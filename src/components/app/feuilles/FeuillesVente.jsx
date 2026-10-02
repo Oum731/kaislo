@@ -265,7 +265,7 @@ export function FeuilleChoixClient() {
     return (
       <Feuille titre="Nouveau client" surFermer={() => setNouveau(null)} pied={<button className="btn bloc" onClick={creer}>Créer et choisir</button>}>
         <div className="pile">
-          <label className="champ"><span>Nom</span><input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} autoFocus placeholder="Ex : Mme Fatima (3e étage)" /></label>
+          <label className="champ"><span>Nom</span><input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} autoFocus placeholder="Ex : Amorac Kaisly" /></label>
           <label className="champ"><span>Téléphone (pour le rappel WhatsApp)</span><input type="tel" value={nouveau.telephone} onChange={(e) => setNouveau({ ...nouveau, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
         </div>
       </Feuille>

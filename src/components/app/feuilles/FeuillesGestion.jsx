@@ -179,7 +179,7 @@ export function FeuilleUtilisateur({ utilisateur }) {
   return (
     <Feuille titre={b.id ? b.nom : 'Nouveau vendeur'} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer}>Enregistrer</button>}>
       <div className="pile">
-        <label className="champ"><span>Nom et prénom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Moussa Traoré" /></label>
+        <label className="champ"><span>Nom et prénom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaisly" /></label>
         <label className="champ"><span>Numéro de téléphone (identifiant de connexion)</span><input type="tel" inputMode="tel" value={b.telephone || ''} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
         <label className="champ"><span>Code PIN (4 chiffres)</span><input className="pin-saisie" inputMode="numeric" maxLength={4} value={b.pin} onChange={(e) => setB({ ...b, pin: e.target.value })} placeholder="••••" /></label>
         <p className="tres-petit muet">Il se connectera avec ce numéro et ce code PIN, sur n’importe quel appareil du commerce.</p>
@@ -233,7 +233,7 @@ export function FeuilleClient({ client }) {
   return (
     <Feuille titre={b.id ? 'Modifier le client' : 'Nouveau client'} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer}>Enregistrer</button>}>
       <div className="pile">
-        <label className="champ"><span>Nom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Mme Fatima (3e étage)" autoFocus /></label>
+        <label className="champ"><span>Nom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaisly" autoFocus /></label>
         <label className="champ"><span>Téléphone (pour le rappel WhatsApp)</span><input type="tel" value={b.telephone} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
         <label className="champ"><span>Note</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder="Ex : paie en fin de mois" /></label>
         {b.id && s.estGerant() && (

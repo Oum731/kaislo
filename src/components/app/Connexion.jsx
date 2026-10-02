@@ -265,7 +265,7 @@ function Inscription() {
       {etape === 2 && (
         <form className="pile" onSubmit={(e) => { e.preventDefault(); continuer(); }}>
           <div className="intro"><p className="petit muet">Étape 2 sur 3</p><h1 style={{ marginTop: 4 }}>Votre commerce</h1></div>
-          <label className="champ"><span>Nom du commerce</span><input value={f.nom} onChange={maj('nom')} placeholder="Ex : Resto Le Bon Goût" autoFocus /></label>
+          <label className="champ"><span>Nom du commerce</span><input value={f.nom} onChange={maj('nom')} placeholder="Ex : Amorac Kaisly" autoFocus /></label>
           <div className="grille-2">
             <label className="champ"><span>Pays</span>
               <select value={f.pays} onChange={maj('pays')}>
@@ -289,7 +289,7 @@ function Inscription() {
             <h1 style={{ marginTop: 4 }}>Votre compte gérant</h1>
             <p>Vous vous connecterez avec votre numéro de téléphone et votre code PIN.</p>
           </div>
-          <label className="champ"><span>Votre nom et prénom</span><input value={f.gerantNom} onChange={maj('gerantNom')} placeholder="Ex : Awa Koné" autoFocus /></label>
+          <label className="champ"><span>Votre nom et prénom</span><input value={f.gerantNom} onChange={maj('gerantNom')} placeholder="Ex : Amorac Kaisly" autoFocus /></label>
           <label className="champ"><span>Votre numéro de téléphone (identifiant de connexion)</span><input type="tel" inputMode="tel" autoComplete="tel" value={f.gerantTelephone} onChange={maj('gerantTelephone')} placeholder="Ex : 06 12 34 56 78" /></label>
           <div className="grille-2">
             <label className="champ"><span>Code PIN (4 chiffres)</span><input className="pin-saisie" type="password" inputMode="numeric" autoComplete="new-password" maxLength={4} value={f.gerantPin} onChange={maj('gerantPin')} placeholder="••••" /></label>

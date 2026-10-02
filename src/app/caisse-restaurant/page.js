@@ -34,7 +34,7 @@ const contenu = {
     },
   ],
   chapo: 'Tables, ticket cuisine, plats avec accompagnements, ticket client imprimé ou envoyé par WhatsApp : servez plus vite et sachez chaque soir ce que vous avez gagné.',
-  garanties: ['Démo : Resto Ivoire', 'Sur téléphone ou tablette', 'Essai gratuit de 30 jours'],
+  garanties: ['Démo restaurant prête à tester', 'Sur téléphone ou tablette', 'Essai gratuit de 30 jours'],
   etiquette: 'Pour la salle et la cuisine',
   titreFonctions: 'Du premier plat à la clôture de caisse.',
   chapoFonctions: 'Chaque fonction répond à un vrai problème de restaurateur : les erreurs de commande, les tables oubliées, la recette à recompter le soir.',
@@ -58,7 +58,7 @@ const contenu = {
     ['Puis-je envoyer l’addition par WhatsApp ?', 'Oui : pour une livraison ou une commande par téléphone, cochez « Client à distance » et le reçu s’ouvre dans WhatsApp, prêt à être envoyé.'],
     ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement mensuel simple dans la monnaie de votre pays.'],
   ],
-  titreFinal: 'Testez Kaisly avec Resto Ivoire.',
+  titreFinal: 'Testez la démo restaurant de Kaisly.',
   texteFinal: 'Un restaurant de démonstration déjà rempli : tables occupées, plats, statistiques. Ou créez directement le vôtre.',
 };
 

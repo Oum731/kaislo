@@ -66,7 +66,7 @@ export function formatJourLong(date) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// Initiales pour les avatars : "Awa Koné" -> "AK"
+// Initiales pour les avatars : "Amorac Kaisly" -> "AK"
 export function initiales(nom) {
   return (nom || '?')
     .split(/\s+/)

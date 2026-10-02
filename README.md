@@ -1,7 +1,7 @@
 # Kaisly — Caisse pour restaurants, épiceries et boutiques
 
 Site public (pour Google) + application de caisse, en **Next.js**.
-Démo prête à présenter : **Resto Ivoire** (restaurant, Casablanca) et **Chez Sentinelle** (épicerie), prix en dirhams.
+Démo prête à présenter : un restaurant et une épicerie, tous deux nommés **Amorac Kaisly** (comme leurs gérants, vendeurs et clients), dans la devise du pays choisi.
 
 > La version finale sera une vraie application mobile (Capacitor) reliée à un serveur Laravel.
 > Dans cette version, les données restent **dans l'appareil** (pas encore de serveur).
@@ -16,8 +16,8 @@ npm run dev        # puis ouvrir http://localhost:3000
 - Site public : http://localhost:3000
 - Application : http://localhost:3000/app
 - Connexion : **numéro de téléphone + code PIN** (chaque personne a son numéro)
-- Démo Resto Ivoire : gérante 06 00 00 00 01 / 1234 · vendeurs 06 00 00 00 02 / 0000 et 06 00 00 00 03 / 1111
-- Démo Chez Sentinelle : gérant 06 00 00 00 11 / 1234 · vendeurs 06 00 00 00 12 / 0000 et 06 00 00 00 13 / 1111
+- Démo restaurant : gérant 06 00 00 00 01 / 1234 · vendeurs 06 00 00 00 02 / 0000 et 06 00 00 00 03 / 1111
+- Démo épicerie : gérant 06 00 00 00 11 / 1234 · vendeurs 06 00 00 00 12 / 0000 et 06 00 00 00 13 / 1111
 - Espace Amorac : /admin (mot de passe de démo dans src/config.js)
 
 ## Mettre en ligne sur Hostinger

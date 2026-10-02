@@ -631,7 +631,8 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 @media (min-width: 768px) { .seulement-mobile { display: none !important; } }
 
 /* =============== 3. SITE PUBLIC =============== */
-.site { background: var(--surface); overflow-x: hidden; font-size: 16px; }
+/* overflow-x: clip (et non hidden) : coupe ce qui dépasse sans empêcher le menu du haut de rester fixe */
+.site { background: var(--surface); overflow-x: clip; font-size: 16px; }
 .site-largeur { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
 .site-entete { position: sticky; top: 0; z-index: 40; background: rgba(255, 255, 255, 0.96); border-bottom: 1px solid var(--bordure); }
 .site-entete .site-largeur { display: flex; align-items: center; gap: 28px; height: 62px; }

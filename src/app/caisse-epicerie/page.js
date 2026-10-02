@@ -34,7 +34,7 @@ const contenu = {
     },
   ],
   chapo: 'Code-barres, stock, carnet de crédit numérique et marges : sachez ce que vous vendez, ce qui vous reste, et qui vous doit de l’argent.',
-  garanties: ['Démo : Chez Sentinelle', 'Scan avec la caméra du téléphone', 'Essai gratuit de 30 jours'],
+  garanties: ['Démo épicerie prête à tester', 'Scan avec la caméra du téléphone', 'Essai gratuit de 30 jours'],
   etiquette: 'Pour le comptoir et la réserve',
   titreFonctions: 'Tout ce qui se passe au comptoir, enfin sous contrôle.',
   chapoFonctions: 'Fini le cahier de crédit illisible et les ruptures découvertes devant le client.',
@@ -57,7 +57,7 @@ const contenu = {
     ['Et les produits vendus au poids ou en pack ?', 'Utilisez les options : par exemple « 500 g / 1 kg / 2 kg » pour les tomates, ou « Bouteille / Pack de 6 » pour l’eau, chacun avec son prix.'],
     ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement mensuel simple dans la monnaie de votre pays.'],
   ],
-  titreFinal: 'Testez Kaisly avec Chez Sentinelle.',
+  titreFinal: 'Testez la démo épicerie de Kaisly.',
   texteFinal: 'Une épicerie de démonstration avec stock, clients à crédit et statistiques. Ou créez directement la vôtre.',
 };
 

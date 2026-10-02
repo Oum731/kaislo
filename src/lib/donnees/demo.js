@@ -1,8 +1,8 @@
 // ------------------------------------------------------------
 // Données de DÉMONSTRATION : deux commerces prêts à présenter
 // (tous les prix en dirhams) :
-//  - Resto Ivoire   : restaurant ivoirien à Casablanca
-//  - Chez Sentinelle : épicerie de quartier à Casablanca
+//  - restaurant (id "resto-ivoire") et épicerie (id "chez-sentinelle"),
+//    tous les noms affichés sont "Amorac Kaisly"
 // Avec 45 jours de ventes, des dépenses, des clôtures, des clients
 // à crédit, des tables occupées et des entrées de stock.
 // ------------------------------------------------------------
@@ -13,7 +13,7 @@ import { CREDIT, paysParId } from './modeles.js';
 import { symbole } from '../utils/format.js';
 
 // À augmenter quand la structure des données change : la démo est alors recréée
-export const VERSION_DONNEES = 9;
+export const VERSION_DONNEES = 10;
 
 // Raccourcis pour écrire le catalogue de façon lisible
 let compteur = 0;
@@ -37,13 +37,13 @@ const produit = (categorieId, nom, prix, prixAchat, emoji, extra = {}) => ({
   ...extra,
 });
 
-// ============ 1. Resto Ivoire (restaurant, Casablanca) ============
+// ============ 1. Restaurant de démo ============
 function restoIvoire() {
   const cPlats = id('c'), cGrill = id('c'), cBoissons = id('c'), cDesserts = id('c');
   return {
     commerce: {
       id: 'resto-ivoire',
-      nom: 'Resto Ivoire',
+      nom: 'Amorac Kaisly',
       type: 'restaurant',
       pays: 'MA',
       devise: 'MAD',
@@ -60,9 +60,9 @@ function restoIvoire() {
       tables: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6', 'Terrasse 1', 'Terrasse 2', 'À emporter'],
     },
     utilisateurs: [
-      { id: 'u1', nom: 'Awa Koné', role: 'gerant', telephone: '06 00 00 00 01', pin: '1234', actif: true },
-      { id: 'u2', nom: 'Moussa Traoré', role: 'vendeur', telephone: '06 00 00 00 02', pin: '0000', actif: true, peutGererProduits: false, peutFaireRemises: true },
-      { id: 'u3', nom: 'Fatou Bamba', role: 'vendeur', telephone: '06 00 00 00 03', pin: '1111', actif: true, peutGererProduits: true, peutFaireRemises: false },
+      { id: 'u1', nom: 'Amorac Kaisly', role: 'gerant', telephone: '06 00 00 00 01', pin: '1234', actif: true },
+      { id: 'u2', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 02', pin: '0000', actif: true, peutGererProduits: false, peutFaireRemises: true },
+      { id: 'u3', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 03', pin: '1111', actif: true, peutGererProduits: true, peutFaireRemises: false },
     ],
     categories: [
       { id: cPlats, nom: 'Plats', couleur: 'vert' },
@@ -110,13 +110,13 @@ function restoIvoire() {
       produit(cDesserts, 'Salade de fruits', 20, 8, '🍉'),
     ],
     clients: [
-      { id: 'k1', nom: 'Bureau Atlas Services', telephone: '+212600000001', note: 'Déjeuners de l’équipe, paie le 5 du mois' },
-      { id: 'k2', nom: 'Ibrahim (voisin)', telephone: '+212600000002', note: '' },
+      { id: 'k1', nom: 'Amorac Kaisly', telephone: '+212600000001', note: 'Déjeuners de l’équipe, paie le 5 du mois' },
+      { id: 'k2', nom: 'Amorac Kaisly', telephone: '+212600000002', note: '' },
     ],
   };
 }
 
-// ============ 2. Chez Sentinelle (épicerie, Casablanca) ============
+// ============ 2. Épicerie de démo ============
 function chezSentinelle() {
   const cEpi = id('c'), cBoi = id('c'), cLait = id('c'), cHyg = id('c'), cFruits = id('c');
   // Les codes-barres sont fictifs (préfixe 611 = Maroc)
@@ -125,7 +125,7 @@ function chezSentinelle() {
   return {
     commerce: {
       id: 'chez-sentinelle',
-      nom: 'Chez Sentinelle',
+      nom: 'Amorac Kaisly',
       type: 'epicerie',
       pays: 'MA',
       devise: 'MAD',
@@ -142,9 +142,9 @@ function chezSentinelle() {
       tables: [],
     },
     utilisateurs: [
-      { id: 'u1', nom: 'Youssef Benali', role: 'gerant', telephone: '06 00 00 00 11', pin: '1234', actif: true },
-      { id: 'u2', nom: 'Karim Alaoui', role: 'vendeur', telephone: '06 00 00 00 12', pin: '0000', actif: true, peutGererProduits: true, peutFaireRemises: false },
-      { id: 'u3', nom: 'Salma Idrissi', role: 'vendeur', telephone: '06 00 00 00 13', pin: '1111', actif: true, peutGererProduits: false, peutFaireRemises: false },
+      { id: 'u1', nom: 'Amorac Kaisly', role: 'gerant', telephone: '06 00 00 00 11', pin: '1234', actif: true },
+      { id: 'u2', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 12', pin: '0000', actif: true, peutGererProduits: true, peutFaireRemises: false },
+      { id: 'u3', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 13', pin: '1111', actif: true, peutGererProduits: false, peutFaireRemises: false },
     ],
     categories: [
       { id: cEpi, nom: 'Épicerie', couleur: 'safran' },
@@ -182,12 +182,12 @@ function chezSentinelle() {
       p(cFruits, 'Oignons 1kg', 4, 2.4, '🧅', '', 45),
     ],
     clients: [
-      { id: 'k1', nom: 'Mme Fatima (3e étage)', telephone: '+212600000011', note: 'Paie en fin de mois' },
-      { id: 'k2', nom: 'Hassan, gardien', telephone: '+212600000012', note: '' },
-      { id: 'k3', nom: 'Rachid Bennani', telephone: '+212600000013', note: '' },
-      { id: 'k4', nom: 'Khadija Alami', telephone: '+212600000014', note: 'Plafond conseillé : 300 DH' },
-      { id: 'k5', nom: 'Omar, café d’en face', telephone: '+212600000015', note: 'Achats pour le café' },
-      { id: 'k6', nom: 'Mme Naima', telephone: '+212600000016', note: '' },
+      { id: 'k1', nom: 'Amorac Kaisly', telephone: '+212600000011', note: 'Paie en fin de mois' },
+      { id: 'k2', nom: 'Amorac Kaisly', telephone: '+212600000012', note: '' },
+      { id: 'k3', nom: 'Amorac Kaisly', telephone: '+212600000013', note: '' },
+      { id: 'k4', nom: 'Amorac Kaisly', telephone: '+212600000014', note: 'Plafond conseillé : 300 DH' },
+      { id: 'k5', nom: 'Amorac Kaisly', telephone: '+212600000015', note: 'Achats pour le café' },
+      { id: 'k6', nom: 'Amorac Kaisly', telephone: '+212600000016', note: '' },
     ],
   };
 }
@@ -414,9 +414,9 @@ function genererCommandes(d) {
   const ligne = (nom, q) => ({ ...creerLigne(p(nom), premierChoix(p(nom)), q, dev, ''), envoyee: true });
   const il_y_a = (min) => new Date(Date.now() - min * 60000).toISOString();
   return [
-    { id: 'cmd1', table: 'Table 2', ouverteLe: il_y_a(35), vendeurId: 'u2', vendeurNom: 'Moussa Traoré', lignes: [ligne('Attiéké', 2), ligne('Bissap', 2)] },
-    { id: 'cmd2', table: 'Terrasse 1', ouverteLe: il_y_a(12), vendeurId: 'u3', vendeurNom: 'Fatou Bamba', lignes: [ligne('Poulet braisé', 1), ligne('Soda 33cl', 3)] },
-    { id: 'cmd3', table: 'Table 5', ouverteLe: il_y_a(4), vendeurId: 'u2', vendeurNom: 'Moussa Traoré', lignes: [ligne('Garba', 1)] },
+    { id: 'cmd1', table: 'Table 2', ouverteLe: il_y_a(35), vendeurId: 'u2', vendeurNom: 'Amorac Kaisly', lignes: [ligne('Attiéké', 2), ligne('Bissap', 2)] },
+    { id: 'cmd2', table: 'Terrasse 1', ouverteLe: il_y_a(12), vendeurId: 'u3', vendeurNom: 'Amorac Kaisly', lignes: [ligne('Poulet braisé', 1), ligne('Soda 33cl', 3)] },
+    { id: 'cmd3', table: 'Table 5', ouverteLe: il_y_a(4), vendeurId: 'u2', vendeurNom: 'Amorac Kaisly', lignes: [ligne('Garba', 1)] },
   ];
 }
 
@@ -424,12 +424,12 @@ function genererCommandes(d) {
 // "code" : code du commerce, pour relier un appareil (voir Profil)
 export const COMMERCES_DEMO = [
   {
-    id: 'resto-ivoire', code: '100001', nom: 'Resto Ivoire', sousTitre: 'Restaurant · cuisine africaine', emoji: '🍽️', logo: '/demo/logo-resto-ivoire.svg',
-    comptes: [['Awa Koné', 'Gérante', '06 00 00 00 01', '1234'], ['Moussa Traoré', 'Vendeur', '06 00 00 00 02', '0000'], ['Fatou Bamba', 'Vendeuse', '06 00 00 00 03', '1111']],
+    id: 'resto-ivoire', code: '100001', nom: 'Amorac Kaisly', sousTitre: 'Restaurant · cuisine africaine', emoji: '🍽️', logo: '/demo/logo-resto-ivoire.svg',
+    comptes: [['Amorac Kaisly', 'Gérant', '06 00 00 00 01', '1234'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 02', '0000'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 03', '1111']],
   },
   {
-    id: 'chez-sentinelle', code: '100002', nom: 'Chez Sentinelle', sousTitre: 'Épicerie de quartier', emoji: '🛒', logo: '/demo/logo-chez-sentinelle.svg',
-    comptes: [['Youssef Benali', 'Gérant', '06 00 00 00 11', '1234'], ['Karim Alaoui', 'Vendeur', '06 00 00 00 12', '0000'], ['Salma Idrissi', 'Vendeuse', '06 00 00 00 13', '1111']],
+    id: 'chez-sentinelle', code: '100002', nom: 'Amorac Kaisly', sousTitre: 'Épicerie de quartier', emoji: '🛒', logo: '/demo/logo-chez-sentinelle.svg',
+    comptes: [['Amorac Kaisly', 'Gérant', '06 00 00 00 11', '1234'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 12', '0000'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 13', '1111']],
   },
 ];
 
@@ -466,8 +466,8 @@ const LIEUX = {
 
 // Noms des clients à crédit de l'épicerie, selon la région
 const CLIENTS_EPICERIE = {
-  MA: ['Mme Fatima (3e étage)', 'Hassan, gardien', 'Rachid Bennani', 'Khadija Alami', 'Omar, café d’en face', 'Mme Naima'],
-  autre: ['Mme Diallo (3e étage)', 'Moussa, gardien', 'Jean-Marc Kouassi', 'Aïcha Konaté', 'Omar, café d’en face', 'Mme Mensah'],
+  MA: ['Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly'],
+  autre: ['Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly'],
 };
 
 function adapterAuPays(d, paysId) {
@@ -485,7 +485,7 @@ function adapterAuPays(d, paysId) {
     ville: pays.ville || 'Centre-ville',
     adresse,
     telephone: (pays.indicatif ? '+' + pays.indicatif + ' ' : '') + telLocal,
-    email: estResto ? 'bonjour@resto-ivoire.com' : 'chezsentinelle@gmail.com',
+    email: 'contact@amorac.com',
     localisation: lat !== null ? { lat, lng } : null,
     modesPaiement: pays.paiements,
     fondDeCaisse: c(200),
