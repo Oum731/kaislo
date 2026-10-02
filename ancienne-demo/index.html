@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#F6F4EE" />
+  <meta name="description" content="Kaisly — la caisse simple pour restaurants et épiceries." />
+  <title>Kaisly — Caisse</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icone.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icons/icone-180.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
+  <script type="module" src="/src/main.js"></script>
+</head>
+
+<body x-data="kaisly">
+
+  <!-- =========================================================
+       ICÔNES (dessinées une fois, réutilisées avec <use href="#...">)
+       ========================================================= -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-stats" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+    <symbol id="i-caisse" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-ventes" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></symbol>
+    <symbol id="i-catalogue" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1.5"/><rect width="7" height="7" x="14" y="3" rx="1.5"/><rect width="7" height="7" x="14" y="14" rx="1.5"/><rect width="7" height="7" x="3" y="14" rx="1.5"/></symbol>
+    <symbol id="i-reglages" viewBox="0 0 24 24"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></symbol>
+    <symbol id="i-imprimante" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></symbol>
+    <symbol id="i-sortie" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol>
+    <symbol id="i-recherche" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+    <symbol id="i-moins" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-fermer" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-ok" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-droite" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-gauche" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-haut" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-bas" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-poubelle" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+    <symbol id="i-bluetooth" viewBox="0 0 24 24"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></symbol>
+    <symbol id="i-effacer" viewBox="0 0 24 24"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"/><line x1="18" x2="12" y1="9" y2="15"/><line x1="12" x2="18" y1="9" y2="15"/></symbol>
+    <symbol id="i-alerte" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-hausse" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+    <symbol id="i-baisse" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></symbol>
+    <symbol id="i-installer" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+  </svg>
+
+  <div class="app" x-cloak>
+
+    <!-- =========================================================
+         CONNEXION
+         ========================================================= -->
+    <template x-if="!utilisateur">
+      <section class="connexion">
+        <div class="ligne espace">
+          <div class="logo"><span class="logo-marque">K</span> Kaisly</div>
+          <button class="btn secondaire petit" x-show="installation" @click="installer()">
+            <svg class="ic ic-sm"><use href="#i-installer"/></svg> Installer
+          </button>
+          <button class="bouton-rond" x-show="etapeConnexion !== 'commerce'" @click="retourConnexion()" aria-label="Retour">
+            <svg class="ic"><use href="#i-gauche"/></svg>
+          </button>
+        </div>
+
+        <!-- Accueil : créer un commerce, mes commerces, démos -->
+        <div x-show="etapeConnexion === 'commerce'">
+          <div class="intro">
+            <h1>La caisse simple de votre commerce.</h1>
+            <p>Restaurants, épiceries, boutiques : encaissez en quelques touches, imprimez le ticket, suivez vos ventes.</p>
+          </div>
+          <button class="btn bloc" style="height:58px;font-size:17px" @click="commencerInscription()">
+            <svg class="ic"><use href="#i-plus"/></svg> Créer mon commerce
+          </button>
+          <p class="tres-petit muet" style="text-align:center;margin-top:8px">Gratuit · 2 minutes · sans engagement</p>
+
+          <template x-if="comptes.length">
+            <div>
+              <p class="section-titre">Mes commerces</p>
+              <template x-for="c in comptes" :key="c.id">
+                <button class="choix-carte" @click="choisirCommerce(c.id)">
+                  <span class="emoji-grand" x-text="c.emoji"></span>
+                  <span class="grandit">
+                    <h3 x-text="c.nom"></h3>
+                    <span class="petit muet" x-text="c.sousTitre"></span>
+                  </span>
+                  <svg class="ic muet"><use href="#i-droite"/></svg>
+                </button>
+              </template>
+            </div>
+          </template>
+
+          <p class="section-titre">Essayer avec un commerce d’exemple</p>
+          <template x-for="c in commercesDemo" :key="c.id">
+            <button class="choix-carte" @click="choisirCommerce(c.id)">
+              <span class="emoji-grand" x-text="c.emoji"></span>
+              <span class="grandit">
+                <h3 x-text="c.nom"></h3>
+                <span class="petit muet" x-text="c.sousTitre"></span>
+              </span>
+              <span class="badge safran">Démo</span>
+            </button>
+          </template>
+          <p class="tres-petit muet" style="margin-top:24px;text-align:center">
+            Version de démonstration · les données restent sur ce téléphone
+          </p>
+        </div>
+
+        <!-- Inscription en 3 étapes -->
+        <template x-if="etapeConnexion === 'inscription' && inscription">
+          <div>
+            <div class="etapes">
+              <template x-for="n in 3" :key="n"><span :class="etapeInscription >= n && 'faite'"></span></template>
+            </div>
+
+            <!-- 1. Type de commerce -->
+            <div x-show="etapeInscription === 1">
+              <div class="intro" style="margin-top:20px">
+                <p class="petit muet">Étape 1 sur 3</p>
+                <h1 style="margin-top:4px">Quel est votre commerce ?</h1>
+              </div>
+              <template x-for="t in typesCommerce" :key="t.id">
+                <button class="choix-carte" :class="inscription.type === t.id && 'choisie'" @click="choisirType(t.id)">
+                  <span class="emoji-grand" x-text="t.emoji"></span>
+                  <span class="grandit">
+                    <h3 x-text="t.nom"></h3>
+                    <span class="petit muet" x-text="t.description"></span>
+                  </span>
+                  <svg class="ic muet"><use href="#i-droite"/></svg>
+                </button>
+              </template>
+            </div>
+
+            <!-- 2. Informations du commerce -->
+            <div x-show="etapeInscription === 2">
+              <div class="intro" style="margin-top:20px">
+                <p class="petit muet">Étape 2 sur 3</p>
+                <h1 style="margin-top:4px">Votre commerce</h1>
+              </div>
+              <div class="pile">
+                <label class="champ"><span>Nom du commerce</span><input x-model="inscription.nom" placeholder="Ex : Maquis Le Bon Goût" /></label>
+                <div class="grille-2">
+                  <label class="champ"><span>Pays</span>
+                    <select x-model="inscription.pays">
+                      <template x-for="p in pays" :key="p.id"><option :value="p.id" x-text="p.nom" :selected="p.id === inscription.pays"></option></template>
+                    </select>
+                  </label>
+                  <label class="champ"><span>Ville</span><input x-model="inscription.ville" placeholder="Ex : Abidjan" /></label>
+                </div>
+                <label class="champ"><span>Téléphone du commerce</span><input type="tel" x-model="inscription.telephone" placeholder="Facultatif" /></label>
+                <p class="astuce" x-text="'Devise : ' + deviseInscription() + '. Les modes de paiement de votre pays sont ajoutés automatiquement.'"></p>
+                <button class="btn bloc" @click="validerEtapeCommerce()">Continuer</button>
+              </div>
+            </div>
+
+            <!-- 3. Compte du gérant -->
+            <div x-show="etapeInscription === 3">
+              <div class="intro" style="margin-top:20px">
+                <p class="petit muet">Étape 3 sur 3</p>
+                <h1 style="margin-top:4px">Votre compte gérant</h1>
+                <p>Vous gérez les produits, les vendeurs et voyez toutes les statistiques.</p>
+              </div>
+              <div class="pile">
+                <label class="champ"><span>Votre nom et prénom</span><input x-model="inscription.gerantNom" placeholder="Ex : Awa Koné" /></label>
+                <div class="grille-2">
+                  <label class="champ"><span>Code PIN (4 chiffres)</span><input type="password" inputmode="numeric" maxlength="4" x-model="inscription.gerantPin" placeholder="••••" style="letter-spacing:6px;font-weight:700" /></label>
+                  <label class="champ"><span>Confirmez le PIN</span><input type="password" inputmode="numeric" maxlength="4" x-model="inscription.gerantPin2" placeholder="••••" style="letter-spacing:6px;font-weight:700" @keydown.enter="terminerInscription()" /></label>
+                </div>
+                <p class="tres-petit muet">Ce code vous servira à vous connecter et à valider les annulations de vente. Ne le donnez pas à vos vendeurs.</p>
+                <button class="btn bloc" style="height:58px" @click="terminerInscription()">Créer mon commerce</button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Étape 2 : qui êtes-vous ? -->
+        <template x-if="etapeConnexion === 'utilisateur' && d">
+          <div>
+            <div class="intro">
+              <p class="petit muet" x-text="d.commerce.nom"></p>
+              <h1 style="margin-top:4px">Qui êtes-vous ?</h1>
+            </div>
+            <template x-for="u in utilisateursConnexion()" :key="u.id">
+              <button class="choix-carte" @click="choisirUtilisateur(u)">
+                <span class="avatar" :class="u.role === 'gerant' && 'gerant'" x-text="initiales(u.nom)"></span>
+                <span class="grandit">
+                  <h3 x-text="u.nom"></h3>
+                  <span class="petit muet" x-text="u.role === 'gerant' ? 'Gérant' : 'Vendeur'"></span>
+                </span>
+                <svg class="ic muet"><use href="#i-droite"/></svg>
+              </button>
+            </template>
+            <p class="astuce" style="margin-top:20px" x-show="estDemoActuel()">Démo : code PIN du gérant <b>1234</b> · vendeurs <b>0000</b> et <b>1111</b></p>
+          </div>
+        </template>
+
+        <!-- Étape 3 : code PIN -->
+        <template x-if="etapeConnexion === 'pin' && utilisateurChoisi">
+          <div class="pin-zone">
+            <span class="avatar grand" :class="utilisateurChoisi.role === 'gerant' && 'gerant'" x-text="initiales(utilisateurChoisi.nom)"></span>
+            <h2 style="margin-top:12px" x-text="utilisateurChoisi.nom"></h2>
+            <p class="muet petit" x-text="pinErreur ? 'Code incorrect, réessayez' : 'Entrez votre code PIN'" :style="pinErreur && 'color:var(--rouge)'"></p>
+            <div class="pin-points" :class="pinErreur && 'erreur'">
+              <template x-for="i in 4" :key="i"><span :class="pin.length >= i && 'plein'"></span></template>
+            </div>
+            <div class="pin-clavier">
+              <template x-for="n in ['1','2','3','4','5','6','7','8','9']" :key="n">
+                <button @click="taperPin(n)" x-text="n"></button>
+              </template>
+              <button class="transparent" disabled></button>
+              <button @click="taperPin('0')">0</button>
+              <button class="transparent" @click="effacerPin()" aria-label="Effacer"><svg class="ic"><use href="#i-effacer"/></svg></button>
+            </div>
+          </div>
+        </template>
+      </section>
+    </template>
+
+    <!-- =========================================================
+         APPLICATION (une fois connecté)
+         ========================================================= -->
+    <template x-if="utilisateur && d">
+      <div>
+
+        <!-- ------------------------- STATISTIQUES (gérant) ------------------------- -->
+        <section x-show="ecran === 'stats'">
+          <header class="barre-haut">
+            <div class="titres">
+              <p class="sur-titre" x-text="aujourdhui() + ' · ' + d.commerce.nom"></p>
+              <h1 x-text="'Bonjour, ' + utilisateur.nom.split(' ')[0]"></h1>
+            </div>
+            <button class="avatar gerant" @click="feuille = 'compte'" x-text="initiales(utilisateur.nom)"></button>
+          </header>
+          <div class="contenu" x-show="s">
+            <template x-if="afficherPremiersPas()">
+              <div class="carte premiers-pas" style="margin-bottom:14px">
+                <h3>Bienvenue sur Kaisly 👋</h3>
+                <p class="petit muet" style="margin-top:4px">4 étapes pour être prêt à encaisser :</p>
+                <template x-for="(p, i) in premiersPas()" :key="i">
+                  <button class="pas" :class="p.fait && 'fait'" @click="p.action()">
+                    <span class="pas-num"><svg class="ic ic-sm" x-show="p.fait" style="stroke-width:3"><use href="#i-ok"/></svg><span x-show="!p.fait" x-text="i + 1"></span></span>
+                    <span class="grandit"><b x-text="p.titre"></b><span class="tres-petit muet" style="display:block" x-text="p.texte"></span></span>
+                    <svg class="ic ic-sm muet" x-show="!p.fait"><use href="#i-droite"/></svg>
+                  </button>
+                </template>
+              </div>
+            </template>
+            <div class="segment">
+              <template x-for="p in [['jour','Jour'],['semaine','Semaine'],['mois','Mois'],['annee','Année']]" :key="p[0]">
+                <button :class="periodeStats === p[0] && 'actif'" @click="choisirPeriode(p[0])" x-text="p[1]"></button>
+              </template>
+            </div>
+
+            <div class="carte kpi-principal" style="margin-top:14px">
+              <p class="petit" style="opacity:.8" x-text="'Chiffre d’affaires · ' + libellesPeriode[periodeStats].titre"></p>
+              <p class="valeur" x-text="prix(s.total)"></p>
+              <template x-if="s.variation !== null">
+                <span class="evolution">
+                  <svg class="ic ic-sm"><use :href="s.variation >= 0 ? '#i-hausse' : '#i-baisse'"/></svg>
+                  <span x-text="(s.variation >= 0 ? '+' : '') + s.variation + ' % vs ' + libellesPeriode[periodeStats].prec"></span>
+                </span>
+              </template>
+            </div>
+            <div class="kpis">
+              <div class="carte"><p class="petit muet">Tickets</p><p class="kpi-valeur" x-text="s.nb"></p></div>
+              <div class="carte"><p class="petit muet">Panier moyen</p><p class="kpi-valeur" x-text="prix(s.panierMoyen)"></p></div>
+              <div class="carte"><p class="petit muet">Dépenses</p><p class="kpi-valeur" style="color:var(--rouge)" x-text="prix(s.totalDepenses)"></p></div>
+              <div class="carte"><p class="petit muet">Solde après dépenses</p><p class="kpi-valeur" :style="s.solde < 0 && 'color:var(--rouge)'" x-text="prix(s.solde)"></p></div>
+            </div>
+            <p class="tres-petit muet" style="margin:8px 4px 0">Solde = ventes − dépenses, avant les autres charges éventuelles.</p>
+
+            <!-- Graphique en barres -->
+            <div class="carte" style="margin-top:12px">
+              <div class="ligne espace"><h3>Évolution des ventes</h3></div>
+              <p class="info-barre">
+                <template x-if="barreActive !== null">
+                  <span><span x-text="s.barres[barreActive].long"></span> : <b x-text="prix(s.barres[barreActive].valeur)"></b></span>
+                </template>
+                <template x-if="barreActive === null"><span class="muet">Touchez une barre pour voir le détail</span></template>
+              </p>
+              <div class="graphique" :class="barreActive !== null && 'selection'" role="img" :aria-label="'Ventes ' + libellesPeriode[periodeStats].titre">
+                <template x-for="(b, i) in s.barres" :key="periodeStats + i">
+                  <button class="col" :class="barreActive === i && 'active'" @click="barreActive = barreActive === i ? null : i" :aria-label="b.long + ' : ' + prix(b.valeur)">
+                    <div class="barre" :style="'height:' + hauteurBarre(b) + '%'"></div>
+                  </button>
+                </template>
+              </div>
+              <div class="axe">
+                <template x-for="(b, i) in s.barres" :key="'a' + periodeStats + i">
+                  <span x-text="etiquetteVisible(i) ? b.label : ''"></span>
+                </template>
+              </div>
+            </div>
+
+            <!-- Alertes de stock (épiceries) -->
+            <template x-if="produitsStockBas().length">
+              <div class="carte" style="margin-top:12px">
+                <div class="ligne"><svg class="ic" style="color:var(--rouge)"><use href="#i-alerte"/></svg><h3 class="grandit">Stock bas</h3>
+                  <span class="badge rouge" x-text="produitsStockBas().length"></span></div>
+                <template x-for="p in produitsStockBas()" :key="p.id">
+                  <div class="ligne espace petit" style="margin-top:10px">
+                    <span x-text="p.nom"></span>
+                    <span class="badge" :class="p.stock === 0 ? 'rouge' : 'safran'" x-text="p.stock === 0 ? 'Rupture' : p.stock + ' restants'"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Dépenses de la période -->
+            <div class="ligne espace">
+              <p class="section-titre">Dépenses</p>
+              <button class="lien" @click="nouvelleDepense()">+ Ajouter</button>
+            </div>
+            <div class="liste">
+              <template x-for="x in s.depenses.slice(0, 8)" :key="x.id">
+                <button class="liste-item" @click="modifierDepense(x)">
+                  <span class="grandit">
+                    <span class="gras tronque" style="display:block" x-text="x.note || x.categorie"></span>
+                    <span class="tres-petit muet" x-text="date(x.date).slice(0, 5) + ' ' + heure(x.date) + ' · ' + x.categorie + (x.depuisCaisse ? ' · payée par la caisse' : '')"></span>
+                  </span>
+                  <b class="chiffre" x-text="'− ' + prix(x.montant)"></b>
+                </button>
+              </template>
+              <p class="muet petit" style="padding:14px" x-show="!s.depenses.length">Aucune dépense sur cette période.</p>
+              <p class="tres-petit muet" style="padding:0 14px 12px" x-show="s.depenses.length > 8" x-text="'+ ' + (s.depenses.length - 8) + ' autres dépenses'"></p>
+            </div>
+
+            <!-- Clôtures de caisse -->
+            <p class="section-titre">Dernières clôtures de caisse</p>
+            <div class="liste">
+              <template x-for="c in dernieresClotures()" :key="c.id">
+                <button class="liste-item" @click="ouvrirTicketCloture(c)">
+                  <span class="grandit">
+                    <span class="gras" style="display:block" x-text="date(c.date) + ' · ' + heure(c.date)"></span>
+                    <span class="tres-petit muet" x-text="c.utilisateurNom + ' · ' + c.nbVentes + ' tickets · ' + prix(c.totalVentes)"></span>
+                  </span>
+                  <span class="badge" :class="classeEcart(c.ecart)" x-text="libelleEcart(c.ecart)"></span>
+                </button>
+              </template>
+              <p class="muet petit" style="padding:14px" x-show="!dernieresClotures().length">Aucune clôture pour l’instant.</p>
+            </div>
+
+            <p class="section-titre">Meilleures ventes</p>
+            <div class="carte">
+              <template x-for="(e, i) in s.produits.slice(0, 6)" :key="e.nom">
+                <div class="classement-ligne">
+                  <div class="ligne espace">
+                    <span class="tronque"><b x-text="(i + 1) + '.'"></b> <span x-text="e.nom"></span> <span class="muet" x-text="'× ' + e.quantite"></span></span>
+                    <b class="chiffre" x-text="prix(e.total)"></b>
+                  </div>
+                  <div class="jauge"><div :style="'width:' + largeurClassement(s.produits, e) + '%'"></div></div>
+                </div>
+              </template>
+              <p class="muet petit" x-show="!s.produits.length">Aucune vente sur cette période.</p>
+            </div>
+
+            <p class="section-titre">Par vendeur</p>
+            <div class="carte">
+              <template x-for="e in s.vendeurs" :key="e.nom">
+                <div class="classement-ligne">
+                  <div class="ligne espace">
+                    <span class="tronque"><span x-text="e.nom"></span> <span class="muet" x-text="'· ' + e.quantite + ' ventes'"></span></span>
+                    <b class="chiffre" x-text="prix(e.total)"></b>
+                  </div>
+                  <div class="jauge"><div :style="'width:' + largeurClassement(s.vendeurs, e) + '%'"></div></div>
+                </div>
+              </template>
+              <p class="muet petit" x-show="!s.vendeurs.length">Aucune vente sur cette période.</p>
+            </div>
+
+            <p class="section-titre">Par mode de paiement</p>
+            <div class="carte">
+              <template x-for="e in s.paiements" :key="e.nom">
+                <div class="classement-ligne">
+                  <div class="ligne espace">
+                    <span><span x-text="e.nom"></span> <span class="muet" x-text="'· ' + partPaiement(e) + ' %'"></span></span>
+                    <b class="chiffre" x-text="prix(e.total)"></b>
+                  </div>
+                  <div class="jauge"><div :style="'width:' + partPaiement(e) + '%'"></div></div>
+                </div>
+              </template>
+              <p class="muet petit" x-show="!s.paiements.length">Aucune vente sur cette période.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------------- CAISSE ------------------------- -->
+        <section x-show="ecran === 'caisse'">
+          <header class="barre-haut">
+            <div class="titres">
+              <p class="sur-titre" x-text="d.commerce.nom"></p>
+              <h1>Caisse</h1>
+            </div>
+            <button class="bouton-rond" :class="imprimante.connectee && 'actif'" @click="allerImprimante()" aria-label="Imprimante">
+              <svg class="ic"><use href="#i-imprimante"/></svg>
+            </button>
+            <button class="avatar" :class="estGerant() && 'gerant'" @click="feuille = 'compte'" x-text="initiales(utilisateur.nom)"></button>
+          </header>
+          <div class="contenu">
+            <div class="caisse-outils">
+              <label class="recherche">
+                <svg class="ic ic-sm"><use href="#i-recherche"/></svg>
+                <input type="search" placeholder="Rechercher un article…" x-model="recherche" @keydown.enter="validerRecherche()" enterkeyhint="search" />
+              </label>
+              <button class="bouton-rond" style="width:50px;height:50px;border-radius:14px" x-show="gereStock()" @click="ouvrirScan()" aria-label="Scanner un code-barres">
+                <svg class="ic"><use href="#i-scan"/></svg>
+              </button>
+            </div>
+            <div class="puces">
+              <button class="puce" :class="categorieActive === 'tout' && 'actif'" @click="categorieActive = 'tout'">Tout</button>
+              <template x-for="c in d.categories" :key="c.id">
+                <button class="puce" :class="categorieActive === c.id && 'actif'" @click="categorieActive = c.id" x-text="c.nom"></button>
+              </template>
+            </div>
+
+            <div class="grille-produits">
+              <template x-for="p in produitsAffiches()" :key="p.id">
+                <button class="tuile" :class="['teinte-' + couleurCategorie(p.categorieId), quantiteDansPanier(p) && 'dans-panier', enRupture(p) && 'rupture']" @click="toucherProduit(p)">
+                  <span class="tuile-compteur" x-show="quantiteDansPanier(p)" x-text="quantiteDansPanier(p)"></span>
+                  <span class="tuile-emoji" x-text="p.emoji || initiales(p.nom)"></span>
+                  <span class="tuile-nom" x-text="p.nom"></span>
+                  <span class="tuile-bas">
+                    <span class="tuile-prix" x-text="(p.groupes.length ? 'dès ' : '') + prix(prixDepart(p))"></span>
+                    <span class="tuile-stock" :class="p.stock <= 5 && 'bas'" x-show="p.suiviStock" x-text="enRupture(p) ? 'Rupture' : 'Stock ' + p.stock"></span>
+                  </span>
+                </button>
+              </template>
+            </div>
+            <div class="vide" x-show="!produitsAffiches().length && d.produits.length">
+              <div class="emoji">🔍</div>
+              <p>Aucun article trouvé</p>
+            </div>
+            <div class="vide" x-show="!d.produits.length">
+              <div class="emoji">📦</div>
+              <p><b>Aucun produit pour l’instant</b></p>
+              <p class="petit" style="margin:4px 0 16px" x-text="peutGererProduits() ? 'Ajoutez vos premiers produits pour commencer à vendre.' : 'Demandez au gérant d’ajouter les produits.'"></p>
+              <button class="btn" x-show="peutGererProduits()" @click="allerA('catalogue'); nouveauProduit()"><svg class="ic"><use href="#i-plus"/></svg> Ajouter un produit</button>
+            </div>
+          </div>
+
+          <!-- Barre du panier -->
+          <div class="barre-panier" x-show="panier.length" x-transition.opacity :class="animerPanier && 'bump'">
+            <span class="nb" x-text="nbArticles()"></span>
+            <span class="grandit">
+              <span class="tres-petit" style="opacity:.8;display:block">Total</span>
+              <span class="total" x-text="prix(totalPanier())"></span>
+            </span>
+            <button class="btn" @click="ouvrirPanier()">Encaisser <svg class="ic ic-sm"><use href="#i-droite"/></svg></button>
+          </div>
+        </section>
+
+        <!-- ------------------------- VENTES ------------------------- -->
+        <section x-show="ecran === 'ventes'">
+          <header class="barre-haut">
+            <div class="titres">
+              <p class="sur-titre" x-text="estGerant() ? 'Toutes les ventes du commerce' : 'Mes ventes'"></p>
+              <h1>Ventes</h1>
+            </div>
+            <button class="avatar" :class="estGerant() && 'gerant'" @click="feuille = 'compte'" x-text="initiales(utilisateur.nom)"></button>
+          </header>
+          <div class="contenu">
+            <div class="puces">
+              <template x-for="f in [['jour','Aujourd’hui'],['hier','Hier'],['semaine','7 derniers jours']]" :key="f[0]">
+                <button class="puce" :class="filtreVentes === f[0] && 'actif'" @click="filtreVentes = f[0]" x-text="f[1]"></button>
+              </template>
+            </div>
+            <button class="btn safran bloc" style="margin-top:14px" @click="ouvrirCloture()">
+              <svg class="ic"><use href="#i-caisse"/></svg> Clôturer la caisse
+            </button>
+            <div class="carte ligne espace" style="margin:12px 0 14px">
+              <div><p class="petit muet">Total</p><p class="kpi-valeur" x-text="prix(totalListe())"></p></div>
+              <div style="text-align:right"><p class="petit muet">Tickets</p><p class="kpi-valeur" x-text="nbTicketsListe()"></p></div>
+            </div>
+            <template x-for="v in ventesListe()" :key="v.id">
+              <button class="vente-item" :class="v.annulee && 'annulee'" @click="ouvrirVente(v)">
+                <span class="vente-heure">
+                  <span x-text="heure(v.date)"></span>
+                  <span class="tres-petit muet" style="display:block;font-weight:500" x-show="filtreVentes === 'semaine'" x-text="date(v.date).slice(0,5)"></span>
+                </span>
+                <span class="grandit">
+                  <span class="ligne" style="gap:6px">
+                    <b x-text="'N° ' + v.numero"></b>
+                    <span class="badge" :class="v.annulee ? 'rouge' : 'gris'" x-text="v.annulee ? 'Annulée' : v.paiement"></span>
+                  </span>
+                  <span class="tres-petit muet tronque" style="display:block;margin-top:3px" x-text="(estGerant() ? v.vendeurNom.split(' ')[0] + ' · ' : '') + resumeArticles(v)"></span>
+                </span>
+                <b class="chiffre prix-vente" x-text="prix(v.total)"></b>
+              </button>
+            </template>
+            <div class="vide" x-show="!ventesListe().length">
+              <div class="emoji">🧾</div>
+              <p>Aucune vente sur cette période</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------------- CATALOGUE (gérant) ------------------------- -->
+        <section x-show="ecran === 'catalogue'">
+          <header class="barre-haut">
+            <div class="titres">
+              <p class="sur-titre" x-text="d.produits.length + ' articles · ' + d.categories.length + ' catégories'"></p>
+              <h1>Catalogue</h1>
+            </div>
+            <button class="avatar" :class="estGerant() && 'gerant'" @click="feuille = 'compte'" x-text="initiales(utilisateur.nom)"></button>
+          </header>
+          <div class="contenu">
+            <div class="segment" x-show="estGerant()">
+              <button :class="ongletCatalogue === 'produits' && 'actif'" @click="ongletCatalogue = 'produits'">Articles</button>
+              <button :class="ongletCatalogue === 'categories' && 'actif'" @click="ongletCatalogue = 'categories'">Catégories</button>
+            </div>
+
+            <div x-show="ongletCatalogue === 'produits'">
+              <label class="recherche" style="margin-top:14px">
+                <svg class="ic ic-sm"><use href="#i-recherche"/></svg>
+                <input type="search" placeholder="Rechercher…" x-model="rechercheCatalogue" />
+              </label>
+              <template x-for="g in catalogueParCategorie()" :key="g.categorie.id">
+                <div>
+                  <div class="ligne espace">
+                    <p class="section-titre" x-text="g.categorie.nom"></p>
+                    <button class="lien" @click="nouveauProduit(g.categorie.id)">+ Ajouter</button>
+                  </div>
+                  <div class="liste" :class="'teinte-' + g.categorie.couleur">
+                    <template x-for="p in g.produits" :key="p.id">
+                      <div class="liste-item" :class="!p.actif && 'inactif'" @click="modifierProduit(p)">
+                        <span class="mini-emoji" x-text="p.emoji || initiales(p.nom)"></span>
+                        <span class="grandit">
+                          <span class="gras tronque" style="display:block" x-text="p.nom"></span>
+                          <span class="tres-petit muet tronque" style="display:block">
+                            <span x-text="prix(p.prix)"></span>
+                            <span x-show="p.groupes.length" x-text="' · ' + resumeOptions(p)"></span>
+                            <span x-show="p.suiviStock" x-text="' · stock ' + p.stock"></span>
+                          </span>
+                        </span>
+                        <button class="interrupteur" :class="p.actif && 'on'" @click.stop="basculerProduit(p)" :aria-label="p.actif ? 'Désactiver' : 'Activer'"></button>
+                      </div>
+                    </template>
+                    <p class="muet petit" style="padding:14px" x-show="!g.produits.length">Aucun article dans cette catégorie.</p>
+                  </div>
+                </div>
+              </template>
+              <p class="tres-petit muet" style="margin-top:16px;text-align:center">L’interrupteur masque un article de la caisse sans le supprimer.</p>
+              <button class="bouton-flottant" @click="nouveauProduit()"><svg class="ic"><use href="#i-plus"/></svg> Article</button>
+            </div>
+
+            <div x-show="ongletCatalogue === 'categories'" style="margin-top:14px">
+              <div class="liste">
+                <template x-for="(c, i) in d.categories" :key="c.id">
+                  <div class="liste-item" :class="'teinte-' + c.couleur">
+                    <span class="mini-emoji" x-text="c.nom.charAt(0)"></span>
+                    <button class="grandit" style="text-align:left" @click="modifierCategorie(c)">
+                      <span class="gras" style="display:block" x-text="c.nom"></span>
+                      <span class="tres-petit muet" x-text="nbProduits(c.id) + ' articles'"></span>
+                    </button>
+                    <button class="icone-btn" @click="deplacerCategorie(c, -1)" :disabled="i === 0" aria-label="Monter"><svg class="ic ic-sm"><use href="#i-haut"/></svg></button>
+                    <button class="icone-btn" @click="deplacerCategorie(c, 1)" :disabled="i === d.categories.length - 1" aria-label="Descendre"><svg class="ic ic-sm"><use href="#i-bas"/></svg></button>
+                  </div>
+                </template>
+              </div>
+              <p class="tres-petit muet" style="margin-top:16px;text-align:center">L’ordre des catégories est celui de la caisse.</p>
+              <button class="bouton-flottant" @click="nouvelleCategorie()"><svg class="ic"><use href="#i-plus"/></svg> Catégorie</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------------- RÉGLAGES (gérant) ------------------------- -->
+        <section x-show="ecran === 'reglages'">
+          <header class="barre-haut">
+            <div class="titres">
+              <p class="sur-titre" x-text="d.commerce.nom"></p>
+              <h1>Réglages</h1>
+            </div>
+            <button class="avatar" :class="estGerant() && 'gerant'" @click="feuille = 'compte'" x-text="initiales(utilisateur.nom)"></button>
+          </header>
+          <div class="contenu" style="padding-bottom:0">
+            <div class="segment">
+              <button :class="ongletReglages === 'equipe' && 'actif'" @click="ouvrirReglages('equipe')">Équipe</button>
+              <button :class="ongletReglages === 'commerce' && 'actif'" @click="ouvrirReglages('commerce')">Commerce</button>
+              <button :class="ongletReglages === 'imprimante' && 'actif'" @click="ouvrirReglages('imprimante')">Imprimante</button>
+            </div>
+          </div>
+
+          <!-- Équipe -->
+          <div class="contenu" x-show="ongletReglages === 'equipe'">
+            <p class="section-titre">Personnes autorisées sur la caisse</p>
+            <div class="liste">
+              <template x-for="u in vendeurs()" :key="u.id">
+                <div class="liste-item" :class="!u.actif && 'inactif'" @click="modifierUtilisateur(u)">
+                  <span class="avatar" :class="u.role === 'gerant' && 'gerant'" x-text="initiales(u.nom)"></span>
+                  <span class="grandit">
+                    <span class="ligne" style="gap:6px">
+                      <b class="tronque" x-text="u.nom"></b>
+                      <span class="badge" :class="u.role === 'gerant' ? 'safran' : 'gris'" x-text="u.role === 'gerant' ? 'Gérant' : 'Vendeur'"></span>
+                      <span class="badge" x-show="u.role !== 'gerant' && u.peutGererProduits">+ Produits</span>
+                    </span>
+                    <span class="tres-petit muet" x-text="'Aujourd’hui : ' + prix(ventesDuJourDe(u))"></span>
+                  </span>
+                  <button class="interrupteur" :class="u.actif && 'on'" x-show="u.role !== 'gerant'" @click.stop="basculerUtilisateur(u)" :aria-label="u.actif ? 'Désactiver' : 'Activer'"></button>
+                </div>
+              </template>
+            </div>
+            <p class="tres-petit muet" style="margin-top:16px;text-align:center">Un vendeur désactivé ne peut plus se connecter. Ses ventes restent dans l’historique.</p>
+            <button class="bouton-flottant" @click="nouveauVendeur()"><svg class="ic"><use href="#i-plus"/></svg> Vendeur</button>
+          </div>
+
+          <!-- Commerce -->
+          <template x-if="ongletReglages === 'commerce' && brouillonCommerce">
+            <div class="contenu">
+              <p class="section-titre">Informations imprimées sur le ticket</p>
+              <div class="carte pile">
+                <label class="champ"><span>Nom du commerce</span><input x-model="brouillonCommerce.nom" /></label>
+                <label class="champ"><span>Adresse</span><input x-model="brouillonCommerce.adresse" /></label>
+                <div class="grille-2">
+                  <label class="champ"><span>Ville</span><input x-model="brouillonCommerce.ville" /></label>
+                  <label class="champ"><span>Téléphone</span><input type="tel" x-model="brouillonCommerce.telephone" /></label>
+                </div>
+                <label class="champ"><span>Message en bas du ticket</span><textarea x-model="brouillonCommerce.piedTicket"></textarea></label>
+                <button class="btn bloc" @click="enregistrerInfosCommerce()">Enregistrer</button>
+              </div>
+              <p class="section-titre">Compte</p>
+              <div class="carte pile">
+                <div class="grille-2">
+                  <label class="champ"><span>Type</span><input disabled :value="typeCommerceNom()" /></label>
+                  <label class="champ"><span>Devise</span><input disabled :value="d.commerce.devise === 'MAD' ? 'Dirham (DH)' : 'Franc CFA'" /></label>
+                </div>
+                <p class="tres-petit muet">Le type et la devise sont choisis à la création du commerce.</p>
+              </div>
+              <p class="section-titre">Ce téléphone</p>
+              <div class="carte pile">
+                <button class="btn secondaire bloc" @click="changerDeCommerce()">Changer de commerce</button>
+                <button class="btn danger bloc" x-show="estDemoActuel()" @click="reinitialiserDemo()">Réinitialiser les données de démo</button>
+                <button class="btn danger bloc" x-show="!estDemoActuel()" @click="supprimerCeCommerce()">Supprimer ce commerce</button>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        <!-- ------------------------- IMPRIMANTE ------------------------- -->
+        <!-- (onglet "Imprimante" du vendeur, et sous-onglet des réglages du gérant) -->
+        <section x-show="ecran === 'imprimante' || (ecran === 'reglages' && ongletReglages === 'imprimante')">
+          <header class="barre-haut" x-show="ecran === 'imprimante'">
+            <div class="titres">
+              <p class="sur-titre" x-text="d.commerce.nom"></p>
+              <h1>Imprimante</h1>
+            </div>
+            <button class="avatar" @click="feuille = 'compte'" x-text="initiales(utilisateur.nom)"></button>
+          </header>
+          <div class="contenu">
+            <div class="carte" :style="ecran === 'reglages' && 'margin-top:22px'">
+              <div class="etat-imprimante">
+                <span class="pastille" :class="imprimante.connectee && 'ok'"><svg class="ic"><use href="#i-bluetooth"/></svg></span>
+                <div class="grandit">
+                  <h3 x-text="imprimante.connectee ? imprimante.nom : 'Aucune imprimante connectée'"></h3>
+                  <p class="petit muet" x-text="imprimante.connectee ? 'Prête · les tickets s’impriment à chaque vente' : 'Imprimante thermique Bluetooth 58 ou 80 mm'"></p>
+                </div>
+              </div>
+              <div class="pile" style="margin-top:16px">
+                <template x-if="!imprimante.connectee">
+                  <button class="btn bloc" @click="connecterImprimante()" :disabled="!imprimante.disponible">
+                    <svg class="ic"><use href="#i-bluetooth"/></svg> Connecter une imprimante
+                  </button>
+                </template>
+                <template x-if="imprimante.connectee">
+                  <div class="grille-2">
+                    <button class="btn" @click="imprimerTest()" :disabled="impressionEnCours">Ticket test</button>
+                    <button class="btn secondaire" @click="deconnecterImprimante()">Déconnecter</button>
+                  </div>
+                </template>
+                <p class="astuce" x-show="!imprimante.disponible">
+                  Ce navigateur ne permet pas le Bluetooth (iPhone, Firefox…). Utilisez <b>Chrome sur Android</b> pour imprimer.
+                  L’aperçu du ticket reste disponible. L’application mobile Kaisly fonctionnera sur tous les téléphones.
+                </p>
+              </div>
+            </div>
+
+            <p class="section-titre">Papier</p>
+            <div class="carte pile">
+              <div class="segment">
+                <button :class="prefs.largeurTicket === 58 && 'actif'" @click="changerLargeur(58)">58 mm</button>
+                <button :class="prefs.largeurTicket === 80 && 'actif'" @click="changerLargeur(80)">80 mm</button>
+              </div>
+              <div class="ligne">
+                <div class="grandit">
+                  <b>Imprimer les accents</b>
+                  <p class="tres-petit muet">À désactiver si l’imprimante affiche des caractères bizarres.</p>
+                </div>
+                <button class="interrupteur" :class="prefs.accents && 'on'" @click="basculerAccents()"></button>
+              </div>
+            </div>
+
+            <p class="section-titre">Aperçu du ticket</p>
+            <div class="ticket" :class="'l' + prefs.largeurTicket">
+              <template x-for="(l, i) in lignesTicket(d.ventes[d.ventes.length - 1])" :key="i">
+                <div :class="[l.gras && 't-gras', l.grand && 't-grand']" x-text="l.texte || ' '"></div>
+              </template>
+            </div>
+
+            <p class="section-titre">Première connexion</p>
+            <div class="carte petit pile">
+              <p><b>1.</b> Allumez l’imprimante et mettez du papier.</p>
+              <p><b>2.</b> Activez le Bluetooth et la localisation du téléphone.</p>
+              <p><b>3.</b> Touchez « Connecter une imprimante » et choisissez-la dans la liste.</p>
+              <p class="muet">Inutile de l’appairer dans les réglages du téléphone.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------------- NAVIGATION DU BAS ------------------------- -->
+        <nav class="nav-bas">
+          <template x-if="estGerant()">
+            <div style="display:contents">
+              <button :class="ecran === 'stats' && 'actif'" @click="allerA('stats')"><svg class="ic"><use href="#i-stats"/></svg>Accueil</button>
+              <button :class="ecran === 'caisse' && 'actif'" @click="allerA('caisse')"><svg class="ic"><use href="#i-caisse"/></svg>Caisse</button>
+              <button :class="ecran === 'ventes' && 'actif'" @click="allerA('ventes')"><svg class="ic"><use href="#i-ventes"/></svg>Ventes</button>
+              <button :class="ecran === 'catalogue' && 'actif'" @click="allerA('catalogue')"><svg class="ic"><use href="#i-catalogue"/></svg>Catalogue</button>
+              <button :class="ecran === 'reglages' && 'actif'" @click="allerA('reglages')"><svg class="ic"><use href="#i-reglages"/></svg>Réglages</button>
+            </div>
+          </template>
+          <template x-if="!estGerant()">
+            <div style="display:contents">
+              <button :class="ecran === 'caisse' && 'actif'" @click="allerA('caisse')"><svg class="ic"><use href="#i-caisse"/></svg>Caisse</button>
+              <button :class="ecran === 'ventes' && 'actif'" @click="allerA('ventes')"><svg class="ic"><use href="#i-ventes"/></svg>Mes ventes</button>
+              <button x-show="peutGererProduits()" :class="ecran === 'catalogue' && 'actif'" @click="allerA('catalogue')"><svg class="ic"><use href="#i-catalogue"/></svg>Produits</button>
+              <button :class="ecran === 'imprimante' && 'actif'" @click="allerA('imprimante')"><svg class="ic"><use href="#i-imprimante"/></svg>Imprimante</button>
+            </div>
+          </template>
+        </nav>
+
+        <!-- =========================================================
+             FEUILLES (fenêtres qui montent du bas)
+             ========================================================= -->
+        <div class="voile" x-show="feuille" @click="fermerFeuille()" x-transition:enter="fondu-enter" x-transition:enter-start="fondu-start" x-transition:enter-end="fondu-end" x-transition:leave="fondu-leave" x-transition:leave-start="fondu-end" x-transition:leave-end="fondu-start"></div>
+
+        <!-- Options d'un produit -->
+        <div class="feuille" x-show="feuille === 'options'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="produitOptions">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete" :class="'teinte-' + couleurCategorie(produitOptions.categorieId)">
+                <span class="mini-emoji" x-text="produitOptions.emoji || initiales(produitOptions.nom)"></span>
+                <div class="titres"><h2 x-text="produitOptions.nom"></h2><p class="petit muet" x-text="prix(produitOptions.prix)"></p></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps">
+                <template x-for="g in produitOptions.groupes" :key="g.id">
+                  <div class="groupe-options">
+                    <div class="groupe-tete">
+                      <h3 x-text="g.nom"></h3>
+                      <span class="badge" :class="g.obligatoire ? (choix[g.id]?.length ? '' : 'safran') : 'gris'"
+                        x-text="g.obligatoire ? (choix[g.id]?.length ? 'OK' : 'Obligatoire') : (g.type === 'multiple' ? 'Plusieurs choix' : 'Facultatif')"></span>
+                    </div>
+                    <template x-for="o in g.options" :key="o.id">
+                      <button class="option" :class="optionChoisie(g, o) && 'choisie'" @click="basculerOption(g, o)">
+                        <span class="coche" :class="g.type === 'multiple' && 'carre'"><svg class="ic ic-sm" x-show="optionChoisie(g, o)" style="stroke-width:3"><use href="#i-ok"/></svg></span>
+                        <span x-text="o.nom"></span>
+                        <span class="supplement" x-text="o.prix > 0 ? '+ ' + nombre(o.prix) : (o.prix < 0 ? '− ' + nombre(-o.prix) : '')"></span>
+                      </button>
+                    </template>
+                  </div>
+                </template>
+              </div>
+              <div class="feuille-pied ligne">
+                <div class="quantite">
+                  <button @click="quantiteOptions = Math.max(1, quantiteOptions - 1)" aria-label="Moins"><svg class="ic"><use href="#i-moins"/></svg></button>
+                  <span x-text="quantiteOptions"></span>
+                  <button @click="quantiteOptions++" aria-label="Plus"><svg class="ic"><use href="#i-plus"/></svg></button>
+                </div>
+                <button class="btn grandit" :disabled="!optionsValides()" @click="validerOptions()" x-text="optionsValides() ? 'Ajouter · ' + prix(prixAvecOptions()) : 'Faites un choix'"></button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Panier + paiement -->
+        <div class="feuille" x-show="feuille === 'panier'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <div class="feuille-poignee"></div>
+          <div class="feuille-tete">
+            <div class="titres"><h2>Commande</h2><p class="petit muet" x-text="nbArticles() + ' article' + (nbArticles() > 1 ? 's' : '')"></p></div>
+            <button class="btn secondaire petit" @click="viderPanier()"><svg class="ic ic-sm"><use href="#i-poubelle"/></svg> Vider</button>
+            <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+          </div>
+          <div class="feuille-corps">
+            <div class="carte" style="padding:4px 14px">
+              <template x-for="(l, i) in panier" :key="i + l.nom">
+                <div class="ligne-panier">
+                  <div class="grandit">
+                    <b x-text="l.nom"></b>
+                    <template x-for="det in l.details" :key="det"><p class="tres-petit muet" x-text="det"></p></template>
+                    <p class="petit chiffre" style="margin-top:2px"><span class="muet" x-text="nombre(l.prixUnitaire) + ' × ' + l.quantite + ' = '"></span><b x-text="prix(l.total)"></b></p>
+                  </div>
+                  <div class="quantite">
+                    <button @click="changerQuantite(l, -1)" aria-label="Moins"><svg class="ic ic-sm"><use :href="l.quantite === 1 ? '#i-poubelle' : '#i-moins'"/></svg></button>
+                    <span x-text="l.quantite"></span>
+                    <button @click="changerQuantite(l, 1)" aria-label="Plus"><svg class="ic ic-sm"><use href="#i-plus"/></svg></button>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <p class="section-titre">Mode de paiement</p>
+            <div class="paiements">
+              <template x-for="m in d.commerce.modesPaiement" :key="m">
+                <button :class="paiement === m && 'actif'" @click="paiement = m" x-text="m"></button>
+              </template>
+            </div>
+
+            <template x-if="paiement === 'Espèces'">
+              <div>
+                <p class="section-titre">Montant reçu (facultatif)</p>
+                <input class="saisie chiffre" type="number" inputmode="decimal" step="any" min="0" placeholder="Ex : 10 000" x-model.number="montantRecu" />
+                <div class="puces" style="margin-top:10px">
+                  <button class="puce" @click="montantRecu = totalPanier()">Compte exact</button>
+                  <template x-for="m in montantsRapides()" :key="m">
+                    <button class="puce" :class="montantRecu === m && 'actif'" @click="montantRecu = m" x-text="nombre(m)"></button>
+                  </template>
+                </div>
+                <div class="rendu ligne espace" style="margin-top:12px" x-show="montantRecu > 0">
+                  <span x-text="monnaieARendre() >= 0 ? 'À rendre au client' : 'Montant insuffisant'"></span>
+                  <span class="chiffre" x-text="prix(Math.abs(monnaieARendre()))"></span>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div class="feuille-pied">
+            <div class="ligne espace" style="margin-bottom:12px">
+              <span class="muet">Total à payer</span>
+              <span class="total-grand" x-text="prix(totalPanier())"></span>
+            </div>
+            <button class="btn bloc" style="height:58px;font-size:17px" @click="validerVente()">
+              <svg class="ic"><use :href="imprimante.connectee ? '#i-imprimante' : '#i-ok'"/></svg>
+              <span x-text="imprimante.connectee ? 'Valider et imprimer' : 'Valider la vente'"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ticket (après une vente, ou depuis l'historique) -->
+        <div class="feuille pleine" x-show="feuille === 'ticket'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="derniereVente">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2 x-text="'Ticket n° ' + derniereVente.numero"></h2><p class="petit muet" x-text="date(derniereVente.date) + ' à ' + heure(derniereVente.date) + ' · ' + derniereVente.vendeurNom"></p></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps">
+                <div class="succes" x-show="venteJusteValidee">
+                  <div class="rond"><svg class="ic" style="width:30px;height:30px;stroke-width:3"><use href="#i-ok"/></svg></div>
+                  <h2>Vente enregistrée</h2>
+                  <p class="muet" x-text="prix(derniereVente.total) + ' · ' + derniereVente.paiement"></p>
+                  <p class="rendu" style="margin-top:12px;display:inline-block" x-show="derniereVente.recu > 0" x-text="'Rendre ' + prix(derniereVente.recu - derniereVente.total)"></p>
+                </div>
+                <p class="alerte-annulee" x-show="derniereVente.annulee" x-text="derniereVente.annulee && ('Vente annulée par ' + derniereVente.annulee.par + ' le ' + date(derniereVente.annulee.date) + ' à ' + heure(derniereVente.annulee.date) + (derniereVente.annulee.motif ? ' · ' + derniereVente.annulee.motif : ''))"></p>
+                <div class="ticket" :class="'l' + prefs.largeurTicket">
+                  <template x-for="(l, i) in lignesTicket(derniereVente)" :key="i">
+                    <div :class="[l.gras && 't-gras', l.grand && 't-grand']" x-text="l.texte || ' '"></div>
+                  </template>
+                </div>
+                <button class="btn danger bloc petit" style="margin-top:20px" x-show="!derniereVente.annulee" @click="demanderAnnulation()">
+                  <svg class="ic ic-sm"><use href="#i-fermer"/></svg> Annuler cette vente
+                </button>
+              </div>
+              <div class="feuille-pied grille-2">
+                <button class="btn secondaire" @click="imprimerTicket(derniereVente)" :disabled="impressionEnCours">
+                  <svg class="ic"><use href="#i-imprimante"/></svg> <span x-text="impressionEnCours ? 'Impression…' : 'Imprimer'"></span>
+                </button>
+                <button class="btn" @click="venteJusteValidee ? nouvelleVente() : fermerFeuille()" x-text="venteJusteValidee ? 'Nouvelle vente' : 'Fermer'"></button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Annulation d'une vente (PIN du gérant obligatoire) -->
+        <div class="feuille" x-show="feuille === 'annulation'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="derniereVente">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2 x-text="'Annuler la vente n° ' + derniereVente.numero"></h2><p class="petit muet" x-text="prix(derniereVente.total) + ' · ' + derniereVente.vendeurNom"></p></div>
+                <button class="bouton-rond" @click="feuille = 'ticket'" aria-label="Retour"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps pile">
+                <label class="champ"><span>Motif</span><input x-model="motifAnnulation" placeholder="Ex : erreur de saisie, client parti…" /></label>
+                <label class="champ"><span>Code PIN du gérant</span><input type="password" inputmode="numeric" maxlength="4" x-model="pinAnnulation" placeholder="••••" style="letter-spacing:6px;font-weight:700" @keydown.enter="confirmerAnnulation()" /></label>
+                <p class="tres-petit muet">La vente reste dans l’historique, marquée « Annulée ». Elle ne compte plus dans les totaux ni dans la clôture, et les articles reviennent dans le stock.</p>
+              </div>
+              <div class="feuille-pied"><button class="btn danger bloc" :disabled="pinAnnulation.length < 4" @click="confirmerAnnulation()">Confirmer l’annulation</button></div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Clôture de caisse -->
+        <div class="feuille pleine" x-show="feuille === 'cloture'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="clotureEnCours">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2>Clôture de caisse</h2><p class="petit muet" x-text="'Depuis ' + heure(clotureEnCours.debut) + ' · ' + utilisateur.nom"></p></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps">
+                <div class="carte">
+                  <div class="ligne espace"><b x-text="'Ventes (' + clotureEnCours.nbVentes + ' tickets)'"></b><b class="chiffre" x-text="prix(clotureEnCours.totalVentes)"></b></div>
+                  <template x-for="p in clotureEnCours.parPaiement" :key="p.mode">
+                    <div class="ligne espace petit" style="margin-top:8px"><span class="muet" x-text="p.mode + ' (' + p.nb + ')'"></span><span class="chiffre" x-text="prix(p.total)"></span></div>
+                  </template>
+                  <p class="tres-petit muet" style="margin-top:8px" x-show="clotureEnCours.nbAnnulees" x-text="clotureEnCours.nbAnnulees + ' vente(s) annulée(s), non comptée(s)'"></p>
+                </div>
+
+                <p class="section-titre">Espèces dans la caisse</p>
+                <div class="carte pile">
+                  <label class="champ"><span>Fond de caisse (monnaie du matin)</span>
+                    <input class="chiffre" type="number" inputmode="decimal" step="any" min="0" x-model.number="clotureEnCours.fondDeCaisse" @input="recalculerCloture()" />
+                  </label>
+                  <div class="ligne espace petit"><span class="muet">+ Ventes en espèces</span><span class="chiffre" x-text="prix(clotureEnCours.ventesEspeces)"></span></div>
+                  <div class="ligne espace petit"><span class="muet">− Dépenses payées par la caisse</span><span class="chiffre" x-text="prix(clotureEnCours.depensesCaisse)"></span></div>
+                  <p class="astuce" x-show="clotureEnCours.attendu < 0">Les dépenses payées par la caisse dépassent les espèces encaissées. Vérifiez le fond de caisse ou les dépenses du jour.</p>
+                  <div class="ligne espace" style="padding-top:10px;border-top:1px solid var(--bordure)"><b>Espèces attendues</b><span class="kpi-valeur" style="margin:0" x-text="prix(clotureEnCours.attendu)"></span></div>
+                </div>
+
+                <p class="section-titre">Comptez les billets et pièces</p>
+                <input class="saisie chiffre" style="height:60px;font-size:22px;font-weight:700" type="number" inputmode="decimal" step="any" min="0" placeholder="Montant compté" x-model.number="montantCompte" />
+                <div class="ecart" :class="ecartCloture() !== null && (classeEcart(ecartCloture()) || 'juste')" x-show="ecartCloture() !== null">
+                  <svg class="ic"><use :href="ecartCloture() === 0 ? '#i-ok' : '#i-alerte'"/></svg>
+                  <span x-text="ecartCloture() !== null && libelleEcart(ecartCloture())"></span>
+                </div>
+              </div>
+              <div class="feuille-pied">
+                <button class="btn bloc" style="height:58px" :disabled="ecartCloture() === null" @click="validerCloture()">
+                  <svg class="ic"><use :href="imprimante.connectee ? '#i-imprimante' : '#i-ok'"/></svg>
+                  <span x-text="imprimante.connectee ? 'Valider et imprimer la clôture' : 'Valider la clôture'"></span>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Ticket de clôture -->
+        <div class="feuille pleine" x-show="feuille === 'ticketCloture'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="clotureAffichee">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2>Ticket de clôture</h2><p class="petit muet" x-text="date(clotureAffichee.date) + ' à ' + heure(clotureAffichee.date) + ' · ' + clotureAffichee.utilisateurNom"></p></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps">
+                <div class="ticket" :class="'l' + prefs.largeurTicket">
+                  <template x-for="(l, i) in lignesTicketCloture(clotureAffichee)" :key="i">
+                    <div :class="[l.gras && 't-gras', l.grand && 't-grand']" x-text="l.texte || ' '"></div>
+                  </template>
+                </div>
+              </div>
+              <div class="feuille-pied grille-2">
+                <button class="btn secondaire" @click="imprimerTicketCloture(clotureAffichee)" :disabled="impressionEnCours">
+                  <svg class="ic"><use href="#i-imprimante"/></svg> Imprimer
+                </button>
+                <button class="btn" @click="fermerFeuille()">Terminer</button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Ajouter / modifier une dépense (gérant) -->
+        <div class="feuille" x-show="feuille === 'depense'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="brouillonDepense">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2 x-text="brouillonDepense.id ? 'Modifier la dépense' : 'Nouvelle dépense'"></h2></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps pile">
+                <label class="champ"><span x-text="'Montant (' + (devise() === 'MAD' ? 'DH' : 'FCFA') + ')'"></span>
+                  <input class="chiffre" style="height:60px;font-size:22px;font-weight:700" type="number" inputmode="decimal" step="any" min="0" x-model.number="brouillonDepense.montant" placeholder="0" />
+                </label>
+                <div class="champ"><span>Catégorie</span>
+                  <div class="paiements">
+                    <template x-for="c in categoriesDepenses" :key="c">
+                      <button :class="brouillonDepense.categorie === c && 'actif'" @click="brouillonDepense.categorie = c" x-text="c" style="font-size:13px"></button>
+                    </template>
+                  </div>
+                </div>
+                <label class="champ"><span>Note (facultatif)</span><input x-model="brouillonDepense.note" placeholder="Ex : marché, poisson et légumes" /></label>
+                <div class="ligne">
+                  <div class="grandit"><b>Payée avec l’argent de la caisse</b><p class="tres-petit muet">Elle sera déduite des espèces attendues à la clôture.</p></div>
+                  <button class="interrupteur" :class="brouillonDepense.depuisCaisse && 'on'" @click="brouillonDepense.depuisCaisse = !brouillonDepense.depuisCaisse"></button>
+                </div>
+                <button class="btn danger bloc" x-show="brouillonDepense.id" @click="supprimerDepense()">Supprimer la dépense</button>
+              </div>
+              <div class="feuille-pied"><button class="btn bloc" @click="enregistrerDepense()">Enregistrer</button></div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Scan de code-barres -->
+        <div class="feuille" x-show="feuille === 'scan'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <div class="feuille-poignee"></div>
+          <div class="feuille-tete">
+            <div class="titres"><h2>Scanner un article</h2><p class="petit muet">Visez le code-barres avec la caméra</p></div>
+            <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+          </div>
+          <div class="feuille-corps pile">
+            <video id="video-scan" x-show="scanSupporte" playsinline muted style="width:100%;border-radius:16px;background:#000;aspect-ratio:4/3;object-fit:cover"></video>
+            <p class="astuce" x-show="!scanSupporte">Le scan par caméra n’est pas disponible sur ce navigateur. Tapez le code ou utilisez un lecteur de code-barres.</p>
+            <div class="ligne">
+              <input class="saisie grandit" inputmode="numeric" placeholder="Code-barres" x-model="scanCodeManuel" @keydown.enter="codeScanne(scanCodeManuel)" />
+              <button class="btn" @click="codeScanne(scanCodeManuel)">OK</button>
+            </div>
+            <p class="tres-petit muet">Démo : essayez 6111000000011 (huile) ou 6111000000103 (lait).</p>
+          </div>
+        </div>
+
+        <!-- Modifier un produit -->
+        <div class="feuille pleine" x-show="feuille === 'produit'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="brouillon">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2 x-text="brouillon.id ? 'Modifier l’article' : 'Nouvel article'"></h2></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps">
+                <div class="carte pile">
+                  <div class="ligne" style="align-items:flex-end">
+                    <label class="champ" style="width:76px"><span>Icône</span><input x-model="brouillon.emoji" maxlength="4" placeholder="🍽️" style="text-align:center;font-size:22px" /></label>
+                    <label class="champ grandit"><span>Nom</span><input x-model="brouillon.nom" placeholder="Ex : Attiéké" /></label>
+                  </div>
+                  <div class="grille-2">
+                    <label class="champ"><span x-text="'Prix (' + (devise() === 'MAD' ? 'DH' : 'FCFA') + ')'"></span><input type="number" inputmode="decimal" step="any" min="0" x-model.number="brouillon.prix" placeholder="0" /></label>
+                    <label class="champ"><span>Catégorie</span>
+                      <select x-model="brouillon.categorieId">
+                        <template x-for="c in d.categories" :key="c.id"><option :value="c.id" x-text="c.nom" :selected="c.id === brouillon.categorieId"></option></template>
+                      </select>
+                    </label>
+                  </div>
+                  <template x-if="gereStock()">
+                    <div class="pile">
+                      <label class="champ"><span>Code-barres</span><input inputmode="numeric" x-model="brouillon.codeBarre" placeholder="Facultatif" /></label>
+                      <div class="ligne">
+                        <div class="grandit"><b>Suivre le stock</b><p class="tres-petit muet">Le stock baisse à chaque vente.</p></div>
+                        <button class="interrupteur" :class="brouillon.suiviStock && 'on'" @click="brouillon.suiviStock = !brouillon.suiviStock"></button>
+                      </div>
+                      <label class="champ" x-show="brouillon.suiviStock"><span>Quantité en stock</span><input type="number" inputmode="numeric" x-model.number="brouillon.stock" /></label>
+                    </div>
+                  </template>
+                  <div class="ligne">
+                    <div class="grandit"><b>Visible à la caisse</b></div>
+                    <button class="interrupteur" :class="brouillon.actif && 'on'" @click="brouillon.actif = !brouillon.actif"></button>
+                  </div>
+                </div>
+
+                <p class="section-titre">Options (accompagnements, tailles, suppléments…)</p>
+                <template x-for="(g, gi) in brouillon.groupes" :key="g.id">
+                  <div class="groupe-edition pile">
+                    <div class="ligne">
+                      <input class="saisie grandit" style="font-weight:700" x-model="g.nom" placeholder="Nom du groupe" />
+                      <button class="icone-btn" @click="supprimerGroupe(gi)" aria-label="Supprimer le groupe"><svg class="ic"><use href="#i-poubelle"/></svg></button>
+                    </div>
+                    <div class="segment">
+                      <button :class="g.type === 'unique' && 'actif'" @click="g.type = 'unique'">Un seul choix</button>
+                      <button :class="g.type === 'multiple' && 'actif'" @click="g.type = 'multiple'">Plusieurs choix</button>
+                    </div>
+                    <div class="ligne">
+                      <div class="grandit"><b class="petit">Choix obligatoire</b></div>
+                      <button class="interrupteur" :class="g.obligatoire && 'on'" @click="g.obligatoire = !g.obligatoire"></button>
+                    </div>
+                    <div>
+                      <div class="option-edition tres-petit muet" style="margin:0"><span>Option</span><span>Supplément</span><span></span></div>
+                      <template x-for="(o, oi) in g.options" :key="o.id">
+                        <div class="option-edition">
+                          <input class="saisie" x-model="o.nom" placeholder="Ex : Poisson grillé" />
+                          <input class="saisie chiffre" type="number" inputmode="decimal" step="any" x-model.number="o.prix" placeholder="0" />
+                          <button class="icone-btn" @click="supprimerOption(g, oi)" aria-label="Supprimer l’option"><svg class="ic ic-sm"><use href="#i-fermer"/></svg></button>
+                        </div>
+                      </template>
+                      <button class="lien" style="margin-top:10px" @click="ajouterOption(g)">+ Ajouter une option</button>
+                    </div>
+                  </div>
+                </template>
+                <div class="grille-2" style="margin-top:12px">
+                  <button class="btn secondaire petit" @click="ajouterGroupe('unique')">+ Choix unique</button>
+                  <button class="btn secondaire petit" @click="ajouterGroupe('multiple')">+ Suppléments</button>
+                </div>
+                <p class="tres-petit muet" style="margin-top:10px">Ex : « Accompagnement » en choix unique obligatoire, « Suppléments » en choix multiple facultatif. Le supplément s’ajoute au prix de base.</p>
+                <button class="btn danger bloc" style="margin-top:24px" x-show="brouillon.id && estGerant()" @click="supprimerProduit()">Supprimer l’article</button>
+              </div>
+              <div class="feuille-pied"><button class="btn bloc" @click="enregistrerProduit()">Enregistrer</button></div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Modifier une catégorie -->
+        <div class="feuille" x-show="feuille === 'categorie'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="brouillonCategorie">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2 x-text="brouillonCategorie.id ? 'Modifier la catégorie' : 'Nouvelle catégorie'"></h2></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps pile">
+                <label class="champ"><span>Nom</span><input x-model="brouillonCategorie.nom" placeholder="Ex : Boissons" /></label>
+                <div class="champ"><span>Couleur</span>
+                  <div class="choix-couleurs">
+                    <template x-for="c in couleurs" :key="c">
+                      <button :class="['teinte-' + c, brouillonCategorie.couleur === c && 'actif']" @click="brouillonCategorie.couleur = c" :aria-label="c"></button>
+                    </template>
+                  </div>
+                </div>
+                <button class="btn danger bloc" x-show="brouillonCategorie.id" @click="supprimerCategorie()">Supprimer la catégorie</button>
+              </div>
+              <div class="feuille-pied"><button class="btn bloc" @click="enregistrerCategorie()">Enregistrer</button></div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Modifier un vendeur -->
+        <div class="feuille" x-show="feuille === 'utilisateur'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <template x-if="brouillonUtilisateur">
+            <div style="display:contents">
+              <div class="feuille-poignee"></div>
+              <div class="feuille-tete">
+                <div class="titres"><h2 x-text="brouillonUtilisateur.id ? brouillonUtilisateur.nom : 'Nouveau vendeur'"></h2></div>
+                <button class="bouton-rond" @click="fermerFeuille()" aria-label="Fermer"><svg class="ic"><use href="#i-fermer"/></svg></button>
+              </div>
+              <div class="feuille-corps pile">
+                <label class="champ"><span>Nom et prénom</span><input x-model="brouillonUtilisateur.nom" placeholder="Ex : Moussa Traoré" /></label>
+                <label class="champ"><span>Code PIN (4 chiffres)</span><input inputmode="numeric" maxlength="4" x-model="brouillonUtilisateur.pin" placeholder="••••" style="letter-spacing:6px;font-weight:700" /></label>
+                <p class="tres-petit muet">Le vendeur utilise ce code pour se connecter sur la caisse.</p>
+                <div class="ligne carte" x-show="brouillonUtilisateur.role !== 'gerant'">
+                  <div class="grandit">
+                    <b>Peut ajouter et modifier des produits</b>
+                    <p class="tres-petit muet" x-text="brouillonUtilisateur.peutGererProduits ? 'Il voit l’onglet Produits : ajout d’articles, prix, options et stock. Il ne peut rien supprimer.' : 'Il vend uniquement : il ne peut pas toucher aux produits ni aux prix.'"></p>
+                  </div>
+                  <button class="interrupteur" :class="brouillonUtilisateur.peutGererProduits && 'on'" @click="brouillonUtilisateur.peutGererProduits = !brouillonUtilisateur.peutGererProduits"></button>
+                </div>
+              </div>
+              <div class="feuille-pied"><button class="btn bloc" @click="enregistrerUtilisateur()">Enregistrer</button></div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Compte -->
+        <div class="feuille" x-show="feuille === 'compte'" x-transition:enter="monte-enter" x-transition:enter-start="monte-start" x-transition:enter-end="monte-end" x-transition:leave="monte-leave" x-transition:leave-start="monte-end" x-transition:leave-end="monte-start">
+          <div class="feuille-poignee"></div>
+          <div class="feuille-corps" style="text-align:center;padding-top:16px">
+            <span class="avatar grand" style="margin:0 auto" :class="estGerant() && 'gerant'" x-text="initiales(utilisateur.nom)"></span>
+            <h2 style="margin-top:12px" x-text="utilisateur.nom"></h2>
+            <p class="muet" x-text="(estGerant() ? 'Gérant' : 'Vendeur') + ' · ' + d.commerce.nom"></p>
+          </div>
+          <div class="feuille-pied pile">
+            <button class="btn secondaire bloc" @click="seDeconnecter()"><svg class="ic"><use href="#i-sortie"/></svg> Changer d’utilisateur</button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Message temporaire -->
+    <div class="toast" x-show="toast" x-transition.opacity :class="toast?.type === 'erreur' && 'erreur'" x-text="toast?.texte" role="status"></div>
+  </div>
+</body>
+</html>

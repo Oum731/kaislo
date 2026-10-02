@@ -1,0 +1,307 @@
+// ------------------------------------------------------------
+// GESTION : produits, catégories, équipe, commerce, tables,
+// dépenses, clôtures, clients à crédit, remboursements, stock.
+// Chaque action vérifie les données puis appelle majDonnees().
+// ------------------------------------------------------------
+import { genId, arrondir } from '@/lib/utils/format.js';
+import { calculerCloture, caisseOuverte } from '@/lib/donnees/cloture.js';
+import { soldeClient } from '@/lib/donnees/credit.js';
+import { reinitialiserCommerce, majCompte, supprimerCommerce, telephoneDejaUtilise } from '@/lib/donnees/stockage.js';
+import { cleTelephone } from '@/lib/donnees/modeles.js';
+import { supprimerImage } from '@/lib/donnees/images.js';
+
+const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
+
+export const trancheGestion = (set, get) => ({
+  // ---------- Produits ----------
+  // Renvoie un message d'erreur, ou null si tout va bien
+  enregistrerProduit(brouillon) {
+    const b = JSON.parse(JSON.stringify(brouillon));
+    b.nom = b.nom.trim();
+    if (!b.nom) return 'Donnez un nom au produit';
+    if (!get().d.categories.some((c) => c.id === b.categorieId)) return 'Choisissez ou créez une catégorie';
+    b.prix = nombre(b.prix);
+    if (b.prix === null || b.prix < 0) return 'Indiquez un prix';
+    b.promo = nombre(b.promo);
+    if (b.promo !== null && b.promo >= b.prix) return 'Le prix promo doit être plus petit que le prix normal';
+    b.prixAchat = nombre(b.prixAchat);
+    b.stock = nombre(b.stock) || 0;
+    b.seuilAlerte = nombre(b.seuilAlerte) ?? 5;
+    for (const g of b.groupes) {
+      g.nom = g.nom.trim();
+      g.options = g.options.filter((o) => o.nom.trim());
+      if (!g.nom) return 'Chaque groupe d’options doit avoir un nom';
+      if (!g.options.length) return 'Le groupe « ' + g.nom + ' » n’a aucune option';
+      for (const o of g.options) o.prix = Number(o.prix) || 0;
+    }
+    get().majDonnees((d) =>
+      b.id
+        ? { produits: d.produits.map((p) => (p.id === b.id ? b : p)) }
+        : { produits: [...d.produits, { ...b, id: genId('p') }] }
+    );
+    get().message('Produit enregistré');
+    return null;
+  },
+
+  supprimerProduit(id) {
+    supprimerImage(get().d.produits.find((p) => p.id === id)?.image); // sa photo aussi
+    get().majDonnees((d) => ({ produits: d.produits.filter((p) => p.id !== id) }));
+    get().message('Produit supprimé');
+  },
+
+  basculerProduit(id) {
+    get().majDonnees((d) => ({ produits: d.produits.map((p) => (p.id === id ? { ...p, actif: !p.actif } : p)) }));
+  },
+
+  // ---------- Catégories ----------
+  // Gérant, et vendeurs qui ont le droit "produits". Renvoie { erreur } ou { categorie }
+  enregistrerCategorie(b) {
+    const nom = b.nom.trim();
+    if (!nom) return { erreur: 'Donnez un nom à la catégorie' };
+    if (get().d.categories.some((c) => c.nom.toLowerCase() === nom.toLowerCase() && c.id !== b.id)) {
+      return { erreur: 'Cette catégorie existe déjà' };
+    }
+    const categorie = { ...b, nom, id: b.id || genId('c') };
+    get().majDonnees((d) =>
+      b.id
+        ? { categories: d.categories.map((c) => (c.id === b.id ? categorie : c)) }
+        : { categories: [...d.categories, categorie] }
+    );
+    get().message('Catégorie « ' + nom + ' » enregistrée');
+    return { categorie };
+  },
+
+  supprimerCategorie(id) {
+    if (get().d.produits.some((p) => p.categorieId === id)) {
+      return 'Déplacez ou supprimez d’abord les produits de cette catégorie';
+    }
+    get().majDonnees((d) => ({ categories: d.categories.filter((c) => c.id !== id) }));
+    return null;
+  },
+
+  deplacerCategorie(id, sens) {
+    const cats = [...get().d.categories];
+    const i = cats.findIndex((c) => c.id === id);
+    const j = i + sens;
+    if (j < 0 || j >= cats.length) return;
+    [cats[i], cats[j]] = [cats[j], cats[i]];
+    get().majDonnees(() => ({ categories: cats }));
+  },
+
+  // ---------- Équipe ----------
+  enregistrerUtilisateur(b) {
+    const nom = b.nom.trim();
+    const pin = String(b.pin || '').trim();
+    const telephone = String(b.telephone || '').trim();
+    const { d } = get();
+    if (!nom) return 'Indiquez le nom';
+    // Le numéro de téléphone sert d'identifiant de connexion : unique dans tout Kaisly
+    if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';
+    if (telephoneDejaUtilise(telephone, (b.id || 'nouveau') + '@' + d.commerce.id)) return 'Ce numéro est déjà utilisé par un autre compte Kaisly';
+    if (!/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
+    // Un vendeur ne doit pas avoir le PIN du gérant (qui valide les annulations)
+    if (b.role !== 'gerant' && d.utilisateurs.some((u) => u.role === 'gerant' && u.pin === pin)) return 'Choisissez un code PIN différent de celui du gérant';
+    const u = { ...b, nom, pin, telephone };
+    get().majDonnees((d) =>
+      b.id
+        ? { utilisateurs: d.utilisateurs.map((x) => (x.id === b.id ? u : x)) }
+        : { utilisateurs: [...d.utilisateurs, { ...u, id: genId('u') }] }
+    );
+    get().message('Vendeur enregistré');
+    return null;
+  },
+
+  basculerUtilisateur(id) {
+    if (id === get().utilisateur.id) return get().message('Vous ne pouvez pas désactiver votre propre compte', 'erreur');
+    get().majDonnees((d) => ({ utilisateurs: d.utilisateurs.map((u) => (u.id === id ? { ...u, actif: !u.actif } : u)) }));
+  },
+
+  // ---------- Commerce ----------
+  enregistrerInfosCommerce(b) {
+    if (!b.nom.trim()) return 'Le nom du commerce est obligatoire';
+    const d = get().majDonnees((d) => ({
+      commerce: {
+        ...d.commerce,
+        nom: b.nom.trim(),
+        adresse: b.adresse,
+        ville: b.ville,
+        telephone: b.telephone,
+        piedTicket: b.piedTicket,
+        fondDeCaisse: Number(b.fondDeCaisse) || 0,
+        email: (b.email || '').trim(),
+        logo: b.logo || null, // référence de l'image (voir images.js)
+        logoSurTicket: b.logoSurTicket === true, // logo sur les reçus : seulement si demandé
+        localisation: b.localisation || null, // { lat, lng }
+      },
+    }));
+    majCompte(d.commerce);
+    get().message('Informations enregistrées');
+    return null;
+  },
+
+  enregistrerTables(tables) {
+    const propres = tables.map((t) => t.trim()).filter(Boolean);
+    if (new Set(propres).size !== propres.length) return 'Deux tables ont le même nom';
+    get().majDonnees((d) => ({ commerce: { ...d.commerce, tables: propres } }));
+    get().message('Tables enregistrées');
+    return null;
+  },
+
+  reinitialiserDemo() {
+    const d = reinitialiserCommerce(get().d.commerce.id);
+    set({ d, utilisateur: d.utilisateurs.find((u) => u.role === 'gerant'), panier: [], commandeActive: null });
+    get().message('Démo réinitialisée');
+  },
+
+  supprimerCeCommerce() {
+    supprimerCommerce(get().d.commerce.id);
+    get().changerDeCommerce();
+    get().message('Commerce supprimé');
+  },
+
+  // ---------- Dépenses ----------
+  enregistrerDepense(b) {
+    const montant = Number(b.montant);
+    if (!(montant > 0)) return 'Indiquez le montant de la dépense';
+    const x = { ...b, montant, note: (b.note || '').trim() };
+    get().majDonnees((d) =>
+      b.id
+        ? { depenses: d.depenses.map((y) => (y.id === b.id ? x : y)) }
+        : { depenses: [...d.depenses, { ...x, id: genId('d'), date: new Date().toISOString(), utilisateurNom: get().utilisateur.nom }] }
+    );
+    get().message('Dépense enregistrée');
+    return null;
+  },
+
+  supprimerDepense(id) {
+    get().majDonnees((d) => ({ depenses: d.depenses.filter((x) => x.id !== id) }));
+  },
+
+  // ---------- Journée de caisse : ouverture et fermeture ----------
+  caisseOuverte() {
+    return caisseOuverte(get().d);
+  },
+
+  // Ouverture : on compte la monnaie du matin (fond de caisse)
+  ouvrirCaisse(fondDeCaisse, note = '') {
+    if (caisseOuverte(get().d)) return get().message('La caisse est déjà ouverte', 'erreur');
+    const session = {
+      id: genId('s'),
+      ouverteLe: new Date().toISOString(),
+      ouvertePar: get().utilisateur.nom,
+      fondDeCaisse: Number(fondDeCaisse) || 0,
+      noteOuverture: note.trim(),
+      fermeLe: null,
+      fermePar: null,
+      cloture: null,
+    };
+    get().majDonnees((d) => ({ sessionsCaisse: [...(d.sessionsCaisse || []), session] }));
+    get().message('Caisse ouverte · fond de caisse ' + get().prix(session.fondDeCaisse));
+    return session;
+  },
+
+  // Calcul de la fermeture pour la journée en cours (depuis l'ouverture)
+  calculClotureEnCours() {
+    const d = get().d;
+    const session = caisseOuverte(d);
+    if (!session) return null;
+    return calculerCloture(d, new Date(session.ouverteLe), new Date(), session.fondDeCaisse);
+  },
+
+  // Fermeture : on compte les espèces, le résumé est gardé dans l'historique
+  fermerCaisse(compte, note = '') {
+    const session = caisseOuverte(get().d);
+    if (!session) return null;
+    const calcul = get().calculClotureEnCours();
+    const maintenant = new Date().toISOString();
+    const cl = {
+      id: genId('z'),
+      date: maintenant,
+      utilisateurNom: get().utilisateur.nom,
+      ouvertePar: session.ouvertePar,
+      note: note.trim(),
+      ...calcul,
+      compte: Number(compte),
+      ecart: arrondir(Number(compte) - calcul.attendu, get().devise()),
+    };
+    get().majDonnees((d) => ({
+      sessionsCaisse: d.sessionsCaisse.map((x) => (x.id === session.id ? { ...x, fermeLe: maintenant, fermePar: cl.utilisateurNom, cloture: cl } : x)),
+    }));
+    get().ouvrir('ticketCloture', { cloture: cl });
+    if (get().imprimante.connectee) get().imprimerCloture(cl);
+    return cl;
+  },
+
+  // ---------- Clients à crédit ----------
+  enregistrerClient(b) {
+    const nom = b.nom.trim();
+    if (!nom) return { erreur: 'Indiquez le nom du client' };
+    const client = { ...b, nom, telephone: (b.telephone || '').trim(), id: b.id || genId('k') };
+    get().majDonnees((d) =>
+      b.id
+        ? { clients: d.clients.map((c) => (c.id === b.id ? client : c)) }
+        : { clients: [...(d.clients || []), client] }
+    );
+    return { client };
+  },
+
+  supprimerClient(id) {
+    if (soldeClient(get().d, id) > 0) return 'Ce client doit encore de l’argent';
+    get().majDonnees((d) => ({ clients: d.clients.filter((c) => c.id !== id) }));
+    return null;
+  },
+
+  // Le client rembourse tout ou partie de son crédit
+  enregistrerRemboursement(client, montant, mode) {
+    const m = Number(montant);
+    const solde = soldeClient(get().d, client.id);
+    if (!(m > 0)) return { erreur: 'Indiquez le montant reçu' };
+    if (m > solde + 0.001) return { erreur: 'Le client ne doit que ' + get().prix(solde) };
+    const r = { id: genId('r'), date: new Date().toISOString(), clientId: client.id, montant: m, mode, utilisateurNom: get().utilisateur.nom };
+    get().majDonnees((d) => ({ remboursements: [...(d.remboursements || []), r] }));
+    const soldeApres = arrondir(solde - m, get().devise());
+    get().ouvrir('recuRemboursement', { remboursement: r, client, soldeApres });
+    if (get().imprimante.connectee) get().imprimerRemboursement(r, client, soldeApres);
+    return { remboursement: r };
+  },
+
+  // ---------- Stock ----------
+  // Arrivée de marchandise : le stock augmente, le prix d'achat peut être mis à jour
+  entreeStock({ produitId, quantite, prixAchat, fournisseur, note }) {
+    const q = Number(quantite);
+    if (!(q > 0)) return 'Indiquez la quantité reçue';
+    const p = get().d.produits.find((x) => x.id === produitId);
+    if (!p) return 'Choisissez un produit';
+    const pa = nombre(prixAchat);
+    const mouvement = {
+      id: genId('m'), date: new Date().toISOString(), produitId, produitNom: p.nom, type: 'entree',
+      quantite: q, prixAchat: pa ?? p.prixAchat, fournisseur: (fournisseur || '').trim(), note: (note || '').trim(),
+      utilisateurNom: get().utilisateur.nom,
+    };
+    get().majDonnees((d) => ({
+      produits: d.produits.map((x) => (x.id === produitId ? { ...x, suiviStock: true, stock: x.stock + q, prixAchat: pa ?? x.prixAchat } : x)),
+      mouvements: [...(d.mouvements || []), mouvement],
+    }));
+    get().message('+' + q + ' ' + p.nom);
+    return null;
+  },
+
+  // Inventaire : on compte et on corrige la quantité réelle
+  ajusterStock(produitId, quantiteReelle, note) {
+    const q = Number(quantiteReelle);
+    if (!(q >= 0)) return 'Indiquez la quantité comptée';
+    const p = get().d.produits.find((x) => x.id === produitId);
+    const ecart = q - p.stock;
+    const mouvement = {
+      id: genId('m'), date: new Date().toISOString(), produitId, produitNom: p.nom, type: 'ajustement',
+      quantite: ecart, prixAchat: p.prixAchat, fournisseur: '', note: (note || '').trim() || 'Inventaire',
+      utilisateurNom: get().utilisateur.nom,
+    };
+    get().majDonnees((d) => ({
+      produits: d.produits.map((x) => (x.id === produitId ? { ...x, suiviStock: true, stock: q } : x)),
+      mouvements: [...(d.mouvements || []), mouvement],
+    }));
+    get().message('Stock corrigé : ' + p.nom + ' = ' + q);
+    return null;
+  },
+});

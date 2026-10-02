@@ -1,0 +1,35 @@
+// ------------------------------------------------------------
+// Modèle commun des pages "Caisse pour restaurant" et
+// "Caisse pour épicerie" (même structure, contenus différents)
+// ------------------------------------------------------------
+import { EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel } from './Site';
+
+export default function PageMetier({ c }) {
+  return (
+    <div className="site">
+      <EnTeteSite />
+      <main>
+        <Hero titre={c.titre} chapo={c.chapo} lienDemo={c.lienDemo} garanties={c.garanties} capture={c.capture} captureMobile={c.captureMobile} />
+        <section className="section">
+          <div className="site-largeur">
+            <span className="etiquette">{c.etiquette}</span>
+            <h2>{c.titreFonctions}</h2>
+            <p className="chapo">{c.chapoFonctions}</p>
+            {(c.lignes || []).map((l, i) => <FonctionLigne key={l.titre} {...l} inverse={i % 2 === 1} />)}
+            <ListeFonctions fonctions={c.fonctions} />
+          </div>
+        </section>
+        <section className="section claire">
+          <div className="site-largeur">
+            <span className="etiquette">Questions fréquentes</span>
+            <h2>{c.titreFaq}</h2>
+            <Faq questions={c.questions} />
+          </div>
+        </section>
+        <AppelFinal titre={c.titreFinal} texte={c.texteFinal} lienDemo={c.lienDemo} />
+      </main>
+      <PiedSite />
+      <DonneesLogiciel description={c.description} />
+    </div>
+  );
+}

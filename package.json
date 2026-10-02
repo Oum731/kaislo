@@ -1,0 +1,20 @@
+{
+  "name": "kaisly",
+  "private": true,
+  "version": "0.2.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "npx serve out",
+    "icones": "node scripts/generer-icones.mjs",
+    "partager": "node scripts/partager.mjs",
+    "arreter-partage": "node scripts/arreter-partage.mjs",
+    "publier-github": "node scripts/publier-github.mjs"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.8"
+  }
+}

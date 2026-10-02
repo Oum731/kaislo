@@ -1,0 +1,17 @@
+// ------------------------------------------------------------
+// Configuration Next.js
+// output: 'export' => "npm run build" produit un dossier out/ avec
+// uniquement des fichiers HTML/CSS/JS. Il suffit de l'envoyer sur
+// Hostinger (pas besoin de Node sur le serveur), et ce même dossier
+// servira plus tard à l'application mobile (Capacitor).
+// ------------------------------------------------------------
+const nextConfig = {
+  output: 'export',
+  trailingSlash: true, // /caisse-epicerie/ -> /caisse-epicerie/index.html (Hostinger)
+  images: { unoptimized: true },
+  reactStrictMode: true,
+  // Version de test GitHub Pages : le site vit dans /kaisly (voir npm run publier-github)
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
+};
+
+export default nextConfig;
