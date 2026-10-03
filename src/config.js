@@ -9,7 +9,7 @@ export const SITE_URL = 'https://kaislo.com';
 // Google Search Console → Ajouter une propriété → balise HTML : coller ici le code « content » (sinon laisser vide)
 export const GOOGLE_VERIFICATION = '';
 
-// Sous-dossier du site : vide sur Hostinger, "/kaisly" pour la version de test
+// Sous-dossier du site : vide sur Hostinger, "/kaislo" pour la version de test
 // sur GitHub Pages (fixé au moment du build par NEXT_PUBLIC_BASE_PATH).
 // Les <Link> de Next l'ajoutent tout seuls ; pour les images et fichiers
 // de public/, utiliser chemin('/captures/…').

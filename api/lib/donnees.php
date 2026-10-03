@@ -12,7 +12,7 @@
 // ------------------------------------------------------------
 
 // Types acceptés. « reglages » = réglages du commerce (un seul élément, id « commerce »).
-const TYPES_ELEMENTS = ['reglages', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements', 'images'];
+const TYPES_ELEMENTS = ['reglages', 'postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements', 'images'];
 const TAILLE_MAX_ELEMENT = 400000; // octets (une photo réduite fait environ 40 à 80 Ko)
 const ELEMENTS_PAR_ENVOI = 500;
 const ELEMENTS_PAR_PAGE = 2000;
@@ -60,6 +60,7 @@ function routeDonneesLire(): never
         'ok' => true, 'heure' => $heure, 'suite' => $suite, 'elements' => $elements,
         'commerce' => versCommerce($commerce), 'utilisateurs' => equipe($u['commerce_id']), 'moi' => versUtilisateur($u),
         'messagesNonLus' => messagesNonLus($u['commerce_id']), // réponses de l'équipe Amorac pas encore lues
+        'tarif' => tarifCommerce($commerce), // formule, postes et prix de l'abonnement
     ]);
 }
 
@@ -143,7 +144,7 @@ function enregistrerElement(array $u, array $e): ?string
 function droitManquant(array $u, string $type, bool $supprime, ?array $existant, ?array $contenu): ?string
 {
     if ($u['role'] === 'gerant') return null;
-    if ($type === 'reglages') return 'réservé au gérant';
+    if ($type === 'reglages' || $type === 'postes') return 'réservé au gérant';
     $produits = in_array($type, ['produits', 'categories'], true);
     if ($produits && $u['peut_gerer_produits']) return null;
     if ($supprime) return $type === 'commandes' ? null : 'suppression réservée au gérant';

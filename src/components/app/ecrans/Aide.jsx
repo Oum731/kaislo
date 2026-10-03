@@ -36,7 +36,7 @@ export default function Aide() {
   );
 }
 
-function Messagerie() {
+export function Messagerie() {
   const s = useKaislo();
   const [messages, setMessages] = useState(null);
   const [texte, setTexte] = useState('');

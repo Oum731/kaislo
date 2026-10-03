@@ -36,6 +36,8 @@ const SECTIONS = [
           <tr><th>Utilisateurs</th><td>Nom, numéro de téléphone, rôle et droits, code PIN (enregistré sous forme chiffrée dans la version en ligne), dates de connexion.</td></tr>
           <tr><th>Activité</th><td>Articles, prix, ventes, tickets, remises, dépenses, stock, journées de caisse, vendeur ayant fait chaque opération.</td></tr>
           <tr><th>Clients du commerce</th><td>Nom, téléphone, note, achats à crédit et remboursements ; numéro du client pour l’envoi du ticket par WhatsApp.</td></tr>
+          <tr><th>Visiteurs du site</th><td>Nom, numéro WhatsApp ou e-mail et message laissés avec la bulle « Discuter avec nous », pour vous répondre. Supprimés sur simple demande.</td></tr>
+          <tr><th>Commerciaux Kaislo</th><td>Nom, téléphone, e-mail, code parrain et commissions des commerciaux. Un commercial voit seulement le nom, l’activité, la ville et l’état d’abonnement des commerces inscrits avec son code : jamais leurs ventes ni leurs clients.</td></tr>
           <tr><th>Messages</th><td>Messages échangés avec l’équipe Kaislo depuis l’écran Aide (nom de l’auteur, date, lecture). L’équipe est prévenue par e-mail de chaque nouveau message.</td></tr>
           <tr><th>Abonnement</th><td>Offre, dates, montants et références de paiement. Les numéros de carte sont saisis chez le prestataire de paiement et ne nous sont jamais transmis.</td></tr>
           <tr><th>Technique</th><td>Type d’appareil et de navigateur, journaux de connexion et d’erreurs, adresse IP (sécurité et lutte contre la fraude).</td></tr>

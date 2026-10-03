@@ -1,6 +1,6 @@
 'use client';
 // ------------------------------------------------------------
-// RÉGLAGES (gérant) : équipe et droits, commerce, tables, imprimante
+// RÉGLAGES (gérant) : équipe et droits, postes, commerce, tables, imprimante
 // ------------------------------------------------------------
 import { useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
@@ -8,7 +8,9 @@ import { typeCommerce, paysParId } from '@/lib/donnees/modeles';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { exporterTout, exporterVentesCsv } from '@/lib/donnees/export';
 import { NOMS_DEVISES, formatDate } from '@/lib/utils/format';
-import { etatAbonnement, LIBELLES_STATUT, OFFRES_DEFAUT } from '@/lib/donnees/abonnement';
+import AbonnementCommerce from './Abonnement';
+import Postes from './Postes';
+import { posteParId } from '@/lib/donnees/postes';
 import { Icone, Segment, Interrupteur, Avatar, ApercuTicket, Reglage, ChampMontant, ChoixImage, ImageStockee } from '@/components/ui';
 import { EnTete } from '../EnTete';
 
@@ -17,7 +19,7 @@ export default function Reglages() {
   const { d } = s;
   const [onglet, setOnglet] = useState('equipe');
   const avecTables = typeCommerce(d.commerce.type).tables || d.commerce.tables.length > 0;
-  const options = [['equipe', 'Équipe'], ['commerce', 'Profil'], ...(avecTables ? [['tables', 'Tables']] : []), ['imprimante', 'Imprimante']];
+  const options = [['equipe', 'Équipe'], ['postes', 'Postes'], ['commerce', 'Profil'], ...(avecTables ? [['tables', 'Tables']] : []), ['imprimante', 'Imprimante']];
 
   return (
     <>
@@ -26,6 +28,7 @@ export default function Reglages() {
         <Segment options={options} valeur={onglet} surChanger={setOnglet} />
         <div style={{ marginTop: 18 }}>
           {onglet === 'equipe' && <Equipe />}
+          {onglet === 'postes' && <Postes />}
           {onglet === 'commerce' && <InfosCommerce />}
           {onglet === 'tables' && <ConfigTables />}
           {onglet === 'imprimante' && <BlocImprimante />}
@@ -55,6 +58,7 @@ function Equipe() {
               <span className="ligne" style={{ gap: 6, flexWrap: 'wrap' }}>
                 <b className="tronque">{u.nom}</b>
                 <span className={`badge ${u.role === 'gerant' ? 'safran' : 'gris'}`}>{u.role === 'gerant' ? 'Gérant' : 'Vendeur'}</span>
+                {u.role !== 'gerant' && <span className="badge gris">Poste : {posteParId(d, u.posteId).nom}</span>}
                 {u.role !== 'gerant' && u.peutGererProduits && <span className="badge">+ Produits</span>}
                 {u.role !== 'gerant' && u.peutFaireRemises && <span className="badge">+ Remises</span>}
               </span>
@@ -210,30 +214,6 @@ function InfosCommerce() {
           <button className="btn danger bloc" onClick={() => confirm('Supprimer définitivement « ' + d.commerce.nom + ' » et toutes ses ventes de cet appareil ?') && s.supprimerCeCommerce()}>Supprimer ce commerce</button>
         )}
       </div>
-    </div>
-  );
-}
-
-// Abonnement du commerce (géré par l'équipe Amorac)
-function AbonnementCommerce() {
-  const s = useKaislo();
-  const ab = s.d.commerce.abonnement;
-  const etat = etatAbonnement(ab);
-  const offre = OFFRES_DEFAUT.find((o) => o.id === ab?.offre);
-  const classe = { essai: 'safran', actif: '', expire: 'rouge', suspendu: 'rouge' }[etat.statut];
-  return (
-    <div className="ligne espace" style={{ padding: '12px 0', borderTop: '1px solid var(--bordure)', borderBottom: '1px solid var(--bordure)' }}>
-      <div>
-        <p className="petit muet">Abonnement</p>
-        <b>{offre?.nom || 'Kaislo'}</b>
-        {etat.fin && (
-          <p className="tres-petit muet">
-            {etat.statut === 'expire' ? 'Terminé le ' : etat.statut === 'essai' ? 'Essai jusqu’au ' : 'Prochaine échéance le '}
-            {formatDate(etat.fin)}{etat.joursRestants > 0 ? ' (' + etat.joursRestants + ' j)' : ''}
-          </p>
-        )}
-      </div>
-      <span className={`badge ${classe}`}>{LIBELLES_STATUT[etat.statut]}</span>
     </div>
   );
 }

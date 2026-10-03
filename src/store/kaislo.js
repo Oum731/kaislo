@@ -13,8 +13,7 @@
 //   synchro.js    : envoi / réception des données (commerces inscrits en ligne)
 // ------------------------------------------------------------
 import { create } from 'zustand';
-import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo, migrerAncienNom } from '@/lib/donnees/stockage.js';
-import { copierAnciennesImages } from '@/lib/donnees/images.js';
+import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo } from '@/lib/donnees/stockage.js';
 import { PAYS, paysDuNavigateur } from '@/lib/donnees/modeles.js';
 import { formatPrix, formatNombre } from '@/lib/utils/format.js';
 import { trancheSession } from './session.js';
@@ -48,14 +47,16 @@ const trancheCommune = (set, get) => ({
   // Appelé une seule fois au démarrage, dans le navigateur
   demarrer() {
     if (get().pret) return;
-    migrerAncienNom(); // données de l'ancien nom (Kaisly) reprises sous Kaislo
-    copierAnciennesImages();
     set({ prefs: chargerPreferences() });
+    // Identifiant de cet appareil (sert à savoir quel appareil a fait une vente, pour l'impression au poste)
+    if (!get().prefs.appareilId) get().sauverPrefs({ appareilId: 'app' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) });
     get().initImprimante();
     // Liens directs depuis le site :
     //   /app?demo=resto-ivoire&pays=CI   (pays facultatif : devise, ville, paiements)
     //   /app?inscription=1
     const params = new URLSearchParams(window.location.search);
+    // Lien d'un commercial Kaislo : /app/?ref=CODE (code repris à l'inscription)
+    if (params.get('ref')) get().sauverPrefs({ codeParrain: params.get('ref').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) });
     if (!get().prefs.paysDemo) get().choisirPaysDemo(paysDuNavigateur());
     if (params.get('pays') && PAYS.some((p) => p.id === params.get('pays'))) get().choisirPaysDemo(params.get('pays'));
     const demo = params.get('demo');

@@ -12,6 +12,8 @@ import { appelApi } from '@/lib/api.js';
 import { cleTelephone } from '@/lib/donnees/modeles.js';
 import { normaliserTelephone } from '@/lib/donnees/telephone.js';
 import { supprimerImage } from '@/lib/donnees/images.js';
+import { postesDe, postePlein, vendeursDuPoste } from '@/lib/donnees/postes.js';
+import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs.js';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
 
@@ -100,13 +102,16 @@ export const trancheGestion = (set, get) => ({
     const telephone = String(b.telephone || '').trim();
     const { d } = get();
     if (!nom) return 'Indiquez le nom';
+    // Poste du vendeur : 5 vendeurs actifs au maximum par poste (le gérant ne compte pas)
+    const posteId = b.role === 'gerant' ? undefined : b.posteId || postesDe(d)[0].id;
+    if (posteId && b.actif !== false && postePlein(d, posteId, b.id)) return 'Ce poste a déjà ' + VENDEURS_PAR_POSTE + ' vendeurs : créez un autre poste (Réglages → Postes) ou choisissez-en un autre';
     if (estServeur(d)) {
       // Numéro au format international du pays du commerce (le serveur vérifie qu'il est unique)
       const numero = normaliserTelephone(telephone, d.commerce.pays);
       if (!numero.ok) return numero.erreur;
       // Modification d'un vendeur : PIN vide = inchangé
       if ((!b.id || pin) && !/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
-      return get().equipeServeur({ id: b.id || undefined, nom, telephone: numero.affichage, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises }, 'Vendeur enregistré');
+      return get().equipeServeur({ id: b.id || undefined, nom, telephone: numero.affichage, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises, posteId }, 'Vendeur enregistré');
     }
     // Le numéro de téléphone sert d'identifiant de connexion : unique dans tout Kaislo
     if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';
@@ -114,7 +119,7 @@ export const trancheGestion = (set, get) => ({
     if (!/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
     // Un vendeur ne doit pas avoir le PIN du gérant (qui valide les annulations)
     if (b.role !== 'gerant' && d.utilisateurs.some((u) => u.role === 'gerant' && u.pin === pin)) return 'Choisissez un code PIN différent de celui du gérant';
-    const u = { ...b, nom, pin, telephone };
+    const u = { ...b, nom, pin, telephone, ...(posteId ? { posteId } : {}) };
     get().majDonnees((d) =>
       b.id
         ? { utilisateurs: d.utilisateurs.map((x) => (x.id === b.id ? u : x)) }
@@ -128,11 +133,44 @@ export const trancheGestion = (set, get) => ({
     if (id === get().utilisateur.id) return get().message('Vous ne pouvez pas désactiver votre propre compte', 'erreur');
     const u = get().d.utilisateurs.find((x) => x.id === id);
     if (estServeur(get().d)) {
-      const erreur = await get().equipeServeur({ id, nom: u.nom, telephone: u.telephone, actif: !u.actif, peutGererProduits: !!u.peutGererProduits, peutFaireRemises: !!u.peutFaireRemises }, u.actif ? 'Compte désactivé : ses appareils sont déconnectés' : 'Compte réactivé');
+      const erreur = await get().equipeServeur({ id, nom: u.nom, telephone: u.telephone, actif: !u.actif, peutGererProduits: !!u.peutGererProduits, peutFaireRemises: !!u.peutFaireRemises, posteId: u.posteId }, u.actif ? 'Compte désactivé : ses appareils sont déconnectés' : 'Compte réactivé');
       if (erreur) get().message(erreur, 'erreur');
       return;
     }
+    if (!u.actif && u.role !== 'gerant' && postePlein(get().d, u.posteId || 'principal', u.id)) return get().message('Son poste a déjà ' + VENDEURS_PAR_POSTE + ' vendeurs : changez-le de poste avant de le réactiver', 'erreur');
     get().majDonnees((d) => ({ utilisateurs: d.utilisateurs.map((x) => (x.id === id ? { ...x, actif: !x.actif } : x)) }));
+  },
+
+  // ---------- Postes (points d'impression) ----------
+  // Renvoie un message d'erreur, ou null
+  enregistrerPoste(b) {
+    const nom = (b.nom || '').trim();
+    if (!nom) return 'Donnez un nom au poste (ex : Comptoir, Terrasse, Caisse 2)';
+    const actuels = postesDe(get().d);
+    if (actuels.some((p) => p.id !== b.id && p.nom.toLowerCase() === nom.toLowerCase())) return 'Un poste porte déjà ce nom';
+    get().majDonnees((d) => {
+      const liste = d.postes?.length ? d.postes : actuels; // le poste principal devient un vrai poste au premier changement
+      return { postes: b.id ? liste.map((p) => (p.id === b.id ? { ...p, nom } : p)) : [...liste, { id: genId('poste'), nom }] };
+    });
+    get().message(b.id ? 'Poste renommé' : 'Poste « ' + nom + ' » créé');
+    return null;
+  },
+
+  supprimerPoste(id) {
+    const { d } = get();
+    if (postesDe(d).length <= 1) return 'Il faut au moins un poste';
+    if (vendeursDuPoste(d, id).length) return 'Des vendeurs sont affectés à ce poste : changez-les de poste d’abord';
+    get().majDonnees((x) => ({ postes: postesDe(x).filter((p) => p.id !== id) }));
+    if (get().prefs.posteAppareil === id) get().sauverPrefs({ posteAppareil: null });
+    get().message('Poste supprimé');
+    return null;
+  },
+
+  // Cet appareil (relié à l'imprimante) devient le poste choisi : il imprimera les tickets de ses vendeurs
+  definirPosteAppareil(posteId) {
+    get().sauverPrefs({ posteAppareil: posteId || null });
+    get().message(posteId ? 'Cet appareil imprime les tickets du poste' : 'Cet appareil n’est plus un poste d’impression');
+    if (posteId) get().synchroniser?.();
   },
 
   // Envoie un vendeur au serveur et met à jour l'équipe de l'appareil (pas de file d'attente : internet obligatoire)

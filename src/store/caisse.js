@@ -8,6 +8,7 @@ import { CREDIT } from '@/lib/donnees/modeles.js';
 import { arrondir, genId } from '@/lib/utils/format.js';
 import { estServeur } from '@/lib/donnees/synchro.js';
 import { appelApi } from '@/lib/api.js';
+import { posteDuTicket } from '@/lib/donnees/postes.js';
 
 export const trancheCaisse = (set, get) => ({
   panier: [], // lignes en cours
@@ -99,6 +100,9 @@ export const trancheCaisse = (set, get) => ({
       date: new Date().toISOString(),
       vendeurId: utilisateur.id,
       vendeurNom: utilisateur.nom,
+      // Poste dont l'imprimante sort le ticket, et appareil qui a fait la vente
+      posteId: posteDuTicket(d0, utilisateur, get().prefs.posteAppareil) || undefined,
+      appareil: get().prefs.appareilId,
       paiement,
       recu: paiement === 'Espèces' && recu > 0 ? recu : 0,
       clientId: client?.id || null,
@@ -218,8 +222,13 @@ export const trancheCaisse = (set, get) => ({
     if (!commande) return;
     const nouvelles = get().panier.filter((l) => !l.envoyee);
     const lignes = get().panier.map((l) => ({ ...l, envoyee: true }));
+    // Envoi noté sur la commande : le poste du serveur l'imprime s'il n'est pas sur cet appareil
+    const envoi = nouvelles.length ? {
+      id: genId('cu'), le: new Date().toISOString(), lignes: nouvelles.map(({ envoyee, ...l }) => l),
+      posteId: posteDuTicket(get().d, get().utilisateur, get().prefs.posteAppareil) || undefined, appareil: get().prefs.appareilId,
+    } : null;
     get().majDonnees((d) => ({
-      commandes: d.commandes.map((c) => (c.id === commande.id ? { ...c, lignes } : c)),
+      commandes: d.commandes.map((c) => (c.id === commande.id ? { ...c, lignes, ...(envoi ? { envoisCuisine: [...(c.envoisCuisine || []), envoi].slice(-10) } : {}) } : c)),
     }));
     set({ panier: [], commandeActive: null, remise: null });
     if (nouvelles.length) {

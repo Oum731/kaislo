@@ -36,6 +36,7 @@ const SECTIONS = [
           <tr><td>kaislo-images</td><td>Photos des articles et logo, pour un affichage rapide.</td><td>Jusqu’à suppression</td></tr>
           <tr><td>kaislo-v… (cache)</td><td>Copie de l’application pour qu’elle s’ouvre vite et hors connexion.</td><td>Remplacée à chaque mise à jour</td></tr>
           <tr><td>kaislo:admin-jeton</td><td>Session de l’espace Amorac (équipe Amorac uniquement).</td><td>Fermeture de l’onglet</td></tr>
+          <tr><td>kaislo:commercial-jeton</td><td>Session de l’espace des commerciaux Kaislo.</td><td>30 jours, ou « Sortir »</td></tr>
         </tbody>
       </table>
     ),

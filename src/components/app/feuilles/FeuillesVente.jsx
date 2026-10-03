@@ -110,9 +110,15 @@ export function FeuilleTicket({ vente, nouvelle }) {
       pleine
       pied={
         <div className="grille-2">
-          <button className="btn secondaire" onClick={() => s.imprimerVente(vente)} disabled={s.impressionEnCours}>
-            <Icone nom="imprimante" /> {s.impressionEnCours ? 'Impression…' : 'Imprimer'}
-          </button>
+          {s.doitEnvoyerAuPoste(vente) ? (
+            <button className="btn secondaire" onClick={() => s.envoyerAuPoste(vente)}>
+              <Icone nom="imprimante" /> <span className="tronque">Imprimer au poste « {s.nomPoste(vente.posteId)} »</span>
+            </button>
+          ) : (
+            <button className="btn secondaire" onClick={() => s.imprimerVente(vente)} disabled={s.impressionEnCours}>
+              <Icone nom="imprimante" /> {s.impressionEnCours ? 'Impression…' : 'Imprimer'}
+            </button>
+          )}
           <button className="btn" onClick={s.fermer}>{nouvelle ? 'Nouvelle vente' : 'Fermer'}</button>
         </div>
       }

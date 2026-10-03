@@ -12,6 +12,9 @@
 //   POST /api/utilisateurs  vendeurs (gérant) · POST /api/verifier-gerant (annulation)
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
 //   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
+//   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
+//   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
+//   /api/commercial/...     espace des commerciaux Kaislo (voir lib/commerciaux.php)
 //   /api/admin/...          espace Amorac : commerces, abonnements, offres, équipe (voir lib/admin.php)
 //
 // Réponses en JSON : { ok: true, ... } ou { ok: false, erreur: "message" }.
@@ -28,6 +31,9 @@ require __DIR__ . '/lib/equipe.php';
 require __DIR__ . '/lib/biometrie.php';
 require __DIR__ . '/lib/messages.php';
 require __DIR__ . '/lib/admin.php';
+require __DIR__ . '/lib/contact.php';
+require __DIR__ . '/lib/tarifs.php';
+require __DIR__ . '/lib/commerciaux.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -57,6 +63,9 @@ try {
         'POST /biometrie/connexion' => routeBiometrieConnexion(),
         'GET /messages' => routeMessagesLire(),
         'POST /messages' => routeMessagesEcrire(),
+        'POST /contact' => routeContact(),
+        'GET /admin/contacts' => routeAdminContacts(),
+        'POST /admin/contact' => routeAdminContact(),
         'GET /admin/etat' => routeAdminEtat(),
         'POST /admin/installer' => routeAdminInstaller(),
         'POST /admin/connexion' => routeAdminConnexion(),
@@ -66,7 +75,17 @@ try {
         'GET /admin/commerce' => routeAdminCommerce(),
         'POST /admin/commerce' => routeAdminActionCommerce(),
         'POST /admin/paiement' => routeAdminPaiement(),
-        'POST /admin/offres' => routeAdminOffres(),
+        'POST /admin/tarifs' => routeAdminTarifs(),
+        'GET /admin/commerciaux' => routeAdminCommerciaux(),
+        'GET /admin/commercial' => routeAdminCommercial(),
+        'POST /admin/commercial' => routeAdminCommercialEnregistrer(),
+        'POST /admin/commissions' => routeAdminCommissions(),
+        'POST /admin/programme' => routeAdminProgramme(),
+        'GET /tarifs' => routeTarifs(),
+        'POST /commercial/connexion' => routeCommercialConnexion(),
+        'GET /commercial/moi' => routeCommercialMoi(),
+        'POST /commercial/pin' => routeCommercialPin(),
+        'POST /commercial/deconnexion' => routeCommercialDeconnexion(),
         'GET /admin/equipe' => routeAdminEquipe(),
         'POST /admin/equipe' => routeAdminEquipeEnregistrer(),
         'GET /admin/conversations' => routeAdminConversations(),
@@ -89,12 +108,12 @@ function routeSante(): never
     $c = config();
     if (!$c['trouve']) throw new ErreurApi('Fichier .env introuvable sur le serveur', 500);
     base(); // connexion + création des tables si besoin
-    $version = (int) requete('SELECT MAX(version) AS v FROM kaisly_version')->fetch()['v'];
+    $version = (int) requete('SELECT MAX(version) AS v FROM kaislo_version')->fetch()['v'];
     repondre(['ok' => true, 'service' => 'Kaislo API', 'base' => $c['driver'], 'versionBase' => $version, 'heure' => maintenant()]);
 }
 
 // ---------- POST /api/inscription ----------
-// { commerce: { nom, type, pays, ville, telephone }, gerant: { nom, telephone, pin }, conditionsAcceptees: true, appareil }
+// { commerce: { nom, type, pays, ville, telephone }, gerant: { nom, telephone, pin }, codeParrain, conditionsAcceptees: true, appareil }
 function routeInscription(): never
 {
     $e = entree();
@@ -120,6 +139,8 @@ function routeInscription(): never
     $pin = (string) ($gerant['pin'] ?? '');
     if (!preg_match('/^\d{4}$/', $pin)) throw new ErreurApi('Le code PIN doit contenir 4 chiffres');
     if (($e['conditionsAcceptees'] ?? false) !== true) throw new ErreurApi('Merci d’accepter les conditions d’utilisation');
+    // Code parrain du commercial Kaislo qui a présenté l'application (facultatif)
+    $commercial = commercialParCode((string) ($e['codeParrain'] ?? ''));
 
     if (numeroPrisAilleurs($cle, null)) {
         noterEchec($cleIp, 20);
@@ -137,10 +158,10 @@ function routeInscription(): never
         // Code du commerce : 6 chiffres, unique
         do { $code = (string) random_int(100000, 999999); } while (requete('SELECT 1 FROM commerces WHERE code = ?', [$code])->fetch());
         $idCommerce = nouvelId('com');
-        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)', [
             $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $numCommerce['affichage'], $numCommerce['cle'],
-            'essai', 'essai', maintenant(DUREE_ESSAI_JOURS * 86400), null, maintenant(), maintenant(), maintenant(),
+            'essai', 'essai', maintenant(DUREE_ESSAI_JOURS * 86400), null, maintenant(), maintenant(), maintenant(), $commercial['id'] ?? null,
         ]);
         $utilisateur = [
             'id' => nouvelId('u'), 'commerce_id' => $idCommerce, 'nom' => $nomGerant, 'telephone' => $telGerant,
@@ -151,7 +172,7 @@ function routeInscription(): never
             $utilisateur['id'], $idCommerce, $nomGerant, $telGerant, $cle, password_hash($pin, PASSWORD_DEFAULT), 'gerant', maintenant(), maintenant(),
         ]);
         $jeton = creerJeton($utilisateur, (string) ($e['appareil'] ?? ''));
-        journaliser($idCommerce, $utilisateur['id'], 'inscription', ['commerce' => $nom, 'pays' => $pays]);
+        journaliser($idCommerce, $utilisateur['id'], 'inscription', ['commerce' => $nom, 'pays' => $pays, 'parrain' => $commercial['code'] ?? null]);
         $pdo->commit();
         noterEchec($cleIp, 10); // au-delà de 10 inscriptions d'affilée depuis la même adresse : pause de 15 min
     } catch (Throwable $err) {

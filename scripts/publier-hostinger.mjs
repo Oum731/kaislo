@@ -7,7 +7,7 @@
 //   3. envoie le tout sur la branche « hostinger » de GitHub
 //
 // Sur Hostinger (une seule fois) : hPanel → Sites web → Gérer → Avancé → GIT
-//   dépôt https://github.com/Oum731/kaisly.git, branche « hostinger », dossier vide (public_html).
+//   dépôt https://github.com/Oum731/kaislo.git, branche « hostinger », dossier vide (public_html).
 //   Puis « Déployer » après chaque publication, ou le déploiement automatique (webhook GitHub).
 // Le fichier .env (accès à la base) n'est JAMAIS publié : il se crée sur le serveur,
 // dans le dossier au-dessus de public_html (voir README).
@@ -17,7 +17,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const DEPOT = 'https://github.com/Oum731/kaisly.git';
+// Dépôt lu dans git (« origin ») : marche avant et après le renommage du dépôt sur GitHub
+const DEPOT = execSync('git remote get-url origin').toString().trim();
 const BRANCHE = 'hostinger';
 const lancer = (cmd, options = {}) => execSync(cmd, { stdio: 'inherit', ...options });
 const essayer = (cmd, options = {}) => { try { execSync(cmd, { stdio: 'ignore', ...options }); return true; } catch { return false; } };

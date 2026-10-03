@@ -10,7 +10,7 @@ const PAYS = [
     'NE' => 'FCFA', 'GN' => 'GNF', 'CM' => 'FCFA', 'GA' => 'FCFA', 'CG' => 'FCFA', 'FR' => 'EUR', 'BE' => 'EUR',
     'CA' => 'CAD', 'XX' => 'USD',
 ];
-const TYPES_COMMERCE = ['restaurant', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'pharmacie', 'beaute', 'telephonie', 'librairie', 'autre'];
+const TYPES_COMMERCE = ['restaurant', 'maquis', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'pharmacie', 'beaute', 'telephonie', 'librairie', 'autre'];
 const DUREE_ESSAI_JOURS = 30;
 const DUREE_JETON_JOURS = 90;   // un appareil reste connecté 90 jours sans utilisation
 const ESSAIS_AVANT_BLOCAGE = 5; // codes faux autorisés…
@@ -29,8 +29,18 @@ function repondre(array $donnees, int $statut = 200): never
 {
     http_response_code($statut);
     echo json_encode($donnees, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    // La réponse part tout de suite ; les tâches lentes (e-mails) se font ensuite
+    if ($GLOBALS['tachesApresReponse'] ?? []) {
+        if (function_exists('litespeed_finish_request')) litespeed_finish_request(); // Hostinger (LiteSpeed)
+        elseif (function_exists('fastcgi_finish_request')) fastcgi_finish_request(); // PHP-FPM
+        foreach ($GLOBALS['tachesApresReponse'] as $tache) { try { $tache(); } catch (Throwable) { /* un e-mail raté ne bloque rien */ } }
+    }
     exit;
 }
+
+// Tâches à faire après l'envoi de la réponse (voir repondre)
+$GLOBALS['tachesApresReponse'] = [];
+function apresReponse(callable $tache): void { $GLOBALS['tachesApresReponse'][] = $tache; }
 
 // Corps JSON de la demande
 function entree(): array
@@ -128,7 +138,7 @@ function jetonRecu(): ?string
     // Apache sur Hostinger peut masquer « Authorization » : l'en-tête X-Kaislo-Jeton sert de secours
     $entete = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
     if (preg_match('/^Bearer\s+([a-f0-9]{64})$/i', $entete, $m)) return strtolower($m[1]);
-    $secours = $_SERVER['HTTP_X_KAISLO_JETON'] ?? $_SERVER['HTTP_X_KAISLY_JETON'] ?? ''; // (ancien nom accepté)
+    $secours = $_SERVER['HTTP_X_KAISLO_JETON'] ?? '';
     return preg_match('/^[a-f0-9]{64}$/i', $secours) ? strtolower($secours) : null;
 }
 
@@ -154,6 +164,7 @@ function versUtilisateur(array $u): array
         'id' => $u['id'], 'commerceId' => $u['commerce_id'], 'nom' => $u['nom'], 'telephone' => $u['telephone'],
         'role' => $u['role'], 'actif' => (bool) $u['actif'],
         'peutGererProduits' => (bool) $u['peut_gerer_produits'], 'peutFaireRemises' => (bool) $u['peut_faire_remises'],
+        'posteId' => $u['role'] === 'gerant' ? null : ($u['poste_id'] ?? null ?: 'principal'),
     ];
 }
 

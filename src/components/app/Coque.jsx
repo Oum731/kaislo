@@ -15,7 +15,9 @@ import Ventes from './ecrans/Ventes';
 import Clients from './ecrans/Clients';
 import Produits from './ecrans/Produits';
 import Stock from './ecrans/Stock';
-import Aide from './ecrans/Aide';
+import Aide, { Messagerie } from './ecrans/Aide';
+import BulleChat from '@/components/BulleChat';
+import { estServeur } from '@/lib/donnees/synchro';
 import Reglages, { BlocImprimante } from './ecrans/Reglages';
 import Feuilles from './feuilles/Feuilles';
 import { EnTete } from './EnTete';
@@ -86,6 +88,11 @@ export default function Coque() {
       <main className="principal">
         <Ecran />
       </main>
+      {s.ecran !== 'aide' && (
+        <div className={['caisse', 'tables'].includes(s.ecran) ? 'cache-mobile' : ''}>
+          <BulleChat position="app" nonLus={s.messagesNonLus} messagerie={estServeur(s.d) ? <Messagerie /> : null} />
+        </div>
+      )}
       <Feuilles />
     </div>
   );

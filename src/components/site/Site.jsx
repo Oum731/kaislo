@@ -9,6 +9,7 @@ import { Icone } from '@/components/ui';
 import MenuMobile from './MenuMobile';
 import { CONTACT_EMAIL, CONTACT_WHATSAPP, SITE_URL, chemin } from '@/config';
 import Marque from '@/components/Marque';
+import BulleChat from '@/components/BulleChat';
 import { ACTIVITES } from './activites';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
@@ -25,6 +26,7 @@ const LIENS_SITE = [
   ['/caisse-epicerie/', 'Épiceries'],
   ['/gestion-stock/', 'Stock'],
   ['/#fonctions', 'Fonctions'],
+  ['/tarifs/', 'Tarifs'],
   ['/tutoriels/', 'Tutoriels'],
   ['/#questions', 'Questions'],
 ];
@@ -58,6 +60,7 @@ export const PAGES_LEGALES = [
 
 export function PiedSite() {
   return (
+    <>
     <footer className="site-pied">
       <div className="site-largeur">
         <div className="colonnes">
@@ -70,6 +73,8 @@ export function PiedSite() {
             <Link href="/caisse-restaurant/">Caisse pour restaurant</Link>
             <Link href="/caisse-epicerie/">Caisse pour épicerie</Link>
             <Link href="/gestion-stock/">Gestion de stock et inventaire</Link>
+            <Link href="/tarifs/">Tarifs</Link>
+            <Link href="/devenir-commercial/">Devenir commercial Kaislo</Link>
             <Link href="/app/">Se connecter</Link>
             <Link href={LIEN_INSCRIPTION}>Créer mon commerce</Link>
           </div>
@@ -94,6 +99,8 @@ export function PiedSite() {
         </div>
       </div>
     </footer>
+    <BulleChat />
+    </>
   );
 }
 

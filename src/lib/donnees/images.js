@@ -100,25 +100,3 @@ export function reduireImage(fichier, cote = 600, qualite = 0.8) {
     img.src = url;
   });
 }
-
-// Photos enregistrées avant le changement de nom (base « kaisly-images ») : recopiées une seule fois
-export async function copierAnciennesImages() {
-  if (typeof indexedDB === 'undefined') return;
-  try {
-    if (localStorage.getItem('kaislo:imagesReprises')) return;
-    localStorage.setItem('kaislo:imagesReprises', '1');
-    const bases = (await indexedDB.databases?.()) || [];
-    if (!bases.some((b) => b.name === 'kaisly-images')) return;
-    const ancienne = await new Promise((ok, erreur) => { const r = indexedDB.open('kaisly-images', 1); r.onsuccess = () => ok(r.result); r.onerror = () => erreur(r.error); });
-    if (!ancienne.objectStoreNames.contains(TABLE)) return ancienne.close();
-    const entrees = await new Promise((ok) => {
-      const liste = [];
-      const curseur = ancienne.transaction(TABLE).objectStore(TABLE).openCursor();
-      curseur.onsuccess = () => { const c = curseur.result; if (c) { liste.push([c.key, c.value]); c.continue(); } else ok(liste); };
-      curseur.onerror = () => ok(liste);
-    });
-    ancienne.close();
-    for (const [cle, valeur] of entrees) await operation('readwrite', (t) => t.put(valeur, cle));
-    indexedDB.deleteDatabase('kaisly-images');
-  } catch { /* navigateur sans IndexedDB complet : les photos se rechargeront depuis le serveur */ }
-}

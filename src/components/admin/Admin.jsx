@@ -4,7 +4,7 @@
 //  - tableau de bord : commerces, essais, abonnés, revenus, à relancer
 //  - commerces : fiche, abonnement, paiements, suspension, numéro, notes
 //  - messages : conversations avec les commerces
-//  - paiements, offres (prix par devise), équipe Amorac (comptes et rôles)
+//  - paiements, tarifs (formules par métier, postes, fondateur), commerciaux, équipe Amorac
 // Accès : comptes de l'équipe (e-mail + mot de passe), session de 8 heures.
 // Rôles : « admin » (tout) ou « support » (consultation, notes et messages).
 // ------------------------------------------------------------
@@ -17,6 +17,8 @@ import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnee
 import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
+import { prixAbonnement } from '@/lib/donnees/tarifs';
+import VueCommerciaux from './Commerciaux';
 
 const JOUR = 86400000;
 const DEVISES = ['FCFA', 'MAD', 'EUR', 'USD', 'CAD', 'GNF'];
@@ -119,23 +121,24 @@ function InstallationAdmin({ surConnexion }) {
 
 function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [ecran, setEcran] = useState('tableau');
-  const [donnees, setDonnees] = useState(null); // { commerces, offres }
+  const [donnees, setDonnees] = useState(null); // { commerces, formules, regles, fondateurs }
   const [ouvert, setOuvert] = useState(null);
   const [nonLus, setNonLus] = useState(0);
   const api = useCallback((m, c, corps) => appelApi(m, c, corps, jeton).catch((e) => { if (e.statut === 401) surDeconnexion(); throw e; }), [jeton, surDeconnexion]);
   const recharger = useCallback(async () => {
     const rep = await api('GET', '/admin/commerces');
     const commerces = rep.commerces.map((c) => ({ ...c, etat: etatAbonnement(c.commerce.abonnement) }));
-    setDonnees({ commerces, offres: rep.offres });
-    setNonLus(commerces.reduce((n, c) => n + c.messagesNonLus, 0));
+    setDonnees({ commerces, formules: rep.formules, regles: rep.regles, fondateurs: rep.fondateurs });
+    // Pastille « Messages » : messages des commerces non lus + messages des visiteurs non traités
+    setNonLus(commerces.reduce((n, c) => n + c.messagesNonLus, 0) + (rep.contactsNonTraites || 0));
   }, [api]);
   useEffect(() => { recharger(); const m = setInterval(recharger, 60000); return () => clearInterval(m); }, [recharger]);
 
   const estAdmin = admin.role === 'admin';
   const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'],
-    ...(estAdmin ? [['offres', 'Offres', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
+    ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse'], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
-  const ctx = { api, recharger, offres: donnees?.offres || [], estAdmin, ouvrir: setOuvert, admin };
+  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin };
 
   return (
     <div className="coque">
@@ -163,7 +166,8 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
             {ecran === 'commerces' && <VueCommerces commerces={donnees.commerces} ctx={ctx} />}
             {ecran === 'messages' && <VueMessages ctx={ctx} />}
             {ecran === 'paiements' && <VuePaiements commerces={donnees.commerces} ctx={ctx} />}
-            {ecran === 'offres' && <VueOffres ctx={ctx} />}
+            {ecran === 'tarifs' && <VueTarifs ctx={ctx} />}
+            {ecran === 'commerciaux' && <VueCommerciaux ctx={ctx} EnTeteAdmin={EnTeteAdmin} />}
             {ecran === 'equipe' && <VueEquipe ctx={ctx} />}
           </>
         )}
@@ -254,7 +258,6 @@ function Repartition({ titre, lignes, total }) {
 }
 
 function LigneCommerce({ c, ctx }) {
-  const offre = ctx.offres.find((o) => o.id === c.commerce.abonnement?.offre);
   return (
     <button className="liste-item" onClick={() => ctx.ouvrir(c.id)}>
       <span className="mini-emoji teinte-vert">{initiales(c.commerce.nom)}</span>
@@ -263,7 +266,7 @@ function LigneCommerce({ c, ctx }) {
         <span className="tres-petit muet tronque bloc-texte">{paysParId(c.commerce.pays).nom} · {c.commerce.ville} · {c.gerant} · {c.commerce.telephone}</span>
       </span>
       <span style={{ textAlign: 'right' }}>
-        <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}{offre && c.etat.statut === 'actif' ? ' · ' + offre.nom : ''}</span>
+        <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}{c.etat.statut === 'actif' ? ' · ' + c.tarif.nom : ''}</span>
         {c.etat.joursRestants !== null && c.etat.joursRestants > 0 && <span className="tres-petit muet bloc-texte">{c.etat.joursRestants} j restants</span>}
       </span>
     </button>
@@ -326,14 +329,19 @@ function VuePaiements({ commerces, ctx }) {
 
 // ---------- Messages : conversations avec les commerces ----------
 function VueMessages({ ctx }) {
+  const [onglet, setOnglet] = useState('commerces');
   const [conversations, setConversations] = useState(null);
   const [choisie, setChoisie] = useState(null);
   const charger = useCallback(async () => setConversations((await ctx.api('GET', '/admin/conversations')).conversations), [ctx]);
   useEffect(() => { charger(); const m = setInterval(charger, 20000); return () => clearInterval(m); }, [charger]);
   return (
     <>
-      <EnTeteAdmin surTitre="Questions des commerces" titre="Messages" />
+      <EnTeteAdmin surTitre="Questions des commerces et des visiteurs" titre="Messages" />
       <div className="contenu" style={{ maxWidth: 1100 }}>
+        <div style={{ marginBottom: 14 }}>
+          <Puces options={[['commerces', 'Commerces inscrits'], ['visiteurs', 'Visiteurs du site']]} valeur={onglet} surChanger={setOnglet} />
+        </div>
+        {onglet === 'visiteurs' ? <MessagesVisiteurs ctx={ctx} /> : (
         <div className="grille-ecran deux">
           <div className="liste">
             {conversations?.map((c) => (
@@ -354,8 +362,43 @@ function VueMessages({ ctx }) {
           </div>
           {choisie ? <Conversation commerceId={choisie} ctx={ctx} surEnvoi={charger} /> : <p className="astuce">Choisissez une conversation.</p>}
         </div>
+        )}
       </div>
     </>
+  );
+}
+
+// Messages laissés par les visiteurs (bulle du site) : réponse par WhatsApp ou e-mail
+function MessagesVisiteurs({ ctx }) {
+  const [contacts, setContacts] = useState(null);
+  const charger = useCallback(async () => setContacts((await ctx.api('GET', '/admin/contacts')).contacts), [ctx]);
+  useEffect(() => { charger(); }, [charger]);
+  const marquer = async (id, action) => { await ctx.api('POST', '/admin/contact', { id, action }); await charger(); ctx.recharger(); };
+  const lienReponse = (c) => {
+    const texte = 'Bonjour ' + c.nom + ', merci pour votre message sur Kaislo. ';
+    if (c.contact.includes('@')) return 'mailto:' + c.contact + '?subject=' + encodeURIComponent('Kaislo — votre question') + '&body=' + encodeURIComponent(texte);
+    return 'https://wa.me/' + c.contact.replace(/\D/g, '').replace(/^00/, '') + '?text=' + encodeURIComponent(texte);
+  };
+  if (!contacts) return <p className="muet petit">Chargement…</p>;
+  return (
+    <div className="pile">
+      {!contacts.length && <p className="astuce">Aucun message de visiteur pour le moment.</p>}
+      {contacts.map((c) => (
+        <div key={c.id} className={'carte pile' + (c.traiteLe ? ' inactif' : '')}>
+          <div className="ligne espace">
+            <b>{c.nom} <span className="muet petit">· {c.contact}</span></b>
+            <span className="tres-petit muet">{formatDate(c.le)} {formatHeure(c.le)}{c.page ? ' · page ' + c.page : ''}</span>
+          </div>
+          <p className="petit" style={{ whiteSpace: 'pre-wrap' }}>{c.texte}</p>
+          <div className="ligne" style={{ flexWrap: 'wrap' }}>
+            <a className="btn secondaire petit" href={lienReponse(c)} target="_blank" rel="noreferrer"><Icone nom={c.contact.includes('@') ? 'carnet' : 'whatsapp'} taille="sm" /> Répondre {c.contact.includes('@') ? 'par e-mail' : 'sur WhatsApp'}</a>
+            {c.traiteLe
+              ? <><span className="tres-petit muet">Traité le {formatDate(c.traiteLe)} par {c.traitePar}</span><button className="lien" onClick={() => marquer(c.id, 'rouvrir')}>Rouvrir</button></>
+              : <button className="btn petit" onClick={() => marquer(c.id, 'traiter')}><Icone nom="ok" taille="sm" /> Marquer comme traité</button>}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -402,42 +445,57 @@ function Conversation({ commerceId, ctx, surEnvoi }) {
   );
 }
 
-// ---------- Offres : noms, descriptions et prix par devise ----------
-function VueOffres({ ctx }) {
-  const [offres, setOffres] = useState(() => JSON.parse(JSON.stringify(ctx.offres)));
-  const [message, setMessage] = useState('');
-  const maj = (i, x) => setOffres(offres.map((o, j) => (j === i ? { ...o, ...x } : o)));
+// ---------- Tarifs : formules par métier, poste supplémentaire, règles communes ----------
+function VueTarifs({ ctx }) {
+  const [formules, setFormules] = useState(() => JSON.parse(JSON.stringify(ctx.formules)));
+  const [regles, setRegles] = useState(() => ({ ...ctx.regles }));
+  const [message, setMessage] = useState(null);
+  const maj = (i, x) => setFormules(formules.map((f, j) => (j === i ? { ...f, ...x } : f)));
   const enregistrer = async () => {
     try {
-      await ctx.api('POST', '/admin/offres', { offres });
+      await ctx.api('POST', '/admin/tarifs', { formules, regles });
       await ctx.recharger();
-      setMessage('Offres enregistrées');
-    } catch (e) { setMessage(e.message); }
+      setMessage({ ok: true, texte: 'Tarifs enregistrés' });
+    } catch (e) { setMessage({ ok: false, texte: e.message }); }
   };
   return (
     <>
-      <EnTeteAdmin surTitre="Prix par mois et par devise" titre="Offres">
+      <EnTeteAdmin surTitre="Prix par mois, 1 poste et 5 vendeurs inclus" titre="Tarifs">
         <button className="btn" onClick={enregistrer}>Enregistrer</button>
       </EnTeteAdmin>
-      <div className="contenu" style={{ maxWidth: 900 }}>
-        {message && <p className="info-verte" style={{ marginBottom: 14 }}>{message}</p>}
-        <p className="astuce" style={{ marginBottom: 14 }}>L’essai gratuit dure {DUREE_ESSAI_JOURS} jours. Les prix servent de montant proposé lors de l’enregistrement d’un paiement.</p>
-        {offres.map((o, i) => (
-          <div key={o.id} className="carte pile" style={{ marginBottom: 14 }}>
+      <div className="contenu" style={{ maxWidth: 960 }}>
+        {message && <p className={message.ok ? 'info-verte' : 'alerte'} style={{ marginBottom: 14 }}>{message.texte}</p>}
+        <div className="carte pile" style={{ marginBottom: 14 }}>
+          <h3>Règles communes</h3>
+          <div className="grille-3">
+            <label className="champ"><span>Paiement annuel : mois offerts</span><input type="number" min="0" max="6" value={regles.moisOffertsAnnuel} onChange={(e) => setRegles({ ...regles, moisOffertsAnnuel: e.target.value })} /></label>
+            <label className="champ"><span>Tarif fondateur : remise (%)</span><input type="number" min="0" max="90" value={regles.remiseFondateur} onChange={(e) => setRegles({ ...regles, remiseFondateur: e.target.value })} /></label>
+            <label className="champ"><span>Places au tarif fondateur</span><input type="number" min="0" value={regles.placesFondateur} onChange={(e) => setRegles({ ...regles, placesFondateur: e.target.value })} /></label>
+          </div>
+          <p className="tres-petit muet">Tarif fondateur : {ctx.fondateurs}/{ctx.regles.placesFondateur} places attribuées (case à cocher dans la fiche de chaque commerce). Essai gratuit de {DUREE_ESSAI_JOURS} jours pour tous.</p>
+        </div>
+        {formules.map((f, i) => (
+          <div key={f.id} className="carte pile" style={{ marginBottom: 14 }}>
             <div className="grille-2">
-              <label className="champ"><span>Nom</span><input value={o.nom} onChange={(e) => maj(i, { nom: e.target.value })} /></label>
-              <label className="champ"><span>Identifiant</span><input value={o.id} disabled /></label>
+              <label className="champ"><span>Formule</span><input value={f.nom} onChange={(e) => maj(i, { nom: e.target.value })} /></label>
+              <label className="champ"><span>Métiers</span><input value={f.types.map((x) => typeCommerce(x).nom).join(', ')} disabled /></label>
             </div>
-            <label className="champ"><span>Description</span><input value={o.description} onChange={(e) => maj(i, { description: e.target.value })} /></label>
-            {o.id !== 'essai' && (
-              <div className="grille-3">
-                {DEVISES.map((dev) => (
-                  <label key={dev} className="champ"><span>{NOMS_DEVISES[dev] || dev} / mois</span>
-                    <ChampMontant valeur={o.prix?.[dev] ?? null} surChanger={(v) => maj(i, { prix: { ...o.prix, [dev]: v } })} />
-                  </label>
-                ))}
-              </div>
-            )}
+            <p className="petit muet">Prix par mois (1 poste, 5 vendeurs + le gérant)</p>
+            <div className="grille-3">
+              {DEVISES.map((dev) => (
+                <label key={dev} className="champ"><span>{NOMS_DEVISES[dev] || dev}</span>
+                  <ChampMontant valeur={f.prix?.[dev] ?? null} surChanger={(v) => maj(i, { prix: { ...f.prix, [dev]: v } })} />
+                </label>
+              ))}
+            </div>
+            <p className="petit muet">Poste supplémentaire, par mois</p>
+            <div className="grille-3">
+              {DEVISES.map((dev) => (
+                <label key={dev} className="champ"><span>{NOMS_DEVISES[dev] || dev}</span>
+                  <ChampMontant valeur={f.prixPoste?.[dev] ?? null} surChanger={(v) => maj(i, { prixPoste: { ...f.prixPoste, [dev]: v } })} />
+                </label>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -506,10 +564,17 @@ function VueEquipe({ ctx }) {
 function FicheCommerce({ c, ctx, fermer }) {
   const ab = c.commerce.abonnement || {};
   const dev = c.commerce.devise;
-  const prixOffre = (id) => ctx.offres.find((o) => o.id === id)?.prix?.[dev] ?? 0;
-  const [offre, setOffre] = useState(ab.offre === 'essai' || !ab.offre ? 'starter' : ab.offre);
+  const [formule, setFormule] = useState(c.tarif.formule);
+  const [postes, setPostes] = useState(c.tarif.postes);
   const [mois, setMois] = useState(1);
-  const [montant, setMontant] = useState(prixOffre(ab.offre === 'essai' || !ab.offre ? 'starter' : ab.offre));
+  // Montant proposé : formule + postes supplémentaires, 12 mois = mois offerts, remise fondateur
+  const calcul = (f = formule, p = postes, m = mois) => prixAbonnement({ formule: ctx.formules.find((x) => x.id === f), devise: dev, postes: p, mois: m, fondateur: c.commerce.fondateur, regles: ctx.regles });
+  const [montant, setMontant] = useState(calcul().total);
+  const choisir = (x) => { const n = { formule, postes, mois, ...x }; if ('formule' in x) setFormule(x.formule); if ('postes' in x) setPostes(x.postes); if ('mois' in x) setMois(x.mois); setMontant(calcul(n.formule, n.postes, n.mois).total); };
+  const [commerciaux, setCommerciaux] = useState(null);
+  // Tarif fondateur coché ou décoché : le montant proposé est recalculé
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setMontant(calcul().total); }, [c.commerce.fondateur]);
   const [moyen, setMoyen] = useState(MOYENS[0]);
   const [notes, setNotes] = useState(c.commerce.notes || '');
   const [telephone, setTelephone] = useState(c.commerce.telephone || '');
@@ -517,6 +582,7 @@ function FicheCommerce({ c, ctx, fermer }) {
   const [message, setMessage] = useState(null);
   const pays = paysParId(c.commerce.pays);
   useEffect(() => { ctx.api('GET', '/admin/commerce?id=' + encodeURIComponent(c.id)).then(setDetail).catch(() => {}); }, [c.id, ctx]);
+  useEffect(() => { if (ctx.estAdmin) ctx.api('GET', '/admin/commerciaux').then((r) => setCommerciaux(r.commerciaux)).catch(() => {}); }, [ctx]);
 
   const action = async (corps, texte) => {
     try {
@@ -527,7 +593,7 @@ function FicheCommerce({ c, ctx, fermer }) {
   };
   const enregistrerPaiement = async () => {
     try {
-      await ctx.api('POST', '/admin/paiement', { commerceId: c.id, offre, mois, montant: Number(montant), moyen });
+      await ctx.api('POST', '/admin/paiement', { commerceId: c.id, formule, postes, mois, montant: Number(montant), moyen });
       await ctx.recharger();
       setMessage({ ok: true, texte: 'Paiement enregistré : abonnement actif' });
     } catch (e) { setMessage({ ok: false, texte: e.message }); }
@@ -588,7 +654,7 @@ function FicheCommerce({ c, ctx, fermer }) {
               <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}</span>
             </div>
             <p className="petit">
-              Offre : <b>{ctx.offres.find((o) => o.id === ab.offre)?.nom || '—'}</b>
+              Formule : <b>{c.tarif.nom}</b> · {c.tarif.postes} poste(s) · <b>{formatPrix(c.tarif.parMois, dev)}</b>/mois{c.commerce.fondateur ? ' (fondateur)' : ''}
               {c.etat.fin && <> · {c.etat.statut === 'expire' ? 'terminé le ' : 'jusqu’au '}{formatDate(c.etat.fin)}{c.etat.joursRestants > 0 ? ' (' + c.etat.joursRestants + ' j)' : ''}</>}
             </p>
             {ctx.estAdmin && c.etat.statut !== 'suspendu' && (
@@ -596,6 +662,12 @@ function FicheCommerce({ c, ctx, fermer }) {
                 <button className="btn secondaire petit" onClick={() => action({ action: 'prolonger-essai', jours: 15 }, 'Essai prolongé de 15 jours')}>+15 jours d’essai</button>
                 <button className="btn danger petit" onClick={() => confirm('Suspendre « ' + c.commerce.nom + ' » ? Personne ne pourra plus se connecter.') && action({ action: 'suspendre' }, 'Commerce suspendu')}>Suspendre</button>
               </div>
+            )}
+            {ctx.estAdmin && (
+              <label className="case-accord petit">
+                <input type="checkbox" checked={!!c.commerce.fondateur} onChange={(e) => action({ action: 'fondateur', valeur: e.target.checked }, e.target.checked ? 'Tarif fondateur appliqué' : 'Tarif fondateur retiré')} />
+                <span>Tarif fondateur (−{ctx.regles.remiseFondateur} % à vie · {ctx.fondateurs}/{ctx.regles.placesFondateur} places prises)</span>
+              </label>
             )}
             {ctx.estAdmin && c.etat.statut === 'suspendu' && (
               <button className="btn bloc" onClick={() => action({ action: 'reactiver' }, 'Commerce réactivé')}>Réactiver le commerce</button>
@@ -605,18 +677,20 @@ function FicheCommerce({ c, ctx, fermer }) {
           {ctx.estAdmin && (
             <div className="carte pile">
               <h3>Enregistrer un paiement</h3>
+              <label className="champ"><span>Formule</span>
+                <select value={formule} onChange={(e) => choisir({ formule: e.target.value })}>
+                  {ctx.formules.map((f) => <option key={f.id} value={f.id}>{f.nom} · {formatPrix(f.prix?.[dev] || 0, dev)}/mois</option>)}
+                </select>
+              </label>
               <div className="grille-2">
-                <label className="champ"><span>Offre</span>
-                  <select value={offre} onChange={(e) => { setOffre(e.target.value); setMontant(prixOffre(e.target.value) * mois); }}>
-                    {ctx.offres.filter((o) => o.id !== 'essai').map((o) => <option key={o.id} value={o.id}>{o.nom} · {formatPrix(o.prix?.[dev] || 0, dev)}/mois</option>)}
-                  </select>
-                </label>
+                <label className="champ"><span>Postes (1 inclus)</span><input type="number" min="1" max="50" value={postes} onChange={(e) => choisir({ postes: Math.max(1, Number(e.target.value) || 1) })} /></label>
                 <label className="champ"><span>Durée</span>
-                  <select value={mois} onChange={(e) => { setMois(Number(e.target.value)); setMontant(prixOffre(offre) * Number(e.target.value)); }}>
-                    {[1, 3, 6, 12].map((m) => <option key={m} value={m}>{m} mois</option>)}
+                  <select value={mois} onChange={(e) => choisir({ mois: Number(e.target.value) })}>
+                    {[1, 3, 6, 12].map((m) => <option key={m} value={m}>{m === 12 ? '12 mois (' + ctx.regles.moisOffertsAnnuel + ' offerts)' : m + ' mois'}</option>)}
                   </select>
                 </label>
               </div>
+              <p className="tres-petit muet">Prix calculé : {formatPrix(calcul().parMois, dev)}/mois{c.commerce.fondateur ? ' avec la remise fondateur' : ''} → <b>{formatPrix(calcul().total, dev)}</b> pour {mois} mois. Saisissez le montant réellement reçu.</p>
               <div className="grille-2">
                 <label className="champ"><span>Montant reçu ({symbole(dev)})</span><ChampMontant valeur={montant} surChanger={setMontant} /></label>
                 <label className="champ"><span>Moyen de paiement</span>
@@ -628,11 +702,22 @@ function FicheCommerce({ c, ctx, fermer }) {
             </div>
           )}
 
+          {ctx.estAdmin && (
+            <div className="carte pile">
+              <h3>Commercial Kaislo</h3>
+              <select value={c.commerce.commercialId || ''} onChange={(e) => action({ action: 'commercial', commercialId: e.target.value }, 'Commercial enregistré')} disabled={!commerciaux}>
+                <option value="">Aucun (inscription directe)</option>
+                {commerciaux?.map((x) => <option key={x.id} value={x.id}>{x.nom} · {x.code}</option>)}
+              </select>
+              <p className="tres-petit muet">Le commercial touche sa commission sur les premiers mois payés par ce commerce, après validation (Commerciaux → sa fiche).</p>
+            </div>
+          )}
+
           <div className="carte">
             <h3>Historique des paiements</h3>
             {(ab.paiements || []).slice().reverse().map((p) => (
               <div key={p.id} className="ligne espace petit" style={{ marginTop: 10 }}>
-                <span>{formatDate(p.date)} · {p.mois} mois · {p.moyen || '—'}</span>
+                <span>{formatDate(p.date)} · {p.mois} mois · {p.postes || 1} poste(s) · {p.moyen || '—'}</span>
                 <b className="chiffre">{formatPrix(p.montant, p.devise)}</b>
               </div>
             ))}

@@ -9,6 +9,8 @@ import { enregistrerCommerce } from '@/lib/donnees/stockage.js';
 import { estServeur, chargerFile, tailleFile, preparerEnvoi, retirerDeLaFile, appliquerElements, fusionServeur } from '@/lib/donnees/synchro.js';
 
 const INTERVALLE_MS = 30000;
+const INTERVALLE_POSTE_MS = 5000; // appareil poste relié à l'imprimante : les tickets des vendeurs sortent vite
+let derniereSynchro = 0;
 const DELAI_APRES_MODIF_MS = 1500;
 let minuterie = null;
 let delai = null;
@@ -30,7 +32,10 @@ export const trancheSynchro = (set, get) => ({
 
   demarrerSynchro() {
     if (!estServeur(get().d) || minuterie || typeof window === 'undefined') return;
-    minuterie = setInterval(() => get().synchroniser(), INTERVALLE_MS);
+    minuterie = setInterval(() => {
+      const poste = get().prefs.posteAppareil && get().imprimante.connectee;
+      if (Date.now() - derniereSynchro >= (poste ? INTERVALLE_POSTE_MS : INTERVALLE_MS)) get().synchroniser();
+    }, INTERVALLE_POSTE_MS);
     window.addEventListener('online', get().synchroniser);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') get().synchroniser(); });
     set({ synchro: { ...get().synchro, enAttente: tailleFile(get().d.commerce.id) } });
@@ -53,6 +58,7 @@ export const trancheSynchro = (set, get) => ({
   /** Envoie la file d'attente puis récupère les nouveautés. Renvoie true si tout s'est bien passé. */
   synchroniser() {
     if (enCours) return enCours; // une seule synchronisation à la fois
+    derniereSynchro = Date.now();
     enCours = (async () => {
       const depart = get().d;
       const jeton = get().jetonServeur();
@@ -107,6 +113,7 @@ export const trancheSynchro = (set, get) => ({
         const u = get().utilisateur;
         const moi = u && get().d.utilisateurs.find((x) => x.id === u.id);
         set({ synchro: { etat: 'ok', enAttente: tailleFile(id), derniere: new Date().toISOString(), message: '' } });
+        get().imprimerPourPoste(); // appareil poste : tickets des vendeurs à imprimer
         // Compte désactivé ou commerce suspendu depuis un autre appareil
         if (u && moi && !moi.actif) get().finSession('Votre compte a été désactivé par le gérant');
         else if (get().commerceSuspendu()) set({ etapeConnexion: 'suspendu', utilisateur: null });

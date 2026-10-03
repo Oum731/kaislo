@@ -62,7 +62,7 @@ const contenu = {
     ['Plusieurs vendeurs ou appareils peuvent-ils mettre à jour le stock ?', 'Oui. Le stock est partagé entre tous les appareils du commerce et se synchronise dès qu’il y a internet, même après une coupure.'],
     ['Je vends au kilo, au mètre ou au carton : est-ce possible ?', 'Oui : choisissez l’unité de chaque article (pièce, kg, g, litre, mètre, carton, sac, paquet, boîte, bouteille…). Le stock, la caisse et l’inventaire Excel l’affichent partout.'],
     ['Est-ce adapté à un restaurant ?', 'Oui : activez « Gestion du stock et de l’inventaire » dans les réglages pour suivre les boissons et les ingrédients, en plus des plats.'],
-    ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement mensuel simple dans la monnaie de votre pays.'],
+    ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement selon votre métier : à partir de 149 DH ou 9 000 FCFA par mois, 1 poste et 5 vendeurs inclus, 2 mois offerts à l’année. Détail sur la page Tarifs.'],
   ],
   titreFinal: 'Testez la gestion de stock de Kaislo.',
   texteFinal: 'La démo épicerie contient déjà un stock complet avec alertes. Ou créez votre commerce et ajoutez vos articles.',

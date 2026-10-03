@@ -12,21 +12,6 @@ import { nouvelAbonnement } from './abonnement.js';
 import { migrerClotures } from './cloture.js';
 
 const PREFIXE = 'kaislo:';
-const ANCIEN_PREFIXE = 'kaisly:'; // nom de l'application avant octobre 2026
-
-// Données enregistrées avant le changement de nom (Kaisly -> Kaislo) : recopiées une seule fois
-export function migrerAncienNom() {
-  if (typeof window === 'undefined') return;
-  try {
-    for (const cle of Object.keys(localStorage)) {
-      if (!cle.startsWith(ANCIEN_PREFIXE)) continue;
-      const nouvelle = PREFIXE + cle.slice(ANCIEN_PREFIXE.length);
-      if (localStorage.getItem(nouvelle) === null) localStorage.setItem(nouvelle, localStorage.getItem(cle));
-      localStorage.removeItem(cle);
-    }
-  } catch { /* stockage bloqué : rien à faire */ }
-}
-
 function lire(cle) {
   if (typeof window === 'undefined') return null;
   try {

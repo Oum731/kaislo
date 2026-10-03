@@ -6,7 +6,7 @@
 // Premier compte : POST /api/admin/installer avec la clé « CleAdmin » du .env
 // du serveur (aucun compte n'existe encore). Ensuite, les comptes se créent
 // depuis l'espace Amorac (rôle « admin » seulement).
-//   admin   : tout (abonnements, paiements, offres, équipe)
+//   admin   : tout (abonnements, paiements, tarifs, commerciaux, équipe)
 //   support : consultation et messagerie
 // ------------------------------------------------------------
 
@@ -137,7 +137,7 @@ function resumesCommerces(?string $seulId = null): array
     }
     $paiements = [];
     foreach (requete('SELECT * FROM paiements' . ($seulId ? ' WHERE commerce_id = ?' : '') . ' ORDER BY date', $seulId ? [$seulId] : [])->fetchAll() as $p) {
-        $paiements[$p['commerce_id']][] = ['id' => $p['id'], 'date' => $p['date'], 'montant' => (float) $p['montant'], 'devise' => $p['devise'], 'mois' => (int) $p['mois'], 'moyen' => $p['moyen'], 'note' => $p['note'], 'creePar' => $p['cree_par']];
+        $paiements[$p['commerce_id']][] = ['id' => $p['id'], 'date' => $p['date'], 'montant' => (float) $p['montant'], 'devise' => $p['devise'], 'mois' => (int) $p['mois'], 'moyen' => $p['moyen'], 'note' => $p['note'], 'creePar' => $p['cree_par'], 'postes' => (int) ($p['postes'] ?? 1), 'details' => json_decode($p['details'] ?? '{}', true) ?: []];
     }
     $gerants = [];
     foreach (requete("SELECT commerce_id, nom, telephone FROM utilisateurs WHERE role = 'gerant' ORDER BY cree_le")->fetchAll() as $g) $gerants[$g['commerce_id']] ??= $g;
@@ -149,7 +149,11 @@ function resumesCommerces(?string $seulId = null): array
         $commerce['adresse'] = $reglages['adresse'] ?? '';
         $commerce['notes'] = $c['notes'] ?? '';
         $commerce['abonnement']['paiements'] = $paiements[$id] ?? [];
+        $commerce['fondateur'] = (bool) ($c['fondateur'] ?? 0);
+        $commerce['commercialId'] = $c['commercial_id'] ?? null;
+        $commerce['commissionValideeLe'] = $c['commission_validee_le'] ?? null;
         return [
+            'tarif' => tarifCommerce($c),
             'id' => $id, 'commerce' => $commerce,
             'gerant' => $gerants[$id]['nom'] ?? '—', 'gerantTelephone' => $gerants[$id]['telephone'] ?? '',
             'ca30' => round($ca[$id]['ca'] ?? 0, 2), 'tickets30' => $ca[$id]['tickets'] ?? 0,
@@ -162,7 +166,8 @@ function resumesCommerces(?string $seulId = null): array
 function routeAdminCommerces(): never
 {
     adminConnecte();
-    repondre(['ok' => true, 'commerces' => resumesCommerces(), 'offres' => offresAmorac()]);
+    repondre(['ok' => true, 'commerces' => resumesCommerces(), 'formules' => formules(), 'regles' => reglesTarifs(),
+        'fondateurs' => (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE fondateur = 1')->fetch()['n'], 'contactsNonTraites' => contactsNonTraites()]);
 }
 
 // Détail d'un commerce : résumé + équipe + journal récent
@@ -214,6 +219,27 @@ function routeAdminActionCommerce(): never
             if (numeroPrisAilleurs($n['cle'], $id)) throw new ErreurApi('Ce numéro est déjà utilisé par un autre compte Kaislo', 409);
             requete('UPDATE commerces SET telephone = ?, cle_telephone = ?, modifie_le = ? WHERE id = ?', [$n['affichage'], $n['cle'], maintenant(), $id]);
             break;
+        case 'fondateur':
+            // Tarif fondateur : remise à vie, pour un nombre limité de commerces
+            $oui = (bool) ($e['valeur'] ?? false);
+            if ($oui && !$c['fondateur']) {
+                $places = (int) reglesTarifs()['placesFondateur'];
+                $pris = (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE fondateur = 1')->fetch()['n'];
+                if ($pris >= $places) throw new ErreurApi("Les $places places au tarif fondateur sont déjà attribuées");
+            }
+            requete('UPDATE commerces SET fondateur = ?, modifie_le = ? WHERE id = ?', [$oui ? 1 : 0, maintenant(), $id]);
+            break;
+        case 'commercial':
+            // Commercial qui a apporté le commerce (ou aucun)
+            $cid = (string) ($e['commercialId'] ?? '');
+            if ($cid !== '' && !requete('SELECT 1 FROM commerciaux WHERE id = ?', [$cid])->fetch()) throw new ErreurApi('Commercial introuvable', 404);
+            if ($cid !== (string) ($c['commercial_id'] ?? '') && requete("SELECT 1 FROM commissions WHERE commerce_id = ? AND statut = 'payee'", [$id])->fetch()) {
+                throw new ErreurApi('Des commissions ont déjà été versées pour ce commerce : le commercial ne peut plus changer');
+            }
+            requete('UPDATE commerces SET commercial_id = ?, modifie_le = ? WHERE id = ?', [$cid ?: null, maintenant(), $id]);
+            if ($cid === '') requete("DELETE FROM commissions WHERE commerce_id = ? AND statut <> 'payee'", [$id]);
+            else requete("UPDATE commissions SET commercial_id = ? WHERE commerce_id = ? AND statut <> 'payee'", [$cid, $id]);
+            break;
         default:
             throw new ErreurApi('Action inconnue');
     }
@@ -222,7 +248,9 @@ function routeAdminActionCommerce(): never
 }
 
 // ---------- POST /api/admin/paiement : abonnement payé ----------
-// { commerceId, offre, mois, montant, moyen, note }
+// { commerceId, formule, postes, mois, montant, moyen, note }
+// Le montant proposé est calculé (formule + postes supplémentaires, 12 mois = 2 offerts, tarif fondateur) ;
+// l'équipe saisit le montant réellement reçu.
 function routeAdminPaiement(): never
 {
     $admin = adminConnecte(true);
@@ -233,51 +261,31 @@ function routeAdminPaiement(): never
     if (!in_array($mois, [1, 3, 6, 12], true)) throw new ErreurApi('Durée invalide');
     $montant = (float) ($e['montant'] ?? 0);
     if ($montant <= 0) throw new ErreurApi('Indiquez le montant reçu');
-    $offre = (string) ($e['offre'] ?? 'starter');
-    if (!in_array($offre, array_column(offresAmorac(), 'id'), true) || $offre === 'essai') throw new ErreurApi('Offre inconnue');
+    $formule = formuleParId((string) ($e['formule'] ?? '')) ?? formuleDuType($c['type']);
+    $postes = max(1, min(50, (int) ($e['postes'] ?? nombrePostes($c['id']))));
+    $calcul = prixAbonnement($formule, $c['devise'], $postes, $mois, (bool) $c['fondateur']);
     $moyen = mb_substr((string) ($e['moyen'] ?? 'Espèces'), 0, 30);
-    requete('INSERT INTO paiements (id, commerce_id, date, montant, devise, mois, moyen, note, cree_par) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-        nouvelId('pa'), $c['id'], maintenant(), $montant, $c['devise'], $mois, $moyen, mb_substr((string) ($e['note'] ?? ''), 0, 200), $admin['email'],
-    ]);
-    // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
-    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, modifie_le = ? WHERE id = ?", [
-        $offre, prolongerDate($c['statut'] === 'actif' ? $c['periode_fin'] : null, $mois * 30), maintenant(), $c['id'],
-    ]);
-    journaliser($c['id'], $admin['id'], 'amorac-paiement', ['montant' => $montant, 'devise' => $c['devise'], 'mois' => $mois, 'par' => $admin['email']]);
-    repondre(['ok' => true, 'commerce' => resumesCommerces($c['id'])[0]]);
-}
-
-// ---------- Offres ----------
-
-const OFFRES_DEFAUT_SERVEUR = [
-    ['id' => 'essai', 'nom' => 'Essai gratuit', 'description' => 'Toutes les fonctions pendant 30 jours, sans engagement.', 'prix' => []],
-    ['id' => 'starter', 'nom' => 'Starter', 'description' => 'Caisse, tickets, carnet de crédit, statistiques. 1 appareil, 3 vendeurs.', 'prix' => ['MAD' => 99, 'FCFA' => 5000, 'EUR' => 9, 'CAD' => 14, 'USD' => 10, 'GNF' => 90000]],
-    ['id' => 'pro', 'nom' => 'Pro', 'description' => 'Tout Starter + stock et inventaire, tables et cuisine, vendeurs et appareils illimités.', 'prix' => ['MAD' => 199, 'FCFA' => 10000, 'EUR' => 19, 'CAD' => 27, 'USD' => 20, 'GNF' => 180000]],
-];
-
-function offresAmorac(): array
-{
-    $l = requete("SELECT valeur FROM reglages_amorac WHERE cle = 'offres'")->fetch();
-    return $l ? (json_decode($l['valeur'], true) ?: OFFRES_DEFAUT_SERVEUR) : OFFRES_DEFAUT_SERVEUR;
-}
-
-function routeAdminOffres(): never
-{
-    $admin = adminConnecte(true);
-    $offres = entree()['offres'] ?? null;
-    if (!is_array($offres) || !$offres) throw new ErreurApi('Liste d’offres attendue');
-    $propres = [];
-    foreach ($offres as $o) {
-        $id = (string) ($o['id'] ?? '');
-        if (!preg_match('/^[a-z0-9-]{2,20}$/', $id)) throw new ErreurApi('Identifiant d’offre invalide');
-        $prix = [];
-        foreach ((array) ($o['prix'] ?? []) as $devise => $p) if (is_numeric($p) && $p >= 0) $prix[substr((string) $devise, 0, 6)] = (float) $p;
-        $propres[] = ['id' => $id, 'nom' => mb_substr((string) ($o['nom'] ?? $id), 0, 60), 'description' => mb_substr((string) ($o['description'] ?? ''), 0, 300), 'prix' => $prix];
+    $idPaiement = nouvelId('pa');
+    $pdo = base();
+    $pdo->beginTransaction();
+    try {
+        requete('INSERT INTO paiements (id, commerce_id, date, montant, devise, mois, moyen, note, cree_par, postes, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            $idPaiement, $c['id'], maintenant(), $montant, $c['devise'], $mois, $moyen, mb_substr((string) ($e['note'] ?? ''), 0, 200), $admin['email'], $postes,
+            json_encode(['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur']], JSON_UNESCAPED_UNICODE),
+        ]);
+        // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
+        requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, modifie_le = ? WHERE id = ?", [
+            $formule['id'], prolongerDate($c['statut'] === 'actif' ? $c['periode_fin'] : null, $mois * 30), maintenant(), $c['id'],
+        ]);
+        // Commissions du commercial qui a apporté ce commerce
+        if (!empty($c['commercial_id'])) creerCommissions($c, $idPaiement, $montant, $mois);
+        $pdo->commit();
+    } catch (Throwable $err) {
+        $pdo->rollBack();
+        throw $err;
     }
-    $existe = requete("SELECT 1 FROM reglages_amorac WHERE cle = 'offres'")->fetch();
-    requete($existe ? "UPDATE reglages_amorac SET valeur = ?, modifie_le = ? WHERE cle = 'offres'" : "INSERT INTO reglages_amorac (valeur, modifie_le, cle) VALUES (?, ?, 'offres')", [json_encode($propres, JSON_UNESCAPED_UNICODE), maintenant()]);
-    journaliser(null, $admin['id'], 'amorac-offres', ['par' => $admin['email']]);
-    repondre(['ok' => true, 'offres' => $propres]);
+    journaliser($c['id'], $admin['id'], 'amorac-paiement', ['montant' => $montant, 'devise' => $c['devise'], 'mois' => $mois, 'postes' => $postes, 'formule' => $formule['id'], 'par' => $admin['email']]);
+    repondre(['ok' => true, 'commerce' => resumesCommerces($c['id'])[0]]);
 }
 
 // ---------- Équipe Amorac ----------

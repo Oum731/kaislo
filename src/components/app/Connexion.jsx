@@ -252,7 +252,7 @@ function CommerceSuspendu() {
 function Inscription() {
   const s = useKaislo();
   const [etape, setEtape] = useState(1);
-  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false });
+  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false, codeParrain: s.prefs.codeParrain || '' });
   const maj = (champ) => (e) => setF({ ...f, [champ]: e.target.value });
 
   const continuer = () => {
@@ -337,6 +337,10 @@ function Inscription() {
             <label className="champ"><span>Confirmez le PIN</span><input className="pin-saisie" type="password" inputMode="numeric" autoComplete="new-password" maxLength={4} value={f.gerantPin2} onChange={maj('gerantPin2')} placeholder="••••" /></label>
           </div>
           <p className="tres-petit muet">Ce code sert aussi à valider les annulations. Ne le donnez pas à vos vendeurs : chacun aura son propre numéro et son propre PIN.</p>
+          {/* Code du commercial Kaislo qui vous a présenté l'application (rempli tout seul avec son lien) */}
+          <label className="champ"><span>Code parrain (facultatif)</span>
+            <input value={f.codeParrain} onChange={(e) => setF({ ...f, codeParrain: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) })} placeholder="Ex : AWA25" autoCapitalize="characters" />
+          </label>
           <label className="case-accord">
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
             <span>J’accepte les <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">conditions d’utilisation</a> et la <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">politique de confidentialité</a> de Kaislo.</span>

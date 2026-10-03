@@ -10,7 +10,7 @@ const nextConfig = {
   trailingSlash: true, // /caisse-epicerie/ -> /caisse-epicerie/index.html (Hostinger)
   images: { unoptimized: true },
   reactStrictMode: true,
-  // Version de test GitHub Pages : le site vit dans /kaisly (voir npm run publier-github)
+  // Version de test GitHub Pages : le site vit dans /kaislo (voir npm run publier-github)
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
 };
 

@@ -297,6 +297,7 @@ export const trancheSession = (set, get) => ({
         commerce: { nom: infos.nom, type: infos.type, pays: infos.pays, ville: infos.ville, telephone: infos.telephone },
         gerant: { nom: infos.gerantNom, telephone: infos.gerantTelephone, pin: infos.gerantPin },
         conditionsAcceptees: !!infos.conditionsAccepteesLe,
+        codeParrain: infos.codeParrain || '', // commercial Kaislo qui a présenté l'application
         appareil: nomAppareil(),
       });
       const d = creerCommerce(infos, rep);
@@ -308,6 +309,7 @@ export const trancheSession = (set, get) => ({
         jetons: { ...(get().prefs.jetons || {}), [rep.utilisateur.id]: rep.jeton },
         pinsHors: { ...(get().prefs.pinsHors || {}), [cle]: { sel, hash: await empreintePin(sel, infos.gerantPin), utilisateurId: rep.utilisateur.id, commerceId: d.commerce.id } },
       });
+      if (get().prefs.codeParrain) get().sauverPrefs({ codeParrain: null }); // code utilisé
       set({ d });
       get().ouvrirSession(d.utilisateurs[0]);
       get().demarrerSynchro();

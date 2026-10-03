@@ -4,6 +4,8 @@
 // client et remboursement, stock, compte, menu "Plus".
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
+import { postesDe, vendeursDuPoste } from '@/lib/donnees/postes';
+import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs';
 import { useKaislo } from '@/store/kaislo';
 import { genId, formatDate, formatHeure, symbole, quantiteUnite } from '@/lib/utils/format';
 import { CATEGORIES_DEPENSES, COULEURS, UNITES, typeCommerce } from '@/lib/donnees/modeles';
@@ -203,6 +205,15 @@ export function FeuilleUtilisateur({ utilisateur }) {
         <p className="tres-petit muet">Il se connectera avec ce numéro et ce code PIN, sur n’importe quel appareil du commerce.</p>
         {b.role !== 'gerant' && (
           <>
+            <label className="champ"><span>Poste (imprimante où sortent ses tickets)</span>
+              <select value={b.posteId || postesDe(s.d)[0].id} onChange={(e) => setB({ ...b, posteId: e.target.value })}>
+                {postesDe(s.d).map((p) => {
+                  const n = vendeursDuPoste(s.d, p.id, b.id).length;
+                  return <option key={p.id} value={p.id} disabled={n >= VENDEURS_PAR_POSTE}>{p.nom} · {n}/{VENDEURS_PAR_POSTE} vendeurs{n >= VENDEURS_PAR_POSTE ? ' (complet)' : ''}</option>;
+                })}
+              </select>
+            </label>
+            <p className="tres-petit muet">{VENDEURS_PAR_POSTE} vendeurs au maximum par poste. Pour en ajouter : Réglages → Postes → « + Poste ».</p>
             <p className="section-titre">Ce que ce vendeur peut faire</p>
             <div className="carte pile">
               <p className="petit">✓ Encaisser, imprimer les tickets, vendre à crédit, clôturer sa caisse</p>

@@ -885,3 +885,46 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .liens-activites { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; }
 .liens-activites a { color: var(--vert); font-weight: 600; font-size: 14.5px; text-decoration: none; }
 .liens-activites a:hover { text-decoration: underline; }
+
+/* ---------- Bulle « Discuter avec nous » (site et application) ---------- */
+.chat-bouton {
+  position: fixed; z-index: 45; right: 18px; bottom: calc(18px + var(--bas-securise));
+  display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 18px 0 14px;
+  border-radius: 999px; background: var(--vert); color: var(--blanc); font-weight: 600;
+  box-shadow: 0 8px 22px rgba(20, 33, 28, 0.25);
+}
+.chat-bouton:hover { filter: brightness(1.08); }
+.chat-bouton .pastille-nb { position: absolute; top: -4px; right: -4px; }
+/* Dans l'application sur téléphone : rond, à gauche, au-dessus du menu */
+@media (max-width: 767px) {
+  .chat-bouton.app { left: 12px; right: auto; width: 46px; height: 46px; padding: 0; justify-content: center; bottom: calc(var(--nav-h) + var(--bas-securise) + 14px); }
+  .chat-bouton.app .chat-libelle { display: none; }
+}
+.chat-panneau {
+  position: fixed; z-index: 46; right: 18px; bottom: calc(80px + var(--bas-securise));
+  width: min(380px, calc(100vw - 24px)); max-height: min(620px, calc(100dvh - 110px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon);
+  box-shadow: 0 18px 50px rgba(20, 33, 28, 0.25); animation: fondu 0.15s;
+}
+@media (max-width: 767px) {
+  .chat-panneau { left: 12px; right: 12px; width: auto; }
+  .chat-panneau.app { bottom: calc(var(--nav-h) + var(--bas-securise) + 70px); max-height: calc(100dvh - var(--nav-h) - 100px); }
+}
+.chat-entete { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--vert); color: var(--blanc); }
+.chat-entete .icone-btn { color: inherit; width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--rayon-petit); }
+.chat-entete .icone-btn:hover { background: rgba(255, 255, 255, 0.15); }
+.chat-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.18); flex: none; }
+.chat-corps { overflow-y: auto; flex: 1; min-height: 0; }
+.chat-corps .messagerie { border: 0; border-radius: 0; box-shadow: none; }
+.chat-corps .fil-messages { max-height: none; min-height: 260px; }
+.chat-ok { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto; background: var(--vert-clair, #e6f0ea); color: var(--vert); }
+.piege { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+/* Page Tarifs : grilles de prix */
+.tableau-tarifs { overflow-x: auto; margin-top: 12px; border: 1px solid var(--bordure); border-radius: var(--rayon); background: var(--surface); }
+.tableau-tarifs table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.tableau-tarifs th, .tableau-tarifs td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--bordure); }
+.tableau-tarifs th { font-size: 13px; color: var(--encre-3); font-weight: 600; background: var(--surface-2); }
+.tableau-tarifs tr:last-child td { border-bottom: 0; }
+.liste-points { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--encre-2); }

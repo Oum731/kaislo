@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 3;
+const VERSION_BASE = 4;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -22,6 +22,9 @@ const STRUCTURE = [
             'conditions_acceptees_le' => 'DATE', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
             'cle_telephone' => 'VARCHAR(20)', // numéro du commerce (chiffres du format international) : unique
             'notes' => 'LONG', // notes internes de l'équipe Amorac
+            'commercial_id' => 'ID', // commercial Kaislo qui a apporté le commerce (code parrain)
+            'fondateur' => 'ENTIER', // 1 = tarif fondateur (remise à vie, 20 premiers clients)
+            'commission_validee_le' => 'DATE', // 6 mois payés et utilisés : commissions du commercial débloquées
         ],
         'cle' => ['id'], 'uniques' => [['code'], ['cle_telephone']], 'index' => [],
     ],
@@ -31,6 +34,7 @@ const STRUCTURE = [
             'id' => 'ID', 'commerce_id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)',
             'cle_telephone' => 'VARCHAR(20)', 'pin_hash' => 'TEXTE', 'role' => 'VARCHAR(10)', 'actif' => 'ENTIER',
             'peut_gerer_produits' => 'ENTIER', 'peut_faire_remises' => 'ENTIER', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
+            'poste_id' => 'VARCHAR(40)', // poste (point d'impression) du vendeur : 5 vendeurs au maximum par poste
         ],
         'cle' => ['id'], 'uniques' => [['cle_telephone']], 'index' => [['commerce_id']],
     ],
@@ -61,6 +65,7 @@ const STRUCTURE = [
         'colonnes' => [
             'id' => 'ID', 'commerce_id' => 'ID', 'date' => 'DATE', 'montant' => 'MONTANT', 'devise' => 'VARCHAR(6)',
             'mois' => 'ENTIER', 'moyen' => 'VARCHAR(30)', 'note' => 'TEXTE', 'cree_par' => 'TEXTE',
+            'postes' => 'ENTIER', 'details' => 'LONG', // nombre de postes payés ; formule, remise… (JSON)
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id']],
     ],
@@ -103,6 +108,46 @@ const STRUCTURE = [
     'reglages_amorac' => [
         'colonnes' => ['cle' => 'VARCHAR(40)', 'valeur' => 'LONG', 'modifie_le' => 'DATE'],
         'cle' => ['cle'], 'uniques' => [], 'index' => [],
+    ],
+    // Messages laissés par les visiteurs du site (bulle « Discuter avec nous »)
+    'contacts' => [
+        'colonnes' => [
+            'id' => 'ID', 'nom' => 'TEXTE', 'contact' => 'TEXTE', 'texte' => 'LONG', 'page' => 'TEXTE',
+            'ip_hash' => 'VARCHAR(64)', 'cree_le' => 'DATE', 'traite_le' => 'DATE', 'traite_par' => 'TEXTE',
+        ],
+        'cle' => ['id'], 'uniques' => [], 'index' => [['cree_le']],
+    ],
+    // Commerciaux Kaislo (code parrain, commission sur les abonnements de leurs clients)
+    'commerciaux' => [
+        'colonnes' => [
+            'id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)', 'cle_telephone' => 'VARCHAR(20)', 'email' => 'TEXTE',
+            'pays' => 'VARCHAR(4)', 'code' => 'VARCHAR(20)', 'pin_hash' => 'TEXTE', 'taux' => 'MONTANT', 'actif' => 'ENTIER',
+            'notes' => 'LONG', 'cree_le' => 'DATE', 'vu_le' => 'DATE',
+        ],
+        'cle' => ['id'], 'uniques' => [['code'], ['cle_telephone']], 'index' => [],
+    ],
+    // Sessions de l'espace commercial (30 jours, empreinte du jeton seulement)
+    'jetons_commerciaux' => [
+        'colonnes' => ['jeton_hash' => 'VARCHAR(64)', 'commercial_id' => 'ID', 'cree_le' => 'DATE', 'expire_le' => 'DATE'],
+        'cle' => ['jeton_hash'], 'uniques' => [], 'index' => [['commercial_id']],
+    ],
+    // Commissions : une ligne par mois payé par le client (12 premiers mois)
+    // statut : attente (avant validation) · a_payer · payee · annulee
+    'commissions' => [
+        'colonnes' => [
+            'id' => 'ID', 'commercial_id' => 'ID', 'commerce_id' => 'ID', 'paiement_id' => 'ID', 'rang' => 'ENTIER',
+            'montant' => 'MONTANT', 'devise' => 'VARCHAR(6)', 'statut' => 'VARCHAR(12)', 'cree_le' => 'DATE',
+            'paye_le' => 'DATE', 'paye_par' => 'TEXTE', 'moyen' => 'VARCHAR(30)',
+        ],
+        'cle' => ['id'], 'uniques' => [], 'index' => [['commercial_id'], ['commerce_id']],
+    ],
+    // Primes des commerciaux (paliers de clients validés), enregistrées quand elles sont versées
+    'primes' => [
+        'colonnes' => [
+            'id' => 'ID', 'commercial_id' => 'ID', 'palier' => 'ENTIER', 'montant' => 'MONTANT', 'devise' => 'VARCHAR(6)',
+            'paye_le' => 'DATE', 'paye_par' => 'TEXTE', 'moyen' => 'VARCHAR(30)',
+        ],
+        'cle' => ['id'], 'uniques' => [['commercial_id', 'palier']], 'index' => [],
     ],
     // Journal des actions importantes (inscription, connexion, suspension…)
     'journal' => [
@@ -152,8 +197,9 @@ function typeSql(string $type, string $driver): string
 // Crée les tables manquantes (une seule fois par version)
 function migrer(PDO $pdo, string $driver): void
 {
-    $pdo->exec('CREATE TABLE IF NOT EXISTS kaisly_version (version INTEGER NOT NULL)');
-    $version = (int) ($pdo->query('SELECT MAX(version) AS v FROM kaisly_version')->fetch()['v'] ?? 0);
+    $pdo->exec('CREATE TABLE IF NOT EXISTS kaislo_version (version INTEGER NOT NULL)');
+    $version = (int) ($pdo->query('SELECT MAX(version) AS v FROM kaislo_version')->fetch()['v'] ?? 0);
+    if ($version === 0) $version = reprendreAncienneVersion($pdo);
     if ($version >= VERSION_BASE) return;
 
     // Base déjà installée en version 1 : colonne recu_le ajoutée aux éléments
@@ -172,6 +218,16 @@ function migrer(PDO $pdo, string $driver): void
         $essayer('ALTER TABLE admins ADD COLUMN role VARCHAR(20) NULL');
         $essayer('ALTER TABLE admins ADD COLUMN actif INTEGER NULL');
         $essayer('ALTER TABLE admins ADD COLUMN vu_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur
+    if ($version >= 1 && $version < 4) {
+        $essayer('ALTER TABLE commerces ADD COLUMN commercial_id VARCHAR(32) NULL');
+        $essayer('ALTER TABLE commerces ADD COLUMN fondateur INTEGER NULL');
+        $essayer('ALTER TABLE commerces ADD COLUMN commission_validee_le VARCHAR(30) NULL');
+        $essayer('ALTER TABLE utilisateurs ADD COLUMN poste_id VARCHAR(40) NULL');
+        $essayer('ALTER TABLE paiements ADD COLUMN postes INTEGER NULL');
+        $essayer("ALTER TABLE paiements ADD COLUMN details $texteLong NULL");
     }
 
     foreach (STRUCTURE as $table => $t) {
@@ -193,7 +249,17 @@ function migrer(PDO $pdo, string $driver): void
     }
     // Numéros déjà enregistrés : mis au format international (pays du commerce)
     if ($version >= 1 && $version < 3) normaliserNumerosExistants($pdo);
-    $pdo->prepare('INSERT INTO kaisly_version (version) VALUES (?)')->execute([VERSION_BASE]);
+    $pdo->prepare('INSERT INTO kaislo_version (version) VALUES (?)')->execute([VERSION_BASE]);
+}
+
+// Bases installées avant octobre 2026 : la table de version avait l'ancien nom du produit
+function reprendreAncienneVersion(PDO $pdo): int
+{
+    $ancienne = 'kais' . 'ly_version';
+    try { $v = (int) ($pdo->query("SELECT MAX(version) AS v FROM $ancienne")->fetch()['v'] ?? 0); } catch (PDOException) { return 0; }
+    if ($v > 0) $pdo->prepare('INSERT INTO kaislo_version (version) VALUES (?)')->execute([$v]);
+    $pdo->exec("DROP TABLE $ancienne");
+    return $v;
 }
 
 // (migration v3) « 07 07 12 34 56 » -> « +225 07 07 12 34 56 » et clé unique sur le numéro complet

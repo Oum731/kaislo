@@ -33,12 +33,13 @@ function texteMessage(array $e): string
     return $texte;
 }
 
-// E-mail simple (fonction mail() de l'hébergement). Un échec n'empêche jamais l'envoi du message.
+// E-mail simple (fonction mail() de l'hébergement), envoyé après la réponse pour ne pas faire attendre.
+// Un échec n'empêche jamais l'envoi du message.
 function envoyerEmail(string $a, string $sujet, string $texte): void
 {
     $expediteur = lireFichierEnvCle('EmailExpediteur') ?? ('no-reply@' . (domaineSite() ?: 'kaislo.com'));
     $entetes = "From: Kaislo <$expediteur>\r\nReply-To: $expediteur\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 8bit";
-    @mail($a, '=?UTF-8?B?' . base64_encode($sujet) . '?=', $texte, $entetes);
+    apresReponse(fn () => @mail($a, '=?UTF-8?B?' . base64_encode($sujet) . '?=', $texte, $entetes));
 }
 
 // ---------- Côté commerce ----------

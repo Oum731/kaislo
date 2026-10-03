@@ -13,7 +13,8 @@ export const CREDIT = 'Crédit';
 //  tables    : commandes ouvertes par table + ticket cuisine
 //  unite     : unité proposée pour les nouveaux articles
 export const TYPES_COMMERCE = [
-  { id: 'restaurant', nom: 'Restaurant / maquis', icone: 'cuisine', description: 'Tables, ticket cuisine, plats avec accompagnements', gereStock: false, tables: true, unite: 'portion' },
+  { id: 'restaurant', nom: 'Restaurant', icone: 'cuisine', description: 'Tables, ticket cuisine, plats avec accompagnements', gereStock: false, tables: true, unite: 'portion' },
+  { id: 'maquis', nom: 'Maquis / snack / fast-food', icone: 'caisse', description: 'Service rapide, grillades, boissons', gereStock: true, tables: true, unite: 'portion' },
   { id: 'bar', nom: 'Bar / café / lounge', icone: 'tables', description: 'Tables, boissons, stock des bouteilles', gereStock: true, tables: true, unite: 'bouteille' },
   { id: 'boulangerie', nom: 'Boulangerie / pâtisserie', icone: 'etoile', description: 'Pains, viennoiseries, gâteaux sur commande', gereStock: true, tables: false, unite: 'pièce' },
   { id: 'epicerie', nom: 'Épicerie / supérette / alimentation', icone: 'caisse', description: 'Code-barres, stock, carnet de crédit', gereStock: true, tables: false, unite: 'pièce' },
@@ -87,6 +88,12 @@ export const CATEGORIES_DEPART = {
     { nom: 'Grillades', couleur: 'terre' },
     { nom: 'Boissons', couleur: 'bleu' },
     { nom: 'Desserts', couleur: 'safran' },
+  ],
+  maquis: [
+    { nom: 'Plats', couleur: 'vert' },
+    { nom: 'Grillades', couleur: 'terre' },
+    { nom: 'Accompagnements', couleur: 'safran' },
+    { nom: 'Boissons', couleur: 'bleu' },
   ],
   bar: [
     { nom: 'Bières', couleur: 'safran' },

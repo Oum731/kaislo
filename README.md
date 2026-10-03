@@ -59,7 +59,6 @@ npm run dev        # puis ouvrir http://localhost:3000
 | `src/lib/donnees/` | Calculs (vente, statistiques, crédit, clôture), données de démo, **stockage** |
 | `src/lib/impression/` | Tickets et imprimante Bluetooth |
 | `src/app/globals.css` | Le design (couleurs, téléphone / tablette / ordinateur) |
-| `ancienne-demo/` | L'ancienne démo (Alpine.js), gardée pour référence |
 
 Trois fichiers sont prévus pour être remplacés plus tard :
 
@@ -74,7 +73,7 @@ Dans le navigateur : **Chrome** (Android ou ordinateur). Sur iPhone, l'aperçu d
 
 ## Version de test en ligne (GitHub Pages)
 
-Lien à donner aux clients : https://oum731.github.io/kaisly/
+Lien à donner aux clients : https://oum731.github.io/kaislo/
 
 Pour mettre à jour ce lien après des modifications (arrêtez `npm run dev` avant) :
 
@@ -82,7 +81,7 @@ Pour mettre à jour ce lien après des modifications (arrêtez `npm run dev` ava
 npm run publier-github
 ```
 
-Le site est alors construit pour le sous-dossier `/kaisly` et envoyé sur la branche `gh-pages`.
+Le site est alors construit pour le sous-dossier `/kaislo` et envoyé sur la branche `gh-pages`.
 Ensuite, relancez `npm run build` avant tout envoi sur Hostinger (dossier `out/` normal).
 
 ## Pages légales
@@ -131,7 +130,7 @@ Les tables MySQL sont créées automatiquement au premier appel.
 **Réglages à faire une seule fois dans hPanel :**
 1. Avancé → Configuration PHP : PHP 8.1 ou plus récent.
 2. Gestionnaire de fichiers : vider `public_html` (supprimer la page par défaut).
-3. Avancé → GIT : dépôt `https://github.com/Oum731/kaisly.git`, branche `hostinger`, dossier vide → Créer, puis « Déployer ».
+3. Avancé → GIT : dépôt `https://github.com/Oum731/kaislo.git`, branche `hostinger`, dossier vide → Créer, puis « Déployer ».
    Facultatif : activer le déploiement automatique et coller l'adresse du webhook dans GitHub → Settings → Webhooks.
 4. Gestionnaire de fichiers : créer le fichier `.env` dans le dossier **au-dessus** de `public_html`
    (`domains/<domaine>/.env`), avec `Db`, `User`, `Password` (base MySQL créée dans hPanel).
@@ -151,9 +150,34 @@ Les tables MySQL sont créées automatiquement au premier appel.
 - **Commerces** : fiche de chaque commerce (gérant, vendeurs, utilisation, journal), changement du numéro,
   notes internes, prolongation de l'essai, suspension / réactivation, enregistrement d'un paiement
   (espèces, mobile money, virement, carte) qui prolonge l'abonnement.
-- **Messages** : conversation avec chaque commerce (écran « Aide » de l'application). Un e-mail prévient
-  l'équipe à chaque nouveau message.
-- **Offres** et **Équipe** (administrateurs seulement).
+- **Messages** : conversation avec chaque commerce (écran « Aide » ou bulle « Discuter avec nous » de l'application)
+  et messages des **visiteurs du site** (bulle sur toutes les pages : nom, WhatsApp ou e-mail, message ; réponse
+  par WhatsApp ou e-mail, puis « Marquer comme traité »). Un e-mail prévient l'équipe à chaque nouveau message.
+- **Paiements** : le montant proposé est calculé (formule du métier + postes supplémentaires, 12 mois = 2 offerts,
+  tarif fondateur) ; on saisit le montant réellement reçu.
+- **Commerciaux**, **Tarifs** et **Équipe** (administrateurs seulement).
+
+## Tarifs et postes
+
+- Une **formule par métier** (`src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`, à garder identiques ; modifiables
+  ensuite dans `/admin` → Tarifs). Chaque formule comprend **1 poste avec 5 vendeurs au maximum**, plus le gérant.
+- **Poste** = l'appareil relié à l'imprimante (Réglages → Postes). Chaque vendeur est affecté à un poste ; ses tickets
+  (et ses envois en cuisine) s'impriment sur l'imprimante de ce poste. Sur l'appareil du poste : Réglages → Postes →
+  « Cet appareil imprime les tickets du poste… » + imprimante Bluetooth connectée, application ouverte
+  (synchronisation toutes les 5 secondes).
+- Paiement annuel : 2 mois offerts. Tarif fondateur : −20 % à vie, 20 places (case dans la fiche du commerce).
+
+## Programme des commerciaux
+
+- Dans `/admin` → Commerciaux : créer un commercial (nom, téléphone, **code parrain**, taux, code PIN à 6 chiffres).
+- Le commerçant saisit le code à l'inscription, ou s'inscrit avec le lien `https://kaislo.com/app/?inscription=1&ref=CODE`.
+- Commission : 25 % de ce que paie le client pendant 12 mois (une ligne par mois payé). Rien n'est payable avant la
+  **validation** (6 mois payés + des ventes chaque semaine, contrôlé par le système ; l'équipe peut passer outre).
+  Ensuite : mois 1 à 6 « à payer » d'un coup, puis chaque mois. « Client arrêté » annule les commissions en attente.
+- Versements : cocher les commissions → « Marquer comme versé ». Primes par palier (10 et 25 clients validés),
+  montants à définir dans « Règles ».
+- Le commercial suit tout dans son espace : `https://kaislo.com/commercial/` (numéro + code PIN).
+- Page de recrutement : `/devenir-commercial/`.
 
 ## Numéros de téléphone
 
@@ -167,6 +191,8 @@ Chaque commerce et chaque utilisateur est identifié par son numéro, enregistr�
 - [ ] `.env` du serveur complet (`Db`, `User`, `Password`, `CleAdmin`, `EmailEquipe`, `EmailExpediteur`) et **jamais** dans Git.
 - [ ] Premier compte Amorac créé dans `/admin`, puis changer ou retirer `CleAdmin` du `.env`.
 - [ ] `src/config.js` : vrai numéro WhatsApp (`CONTACT_WHATSAPP`) et informations de la société (`SOCIETE`).
+- [ ] Tarifs en EUR, CAD, USD et GNF : conversions provisoires à confirmer dans `/admin` → Tarifs.
+- [ ] Montants des primes des commerciaux : `/admin` → Commerciaux → Règles.
 - [ ] Sauvegardes : hPanel → Bases de données → sauvegarde automatique activée ; exporter la base (phpMyAdmin) avant chaque grosse mise à jour.
 - [ ] Après chaque publication : ouvrir `/api/sante` (`versionBase` à jour) et tester une connexion.
 - Sécurité déjà en place : HTTPS forcé, en-têtes de sécurité (`public/.htaccess`), PIN et mots de passe chiffrés,

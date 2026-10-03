@@ -13,9 +13,9 @@ import { lireLocal, ecrireLocal } from './stockage.js';
 import { enregistrerImage, lireImage } from './images.js';
 
 // Listes du commerce synchronisées élément par élément
-export const COLLECTIONS = ['categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements'];
+export const COLLECTIONS = ['postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements'];
 // Champs du commerce gérés par le serveur : jamais envoyés comme « réglages »
-const CHAMPS_SERVEUR = ['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur'];
+const CHAMPS_SERVEUR = ['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur', 'tarif'];
 
 export const estServeur = (d) => d?.commerce?.serveur === true;
 
@@ -114,7 +114,7 @@ export async function appliquerElements(d, elements) {
   for (const e of elements) {
     if (file[e.type + ':' + e.id]) continue; // modification locale en attente : elle gagne
     if (e.type === 'reglages') {
-      if (!e.supprime) copie.commerce = { ...copie.commerce, ...e.contenu, id: d.commerce.id, code: d.commerce.code, abonnement: d.commerce.abonnement, serveur: true };
+      if (!e.supprime) copie.commerce = { ...copie.commerce, ...e.contenu, id: d.commerce.id, code: d.commerce.code, abonnement: d.commerce.abonnement, tarif: d.commerce.tarif, serveur: true };
     } else if (e.type === 'images') {
       if (!e.supprime && e.contenu?.dataUrl) await enregistrerImage(e.contenu.dataUrl, e.id).catch(() => {});
     } else if (COLLECTIONS.includes(e.type)) {
@@ -138,6 +138,8 @@ export function fusionServeur(d, rep) {
       // Numéro du commerce : tenu par le serveur (identifiant, changé seulement par l'équipe Amorac)
       ...(rep.commerce?.telephone ? { telephone: rep.commerce.telephone } : {}),
       ...(ab ? { abonnement: { ...(d.commerce.abonnement || {}), ...ab, paiements: d.commerce.abonnement?.paiements || [] } } : {}),
+      // Formule, nombre de postes et prix de l'abonnement (calculés par le serveur)
+      ...(rep.tarif ? { tarif: rep.tarif } : {}),
     },
     utilisateurs: rep.utilisateurs || d.utilisateurs,
     prochainNumero: Math.max(d.prochainNumero || 1, numeroMax + 1),

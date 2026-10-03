@@ -23,7 +23,7 @@ const COMMUNES = [
 const QUESTIONS_COMMUNES = [
   ['Faut-il une imprimante ?', 'Non. Le ticket peut être envoyé par WhatsApp ou simplement gardé dans l’historique. Une imprimante thermique Bluetooth ou USB reste possible.'],
   ['Et sans internet ?', 'La caisse continue de fonctionner. Les ventes sont envoyées au serveur dès que la connexion revient.'],
-  ['Combien ça coûte ?', 'Essai gratuit de 30 jours sans engagement, puis un abonnement mensuel simple dans la monnaie de votre pays.'],
+  ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement selon votre métier : à partir de 149 DH ou 9 000 FCFA par mois, 1 poste et 5 vendeurs inclus, 2 mois offerts à l’année. Détail sur la page Tarifs.'],
 ];
 
 function page({ lien, nom, titreSeo, description, titre, chapo, etiquette, titreFonctions, chapoFonctions, lignes, fonctions, questions, lienDemo = LIEN_DEMO_EPICERIE, capture = CAISSE }) {

@@ -52,7 +52,7 @@ const SECTIONS = [
     id: 'essai',
     titre: 'Essai gratuit',
     contenu: (
-      <p>Chaque nouveau Commerce bénéficie d’un <b>essai gratuit de 30 jours</b>, avec toutes les fonctions, sans moyen de paiement demandé et sans engagement. À la fin de l’essai, il suffit de choisir une offre pour continuer. Sans abonnement, l’accès peut être limité, mais vos données restent conservées selon l’article « Fin du contrat ».</p>
+      <p>Chaque nouveau Commerce bénéficie d’un <b>essai gratuit de 30 jours</b>, avec toutes les fonctions, sans moyen de paiement demandé et sans engagement. À la fin de l’essai, il suffit de payer la formule de votre métier pour continuer. Sans abonnement, l’accès peut être limité, mais vos données restent conservées selon l’article « Fin du contrat ».</p>
     ),
   },
   {
@@ -60,7 +60,8 @@ const SECTIONS = [
     titre: 'Abonnement, prix et paiement',
     contenu: (
       <>
-        <p>Les offres et leurs prix sont indiqués dans l’application et sur demande, dans la devise de votre pays. L’abonnement est payable <b>d’avance</b>, au mois ou à l’année.</p>
+        <p>Le prix dépend de votre métier (voir la page <Link href="/tarifs/">Tarifs</Link>) et de la devise de votre pays. Chaque formule comprend <b>un poste</b> (un appareil relié à une imprimante) avec <b>5 vendeurs au maximum</b>, plus le gérant ; chaque poste supplémentaire est facturé en plus, au prix indiqué. L’abonnement est payable <b>d’avance</b>, au mois ou à l’année (deux mois offerts sur l’année).</p>
+        <p>Le tarif fondateur, réservé aux premiers clients désignés par Amorac, donne droit à une remise à vie tant que l’abonnement est payé sans interruption.</p>
         <p>Moyens de paiement acceptés, selon les pays : carte bancaire (Visa, Mastercard…), paiement mobile (Orange Money, Wave, MTN MoMo…), virement bancaire. Les paiements par carte et par mobile sont traités par des prestataires de paiement agréés : <b>Amorac n’enregistre jamais les numéros de carte</b>.</p>
         <ul>
           <li>Un reçu est disponible pour chaque paiement.</li>

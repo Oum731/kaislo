@@ -16,6 +16,12 @@ import {
 } from '@/lib/impression/index.js';
 import { numeroWhatsApp } from '@/lib/donnees/modeles.js';
 import { imprimerSysteme } from '@/lib/impression/systeme.js';
+import { lireLocal, ecrireLocal } from '@/lib/donnees/stockage.js';
+import { estServeur } from '@/lib/donnees/synchro.js';
+import { posteParId } from '@/lib/donnees/postes.js';
+
+// Tickets venus d'autres appareils : imprimés s'ils datent de moins de 15 minutes
+const FRAICHEUR_MS = 15 * 60000;
 
 export const trancheImpression = (set, get) => ({
   imprimante: { disponible: false, connectee: false, nom: '' },
@@ -103,6 +109,54 @@ export const trancheImpression = (set, get) => ({
     }
     const texte = ticketEnTexteWhatsApp(get().lignesVente(vente), d.commerce);
     return 'https://wa.me/' + numero + '?text=' + encodeURIComponent(texte);
+  },
+
+  // Commerce en ligne, appareil sans imprimante : le ticket part sur l'imprimante de son poste
+  doitEnvoyerAuPoste(vente) {
+    const { imprimante, prefs, d } = get();
+    return estServeur(d) && !imprimante.connectee && !!vente.posteId && prefs.posteAppareil !== vente.posteId;
+  },
+  nomPoste(posteId) {
+    return posteParId(get().d, posteId).nom;
+  },
+  envoyerAuPoste(vente) {
+    get().majDonnees((d) => ({ ventes: d.ventes.map((v) => (v.id === vente.id ? { ...v, impressionDemandee: new Date().toISOString() } : v)) }));
+    get().message('Ticket envoyé à l’imprimante du poste « ' + get().nomPoste(vente.posteId) + ' »');
+  },
+
+  /**
+   * Appareil désigné comme poste (Réglages → Postes), relié à une imprimante Bluetooth :
+   * imprime les tickets et les envois en cuisine faits sur les téléphones de ses vendeurs.
+   * Appelé après chaque synchronisation.
+   */
+  async imprimerPourPoste() {
+    const { prefs, d, imprimante } = get();
+    const poste = prefs.posteAppareil;
+    if (!poste || !imprimante.connectee || !estServeur(d)) return;
+    const cle = 'imprimes:' + d.commerce.id;
+    const deja = new Set(lireLocal(cle) || []);
+    const limite = Date.now() - FRAICHEUR_MS;
+    const recent = (date) => date && new Date(date).getTime() > limite;
+    const aFaire = [];
+    for (const v of d.ventes || []) {
+      if (v.posteId !== poste) continue;
+      // Nouvelle vente d'un autre appareil (si l'impression automatique est active), ou demande d'impression
+      const nouvelle = v.appareil !== prefs.appareilId && recent(v.date) && prefs.impressionAuto !== false;
+      if (nouvelle && !deja.has(v.id)) aFaire.push([v.id, () => get().lignesVente(v)]);
+      if (recent(v.impressionDemandee) && !deja.has(v.id + '@' + v.impressionDemandee)) aFaire.push([v.id + '@' + v.impressionDemandee, () => get().lignesVente(v)]);
+    }
+    for (const c of d.commandes || []) {
+      for (const envoi of c.envoisCuisine || []) {
+        if (envoi.posteId === poste && envoi.appareil !== prefs.appareilId && recent(envoi.le) && !deja.has(envoi.id)) {
+          aFaire.push([envoi.id, () => get().lignesCuisine(c, envoi.lignes)]);
+        }
+      }
+    }
+    for (const [id, lignes] of aFaire) {
+      deja.add(id);
+      ecrireLocal(cle, [...deja].slice(-500));
+      await get().imprimer(lignes(), 'Ticket du poste imprimé');
+    }
   },
 
   imprimerTest() {
