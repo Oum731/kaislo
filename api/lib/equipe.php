@@ -9,7 +9,7 @@
 // ------------------------------------------------------------
 
 // ---------- POST /api/utilisateurs ----------
-// { id?, nom, telephone, pin?, actif, peutGererProduits, peutFaireRemises }
+// { id?, nom, telephone, pin?, actif, peutGererProduits, peutFaireRemises, posteId }
 function routeUtilisateur(): never
 {
     $moi = utilisateurConnecte();
@@ -41,12 +41,19 @@ function routeUtilisateur(): never
     }
     $actif = array_key_exists('actif', $e) ? (bool) $e['actif'] : true;
     if ($existant && $existant['id'] === $moi['id'] && !$actif) throw new ErreurApi('Vous ne pouvez pas désactiver votre propre compte');
+    // Poste du vendeur (point d'impression) : 5 vendeurs actifs au maximum par poste
+    $estGerantModifie = $existant && $existant['role'] === 'gerant';
+    $posteId = $estGerantModifie ? null : posteValide($moi['commerce_id'], (string) ($e['posteId'] ?? ''));
+    if ($posteId && $actif) {
+        $occupes = (int) requete("SELECT COUNT(*) AS n FROM utilisateurs WHERE commerce_id = ? AND role = 'vendeur' AND actif = 1 AND COALESCE(poste_id, 'principal') = ? AND id <> ?", [$moi['commerce_id'], $posteId, $id])->fetch()['n'];
+        if ($occupes >= VENDEURS_PAR_POSTE) throw new ErreurApi('Ce poste a déjà ' . VENDEURS_PAR_POSTE . ' vendeurs : créez un autre poste (Réglages → Postes), ou affectez ce vendeur à un autre poste');
+    }
     $produits = !empty($e['peutGererProduits']) ? 1 : 0;
     $remises = !empty($e['peutFaireRemises']) ? 1 : 0;
 
     if ($existant) {
-        requete('UPDATE utilisateurs SET nom = ?, telephone = ?, cle_telephone = ?, actif = ?, peut_gerer_produits = ?, peut_faire_remises = ?, modifie_le = ? WHERE id = ?', [
-            $nom, $telephone, $cle, $actif ? 1 : 0, $produits, $remises, maintenant(), $id,
+        requete('UPDATE utilisateurs SET nom = ?, telephone = ?, cle_telephone = ?, actif = ?, peut_gerer_produits = ?, peut_faire_remises = ?, poste_id = ?, modifie_le = ? WHERE id = ?', [
+            $nom, $telephone, $cle, $actif ? 1 : 0, $produits, $remises, $posteId, maintenant(), $id,
         ]);
         if ($pin !== '') requete('UPDATE utilisateurs SET pin_hash = ? WHERE id = ?', [password_hash($pin, PASSWORD_DEFAULT), $id]);
         // Compte désactivé ou code changé : ses appareils sont déconnectés
@@ -54,13 +61,21 @@ function routeUtilisateur(): never
         journaliser($moi['commerce_id'], $moi['id'], 'vendeur-modifie', ['vendeur' => $id, 'actif' => $actif]);
     } else {
         $id = nouvelId('u');
-        requete('INSERT INTO utilisateurs (id, commerce_id, nom, telephone, cle_telephone, pin_hash, role, actif, peut_gerer_produits, peut_faire_remises, cree_le, modifie_le)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            $id, $moi['commerce_id'], $nom, $telephone, $cle, password_hash($pin, PASSWORD_DEFAULT), 'vendeur', $actif ? 1 : 0, $produits, $remises, maintenant(), maintenant(),
+        requete('INSERT INTO utilisateurs (id, commerce_id, nom, telephone, cle_telephone, pin_hash, role, actif, peut_gerer_produits, peut_faire_remises, poste_id, cree_le, modifie_le)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            $id, $moi['commerce_id'], $nom, $telephone, $cle, password_hash($pin, PASSWORD_DEFAULT), 'vendeur', $actif ? 1 : 0, $produits, $remises, $posteId, maintenant(), maintenant(),
         ]);
         journaliser($moi['commerce_id'], $moi['id'], 'vendeur-cree', ['vendeur' => $id]);
     }
     repondre(['ok' => true, 'id' => $id, 'utilisateurs' => equipe($moi['commerce_id'])]);
+}
+
+// Poste existant du commerce (« principal » : le poste créé avec le commerce)
+function posteValide(string $commerceId, string $posteId): string
+{
+    if ($posteId === '' || $posteId === 'principal') return 'principal';
+    if (!requete("SELECT 1 FROM elements WHERE commerce_id = ? AND type = 'postes' AND id = ? AND supprime = 0", [$commerceId, $posteId])->fetch()) throw new ErreurApi('Poste introuvable : synchronisez puis réessayez');
+    return $posteId;
 }
 
 // ---------- POST /api/verifier-gerant ----------

@@ -3,8 +3,8 @@
 // pour qu'elle s'ouvre vite, même avec une mauvaise connexion.
 // Changer VERSION à chaque mise en ligne force la mise à jour.
 // ------------------------------------------------------------
-const VERSION = 'kaislo-v6'; // v6 : les réponses de l'API ne sont plus jamais mises en cache
-// Dossier du site ("/" sur Hostinger, "/kaisly/" sur GitHub Pages)
+const VERSION = 'kaislo-v7'; // v7 : images, vidéos et icônes toujours à jour (seuls les fichiers /_next/static/ sont gardés tels quels)
+// Dossier du site ("/" sur Hostinger, "/kaislo/" sur GitHub Pages)
 const RACINE = new URL(self.registration.scope).pathname;
 
 self.addEventListener('install', (e) => {
@@ -31,12 +31,17 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
-  // Fichiers (JS, CSS, polices, icônes) : la copie d'abord, sinon le réseau
-  e.respondWith(
-    caches.match(e.request).then((copie) => copie || fetch(e.request).then((r) => {
-      const clone = r.clone();
-      caches.open(VERSION).then((c) => c.put(e.request, clone));
-      return r;
-    }))
-  );
+  // Vidéos : lues par morceaux par le navigateur, jamais copiées
+  if (/\.(mp4|webm)$/.test(adresse.pathname)) return;
+  const enregistrer = (r) => {
+    if (r.ok && r.status === 200) { const clone = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, clone)); }
+    return r;
+  };
+  // JS, CSS et polices de Next.js (nom unique à chaque version) : la copie d'abord, sinon le réseau
+  if (adresse.pathname.startsWith(RACINE + '_next/static/')) {
+    e.respondWith(caches.match(e.request).then((copie) => copie || fetch(e.request).then(enregistrer)));
+    return;
+  }
+  // Images, icônes, captures… : le réseau d'abord (toujours la dernière version), la copie sans connexion
+  e.respondWith(fetch(e.request).then(enregistrer).catch(() => caches.match(e.request)));
 });

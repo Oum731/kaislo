@@ -23,8 +23,12 @@ ErrorDocument 404 /404.html
 
 # Mise en cache des fichiers qui ne changent jamais (noms uniques)
 <IfModule mod_headers.c>
-  <FilesMatch "\.(js|css|woff2|png|svg)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
+  # Fichiers de Next.js (nom unique à chaque version) : gardés 1 an
+  # Images, vidéos, icônes : gardées 1 heure (une nouvelle capture s'affiche vite)
+  SetEnvIf Request_URI "^/_next/static/" fichier_fixe
+  Header set Cache-Control "public, max-age=31536000, immutable" env=fichier_fixe
+  <FilesMatch "\.(png|svg|webp|jpg|ico|mp4|webmanifest)$">
+    Header set Cache-Control "public, max-age=3600" env=!fichier_fixe
   </FilesMatch>
   <FilesMatch "(sw\.js|\.html)$">
     Header set Cache-Control "no-cache"
