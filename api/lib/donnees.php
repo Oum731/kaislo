@@ -59,6 +59,7 @@ function routeDonneesLire(): never
     repondre([
         'ok' => true, 'heure' => $heure, 'suite' => $suite, 'elements' => $elements,
         'commerce' => versCommerce($commerce), 'utilisateurs' => equipe($u['commerce_id']), 'moi' => versUtilisateur($u),
+        'messagesNonLus' => messagesNonLus($u['commerce_id']), // réponses de l'équipe Amorac pas encore lues
     ]);
 }
 

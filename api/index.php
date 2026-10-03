@@ -11,6 +11,8 @@
 //   GET|POST /api/donnees   synchronisation des caisses (voir lib/donnees.php)
 //   POST /api/utilisateurs  vendeurs (gérant) · POST /api/verifier-gerant (annulation)
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
+//   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
+//   /api/admin/...          espace Amorac : commerces, abonnements, offres, équipe (voir lib/admin.php)
 //
 // Réponses en JSON : { ok: true, ... } ou { ok: false, erreur: "message" }.
 // PHP 8.1 minimum (à choisir dans hPanel → Avancé → Configuration PHP).
@@ -24,6 +26,8 @@ require __DIR__ . '/lib/telephone.php';
 require __DIR__ . '/lib/donnees.php';
 require __DIR__ . '/lib/equipe.php';
 require __DIR__ . '/lib/biometrie.php';
+require __DIR__ . '/lib/messages.php';
+require __DIR__ . '/lib/admin.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -51,6 +55,23 @@ try {
         'POST /biometrie/defi' => routeBiometrieDefi(),
         'POST /biometrie/enregistrer' => routeBiometrieEnregistrer(),
         'POST /biometrie/connexion' => routeBiometrieConnexion(),
+        'GET /messages' => routeMessagesLire(),
+        'POST /messages' => routeMessagesEcrire(),
+        'GET /admin/etat' => routeAdminEtat(),
+        'POST /admin/installer' => routeAdminInstaller(),
+        'POST /admin/connexion' => routeAdminConnexion(),
+        'POST /admin/deconnexion' => routeAdminDeconnexion(),
+        'GET /admin/moi' => routeAdminMoi(),
+        'GET /admin/commerces' => routeAdminCommerces(),
+        'GET /admin/commerce' => routeAdminCommerce(),
+        'POST /admin/commerce' => routeAdminActionCommerce(),
+        'POST /admin/paiement' => routeAdminPaiement(),
+        'POST /admin/offres' => routeAdminOffres(),
+        'GET /admin/equipe' => routeAdminEquipe(),
+        'POST /admin/equipe' => routeAdminEquipeEnregistrer(),
+        'GET /admin/conversations' => routeAdminConversations(),
+        'GET /admin/messages' => routeAdminMessagesLire(),
+        'POST /admin/messages' => routeAdminMessagesEcrire(),
         default => throw new ErreurApi('Adresse inconnue', 404),
     };
 } catch (ErreurApi $e) {

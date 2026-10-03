@@ -869,3 +869,14 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .champ-telephone .indicatif + input { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 .champ-telephone input { flex: 1; min-width: 0; }
 .champ input[aria-invalid="true"] { border-color: var(--rouge); }
+
+/* ---------- Messagerie avec l'équipe Kaislo ---------- */
+.messagerie { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.fil-messages { display: flex; flex-direction: column; gap: 10px; padding: 16px; max-height: 60vh; min-height: 220px; overflow-y: auto; background: var(--fond); }
+.bulle { max-width: 82%; padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--bordure); }
+.bulle p { white-space: pre-wrap; word-break: break-word; }
+.bulle span { display: block; margin-top: 4px; color: var(--encre-3); }
+.bulle.moi { align-self: flex-end; background: var(--vert-clair, #e6f0ea); border-color: transparent; }
+.bulle.equipe { align-self: flex-start; }
+.saisie-message { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--bordure); align-items: flex-end; }
+.saisie-message textarea { flex: 1; min-width: 0; resize: vertical; }

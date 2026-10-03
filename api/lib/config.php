@@ -12,6 +12,9 @@
 //   Host                : nom de domaine du site (informatif)
 //   DbDriver            : « mysql » (par défaut) ou « sqlite » (tests sur ordinateur)
 //   DbFichier           : chemin du fichier SQLite (tests seulement)
+//   CleAdmin            : clé pour créer le premier compte de l'espace Amorac (12 caractères ou plus)
+//   EmailEquipe         : adresse qui reçoit les messages des commerces (par défaut contact@amorac.com)
+//   EmailExpediteur     : expéditeur des e-mails envoyés par Kaislo (ex : no-reply@kaislo.com)
 // ------------------------------------------------------------
 
 function lireFichierEnv(string $fichier): array
@@ -53,6 +56,14 @@ function config(): array
         'fichierSqlite' => $valeurs['DbFichier'] ?? (dirname(__DIR__) . '/kaislo-test.sqlite'),
         'domaine' => $valeurs['Host'] ?? '',
         'trouve' => $valeurs !== [],
+        'brut' => $valeurs, // toutes les clés du .env (CleAdmin, EmailEquipe…)
     ];
     return $config;
+}
+
+// Valeur d'une clé du .env (null si absente)
+function lireFichierEnvCle(string $cle): ?string
+{
+    $v = config()['brut'][$cle] ?? null;
+    return $v === null || $v === '' ? null : (string) $v;
 }

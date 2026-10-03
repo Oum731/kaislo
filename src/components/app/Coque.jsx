@@ -15,6 +15,7 @@ import Ventes from './ecrans/Ventes';
 import Clients from './ecrans/Clients';
 import Produits from './ecrans/Produits';
 import Stock from './ecrans/Stock';
+import Aide from './ecrans/Aide';
 import Reglages, { BlocImprimante } from './ecrans/Reglages';
 import Feuilles from './feuilles/Feuilles';
 import { EnTete } from './EnTete';
@@ -32,10 +33,12 @@ export function liensMenu(s) {
   if (s.peut('peutGererProduits')) liens.push(['produits', 'Produits', 'produits']);
   if (s.gereStock() && s.peut('peutGererProduits')) liens.push(['stock', 'Stock', 'stock']);
   liens.push(gerant ? ['reglages', 'Réglages', 'reglages'] : ['imprimante', 'Imprimante', 'imprimante']);
+  // Aide et messagerie avec l'équipe Kaislo (pastille : réponses pas encore lues)
+  liens.push(['aide', 'Aide', 'whatsapp', s.messagesNonLus || null]);
   return liens;
 }
 
-const ECRANS = { accueil: Accueil, caisse: Caisse, tables: Tables, ventes: Ventes, clients: Clients, produits: Produits, stock: Stock, reglages: Reglages, imprimante: EcranImprimante };
+const ECRANS = { accueil: Accueil, caisse: Caisse, tables: Tables, ventes: Ventes, clients: Clients, produits: Produits, stock: Stock, reglages: Reglages, imprimante: EcranImprimante, aide: Aide };
 
 export default function Coque() {
   const s = useKaislo();

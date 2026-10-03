@@ -17,6 +17,7 @@ let enCours = null;
 export const trancheSynchro = (set, get) => ({
   // etat : 'inactif' | 'envoi' | 'ok' | 'hors-ligne' | 'erreur'
   synchro: { etat: 'inactif', enAttente: 0, derniere: null, message: '' },
+  messagesNonLus: 0, // réponses de l'équipe Kaislo pas encore lues (écran Aide)
 
   // Jeton de connexion utilisable pour ce commerce (personne connectée, sinon un autre de l'appareil)
   jetonServeur() {
@@ -63,7 +64,14 @@ export const trancheSynchro = (set, get) => ({
         let file = chargerFile(id);
         while (Object.keys(file).length) {
           const elements = await preparerEnvoi(get().d, file);
-          const rep = await appelApi('POST', '/donnees', { elements }, jeton);
+          let rep;
+          try {
+            rep = await appelApi('POST', '/donnees', { elements }, jeton);
+          } catch (e) {
+            // Commerce suspendu (403) : on n'envoie plus, mais on récupère quand même son état
+            if (e.statut === 403) break;
+            throw e;
+          }
           retirerDeLaFile(id, elements, rep.refuses);
           if (rep.refuses?.length) console.warn('Refusés par le serveur', rep.refuses);
           file = chargerFile(id);
@@ -95,12 +103,15 @@ export const trancheSynchro = (set, get) => ({
         } while (rep.suite);
         const derniere = rep;
         await appliquer(async (base) => fusionServeur(base, derniere));
+        set({ messagesNonLus: derniere.messagesNonLus || 0 });
         const u = get().utilisateur;
         const moi = u && get().d.utilisateurs.find((x) => x.id === u.id);
         set({ synchro: { etat: 'ok', enAttente: tailleFile(id), derniere: new Date().toISOString(), message: '' } });
         // Compte désactivé ou commerce suspendu depuis un autre appareil
         if (u && moi && !moi.actif) get().finSession('Votre compte a été désactivé par le gérant');
         else if (get().commerceSuspendu()) set({ etapeConnexion: 'suspendu', utilisateur: null });
+        // Commerce réactivé par l'équipe Amorac : retour à l'écran de connexion
+        else if (get().etapeConnexion === 'suspendu' && !get().utilisateur) set({ etapeConnexion: 'connexion' });
         return true;
       } catch (e) {
         if (e.statut === 401) get().finSession('Session expirée : reconnectez-vous');

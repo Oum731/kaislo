@@ -1,126 +1,174 @@
 'use client';
 // ------------------------------------------------------------
-// ESPACE AMORAC (/admin) : gestion de tous les commerces Kaislo
-//  - tableau de bord : nombre de commerces, essais, abonnés, revenus
-//  - commerces : fiche, abonnement, paiements, suspension
-//  - paiements : historique des abonnements payés
-//  - offres : noms, descriptions et prix par devise
-//
-// DÉMONSTRATION : les données viennent de cet appareil (localStorage).
-// Dans la vraie version, elles viendront du serveur et l'accès sera
-// réservé aux comptes de l'équipe Amorac.
+// ESPACE AMORAC (/admin) : gestion de tous les commerces Kaislo, sur le serveur.
+//  - tableau de bord : commerces, essais, abonnés, revenus, à relancer
+//  - commerces : fiche, abonnement, paiements, suspension, numéro, notes
+//  - messages : conversations avec les commerces
+//  - paiements, offres (prix par devise), équipe Amorac (comptes et rôles)
+// Accès : comptes de l'équipe (e-mail + mot de passe), session de 8 heures.
+// Rôles : « admin » (tout) ou « support » (consultation, notes et messages).
 // ------------------------------------------------------------
-import { useEffect, useMemo, useState } from 'react';
-import Chargement from '@/components/Chargement';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { tousLesCommerces, enregistrerCommerce, offresActuelles, chargerAdmin, enregistrerAdmin } from '@/lib/donnees/stockage';
-import { etatAbonnement, LIBELLES_STATUT, OFFRES_DEFAUT, prolonger, DUREE_ESSAI_JOURS } from '@/lib/donnees/abonnement';
-import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
-import { formatPrix, formatDate, genId, symbole, NOMS_DEVISES } from '@/lib/utils/format';
-import { ADMIN_MOT_DE_PASSE } from '@/config';
-import { Icone, Feuille, Puces, ImageStockee, ChampMontant, initiales } from '@/components/ui';
+import Chargement from '@/components/Chargement';
 import Marque from '@/components/Marque';
+import { API_ACTIVE, appelApi } from '@/lib/api';
+import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnees/abonnement';
+import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
+import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
+import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
 
 const JOUR = 86400000;
-const DEVISES = ['MAD', 'FCFA', 'EUR', 'CAD', 'USD', 'GNF'];
+const DEVISES = ['FCFA', 'MAD', 'EUR', 'USD', 'CAD', 'GNF'];
 const CLASSE_STATUT = { essai: 'safran', actif: '', expire: 'rouge', suspendu: 'sombre' };
+const MOYENS = ['Espèces', 'Wave', 'Orange Money', 'MTN MoMo', 'Moov Money', 'Carte bancaire', 'Virement'];
+const CLE_SESSION = 'kaislo:admin-jeton';
 
-// Résumé d'un commerce pour l'équipe Amorac
-function resumer(d) {
-  const il30j = Date.now() - 30 * JOUR;
-  const ventes = d.ventes.filter((v) => !v.annulee);
-  const recentes = ventes.filter((v) => new Date(v.date) >= il30j);
-  const derniere = ventes.length ? ventes[ventes.length - 1].date : null;
-  const gerant = d.utilisateurs.find((u) => u.role === 'gerant');
-  return {
-    d,
-    id: d.commerce.id,
-    commerce: d.commerce,
-    gerant: gerant?.nom || d.commerce.gerantNom || '—',
-    gerantTelephone: gerant?.telephone || '',
-    etat: etatAbonnement(d.commerce.abonnement),
-    ca30: recentes.reduce((s, v) => s + v.total, 0),
-    tickets30: recentes.length,
-    derniereActivite: derniere || d.commerce.creeLe || null,
-    actifSemaine: derniere && Date.now() - new Date(derniere) < 7 * JOUR,
-    nbProduits: d.produits.length,
-    nbVendeurs: d.utilisateurs.filter((u) => u.role === 'vendeur' && u.actif).length,
-  };
-}
+// Jeton de la session gardé pour l'onglet seulement (fermé = déconnecté)
+const lireJeton = () => { try { return sessionStorage.getItem(CLE_SESSION); } catch { return null; } };
+const garderJeton = (j) => { try { j ? sessionStorage.setItem(CLE_SESSION, j) : sessionStorage.removeItem(CLE_SESSION); } catch { /* rien */ } };
 
 export default function Admin() {
-  const [connecte, setConnecte] = useState(false);
-  const [pret, setPret] = useState(false);
+  const [etat, setEtat] = useState({ pret: false, admin: null, installe: true, jeton: null });
   useEffect(() => {
-    try { setConnecte(sessionStorage.getItem('kaislo:admin') === 'oui'); } catch { /* rien */ }
-    setPret(true);
+    if (!API_ACTIVE) return setEtat({ pret: true, admin: null, installe: true, jeton: null });
+    (async () => {
+      const jeton = lireJeton();
+      if (jeton) {
+        try {
+          const rep = await appelApi('GET', '/admin/moi', null, jeton);
+          return setEtat({ pret: true, admin: rep.admin, installe: true, jeton });
+        } catch { garderJeton(null); }
+      }
+      const rep = await appelApi('GET', '/admin/etat').catch(() => ({ installe: true }));
+      setEtat({ pret: true, admin: null, installe: rep.installe, jeton: null });
+    })();
   }, []);
-  if (!pret) return <Chargement texte="Ouverture de l’espace Amorac…" />;
-  if (!connecte) return <ConnexionAdmin surConnexion={() => setConnecte(true)} />;
-  return <TableauAdmin surDeconnexion={() => { try { sessionStorage.removeItem('kaislo:admin'); } catch { /* rien */ } setConnecte(false); }} />;
+  const connecte = (rep) => { garderJeton(rep.jeton); setEtat({ pret: true, admin: rep.admin, installe: true, jeton: rep.jeton }); };
+  const deconnexion = () => {
+    appelApi('POST', '/admin/deconnexion', null, etat.jeton).catch(() => {});
+    garderJeton(null);
+    setEtat({ pret: true, admin: null, installe: true, jeton: null });
+  };
+
+  if (!etat.pret) return <Chargement texte="Ouverture de l’espace Amorac…" />;
+  if (!API_ACTIVE) return <Cadre><p className="astuce">L’espace Amorac fonctionne sur le serveur (version hébergée). Cette version de test n’a pas de serveur.</p></Cadre>;
+  if (!etat.admin) return etat.installe ? <ConnexionAdmin surConnexion={connecte} /> : <InstallationAdmin surConnexion={connecte} />;
+  return <TableauAdmin admin={etat.admin} jeton={etat.jeton} surDeconnexion={deconnexion} />;
 }
 
-function ConnexionAdmin({ surConnexion }) {
-  const [mdp, setMdp] = useState('');
-  const [erreur, setErreur] = useState(false);
-  const valider = () => {
-    if (mdp === ADMIN_MOT_DE_PASSE) {
-      try { sessionStorage.setItem('kaislo:admin', 'oui'); } catch { /* rien */ }
-      surConnexion();
-    } else setErreur(true);
-  };
+function Cadre({ children }) {
   return (
     <div className="ecran-chargement" style={{ padding: 20 }}>
-      <div className="carte pile" style={{ width: '100%', maxWidth: 420 }}>
+      <div className="carte pile" style={{ width: '100%', maxWidth: 440 }}>
         <span className="logo"><Marque /> Kaislo · Amorac</span>
-        <h2>Espace équipe</h2>
-        <p className="petit muet">Gestion des commerces, abonnements et offres.</p>
-        <label className="champ"><span>Mot de passe</span>
-          <input type="password" value={mdp} onChange={(e) => { setMdp(e.target.value); setErreur(false); }} onKeyDown={(e) => e.key === 'Enter' && valider()} autoFocus />
-        </label>
-        {erreur && <p className="alerte">Mot de passe incorrect</p>}
-        <button className="btn bloc" onClick={valider}>Entrer</button>
-        <p className="tres-petit muet">Démonstration : l’accès sera protégé par le serveur dans la version en ligne.</p>
+        {children}
       </div>
     </div>
   );
 }
 
-function TableauAdmin({ surDeconnexion }) {
+function ConnexionAdmin({ surConnexion }) {
+  const [f, setF] = useState({ email: '', motDePasse: '' });
+  const [erreur, setErreur] = useState('');
+  const [enCours, setEnCours] = useState(false);
+  const valider = async (e) => {
+    e.preventDefault();
+    setEnCours(true);
+    try { surConnexion(await appelApi('POST', '/admin/connexion', f)); } catch (err) { setErreur(err.message); }
+    setEnCours(false);
+  };
+  return (
+    <Cadre>
+      <h2>Espace équipe</h2>
+      <p className="petit muet">Gestion des commerces, abonnements, messages et offres.</p>
+      <form className="pile" onSubmit={valider}>
+        <label className="champ"><span>E-mail</span><input type="email" autoComplete="username" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} autoFocus /></label>
+        <label className="champ"><span>Mot de passe</span><input type="password" autoComplete="current-password" value={f.motDePasse} onChange={(e) => setF({ ...f, motDePasse: e.target.value })} /></label>
+        {erreur && <p className="alerte">{erreur}</p>}
+        <button className="btn bloc" disabled={enCours}>{enCours ? 'Connexion…' : 'Se connecter'}</button>
+      </form>
+    </Cadre>
+  );
+}
+
+// Premier compte : protégé par la clé « CleAdmin » du fichier .env du serveur
+function InstallationAdmin({ surConnexion }) {
+  const [f, setF] = useState({ cle: '', nom: '', email: '', motDePasse: '' });
+  const [erreur, setErreur] = useState('');
+  const maj = (c) => (e) => setF({ ...f, [c]: e.target.value });
+  const valider = async (e) => {
+    e.preventDefault();
+    try { surConnexion(await appelApi('POST', '/admin/installer', f)); } catch (err) { setErreur(err.message); }
+  };
+  return (
+    <Cadre>
+      <h2>Installer l’espace Amorac</h2>
+      <p className="petit muet">Création du premier compte administrateur. La clé d’installation est la valeur « CleAdmin » du fichier .env du serveur.</p>
+      <form className="pile" onSubmit={valider}>
+        <label className="champ"><span>Clé d’installation</span><input type="password" value={f.cle} onChange={maj('cle')} autoFocus /></label>
+        <label className="champ"><span>Votre nom</span><input value={f.nom} onChange={maj('nom')} /></label>
+        <label className="champ"><span>E-mail</span><input type="email" autoComplete="username" value={f.email} onChange={maj('email')} /></label>
+        <label className="champ"><span>Mot de passe (10 caractères, lettres et chiffres)</span><input type="password" autoComplete="new-password" value={f.motDePasse} onChange={maj('motDePasse')} /></label>
+        {erreur && <p className="alerte">{erreur}</p>}
+        <button className="btn bloc">Créer le compte</button>
+      </form>
+    </Cadre>
+  );
+}
+
+function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [ecran, setEcran] = useState('tableau');
-  const [version, setVersion] = useState(0); // force le rechargement après une modification
-  const [ouvert, setOuvert] = useState(null); // id du commerce affiché
-  const commerces = useMemo(() => tousLesCommerces().map(resumer), [version]);
-  const recharger = () => setVersion((v) => v + 1);
-  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['paiements', 'Paiements', 'ventes'], ['offres', 'Offres', 'remise']];
-  const fiche = commerces.find((c) => c.id === ouvert);
+  const [donnees, setDonnees] = useState(null); // { commerces, offres }
+  const [ouvert, setOuvert] = useState(null);
+  const [nonLus, setNonLus] = useState(0);
+  const api = useCallback((m, c, corps) => appelApi(m, c, corps, jeton).catch((e) => { if (e.statut === 401) surDeconnexion(); throw e; }), [jeton, surDeconnexion]);
+  const recharger = useCallback(async () => {
+    const rep = await api('GET', '/admin/commerces');
+    const commerces = rep.commerces.map((c) => ({ ...c, etat: etatAbonnement(c.commerce.abonnement) }));
+    setDonnees({ commerces, offres: rep.offres });
+    setNonLus(commerces.reduce((n, c) => n + c.messagesNonLus, 0));
+  }, [api]);
+  useEffect(() => { recharger(); const m = setInterval(recharger, 60000); return () => clearInterval(m); }, [recharger]);
+
+  const estAdmin = admin.role === 'admin';
+  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'],
+    ...(estAdmin ? [['offres', 'Offres', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
+  const fiche = donnees?.commerces.find((c) => c.id === ouvert);
+  const ctx = { api, recharger, offres: donnees?.offres || [], estAdmin, ouvrir: setOuvert, admin };
 
   return (
     <div className="coque">
       <nav className="menu" aria-label="Menu Amorac">
         <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Amorac</span></span></div>
         <div className="menu-liens">
-          {liens.map(([e, l, i]) => (
+          {liens.map(([e, l, i, pastille]) => (
             <button key={e} className={`menu-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); window.scrollTo(0, 0); }}>
-              <Icone nom={i} /><span className="tronque">{l}</span>
+              <Icone nom={i} /><span className="tronque">{l}</span>{pastille ? <span className="pastille-nb">{pastille}</span> : null}
             </button>
           ))}
           <button className="menu-lien seulement-mobile" onClick={surDeconnexion}><Icone nom="sortie" /><span>Sortir</span></button>
         </div>
         <div className="menu-pied">
           <button className="carte-utilisateur" onClick={surDeconnexion}>
-            <span className="avatar gerant">AM</span>
-            <span className="infos"><b className="bloc-texte">Équipe Amorac</b><span className="tres-petit" style={{ opacity: 0.65 }}>Se déconnecter</span></span>
+            <span className="avatar gerant">{initiales(admin.nom)}</span>
+            <span className="infos"><b className="bloc-texte tronque">{admin.nom}</b><span className="tres-petit" style={{ opacity: 0.65 }}>{admin.role === 'admin' ? 'Administrateur' : 'Support'} · se déconnecter</span></span>
           </button>
         </div>
       </nav>
       <main className="principal">
-        {ecran === 'tableau' && <VueTableau commerces={commerces} ouvrir={setOuvert} />}
-        {ecran === 'commerces' && <VueCommerces commerces={commerces} ouvrir={setOuvert} />}
-        {ecran === 'paiements' && <VuePaiements commerces={commerces} ouvrir={setOuvert} />}
-        {ecran === 'offres' && <VueOffres />}
+        {!donnees ? <Chargement plein={false} texte="Chargement des commerces…" /> : (
+          <>
+            {ecran === 'tableau' && <VueTableau commerces={donnees.commerces} ctx={ctx} />}
+            {ecran === 'commerces' && <VueCommerces commerces={donnees.commerces} ctx={ctx} />}
+            {ecran === 'messages' && <VueMessages ctx={ctx} />}
+            {ecran === 'paiements' && <VuePaiements commerces={donnees.commerces} ctx={ctx} />}
+            {ecran === 'offres' && <VueOffres ctx={ctx} />}
+            {ecran === 'equipe' && <VueEquipe ctx={ctx} />}
+          </>
+        )}
       </main>
-      {fiche && <FicheCommerce c={fiche} fermer={() => setOuvert(null)} recharger={recharger} />}
+      {fiche && <FicheCommerce c={fiche} ctx={ctx} fermer={() => setOuvert(null)} />}
     </div>
   );
 }
@@ -134,25 +182,21 @@ function EnTeteAdmin({ surTitre, titre, children }) {
   );
 }
 
-// Montants groupés par devise : "1 200,00 DH · 45 000 FCFA"
+// Montants groupés par devise : « 45 000 FCFA · 120,00 € »
 function parDevise(lignes) {
   const totaux = {};
   for (const { montant, devise } of lignes) totaux[devise] = (totaux[devise] || 0) + montant;
-  const texte = Object.entries(totaux).map(([dev, m]) => formatPrix(m, dev)).join(' · ');
-  return texte || '—';
+  return Object.entries(totaux).map(([dev, m]) => formatPrix(m, dev)).join(' · ') || '—';
 }
+const paiementsDe = (commerces) => commerces.flatMap((c) => (c.commerce.abonnement?.paiements || []).map((p) => ({ ...p, c })));
 
-function paiementsDe(commerces) {
-  return commerces.flatMap((c) => (c.commerce.abonnement?.paiements || []).map((p) => ({ ...p, c })));
-}
-
-function VueTableau({ commerces, ouvrir }) {
+function VueTableau({ commerces, ctx }) {
   const compte = (statut) => commerces.filter((c) => c.etat.statut === statut).length;
   const debutMois = new Date();
   debutMois.setDate(1);
   debutMois.setHours(0, 0, 0, 0);
-  const paiements = paiementsDe(commerces);
-  const duMois = paiements.filter((p) => new Date(p.date) >= debutMois);
+  const duMois = paiementsDe(commerces).filter((p) => new Date(p.date) >= debutMois);
+  const actifsSemaine = commerces.filter((c) => c.derniereActivite && Date.now() - new Date(c.derniereActivite) < 7 * JOUR).length;
   const aRelancer = commerces
     .filter((c) => c.etat.statut === 'expire' || (c.etat.statut === 'essai' && c.etat.joursRestants <= 7))
     .sort((a, b) => (a.etat.joursRestants ?? 0) - (b.etat.joursRestants ?? 0));
@@ -161,33 +205,30 @@ function VueTableau({ commerces, ouvrir }) {
     for (const c of commerces) m[cle(c)] = (m[cle(c)] || 0) + 1;
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   };
-
   return (
     <>
       <EnTeteAdmin surTitre="Équipe Amorac" titre="Tableau de bord" />
       <div className="contenu">
-        <p className="astuce" style={{ marginBottom: 16 }}>Démonstration : seuls les commerces créés sur cet appareil (et les démos) apparaissent ici. En ligne, tous les commerces s’afficheront.</p>
         <div className="kpis">
-          <div className="carte kpi"><p className="petit muet">Commerces</p><p className="kpi-valeur">{commerces.length}</p><p className="sous">{commerces.filter((c) => c.actifSemaine).length} actifs cette semaine</p></div>
+          <div className="carte kpi"><p className="petit muet">Commerces</p><p className="kpi-valeur">{commerces.length}</p><p className="sous">{actifsSemaine} actifs cette semaine</p></div>
           <div className="carte kpi"><p className="petit muet">Abonnés</p><p className="kpi-valeur vert-texte">{compte('actif')}</p><p className="sous">abonnement en cours</p></div>
           <div className="carte kpi"><p className="petit muet">En essai</p><p className="kpi-valeur" style={{ color: 'var(--safran-fonce)' }}>{compte('essai')}</p><p className="sous">{DUREE_ESSAI_JOURS} jours gratuits</p></div>
           <div className="carte kpi"><p className="petit muet">Expirés</p><p className="kpi-valeur rouge-texte">{compte('expire')}</p><p className="sous">à relancer</p></div>
           <div className="carte kpi"><p className="petit muet">Suspendus</p><p className="kpi-valeur">{compte('suspendu')}</p><p className="sous">accès bloqué</p></div>
           <div className="carte kpi"><p className="petit muet">Encaissé ce mois</p><p className="kpi-valeur petit" style={{ fontSize: 17 }}>{parDevise(duMois)}</p><p className="sous">{duMois.length} paiement(s)</p></div>
         </div>
-
         <div className="grille-ecran deux" style={{ marginTop: 16 }}>
           <div className="carte">
             <h3>À relancer</h3>
             <p className="tres-petit muet">Essais qui se terminent dans 7 jours ou moins, et abonnements expirés.</p>
             <div className="liste" style={{ marginTop: 12 }}>
-              {aRelancer.map((c) => <LigneCommerce key={c.id} c={c} ouvrir={ouvrir} />)}
+              {aRelancer.map((c) => <LigneCommerce key={c.id} c={c} ctx={ctx} />)}
               {!aRelancer.length && <p className="muet petit" style={{ padding: 16 }}>Personne à relancer pour le moment.</p>}
             </div>
           </div>
           <div className="pile">
             <Repartition titre="Par pays" lignes={repartition((c) => paysParId(c.commerce.pays).nom)} total={commerces.length} />
-            <Repartition titre="Par type de commerce" lignes={repartition((c) => typeCommerce(c.commerce.type).nom)} total={commerces.length} />
+            <Repartition titre="Par activité" lignes={repartition((c) => typeCommerce(c.commerce.type).nom)} total={commerces.length} />
           </div>
         </div>
       </div>
@@ -203,22 +244,23 @@ function Repartition({ titre, lignes, total }) {
         {lignes.map(([nom, n]) => (
           <div key={nom} className="classement-ligne">
             <div className="ligne espace petit"><span>{nom}</span><b>{n}</b></div>
-            <div className="jauge"><div style={{ width: (n / total) * 100 + '%' }} /></div>
+            <div className="jauge"><div style={{ width: (n / Math.max(total, 1)) * 100 + '%' }} /></div>
           </div>
         ))}
+        {!lignes.length && <p className="muet petit">Aucun commerce pour le moment.</p>}
       </div>
     </div>
   );
 }
 
-function LigneCommerce({ c, ouvrir }) {
-  const offre = offresActuelles().find((o) => o.id === c.commerce.abonnement?.offre);
+function LigneCommerce({ c, ctx }) {
+  const offre = ctx.offres.find((o) => o.id === c.commerce.abonnement?.offre);
   return (
-    <button className="liste-item" onClick={() => ouvrir(c.id)}>
-      <ImageStockee reference={c.commerce.logo} className="mini-photo" alt="" secours={<span className="mini-emoji teinte-vert">{initiales(c.commerce.nom)}</span>} />
+    <button className="liste-item" onClick={() => ctx.ouvrir(c.id)}>
+      <span className="mini-emoji teinte-vert">{initiales(c.commerce.nom)}</span>
       <span className="grandit">
-        <b className="bloc-texte tronque">{c.commerce.nom}</b>
-        <span className="tres-petit muet tronque bloc-texte">{paysParId(c.commerce.pays).nom} · {c.commerce.ville} · {c.gerant}</span>
+        <b className="bloc-texte tronque">{c.commerce.nom}{c.messagesNonLus ? <span className="badge safran" style={{ marginLeft: 6 }}>{c.messagesNonLus} message(s)</span> : null}</b>
+        <span className="tres-petit muet tronque bloc-texte">{paysParId(c.commerce.pays).nom} · {c.commerce.ville} · {c.gerant} · {c.commerce.telephone}</span>
       </span>
       <span style={{ textAlign: 'right' }}>
         <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}{offre && c.etat.statut === 'actif' ? ' · ' + offre.nom : ''}</span>
@@ -228,12 +270,15 @@ function LigneCommerce({ c, ouvrir }) {
   );
 }
 
-function VueCommerces({ commerces, ouvrir }) {
+function VueCommerces({ commerces, ctx }) {
   const [filtre, setFiltre] = useState('tous');
   const [recherche, setRecherche] = useState('');
   const r = recherche.trim().toLowerCase();
+  const chiffres = r.replace(/\D/g, '');
   const liste = commerces
-    .filter((c) => (filtre === 'tous' || c.etat.statut === filtre) && (!r || [c.commerce.nom, c.commerce.ville, c.commerce.code, c.gerant, c.gerantTelephone].some((x) => (x || '').toLowerCase().includes(r))))
+    .filter((c) => (filtre === 'tous' || c.etat.statut === filtre) && (!r
+      || [c.commerce.nom, c.commerce.ville, c.commerce.code, c.gerant].some((x) => (x || '').toLowerCase().includes(r))
+      || (chiffres.length >= 4 && [c.commerce.telephone, c.gerantTelephone].some((x) => (x || '').replace(/\D/g, '').includes(chiffres)))))
     .sort((a, b) => (b.derniereActivite || '').localeCompare(a.derniereActivite || ''));
   return (
     <>
@@ -247,7 +292,7 @@ function VueCommerces({ commerces, ouvrir }) {
           <Puces options={[['tous', 'Tous'], ['essai', 'Essai'], ['actif', 'Actifs'], ['expire', 'Expirés'], ['suspendu', 'Suspendus']]} valeur={filtre} surChanger={setFiltre} />
         </div>
         <div className="liste">
-          {liste.map((c) => <LigneCommerce key={c.id} c={c} ouvrir={ouvrir} />)}
+          {liste.map((c) => <LigneCommerce key={c.id} c={c} ctx={ctx} />)}
           {!liste.length && <p className="muet petit" style={{ padding: 16 }}>Aucun commerce.</p>}
         </div>
       </div>
@@ -255,7 +300,7 @@ function VueCommerces({ commerces, ouvrir }) {
   );
 }
 
-function VuePaiements({ commerces, ouvrir }) {
+function VuePaiements({ commerces, ctx }) {
   const paiements = paiementsDe(commerces).sort((a, b) => b.date.localeCompare(a.date));
   return (
     <>
@@ -264,10 +309,10 @@ function VuePaiements({ commerces, ouvrir }) {
         <div className="carte kpi" style={{ marginBottom: 14 }}><p className="petit muet">Total encaissé</p><p className="kpi-valeur">{parDevise(paiements)}</p></div>
         <div className="liste">
           {paiements.map((p) => (
-            <button key={p.c.id + p.id} className="liste-item" onClick={() => ouvrir(p.c.id)}>
+            <button key={p.id} className="liste-item" onClick={() => ctx.ouvrir(p.c.id)}>
               <span className="grandit">
                 <b className="bloc-texte tronque">{p.c.commerce.nom}</b>
-                <span className="tres-petit muet">{formatDate(p.date)} · {p.mois} mois{p.note ? ' · ' + p.note : ''}</span>
+                <span className="tres-petit muet">{formatDate(p.date)} · {p.mois} mois · {p.moyen || '—'}{p.note ? ' · ' + p.note : ''} · par {p.creePar}</span>
               </span>
               <b className="chiffre">{formatPrix(p.montant, p.devise)}</b>
             </button>
@@ -279,12 +324,95 @@ function VuePaiements({ commerces, ouvrir }) {
   );
 }
 
-function VueOffres() {
-  const [offres, setOffres] = useState(() => JSON.parse(JSON.stringify(offresActuelles())));
+// ---------- Messages : conversations avec les commerces ----------
+function VueMessages({ ctx }) {
+  const [conversations, setConversations] = useState(null);
+  const [choisie, setChoisie] = useState(null);
+  const charger = useCallback(async () => setConversations((await ctx.api('GET', '/admin/conversations')).conversations), [ctx]);
+  useEffect(() => { charger(); const m = setInterval(charger, 20000); return () => clearInterval(m); }, [charger]);
+  return (
+    <>
+      <EnTeteAdmin surTitre="Questions des commerces" titre="Messages" />
+      <div className="contenu" style={{ maxWidth: 1100 }}>
+        <div className="grille-ecran deux">
+          <div className="liste">
+            {conversations?.map((c) => (
+              <button key={c.commerceId} className={`liste-item ${choisie === c.commerceId ? 'actif' : ''}`} onClick={() => setChoisie(c.commerceId)}>
+                <span className="mini-emoji teinte-vert">{initiales(c.nom)}</span>
+                <span className="grandit">
+                  <b className="bloc-texte tronque">{c.nom}</b>
+                  <span className="tres-petit muet tronque bloc-texte">{c.dernier.auteur === 'amorac' ? 'Vous : ' : ''}{c.dernier.texte}</span>
+                </span>
+                <span style={{ textAlign: 'right' }}>
+                  {c.nonLus > 0 && <span className="badge safran">{c.nonLus}</span>}
+                  <span className="tres-petit muet bloc-texte">{formatDate(c.dernier.le)}</span>
+                </span>
+              </button>
+            ))}
+            {conversations?.length === 0 && <p className="muet petit" style={{ padding: 16 }}>Aucun message pour le moment.</p>}
+            {!conversations && <p className="muet petit" style={{ padding: 16 }}>Chargement…</p>}
+          </div>
+          {choisie ? <Conversation commerceId={choisie} ctx={ctx} surEnvoi={charger} /> : <p className="astuce">Choisissez une conversation.</p>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Conversation({ commerceId, ctx, surEnvoi }) {
+  const [messages, setMessages] = useState(null);
+  const [texte, setTexte] = useState('');
+  const [erreur, setErreur] = useState('');
+  useEffect(() => {
+    let actif = true;
+    const lire = () => ctx.api('GET', '/admin/messages?commerce=' + encodeURIComponent(commerceId)).then((r) => actif && setMessages(r.messages)).catch(() => {});
+    lire();
+    const m = setInterval(lire, 15000);
+    return () => { actif = false; clearInterval(m); };
+  }, [commerceId, ctx]);
+  const envoyer = async () => {
+    if (!texte.trim()) return;
+    try {
+      const r = await ctx.api('POST', '/admin/messages', { commerceId, texte: texte.trim() });
+      setMessages(r.messages);
+      setTexte('');
+      surEnvoi();
+    } catch (e) { setErreur(e.message); }
+  };
+  return (
+    <div className="carte messagerie">
+      <div className="ligne espace" style={{ padding: '10px 14px', borderBottom: '1px solid var(--bordure)' }}>
+        <b>Conversation</b>
+        <button className="lien" onClick={() => ctx.ouvrir(commerceId)}>Fiche du commerce</button>
+      </div>
+      <div className="fil-messages">
+        {messages?.map((m) => (
+          <div key={m.id} className={'bulle ' + (m.auteur === 'amorac' ? 'moi' : 'equipe')}>
+            <p>{m.texte}</p>
+            <span className="tres-petit">{m.auteur === 'amorac' ? 'Équipe Kaislo' : m.auteurNom} · {formatDate(m.le)} {formatHeure(m.le)}</span>
+          </div>
+        ))}
+      </div>
+      {erreur && <p className="alerte" style={{ margin: '0 14px 10px' }}>{erreur}</p>}
+      <div className="saisie-message">
+        <textarea value={texte} onChange={(e) => setTexte(e.target.value)} placeholder="Votre réponse…" rows={2} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) envoyer(); }} />
+        <button className="btn" onClick={envoyer} disabled={!texte.trim()}>Répondre</button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Offres : noms, descriptions et prix par devise ----------
+function VueOffres({ ctx }) {
+  const [offres, setOffres] = useState(() => JSON.parse(JSON.stringify(ctx.offres)));
+  const [message, setMessage] = useState('');
   const maj = (i, x) => setOffres(offres.map((o, j) => (j === i ? { ...o, ...x } : o)));
-  const enregistrer = () => {
-    enregistrerAdmin({ ...chargerAdmin(), offres });
-    alert('Offres enregistrées');
+  const enregistrer = async () => {
+    try {
+      await ctx.api('POST', '/admin/offres', { offres });
+      await ctx.recharger();
+      setMessage('Offres enregistrées');
+    } catch (e) { setMessage(e.message); }
   };
   return (
     <>
@@ -292,7 +420,8 @@ function VueOffres() {
         <button className="btn" onClick={enregistrer}>Enregistrer</button>
       </EnTeteAdmin>
       <div className="contenu" style={{ maxWidth: 900 }}>
-        <p className="astuce" style={{ marginBottom: 14 }}>Les prix indiqués sont des exemples : remplacez-les par vos tarifs. L’essai gratuit dure {DUREE_ESSAI_JOURS} jours.</p>
+        {message && <p className="info-verte" style={{ marginBottom: 14 }}>{message}</p>}
+        <p className="astuce" style={{ marginBottom: 14 }}>L’essai gratuit dure {DUREE_ESSAI_JOURS} jours. Les prix servent de montant proposé lors de l’enregistrement d’un paiement.</p>
         {offres.map((o, i) => (
           <div key={o.id} className="carte pile" style={{ marginBottom: 14 }}>
             <div className="grille-2">
@@ -303,7 +432,7 @@ function VueOffres() {
             {o.id !== 'essai' && (
               <div className="grille-3">
                 {DEVISES.map((dev) => (
-                  <label key={dev} className="champ"><span>{NOMS_DEVISES[dev]} / mois</span>
+                  <label key={dev} className="champ"><span>{NOMS_DEVISES[dev] || dev} / mois</span>
                     <ChampMontant valeur={o.prix?.[dev] ?? null} surChanger={(v) => maj(i, { prix: { ...o.prix, [dev]: v } })} />
                   </label>
                 ))}
@@ -311,72 +440,144 @@ function VueOffres() {
             )}
           </div>
         ))}
-        <button className="btn fantome" onClick={() => setOffres(JSON.parse(JSON.stringify(OFFRES_DEFAUT)))}>Revenir aux offres par défaut</button>
       </div>
     </>
   );
 }
 
-// ---------- Fiche d'un commerce : abonnement, paiements, suspension ----------
-function FicheCommerce({ c, fermer, recharger }) {
-  const offres = offresActuelles();
+// ---------- Équipe Amorac : comptes et rôles ----------
+function VueEquipe({ ctx }) {
+  const [equipe, setEquipe] = useState(null);
+  const [edition, setEdition] = useState(null);
+  const [erreur, setErreur] = useState('');
+  useEffect(() => { ctx.api('GET', '/admin/equipe').then((r) => setEquipe(r.equipe)).catch((e) => setErreur(e.message)); }, [ctx]);
+  const enregistrer = async () => {
+    try {
+      const r = await ctx.api('POST', '/admin/equipe', edition);
+      setEquipe(r.equipe);
+      setEdition(null);
+      setErreur('');
+    } catch (e) { setErreur(e.message); }
+  };
+  return (
+    <>
+      <EnTeteAdmin surTitre="Comptes de l’espace Amorac" titre="Équipe">
+        <button className="btn" onClick={() => setEdition({ nom: '', email: '', role: 'support', actif: true, motDePasse: '' })}><Icone nom="plus" /> Compte</button>
+      </EnTeteAdmin>
+      <div className="contenu" style={{ maxWidth: 800 }}>
+        <p className="astuce" style={{ marginBottom: 14 }}><b>Administrateur</b> : tout (abonnements, paiements, offres, équipe). <b>Support</b> : consultation, notes et messages.</p>
+        <div className="liste">
+          {equipe?.map((a) => (
+            <button key={a.id} className={`liste-item ${a.actif ? '' : 'inactif'}`} onClick={() => setEdition({ ...a, motDePasse: '' })}>
+              <span className="avatar gerant">{initiales(a.nom)}</span>
+              <span className="grandit">
+                <b className="bloc-texte">{a.nom} {a.id === ctx.admin.id ? <span className="badge">vous</span> : null}</b>
+                <span className="tres-petit muet">{a.email} · dernière connexion {a.vuLe ? formatDate(a.vuLe) : '—'}</span>
+              </span>
+              <span className={`badge ${a.role === 'admin' ? 'safran' : 'gris'}`}>{a.role === 'admin' ? 'Administrateur' : 'Support'}{a.actif ? '' : ' · désactivé'}</span>
+            </button>
+          ))}
+        </div>
+        {erreur && !edition && <p className="alerte" style={{ marginTop: 12 }}>{erreur}</p>}
+      </div>
+      {edition && (
+        <Feuille titre={edition.id ? edition.nom : 'Nouveau compte'} surFermer={() => setEdition(null)} pied={<button className="btn bloc" onClick={enregistrer}>Enregistrer</button>}>
+          <div className="pile">
+            <label className="champ"><span>Nom</span><input value={edition.nom} onChange={(e) => setEdition({ ...edition, nom: e.target.value })} /></label>
+            <label className="champ"><span>E-mail</span><input type="email" value={edition.email} onChange={(e) => setEdition({ ...edition, email: e.target.value })} /></label>
+            <label className="champ"><span>Rôle</span>
+              <select value={edition.role} onChange={(e) => setEdition({ ...edition, role: e.target.value })}>
+                <option value="support">Support</option><option value="admin">Administrateur</option>
+              </select>
+            </label>
+            <label className="champ"><span>{edition.id ? 'Nouveau mot de passe (laisser vide pour le garder)' : 'Mot de passe (10 caractères, lettres et chiffres)'}</span>
+              <input type="password" autoComplete="new-password" value={edition.motDePasse} onChange={(e) => setEdition({ ...edition, motDePasse: e.target.value })} />
+            </label>
+            {edition.id && <label className="case-accord"><input type="checkbox" checked={edition.actif} onChange={(e) => setEdition({ ...edition, actif: e.target.checked })} /><span>Compte actif</span></label>}
+            {erreur && <p className="alerte">{erreur}</p>}
+          </div>
+        </Feuille>
+      )}
+    </>
+  );
+}
+
+// ---------- Fiche d'un commerce : abonnement, paiements, suspension, numéro, équipe ----------
+function FicheCommerce({ c, ctx, fermer }) {
   const ab = c.commerce.abonnement || {};
   const dev = c.commerce.devise;
-  const [offre, setOffre] = useState(ab.offre === 'essai' ? 'starter' : ab.offre || 'starter');
-  const prixOffre = (id) => offres.find((o) => o.id === id)?.prix?.[dev] ?? 0;
+  const prixOffre = (id) => ctx.offres.find((o) => o.id === id)?.prix?.[dev] ?? 0;
+  const [offre, setOffre] = useState(ab.offre === 'essai' || !ab.offre ? 'starter' : ab.offre);
   const [mois, setMois] = useState(1);
-  const [montant, setMontant] = useState(prixOffre(offre));
-  const [notes, setNotes] = useState(ab.notes || '');
+  const [montant, setMontant] = useState(prixOffre(ab.offre === 'essai' || !ab.offre ? 'starter' : ab.offre));
+  const [moyen, setMoyen] = useState(MOYENS[0]);
+  const [notes, setNotes] = useState(c.commerce.notes || '');
+  const [telephone, setTelephone] = useState(c.commerce.telephone || '');
+  const [detail, setDetail] = useState(null); // équipe et journal
+  const [message, setMessage] = useState(null);
   const pays = paysParId(c.commerce.pays);
+  useEffect(() => { ctx.api('GET', '/admin/commerce?id=' + encodeURIComponent(c.id)).then(setDetail).catch(() => {}); }, [c.id, ctx]);
 
-  // Enregistre la modification de l'abonnement dans les données du commerce
-  const majAbonnement = (changements, texte) => {
-    const d = { ...c.d, commerce: { ...c.commerce, abonnement: { ...ab, ...changements } } };
-    enregistrerCommerce(d);
-    recharger();
-    if (texte) alert(texte);
+  const action = async (corps, texte) => {
+    try {
+      await ctx.api('POST', '/admin/commerce', { id: c.id, ...corps });
+      await ctx.recharger();
+      setMessage({ ok: true, texte });
+    } catch (e) { setMessage({ ok: false, texte: e.message }); }
   };
-  const enregistrerPaiement = () => {
-    if (!(montant > 0)) return alert('Indiquez le montant reçu');
-    const paiement = { id: genId('pa'), date: new Date().toISOString(), montant: Number(montant), devise: dev, mois: Number(mois), offre, note: '' };
-    majAbonnement({
-      offre,
-      statut: 'actif',
-      periodeFin: prolonger(ab.statut === 'actif' ? ab.periodeFin : null, mois * 30),
-      paiements: [...(ab.paiements || []), paiement],
-    }, 'Paiement enregistré : abonnement actif');
+  const enregistrerPaiement = async () => {
+    try {
+      await ctx.api('POST', '/admin/paiement', { commerceId: c.id, offre, mois, montant: Number(montant), moyen });
+      await ctx.recharger();
+      setMessage({ ok: true, texte: 'Paiement enregistré : abonnement actif' });
+    } catch (e) { setMessage({ ok: false, texte: e.message }); }
   };
   const telContact = c.gerantTelephone || c.commerce.telephone;
   const lienWhatsApp = telContact ? 'https://wa.me/' + numeroWhatsApp(telContact, c.commerce.pays) : null;
 
   return (
     <Feuille titre={c.commerce.nom} sousTitre={'Code ' + c.commerce.code + ' · ' + typeCommerce(c.commerce.type).nom} surFermer={fermer} pleine large
-      avant={<ImageStockee reference={c.commerce.logo} className="mini-photo" alt="" secours={<span className="mini-emoji teinte-vert">{initiales(c.commerce.nom)}</span>} />}>
+      avant={<span className="mini-emoji teinte-vert">{initiales(c.commerce.nom)}</span>}>
+      {message && <p className={message.ok ? 'info-verte' : 'alerte'} style={{ marginBottom: 14 }}>{message.texte}</p>}
       <div className="grille-ecran deux">
         <div className="pile">
           <div className="carte pile">
             <h3>Informations</h3>
             <p className="petit"><b>Gérant :</b> {c.gerant}{c.gerantTelephone ? ' · ' + c.gerantTelephone : ''}</p>
             <p className="petit"><b>Pays :</b> {pays.nom} · {c.commerce.ville} · {symbole(dev)}</p>
-            <p className="petit"><b>Téléphone :</b> {c.commerce.telephone || '—'}</p>
             <p className="petit"><b>Adresse :</b> {c.commerce.adresse || '—'}</p>
-            <p className="petit"><b>Créé le :</b> {c.commerce.creeLe ? formatDate(c.commerce.creeLe) : '—'}</p>
+            <p className="petit"><b>Inscrit le :</b> {c.commerce.creeLe ? formatDate(c.commerce.creeLe) : '—'}</p>
             {lienWhatsApp && <a className="btn secondaire petit" href={lienWhatsApp} target="_blank" rel="noreferrer"><Icone nom="whatsapp" taille="sm" /> Contacter sur WhatsApp</a>}
+          </div>
+          <div className="carte pile">
+            <h3>Numéro du commerce (identifiant)</h3>
+            <div className="ligne">
+              <input className="saisie grandit" value={telephone} onChange={(e) => setTelephone(e.target.value)} disabled={!ctx.estAdmin} />
+              {ctx.estAdmin && <button className="btn secondaire petit" onClick={() => action({ action: 'telephone', telephone }, 'Numéro du commerce modifié')}>Modifier</button>}
+            </div>
+            <p className="tres-petit muet">Format du pays accepté ; le numéro doit être libre dans tout Kaislo.</p>
           </div>
           <div className="carte">
             <h3>Utilisation (30 derniers jours)</h3>
             <div className="grille-2" style={{ marginTop: 12 }}>
               <div><p className="petit muet">Chiffre d’affaires</p><b>{formatPrix(c.ca30, dev)}</b></div>
               <div><p className="petit muet">Tickets</p><b>{c.tickets30}</b></div>
-              <div><p className="petit muet">Produits</p><b>{c.nbProduits}</b></div>
+              <div><p className="petit muet">Articles</p><b>{c.nbProduits}</b></div>
               <div><p className="petit muet">Vendeurs actifs</p><b>{c.nbVendeurs}</b></div>
             </div>
-            <p className="tres-petit muet" style={{ marginTop: 10 }}>Dernière activité : {c.derniereActivite ? formatDate(c.derniereActivite) : '—'}</p>
+            <p className="tres-petit muet" style={{ marginTop: 10 }}>Dernière activité : {c.derniereActivite ? formatDate(c.derniereActivite) + ' ' + formatHeure(c.derniereActivite) : '—'}</p>
+          </div>
+          <div className="carte pile">
+            <h3>Équipe du commerce</h3>
+            {detail?.equipe.map((u) => (
+              <p key={u.id} className="petit">{u.nom} · {u.role === 'gerant' ? 'Gérant' : 'Vendeur'} · {u.telephone}{u.actif ? '' : ' · désactivé'}</p>
+            ))}
+            {!detail && <p className="muet petit">Chargement…</p>}
           </div>
           <div className="carte pile">
             <h3>Notes internes</h3>
             <label className="champ"><textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex : rappelé le 12/10, paiera en début de mois" /></label>
-            <button className="btn secondaire petit" onClick={() => majAbonnement({ notes }, 'Notes enregistrées')}>Enregistrer les notes</button>
+            <button className="btn secondaire petit" onClick={() => action({ action: 'notes', notes }, 'Notes enregistrées')}>Enregistrer les notes</button>
           </div>
         </div>
 
@@ -387,48 +588,62 @@ function FicheCommerce({ c, fermer, recharger }) {
               <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}</span>
             </div>
             <p className="petit">
-              Offre : <b>{offres.find((o) => o.id === ab.offre)?.nom || '—'}</b>
+              Offre : <b>{ctx.offres.find((o) => o.id === ab.offre)?.nom || '—'}</b>
               {c.etat.fin && <> · {c.etat.statut === 'expire' ? 'terminé le ' : 'jusqu’au '}{formatDate(c.etat.fin)}{c.etat.joursRestants > 0 ? ' (' + c.etat.joursRestants + ' j)' : ''}</>}
             </p>
-            {c.etat.statut !== 'suspendu' && (
+            {ctx.estAdmin && c.etat.statut !== 'suspendu' && (
               <div className="grille-2">
-                <button className="btn secondaire petit" onClick={() => majAbonnement({ statut: ab.statut === 'actif' ? 'actif' : 'essai', essaiFin: prolonger(ab.essaiFin, 15) }, 'Essai prolongé de 15 jours')}>+15 jours d’essai</button>
-                <button className="btn danger petit" onClick={() => confirm('Suspendre « ' + c.commerce.nom + ' » ? Personne ne pourra plus se connecter.') && majAbonnement({ statutAvantSuspension: ab.statut, statut: 'suspendu' }, 'Commerce suspendu')}>Suspendre</button>
+                <button className="btn secondaire petit" onClick={() => action({ action: 'prolonger-essai', jours: 15 }, 'Essai prolongé de 15 jours')}>+15 jours d’essai</button>
+                <button className="btn danger petit" onClick={() => confirm('Suspendre « ' + c.commerce.nom + ' » ? Personne ne pourra plus se connecter.') && action({ action: 'suspendre' }, 'Commerce suspendu')}>Suspendre</button>
               </div>
             )}
-            {c.etat.statut === 'suspendu' && (
-              <button className="btn bloc" onClick={() => majAbonnement({ statut: ab.statutAvantSuspension || 'actif' }, 'Commerce réactivé')}>Réactiver le commerce</button>
+            {ctx.estAdmin && c.etat.statut === 'suspendu' && (
+              <button className="btn bloc" onClick={() => action({ action: 'reactiver' }, 'Commerce réactivé')}>Réactiver le commerce</button>
             )}
           </div>
 
-          <div className="carte pile">
-            <h3>Enregistrer un paiement</h3>
-            <div className="grille-2">
-              <label className="champ"><span>Offre</span>
-                <select value={offre} onChange={(e) => { setOffre(e.target.value); setMontant(prixOffre(e.target.value) * mois); }}>
-                  {offres.filter((o) => o.id !== 'essai').map((o) => <option key={o.id} value={o.id}>{o.nom} · {formatPrix(o.prix?.[dev] || 0, dev)}/mois</option>)}
-                </select>
-              </label>
-              <label className="champ"><span>Durée</span>
-                <select value={mois} onChange={(e) => { setMois(Number(e.target.value)); setMontant(prixOffre(offre) * Number(e.target.value)); }}>
-                  {[1, 3, 6, 12].map((m) => <option key={m} value={m}>{m} mois</option>)}
-                </select>
-              </label>
+          {ctx.estAdmin && (
+            <div className="carte pile">
+              <h3>Enregistrer un paiement</h3>
+              <div className="grille-2">
+                <label className="champ"><span>Offre</span>
+                  <select value={offre} onChange={(e) => { setOffre(e.target.value); setMontant(prixOffre(e.target.value) * mois); }}>
+                    {ctx.offres.filter((o) => o.id !== 'essai').map((o) => <option key={o.id} value={o.id}>{o.nom} · {formatPrix(o.prix?.[dev] || 0, dev)}/mois</option>)}
+                  </select>
+                </label>
+                <label className="champ"><span>Durée</span>
+                  <select value={mois} onChange={(e) => { setMois(Number(e.target.value)); setMontant(prixOffre(offre) * Number(e.target.value)); }}>
+                    {[1, 3, 6, 12].map((m) => <option key={m} value={m}>{m} mois</option>)}
+                  </select>
+                </label>
+              </div>
+              <div className="grille-2">
+                <label className="champ"><span>Montant reçu ({symbole(dev)})</span><ChampMontant valeur={montant} surChanger={setMontant} /></label>
+                <label className="champ"><span>Moyen de paiement</span>
+                  <select value={moyen} onChange={(e) => setMoyen(e.target.value)}>{MOYENS.map((m) => <option key={m}>{m}</option>)}</select>
+                </label>
+              </div>
+              <button className="btn bloc" onClick={enregistrerPaiement}><Icone nom="ok" /> Enregistrer le paiement</button>
+              <p className="tres-petit muet">L’abonnement devient actif et l’échéance avance de {mois * 30} jours.</p>
             </div>
-            <label className="champ"><span>Montant reçu ({symbole(dev)})</span><ChampMontant valeur={montant} surChanger={setMontant} /></label>
-            <button className="btn bloc" onClick={enregistrerPaiement}><Icone nom="ok" /> Enregistrer le paiement</button>
-            <p className="tres-petit muet">L’abonnement devient actif et l’échéance avance de {mois * 30} jours.</p>
-          </div>
+          )}
 
           <div className="carte">
             <h3>Historique des paiements</h3>
             {(ab.paiements || []).slice().reverse().map((p) => (
               <div key={p.id} className="ligne espace petit" style={{ marginTop: 10 }}>
-                <span>{formatDate(p.date)} · {p.mois} mois{p.note ? ' · ' + p.note : ''}</span>
+                <span>{formatDate(p.date)} · {p.mois} mois · {p.moyen || '—'}</span>
                 <b className="chiffre">{formatPrix(p.montant, p.devise)}</b>
               </div>
             ))}
             {!(ab.paiements || []).length && <p className="muet petit" style={{ marginTop: 10 }}>Aucun paiement.</p>}
+          </div>
+
+          <div className="carte">
+            <h3>Journal</h3>
+            {detail?.journal.slice(0, 12).map((j, i) => (
+              <p key={i} className="tres-petit" style={{ marginTop: 6 }}><span className="muet">{formatDate(j.le)} {formatHeure(j.le)}</span> · {j.action.replace(/-/g, ' ')}{j.details?.par ? ' · ' + j.details.par : ''}</p>
+            ))}
           </div>
         </div>
       </div>

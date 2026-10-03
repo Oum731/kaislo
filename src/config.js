@@ -40,6 +40,5 @@ export const HEBERGEUR = {
 // Date affichée en haut des pages légales (à changer à chaque modification)
 export const DATE_PAGES_LEGALES = '3 octobre 2026';
 
-// Mot de passe de l'espace Amorac (/admin) — DÉMONSTRATION SEULEMENT.
-// Dans la vraie version, l'accès sera protégé par le serveur (comptes de l'équipe).
-export const ADMIN_MOT_DE_PASSE = 'amorac2026';
+// L'espace Amorac (/admin) est protégé par le serveur : comptes de l'équipe (e-mail + mot de passe).
+// Premier compte : clé « CleAdmin » du fichier .env du serveur.
