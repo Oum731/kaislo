@@ -6,6 +6,7 @@
 // ------------------------------------------------------------
 import Link from 'next/link';
 import { Icone } from '@/components/ui';
+import MenuMobile from './MenuMobile';
 import { CONTACT_EMAIL, CONTACT_WHATSAPP, SITE_URL, chemin } from '@/config';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
@@ -16,20 +17,26 @@ export function Logo() {
   return <Link href="/" className="logo"><span className="logo-marque">K</span> Kaisly</Link>;
 }
 
+// Liens du menu du site (en-tête et menu sur petit écran)
+const LIENS_SITE = [
+  ['/caisse-restaurant/', 'Restaurants'],
+  ['/caisse-epicerie/', 'Épiceries'],
+  ['/#fonctions', 'Fonctions'],
+  ['/#questions', 'Questions'],
+];
+
 export function EnTeteSite() {
   return (
     <header className="site-entete">
       <div className="site-largeur">
         <Logo />
         <nav className="site-nav" aria-label="Navigation du site">
-          <Link href="/caisse-restaurant/">Restaurants</Link>
-          <Link href="/caisse-epicerie/">Épiceries</Link>
-          <Link href="/#fonctions">Fonctions</Link>
-          <Link href="/#questions">Questions</Link>
+          {LIENS_SITE.map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
         </nav>
         <div className="actions">
           <Link href="/app/" className="btn secondaire petit">Se connecter</Link>
           <Link href={LIEN_INSCRIPTION} className="btn petit">Essai gratuit</Link>
+          <MenuMobile liens={LIENS_SITE} lienInscription={LIEN_INSCRIPTION} />
         </div>
       </div>
     </header>

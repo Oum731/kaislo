@@ -644,6 +644,23 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .site-entete .actions .secondaire { display: none; }
 @media (min-width: 640px) { .site-entete .actions .secondaire { display: inline-flex; } }
 
+/* Menu du site sur petit écran (bouton ☰ + panneau sous l'en-tête) */
+.bouton-menu-site {
+  width: 40px; height: 40px; display: grid; place-items: center; flex: none;
+  border: 1px solid var(--bordure); border-radius: var(--rayon-petit); background: var(--surface); color: var(--encre);
+}
+.menu-site-voile { position: fixed; inset: 62px 0 0; background: rgba(20, 33, 28, 0.35); z-index: 38; }
+.menu-site-panneau {
+  position: absolute; top: 62px; left: 0; right: 0; z-index: 39;
+  background: var(--surface); border-bottom: 1px solid var(--bordure); box-shadow: 0 16px 30px rgba(20, 33, 28, 0.12);
+  padding: 8px 20px 20px; display: flex; flex-direction: column;
+  max-height: calc(100dvh - 62px); overflow-y: auto;
+}
+.menu-site-panneau > a { padding: 14px 0; border-bottom: 1px solid var(--bordure); font-weight: 600; font-size: 16px; text-decoration: none; color: var(--encre); }
+.menu-site-actions { display: grid; gap: 10px; margin-top: 18px; }
+.site-entete .menu-site-actions .btn { display: flex; } /* « Se connecter » est masqué dans l’en-tête, pas dans le menu */
+@media (min-width: 900px) { .bouton-menu-site, .menu-site-voile, .menu-site-panneau { display: none; } }
+
 .hero { padding: 56px 0 40px; border-bottom: 1px solid var(--bordure); background: var(--fond); }
 .hero-texte { max-width: 720px; }
 .hero h1 { font-size: clamp(32px, 4.6vw, 52px); line-height: 1.08; letter-spacing: -0.03em; margin: 0 0 16px; }
@@ -667,7 +684,7 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 @media (min-width: 900px) { .hero-captures { grid-template-columns: 1fr 260px; } }
 @media (max-width: 899px) { .hero-captures .capture.telephone { display: none; } }
 
-.section { padding: 72px 0; border-bottom: 1px solid var(--bordure); }
+.section { padding: 72px 0; border-bottom: 1px solid var(--bordure); scroll-margin-top: 62px; } /* ancres (#fonctions…) : ne pas passer sous l’en-tête fixe */
 .section.claire { background: var(--fond); }
 .section h2 { font-size: clamp(26px, 3.2vw, 36px); letter-spacing: -0.025em; max-width: 680px; line-height: 1.15; }
 .section .chapo { font-size: 17px; color: var(--encre-2); max-width: 620px; margin-top: 12px; }
