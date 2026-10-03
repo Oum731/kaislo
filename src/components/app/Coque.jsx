@@ -6,7 +6,7 @@
 //  - la fenêtre ouverte (s'il y en a une)
 // Le menu dépend du rôle et des droits de la personne connectée.
 // ------------------------------------------------------------
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { Icone, Avatar } from '@/components/ui';
 import Accueil from './ecrans/Accueil';
 import Caisse from './ecrans/Caisse';
@@ -18,6 +18,7 @@ import Stock from './ecrans/Stock';
 import Reglages, { BlocImprimante } from './ecrans/Reglages';
 import Feuilles from './feuilles/Feuilles';
 import { EnTete } from './EnTete';
+import Marque from '@/components/Marque';
 
 // Liste des liens du menu : [écran, libellé, icône, pastille]
 export function liensMenu(s) {
@@ -37,7 +38,7 @@ export function liensMenu(s) {
 const ECRANS = { accueil: Accueil, caisse: Caisse, tables: Tables, ventes: Ventes, clients: Clients, produits: Produits, stock: Stock, reglages: Reglages, imprimante: EcranImprimante };
 
 export default function Coque() {
-  const s = useKaisly();
+  const s = useKaislo();
   const liens = liensMenu(s);
   // Sur téléphone : 4 liens + "Plus" s'il y en a trop
   const tropDeLiens = liens.length > 5;
@@ -47,7 +48,7 @@ export default function Coque() {
     <div className="coque">
       <nav className="menu" aria-label="Menu principal">
         <div className="menu-marque">
-          <span className="logo"><span className="logo-marque">K</span><span className="logo-texte">Kaisly</span></span>
+          <span className="logo"><Marque /><span className="logo-texte">Kaislo</span></span>
         </div>
         <div className="menu-liens">
           {liens.map(([ecran, libelle, icone, pastille], i) => (
@@ -89,7 +90,7 @@ export default function Coque() {
 
 // Onglet "Imprimante" du vendeur
 function EcranImprimante() {
-  const d = useKaisly((s) => s.d);
+  const d = useKaislo((s) => s.d);
   return (
     <>
       <EnTete surTitre={d.commerce.nom} titre="Imprimante" />

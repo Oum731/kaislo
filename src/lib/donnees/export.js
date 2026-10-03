@@ -27,7 +27,7 @@ function telecharger(nom, contenu, type) {
 // Toutes les données du commerce, sans les codes PIN
 export function exporterTout(d) {
   const copie = { ...d, utilisateurs: d.utilisateurs.map(({ pin, ...u }) => u), exporteLe: new Date().toISOString() };
-  telecharger(`kaisly-${nomFichier(d.commerce.nom)}-${jour()}.json`, JSON.stringify(copie, null, 2), 'application/json');
+  telecharger(`kaislo-${nomFichier(d.commerce.nom)}-${jour()}.json`, JSON.stringify(copie, null, 2), 'application/json');
 }
 
 // Une cellule CSV : entre guillemets si besoin (séparateur « ; » pour Excel en français)
@@ -62,7 +62,7 @@ export function exporterVentesCsv(d) {
   });
   // ﻿ au début : Excel reconnaît alors les accents (UTF-8)
   const csv = '﻿' + [entete, ...lignes].map((l) => l.map(cellule).join(';')).join('\r\n');
-  telecharger(`kaisly-ventes-${nomFichier(d.commerce.nom)}-${jour()}.csv`, csv, 'text/csv;charset=utf-8');
+  telecharger(`kaislo-ventes-${nomFichier(d.commerce.nom)}-${jour()}.csv`, csv, 'text/csv;charset=utf-8');
 }
 
 // Inventaire : un article par ligne, quantité, prix et valeur du stock (pour compter ou pour le comptable)
@@ -78,5 +78,5 @@ export function exporterInventaireCsv(d) {
       return [p.nom, categorie(p.categorieId), p.codeBarre, montant(stock), montant(p.seuilAlerte ?? 5), montant(p.prixAchat), montant(p.prix), montant(stock * (p.prixAchat || 0)), montant(stock * p.prix), d.commerce.devise, etat];
     });
   const csv = '﻿' + [entete, ...lignes].map((l) => l.map(cellule).join(';')).join('\r\n');
-  telecharger(`kaisly-inventaire-${nomFichier(d.commerce.nom)}-${jour()}.csv`, csv, 'text/csv;charset=utf-8');
+  telecharger(`kaislo-inventaire-${nomFichier(d.commerce.nom)}-${jour()}.csv`, csv, 'text/csv;charset=utf-8');
 }

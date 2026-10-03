@@ -4,7 +4,7 @@
 // crédit en cours, graphique, alertes de stock, classements.
 // ------------------------------------------------------------
 import { useMemo, useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { calculerStats, LIBELLES_PERIODE } from '@/lib/donnees/statistiques';
 import { totalCreditEnCours } from '@/lib/donnees/credit';
 import { historiqueCaisse } from '@/lib/donnees/cloture';
@@ -15,7 +15,7 @@ import { etatAbonnement } from '@/lib/donnees/abonnement';
 import { CONTACT_WHATSAPP } from '@/config';
 
 export default function Accueil() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [periode, setPeriode] = useState(() => {
     // Tôt le matin, aucune vente aujourd'hui : on montre la semaine
@@ -168,13 +168,13 @@ export default function Accueil() {
 }
 
 export function BadgeEcart({ ecart }) {
-  const s = useKaisly();
+  const s = useKaislo();
   if (ecart === 0) return <span className="badge">Caisse juste</span>;
   return <span className={`badge ${ecart < 0 ? 'rouge' : 'safran'}`}>{ecart < 0 ? 'Manque ' + s.prix(-ecart) : 'Excédent ' + s.prix(ecart)}</span>;
 }
 
 function Classement({ titre, liste, suffixe }) {
-  const s = useKaisly();
+  const s = useKaislo();
   return (
     <div className="carte">
       <h3>{titre}</h3>
@@ -197,11 +197,11 @@ function Classement({ titre, liste, suffixe }) {
 // Les 4 premières étapes d'un nouveau commerce
 // Essai gratuit en cours, ou abonnement terminé
 function BandeauAbonnement() {
-  const s = useKaisly();
+  const s = useKaislo();
   const etat = etatAbonnement(s.d.commerce.abonnement);
   if (etat.statut === 'actif' || etat.statut === 'suspendu') return null;
   const expire = etat.statut === 'expire';
-  const lien = 'https://wa.me/' + CONTACT_WHATSAPP + '?text=' + encodeURIComponent('Bonjour, je souhaite activer mon abonnement Kaisly pour « ' + s.d.commerce.nom + ' » (code ' + s.d.commerce.code + ').');
+  const lien = 'https://wa.me/' + CONTACT_WHATSAPP + '?text=' + encodeURIComponent('Bonjour, je souhaite activer mon abonnement Kaislo pour « ' + s.d.commerce.nom + ' » (code ' + s.d.commerce.code + ').');
   return (
     <div className={expire ? 'alerte ligne' : 'astuce ligne'} style={{ marginBottom: 16, maxWidth: 720, flexWrap: 'wrap' }}>
       <span className="grandit">
@@ -213,7 +213,7 @@ function BandeauAbonnement() {
 }
 
 function PremiersPas() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   if (s.estDemoActuel()) return null;
   const pas = [
@@ -226,7 +226,7 @@ function PremiersPas() {
   if (pas.every((p) => p.fait)) return null;
   return (
     <div className="carte premiers-pas" style={{ marginBottom: 16, maxWidth: 720 }}>
-      <h3>Bienvenue sur Kaisly</h3>
+      <h3>Bienvenue sur Kaislo</h3>
       <p className="petit muet" style={{ marginTop: 4 }}>{pas.length} étapes pour être prêt à encaisser :</p>
       {pas.map((p, i) => (
         <button key={i} className={`pas ${p.fait ? 'fait' : ''}`} onClick={p.action}>

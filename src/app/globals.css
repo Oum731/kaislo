@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------
-   KAISLY — styles (direction « pro sobre »)
+   KAISLO — styles (direction « pro sobre »)
    Charte : crème, vert foncé #14211C, vert #1E5B43, accent safran #E9A23B
    Principes : surfaces plates, coins peu arrondis, bordures fines,
    pas de décorations ni d'emojis, une seule police de texte (DM Sans).
@@ -292,12 +292,9 @@ button.liste-item:hover, .liste-item.cliquable:hover { background: var(--surface
 
 /* Logo (seul endroit en Bricolage Grotesque) */
 .logo { display: inline-flex; align-items: center; gap: 9px; font-family: var(--marque); font-weight: 800; font-size: 21px; letter-spacing: -0.03em; text-decoration: none; }
-.logo-marque {
-  width: 32px; height: 32px; border-radius: 7px; background: var(--vert);
-  display: grid; place-items: center; color: var(--creme); font-size: 18px; flex: none;
-}
+/* Marque Kaislo (dessin SVG : src/components/Marque.jsx) */
+.logo-marque { width: 32px; height: 32px; display: block; flex: none; }
 .menu .logo { color: var(--creme); }
-.menu .logo-marque { background: var(--vert); }
 .menu .logo-texte { display: none; }
 @media (min-width: 1180px) { .menu .logo-texte { display: inline; } }
 

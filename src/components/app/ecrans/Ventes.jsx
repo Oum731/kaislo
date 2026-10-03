@@ -6,7 +6,7 @@
 //  - journées de caisse : historique des ouvertures et fermetures (gérant)
 // ------------------------------------------------------------
 import { useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { formatHeure, formatDate, formatJourLong } from '@/lib/utils/format';
 import { historiqueCaisse, calculerCloture } from '@/lib/donnees/cloture';
 import { Icone, Puces, Segment } from '@/components/ui';
@@ -14,7 +14,7 @@ import { EnTete } from '../EnTete';
 import { BadgeEcart } from './Accueil';
 
 export default function Ventes() {
-  const s = useKaisly();
+  const s = useKaislo();
   const gerant = s.estGerant();
   const [onglet, setOnglet] = useState('tickets');
 
@@ -36,7 +36,7 @@ export default function Ventes() {
 
 // Caisse du jour : ouverte (avec bouton Fermer) ou fermée (avec bouton Ouvrir)
 export function EtatCaisse({ compact = false }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const session = s.caisseOuverte();
   if (!session) {
     return (
@@ -66,7 +66,7 @@ export function EtatCaisse({ compact = false }) {
 }
 
 function ListeTickets() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const gerant = s.estGerant();
   const [filtre, setFiltre] = useState('jour');
@@ -132,7 +132,7 @@ function ListeTickets() {
 
 // Historique des journées de caisse (gérant) : toucher une journée affiche son résumé
 function JourneesCaisse() {
-  const s = useKaisly();
+  const s = useKaislo();
   const journees = historiqueCaisse(s.d).slice(0, 60);
   return (
     <div className="liste" style={{ marginTop: 14 }}>

@@ -2,9 +2,9 @@
 // Réglages généraux du site
 // ------------------------------------------------------------
 
-// Adresse définitive du site : À CHANGER avant la mise en ligne
+// Adresse définitive du site (domaine kaislo.com)
 // (utilisée pour Google : sitemap, liens de partage…)
-export const SITE_URL = 'https://kaisly.amorac.com';
+export const SITE_URL = 'https://kaislo.com';
 
 // Sous-dossier du site : vide sur Hostinger, "/kaisly" pour la version de test
 // sur GitHub Pages (fixé au moment du build par NEXT_PUBLIC_BASE_PATH).
@@ -13,8 +13,8 @@ export const SITE_URL = 'https://kaisly.amorac.com';
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
 export const chemin = (p) => BASE_PATH + p;
 
-export const SITE_NOM = 'Kaisly';
-export const SITE_SLOGAN = 'La caisse simple pour restaurants et épiceries';
+export const SITE_NOM = 'Kaislo';
+export const SITE_SLOGAN = 'La caisse et la gestion de stock simples, pour tous les commerces';
 export const CONTACT_WHATSAPP = '212600000000'; // numéro WhatsApp d'Amorac (sans +)
 export const CONTACT_EMAIL = 'contact@amorac.com';
 

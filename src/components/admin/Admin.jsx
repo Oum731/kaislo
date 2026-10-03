@@ -1,6 +1,6 @@
 'use client';
 // ------------------------------------------------------------
-// ESPACE AMORAC (/admin) : gestion de tous les commerces Kaisly
+// ESPACE AMORAC (/admin) : gestion de tous les commerces Kaislo
 //  - tableau de bord : nombre de commerces, essais, abonnés, revenus
 //  - commerces : fiche, abonnement, paiements, suspension
 //  - paiements : historique des abonnements payés
@@ -19,6 +19,7 @@ import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, genId, symbole, NOMS_DEVISES } from '@/lib/utils/format';
 import { ADMIN_MOT_DE_PASSE } from '@/config';
 import { Icone, Feuille, Puces, ImageStockee, ChampMontant, initiales } from '@/components/ui';
+import Marque from '@/components/Marque';
 
 const JOUR = 86400000;
 const DEVISES = ['MAD', 'FCFA', 'EUR', 'CAD', 'USD', 'GNF'];
@@ -51,12 +52,12 @@ export default function Admin() {
   const [connecte, setConnecte] = useState(false);
   const [pret, setPret] = useState(false);
   useEffect(() => {
-    try { setConnecte(sessionStorage.getItem('kaisly:admin') === 'oui'); } catch { /* rien */ }
+    try { setConnecte(sessionStorage.getItem('kaislo:admin') === 'oui'); } catch { /* rien */ }
     setPret(true);
   }, []);
   if (!pret) return <Chargement texte="Ouverture de l’espace Amorac…" />;
   if (!connecte) return <ConnexionAdmin surConnexion={() => setConnecte(true)} />;
-  return <TableauAdmin surDeconnexion={() => { try { sessionStorage.removeItem('kaisly:admin'); } catch { /* rien */ } setConnecte(false); }} />;
+  return <TableauAdmin surDeconnexion={() => { try { sessionStorage.removeItem('kaislo:admin'); } catch { /* rien */ } setConnecte(false); }} />;
 }
 
 function ConnexionAdmin({ surConnexion }) {
@@ -64,14 +65,14 @@ function ConnexionAdmin({ surConnexion }) {
   const [erreur, setErreur] = useState(false);
   const valider = () => {
     if (mdp === ADMIN_MOT_DE_PASSE) {
-      try { sessionStorage.setItem('kaisly:admin', 'oui'); } catch { /* rien */ }
+      try { sessionStorage.setItem('kaislo:admin', 'oui'); } catch { /* rien */ }
       surConnexion();
     } else setErreur(true);
   };
   return (
     <div className="ecran-chargement" style={{ padding: 20 }}>
       <div className="carte pile" style={{ width: '100%', maxWidth: 420 }}>
-        <span className="logo"><span className="logo-marque">K</span> Kaisly · Amorac</span>
+        <span className="logo"><Marque /> Kaislo · Amorac</span>
         <h2>Espace équipe</h2>
         <p className="petit muet">Gestion des commerces, abonnements et offres.</p>
         <label className="champ"><span>Mot de passe</span>
@@ -97,7 +98,7 @@ function TableauAdmin({ surDeconnexion }) {
   return (
     <div className="coque">
       <nav className="menu" aria-label="Menu Amorac">
-        <div className="menu-marque"><span className="logo"><span className="logo-marque">K</span><span className="logo-texte">Amorac</span></span></div>
+        <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Amorac</span></span></div>
         <div className="menu-liens">
           {liens.map(([e, l, i]) => (
             <button key={e} className={`menu-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); window.scrollTo(0, 0); }}>

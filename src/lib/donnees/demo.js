@@ -2,7 +2,7 @@
 // Données de DÉMONSTRATION : deux commerces prêts à présenter
 // (tous les prix en dirhams) :
 //  - restaurant (id "resto-ivoire") et épicerie (id "chez-sentinelle"),
-//    tous les noms affichés sont "Amorac Kaisly"
+//    tous les noms affichés sont "Amorac Kaislo"
 // Avec 45 jours de ventes, des dépenses, des clôtures, des clients
 // à crédit, des tables occupées et des entrées de stock.
 // ------------------------------------------------------------
@@ -57,7 +57,7 @@ function restoIvoire() {
   return {
     commerce: {
       id: 'resto-ivoire',
-      nom: 'Amorac Kaisly',
+      nom: 'Amorac Kaislo',
       type: 'restaurant',
       pays: 'MA',
       devise: 'MAD',
@@ -74,9 +74,9 @@ function restoIvoire() {
       tables: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6', 'Terrasse 1', 'Terrasse 2', 'À emporter'],
     },
     utilisateurs: [
-      { id: 'u1', nom: 'Amorac Kaisly', role: 'gerant', telephone: '06 00 00 00 01', pin: '1234', actif: true },
-      { id: 'u2', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 02', pin: '0000', actif: true, peutGererProduits: false, peutFaireRemises: true },
-      { id: 'u3', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 03', pin: '1111', actif: true, peutGererProduits: true, peutFaireRemises: false },
+      { id: 'u1', nom: 'Amorac Kaislo', role: 'gerant', telephone: '06 00 00 00 01', pin: '1234', actif: true },
+      { id: 'u2', nom: 'Amorac Kaislo', role: 'vendeur', telephone: '06 00 00 00 02', pin: '0000', actif: true, peutGererProduits: false, peutFaireRemises: true },
+      { id: 'u3', nom: 'Amorac Kaislo', role: 'vendeur', telephone: '06 00 00 00 03', pin: '1111', actif: true, peutGererProduits: true, peutFaireRemises: false },
     ],
     categories: [
       { id: cPlats, nom: 'Plats', couleur: 'vert' },
@@ -124,8 +124,8 @@ function restoIvoire() {
       produit(cDesserts, 'Salade de fruits', 20, 8, '🍉'),
     ],
     clients: [
-      { id: 'k1', nom: 'Amorac Kaisly', telephone: '+212600000001', note: 'Déjeuners de l’équipe, paie le 5 du mois' },
-      { id: 'k2', nom: 'Amorac Kaisly', telephone: '+212600000002', note: '' },
+      { id: 'k1', nom: 'Amorac Kaislo', telephone: '+212600000001', note: 'Déjeuners de l’équipe, paie le 5 du mois' },
+      { id: 'k2', nom: 'Amorac Kaislo', telephone: '+212600000002', note: '' },
     ],
   };
 }
@@ -139,7 +139,7 @@ function chezSentinelle() {
   return {
     commerce: {
       id: 'chez-sentinelle',
-      nom: 'Amorac Kaisly',
+      nom: 'Amorac Kaislo',
       type: 'epicerie',
       pays: 'MA',
       devise: 'MAD',
@@ -156,9 +156,9 @@ function chezSentinelle() {
       tables: [],
     },
     utilisateurs: [
-      { id: 'u1', nom: 'Amorac Kaisly', role: 'gerant', telephone: '06 00 00 00 11', pin: '1234', actif: true },
-      { id: 'u2', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 12', pin: '0000', actif: true, peutGererProduits: true, peutFaireRemises: false },
-      { id: 'u3', nom: 'Amorac Kaisly', role: 'vendeur', telephone: '06 00 00 00 13', pin: '1111', actif: true, peutGererProduits: false, peutFaireRemises: false },
+      { id: 'u1', nom: 'Amorac Kaislo', role: 'gerant', telephone: '06 00 00 00 11', pin: '1234', actif: true },
+      { id: 'u2', nom: 'Amorac Kaislo', role: 'vendeur', telephone: '06 00 00 00 12', pin: '0000', actif: true, peutGererProduits: true, peutFaireRemises: false },
+      { id: 'u3', nom: 'Amorac Kaislo', role: 'vendeur', telephone: '06 00 00 00 13', pin: '1111', actif: true, peutGererProduits: false, peutFaireRemises: false },
     ],
     categories: [
       { id: cEpi, nom: 'Épicerie', couleur: 'safran' },
@@ -196,12 +196,12 @@ function chezSentinelle() {
       p(cFruits, 'Oignons 1kg', 4, 2.4, '🧅', '', 45),
     ],
     clients: [
-      { id: 'k1', nom: 'Amorac Kaisly', telephone: '+212600000011', note: 'Paie en fin de mois' },
-      { id: 'k2', nom: 'Amorac Kaisly', telephone: '+212600000012', note: '' },
-      { id: 'k3', nom: 'Amorac Kaisly', telephone: '+212600000013', note: '' },
-      { id: 'k4', nom: 'Amorac Kaisly', telephone: '+212600000014', note: 'Plafond conseillé : 300 DH' },
-      { id: 'k5', nom: 'Amorac Kaisly', telephone: '+212600000015', note: 'Achats pour le café' },
-      { id: 'k6', nom: 'Amorac Kaisly', telephone: '+212600000016', note: '' },
+      { id: 'k1', nom: 'Amorac Kaislo', telephone: '+212600000011', note: 'Paie en fin de mois' },
+      { id: 'k2', nom: 'Amorac Kaislo', telephone: '+212600000012', note: '' },
+      { id: 'k3', nom: 'Amorac Kaislo', telephone: '+212600000013', note: '' },
+      { id: 'k4', nom: 'Amorac Kaislo', telephone: '+212600000014', note: 'Plafond conseillé : 300 DH' },
+      { id: 'k5', nom: 'Amorac Kaislo', telephone: '+212600000015', note: 'Achats pour le café' },
+      { id: 'k6', nom: 'Amorac Kaislo', telephone: '+212600000016', note: '' },
     ],
   };
 }
@@ -428,9 +428,9 @@ function genererCommandes(d) {
   const ligne = (nom, q) => ({ ...creerLigne(p(nom), premierChoix(p(nom)), q, dev, ''), envoyee: true });
   const il_y_a = (min) => new Date(Date.now() - min * 60000).toISOString();
   return [
-    { id: 'cmd1', table: 'Table 2', ouverteLe: il_y_a(35), vendeurId: 'u2', vendeurNom: 'Amorac Kaisly', lignes: [ligne('Attiéké', 2), ligne('Bissap', 2)] },
-    { id: 'cmd2', table: 'Terrasse 1', ouverteLe: il_y_a(12), vendeurId: 'u3', vendeurNom: 'Amorac Kaisly', lignes: [ligne('Poulet braisé', 1), ligne('Soda 33cl', 3)] },
-    { id: 'cmd3', table: 'Table 5', ouverteLe: il_y_a(4), vendeurId: 'u2', vendeurNom: 'Amorac Kaisly', lignes: [ligne('Garba', 1)] },
+    { id: 'cmd1', table: 'Table 2', ouverteLe: il_y_a(35), vendeurId: 'u2', vendeurNom: 'Amorac Kaislo', lignes: [ligne('Attiéké', 2), ligne('Bissap', 2)] },
+    { id: 'cmd2', table: 'Terrasse 1', ouverteLe: il_y_a(12), vendeurId: 'u3', vendeurNom: 'Amorac Kaislo', lignes: [ligne('Poulet braisé', 1), ligne('Soda 33cl', 3)] },
+    { id: 'cmd3', table: 'Table 5', ouverteLe: il_y_a(4), vendeurId: 'u2', vendeurNom: 'Amorac Kaislo', lignes: [ligne('Garba', 1)] },
   ];
 }
 
@@ -438,12 +438,12 @@ function genererCommandes(d) {
 // "code" : code du commerce, pour relier un appareil (voir Profil)
 export const COMMERCES_DEMO = [
   {
-    id: 'resto-ivoire', code: '100001', nom: 'Amorac Kaisly', sousTitre: 'Restaurant · cuisine africaine', emoji: '🍽️', logo: '/demo/logo-resto-ivoire.svg',
-    comptes: [['Amorac Kaisly', 'Gérant', '06 00 00 00 01', '1234'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 02', '0000'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 03', '1111']],
+    id: 'resto-ivoire', code: '100001', nom: 'Amorac Kaislo', sousTitre: 'Restaurant · cuisine africaine', emoji: '🍽️', logo: '/demo/logo-resto-ivoire.svg',
+    comptes: [['Amorac Kaislo', 'Gérant', '06 00 00 00 01', '1234'], ['Amorac Kaislo', 'Vendeur', '06 00 00 00 02', '0000'], ['Amorac Kaislo', 'Vendeur', '06 00 00 00 03', '1111']],
   },
   {
-    id: 'chez-sentinelle', code: '100002', nom: 'Amorac Kaisly', sousTitre: 'Épicerie de quartier', emoji: '🛒', logo: '/demo/logo-chez-sentinelle.svg',
-    comptes: [['Amorac Kaisly', 'Gérant', '06 00 00 00 11', '1234'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 12', '0000'], ['Amorac Kaisly', 'Vendeur', '06 00 00 00 13', '1111']],
+    id: 'chez-sentinelle', code: '100002', nom: 'Amorac Kaislo', sousTitre: 'Épicerie de quartier', emoji: '🛒', logo: '/demo/logo-chez-sentinelle.svg',
+    comptes: [['Amorac Kaislo', 'Gérant', '06 00 00 00 11', '1234'], ['Amorac Kaislo', 'Vendeur', '06 00 00 00 12', '0000'], ['Amorac Kaislo', 'Vendeur', '06 00 00 00 13', '1111']],
   },
 ];
 
@@ -480,8 +480,8 @@ const LIEUX = {
 
 // Noms des clients à crédit de l'épicerie, selon la région
 const CLIENTS_EPICERIE = {
-  MA: ['Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly'],
-  autre: ['Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly', 'Amorac Kaisly'],
+  MA: ['Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo'],
+  autre: ['Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo', 'Amorac Kaislo'],
 };
 
 function adapterAuPays(d, paysId) {

@@ -1,5 +1,5 @@
 # ------------------------------------------------------------
-# API Kaisly sur Hostinger (Apache) : toutes les adresses /api/... vont vers index.php
+# API Kaislo sur Hostinger (Apache) : toutes les adresses /api/... vont vers index.php
 # ------------------------------------------------------------
 RewriteEngine On
 

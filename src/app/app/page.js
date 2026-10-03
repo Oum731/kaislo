@@ -5,7 +5,7 @@ import Application from '@/components/app/Application';
 
 export const metadata = {
   title: 'Application',
-  description: 'Connectez-vous à votre caisse Kaisly.',
+  description: 'Connectez-vous à votre caisse Kaislo.',
   robots: { index: false, follow: false },
   alternates: { canonical: '/app/' },
 };

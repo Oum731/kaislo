@@ -3,31 +3,31 @@
 // Point de départ de l'application (/app)
 // ------------------------------------------------------------
 import { useEffect } from 'react';
-import { useKaisly, ajouterEtape } from '@/store/kaisly';
+import { useKaislo, ajouterEtape } from '@/store/kaislo';
 import Connexion from './Connexion';
 import Coque from './Coque';
 import { chemin } from '@/config';
 import Chargement from '@/components/Chargement';
 
 export default function Application() {
-  const pret = useKaisly((s) => s.pret);
-  const connecte = useKaisly((s) => !!s.utilisateur && !!s.d);
-  const toast = useKaisly((s) => s.toast);
+  const pret = useKaislo((s) => s.pret);
+  const connecte = useKaislo((s) => !!s.utilisateur && !!s.d);
+  const toast = useKaislo((s) => s.toast);
 
   // Les données sont dans le téléphone : on les lit une fois la page affichée
   useEffect(() => {
-    useKaisly.getState().demarrer();
+    useKaislo.getState().demarrer();
     // Installation sur l'écran d'accueil + ouverture hors connexion (version en ligne seulement)
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       navigator.serviceWorker.register(chemin('/sw.js')).catch(() => {});
     }
-    // Bouton « retour » du téléphone (voir retourTelephone dans store/kaisly.js)
-    const surRetour = (e) => useKaisly.getState().retourTelephone(e.state);
+    // Bouton « retour » du téléphone (voir retourTelephone dans store/kaislo.js)
+    const surRetour = (e) => useKaislo.getState().retourTelephone(e.state);
     window.addEventListener('popstate', surRetour);
     // Écrans de connexion / inscription : une étape d'historique pour pouvoir revenir à l'accueil
-    const desabonner = useKaisly.subscribe((etat, avant) => {
+    const desabonner = useKaislo.subscribe((etat, avant) => {
       if (!etat.utilisateur && etat.etapeConnexion !== avant.etapeConnexion && avant.etapeConnexion === 'accueil') {
-        ajouterEtape({ kaisly: 'etape' });
+        ajouterEtape({ kaislo: 'etape' });
       }
     });
     return () => {

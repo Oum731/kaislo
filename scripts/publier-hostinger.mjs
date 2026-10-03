@@ -28,7 +28,7 @@ delete env.NEXT_PUBLIC_BASE_PATH;
 lancer('npx next build', { env });
 
 // 2. Copie de travail de la branche « hostinger » (créée si elle n'existe pas encore)
-const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'kaisly-hostinger-'));
+const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-hostinger-'));
 if (!essayer(`git clone --quiet --depth 1 --branch ${BRANCHE} ${DEPOT} "${dossier}"`)) {
   lancer('git init -q', { cwd: dossier });
   lancer(`git checkout -q --orphan ${BRANCHE}`, { cwd: dossier });

@@ -5,7 +5,7 @@
 // table, scan de code-barres, clôture de caisse.
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { creerLigne, choixComplets, prixDeBase } from '@/lib/donnees/vente';
 import { clientsAvecSolde } from '@/lib/donnees/credit';
 import { formatDate, formatHeure, formatJourLong, symbole } from '@/lib/utils/format';
@@ -15,7 +15,7 @@ import { ContenuPanier } from '../ecrans/Caisse';
 
 // ---------- Options d'un produit (accompagnement, taille…) ----------
 export function FeuilleOptions({ produit }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [choix, setChoix] = useState(() =>
     // Groupe obligatoire avec une seule option : déjà cochée
     Object.fromEntries(produit.groupes.filter((g) => g.obligatoire && g.options.length === 1).map((g) => [g.id, [g.options[0].id]]))
@@ -81,7 +81,7 @@ export function FeuilleOptions({ produit }) {
 
 // ---------- Panier (téléphone) ----------
 export function FeuillePanier() {
-  const s = useKaisly();
+  const s = useKaislo();
   const t = s.totaux();
   const commande = s.commandeEnCours();
   useEffect(() => {
@@ -101,7 +101,7 @@ export function FeuillePanier() {
 
 // ---------- Ticket de vente ----------
 export function FeuilleTicket({ vente, nouvelle }) {
-  const s = useKaisly();
+  const s = useKaislo();
   return (
     <Feuille
       titre={'Ticket n° ' + vente.numero}
@@ -143,7 +143,7 @@ export function FeuilleTicket({ vente, nouvelle }) {
 
 // ---------- Envoi du reçu par WhatsApp (client qui n'est pas sur place) ----------
 function EnvoiWhatsApp({ vente, enAvant }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [telephone, setTelephone] = useState(vente.telephoneClient || '');
   const [ouvert, setOuvert] = useState(enAvant || !!vente.telephoneClient);
   const envoyer = () => {
@@ -171,7 +171,7 @@ function EnvoiWhatsApp({ vente, enAvant }) {
 
 // ---------- Annulation (PIN du gérant) ----------
 export function FeuilleAnnulation({ vente }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [motif, setMotif] = useState('');
   const [pin, setPin] = useState('');
   const [enCours, setEnCours] = useState(false);
@@ -200,7 +200,7 @@ export function FeuilleAnnulation({ vente }) {
 
 // ---------- Ticket cuisine ----------
 export function FeuilleCuisine({ commande, lignes }) {
-  const s = useKaisly();
+  const s = useKaislo();
   return (
     <Feuille
       titre="Envoyé en cuisine"
@@ -220,7 +220,7 @@ export function FeuilleCuisine({ commande, lignes }) {
 
 // ---------- Remise ----------
 export function FeuilleRemise() {
-  const s = useKaisly();
+  const s = useKaislo();
   const [type, setType] = useState(s.remise?.type || 'pourcent');
   const [valeur, setValeur] = useState(s.remise?.valeur ?? null);
   // Sur téléphone on revient au panier, sur grand écran le panier est déjà visible
@@ -249,7 +249,7 @@ export function FeuilleRemise() {
 
 // ---------- Choisir (ou créer) le client pour une vente à crédit ----------
 export function FeuilleChoixClient() {
-  const s = useKaisly();
+  const s = useKaislo();
   const [recherche, setRecherche] = useState('');
   const [nouveau, setNouveau] = useState(null);
   const clients = clientsAvecSolde(s.d);
@@ -257,7 +257,7 @@ export function FeuilleChoixClient() {
   const liste = clients.filter((c) => !r || c.nom.toLowerCase().includes(r) || (c.telephone || '').includes(r));
   const retour = () => (window.innerWidth < 1024 ? s.ouvrir('panier') : s.fermer());
   const choisir = (c) => {
-    useKaisly.setState({ clientCredit: c, paiementChoisi: 'Crédit' });
+    useKaislo.setState({ clientCredit: c, paiementChoisi: 'Crédit' });
     retour();
   };
   const creer = () => {
@@ -270,7 +270,7 @@ export function FeuilleChoixClient() {
     return (
       <Feuille titre="Nouveau client" surFermer={() => setNouveau(null)} pied={<button className="btn bloc" onClick={creer}>Créer et choisir</button>}>
         <div className="pile">
-          <label className="champ"><span>Nom</span><input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} autoFocus placeholder="Ex : Amorac Kaisly" /></label>
+          <label className="champ"><span>Nom</span><input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} autoFocus placeholder="Ex : Amorac Kaislo" /></label>
           <label className="champ"><span>Téléphone (pour le rappel WhatsApp)</span><input type="tel" value={nouveau.telephone} onChange={(e) => setNouveau({ ...nouveau, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
         </div>
       </Feuille>
@@ -299,7 +299,7 @@ export function FeuilleChoixClient() {
 
 // ---------- Mettre la commande sur une table ----------
 export function FeuilleChoixTable() {
-  const s = useKaisly();
+  const s = useKaislo();
   const occupee = (t) => (s.d.commandes || []).some((c) => c.table === t && c.lignes.length);
   return (
     <Feuille titre="Sur quelle table ?" sousTitre="Les plats partent en cuisine" surFermer={() => (window.innerWidth < 1024 ? s.ouvrir('panier') : s.fermer())}>
@@ -317,7 +317,7 @@ export function FeuilleChoixTable() {
 
 // ---------- Scan de code-barres avec la caméra ----------
 export function FeuilleScan({ surCode }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const video = useRef(null);
   const [supporte, setSupporte] = useState(true);
   const [code, setCode] = useState('');
@@ -368,7 +368,7 @@ export function FeuilleScan({ surCode }) {
 
 // ---------- Ouverture de la caisse du jour ----------
 export function FeuilleOuverture() {
-  const s = useKaisly();
+  const s = useKaislo();
   const [fond, setFond] = useState(s.d.commerce.fondDeCaisse || 0);
   const [note, setNote] = useState('');
   const derniere = historiqueCaisse(s.d).find((x) => x.fermeLe);
@@ -394,7 +394,7 @@ export function FeuilleOuverture() {
 
 // ---------- Fermeture de la caisse (avec le total vendu par article) ----------
 export function FeuilleCloture() {
-  const s = useKaisly();
+  const s = useKaislo();
   const [compte, setCompte] = useState(null);
   const [note, setNote] = useState('');
   const session = s.caisseOuverte();
@@ -456,7 +456,7 @@ export function FeuilleCloture() {
 
 // Total vendu par article (quantité et montant)
 function ArticlesVendus({ c }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const liste = c.parArticle || [];
   return (
     <div className="carte">
@@ -476,7 +476,7 @@ function ArticlesVendus({ c }) {
 
 // ---------- Résumé d'une journée de caisse (après fermeture ou depuis l'historique) ----------
 export function FeuilleTicketCloture({ cloture }) {
-  const s = useKaisly();
+  const s = useKaislo();
   return (
     <Feuille titre="Résumé de la journée de caisse" sousTitre={'Fermée le ' + formatDate(cloture.date) + ' à ' + formatHeure(cloture.date) + ' · ' + cloture.utilisateurNom} surFermer={s.fermer} pleine large
       pied={

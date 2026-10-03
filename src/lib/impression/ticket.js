@@ -116,7 +116,7 @@ export function construireTicket(vente, commerce, largeurPapier = 58) {
 
   // Pied de ticket
   if (commerce.piedTicket) for (const l of decouper(commerce.piedTicket, L)) ajouter(centrer(l, L));
-  ajouter(centrer('Caisse Kaisly', L));
+  ajouter(centrer('Caisse Kaislo', L));
   return out;
 }
 
@@ -171,7 +171,7 @@ export function construireTicketCloture(cl, commerce, largeurPapier = 58) {
   ajouter('');
   ajouter('Signature :');
   ajouter('');
-  ajouter(centrer('Caisse Kaisly', L));
+  ajouter(centrer('Caisse Kaislo', L));
   return out;
 }
 
@@ -216,7 +216,7 @@ export function construireTicketRemboursement(r, client, soldeApres, commerce, l
   colonnes('Reste dû', formatPrix(soldeApres, dev), { gras: true });
   ajouter('-'.repeat(L));
   ajouter(centrer(soldeApres > 0 ? 'Merci !' : 'Compte soldé. Merci !', L));
-  ajouter(centrer('Caisse Kaisly', L));
+  ajouter(centrer('Caisse Kaislo', L));
   return out;
 }
 
@@ -224,7 +224,7 @@ export function construireTicketRemboursement(r, client, soldeApres, commerce, l
 export function ticketTest(commerce, largeurPapier = 58) {
   const L = CARACTERES[largeurPapier] || 32;
   return [
-    { texte: centrer('KAISLY', L), gras: true, grand: true },
+    { texte: centrer('KAISLO', L), gras: true, grand: true },
     { texte: centrer('Test d\'impression', L) },
     { texte: '-'.repeat(L) },
     { texte: commerce.nom },

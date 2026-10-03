@@ -3,7 +3,7 @@
 //
 // Tout ce que l'application sait (commerce ouvert, personne connectée,
 // panier…) est rangé ici, avec les actions qui le modifient.
-// Les écrans (dossier components/app) lisent cet état avec useKaisly().
+// Les écrans (dossier components/app) lisent cet état avec useKaislo().
 //
 // Le fichier est découpé en "tranches" pour rester lisible :
 //   session.js    : connexion, inscription, droits
@@ -13,7 +13,8 @@
 //   synchro.js    : envoi / réception des données (commerces inscrits en ligne)
 // ------------------------------------------------------------
 import { create } from 'zustand';
-import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo } from '@/lib/donnees/stockage.js';
+import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo, migrerAncienNom } from '@/lib/donnees/stockage.js';
+import { copierAnciennesImages } from '@/lib/donnees/images.js';
 import { PAYS, paysDuNavigateur } from '@/lib/donnees/modeles.js';
 import { formatPrix, formatNombre } from '@/lib/utils/format.js';
 import { trancheSession } from './session.js';
@@ -47,6 +48,8 @@ const trancheCommune = (set, get) => ({
   // Appelé une seule fois au démarrage, dans le navigateur
   demarrer() {
     if (get().pret) return;
+    migrerAncienNom(); // données de l'ancien nom (Kaisly) reprises sous Kaislo
+    copierAnciennesImages();
     set({ prefs: chargerPreferences() });
     get().initImprimante();
     // Liens directs depuis le site :
@@ -91,9 +94,9 @@ const trancheCommune = (set, get) => ({
     set({ ecran, feuille: null });
     if (!navigateur()) return;
     window.scrollTo(0, 0);
-    const etape = { kaisly: 'ecran', ecran };
+    const etape = { kaislo: 'ecran', ecran };
     // Une fenêtre était ouverte : son étape devient celle du nouvel écran
-    if (window.history.state?.kaisly === 'feuille') window.history.replaceState(etape, '');
+    if (window.history.state?.kaislo === 'feuille') window.history.replaceState(etape, '');
     else if (ecran !== avant) ajouterEtape(etape);
   },
 
@@ -103,14 +106,14 @@ const trancheCommune = (set, get) => ({
     set({ feuille: { type, ...infos, _id: Date.now() } });
     if (!navigateur() || dejaOuverte) return; // une fenêtre en remplace une autre : même étape
     if (ignorerRetour) ajouterApresRetour = true;
-    else ajouterEtape({ kaisly: 'feuille' });
+    else ajouterEtape({ kaislo: 'feuille' });
   },
 
   fermer() {
     if (!get().feuille) return;
     set({ feuille: null });
     // Retire l'étape de la fenêtre, comme si on avait appuyé sur « retour »
-    if (navigateur() && window.history.state?.kaisly === 'feuille') {
+    if (navigateur() && window.history.state?.kaislo === 'feuille') {
       ignorerRetour = true;
       window.history.back();
     }
@@ -122,7 +125,7 @@ const trancheCommune = (set, get) => ({
       ignorerRetour = false;
       if (ajouterApresRetour) {
         ajouterApresRetour = false;
-        ajouterEtape({ kaisly: 'feuille' });
+        ajouterEtape({ kaislo: 'feuille' });
       }
       return;
     }
@@ -131,7 +134,7 @@ const trancheCommune = (set, get) => ({
     if (s.utilisateur) {
       // 2. revient à l'écran précédent (ou à l'accueil)
       const accueil = s.utilisateur.role === 'gerant' ? 'accueil' : 'caisse';
-      set({ ecran: etat?.kaisly === 'ecran' ? etat.ecran : accueil });
+      set({ ecran: etat?.kaislo === 'ecran' ? etat.ecran : accueil });
       window.scrollTo(0, 0);
       return;
     }
@@ -157,7 +160,7 @@ const trancheCommune = (set, get) => ({
   },
 });
 
-export const useKaisly = create((set, get) => ({
+export const useKaislo = create((set, get) => ({
   ...trancheCommune(set, get),
   ...trancheSession(set, get),
   ...trancheCaisse(set, get),

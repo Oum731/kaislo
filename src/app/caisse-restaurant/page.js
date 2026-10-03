@@ -21,7 +21,7 @@ const contenu = {
   titreVideo: 'Une commande complète, expliquée en une minute.',
   description,
   titre: 'Le logiciel de caisse pour restaurants, maquis et snacks.',
-  capture: { src: '/captures/tables-ordi.webp', alt: 'Plan des tables du restaurant dans Kaisly' },
+  capture: { src: '/captures/tables-ordi.webp', alt: 'Plan des tables du restaurant dans Kaislo' },
   captureMobile: { src: '/captures/caisse-mobile.webp', alt: 'Caisse du restaurant sur téléphone' },
   lignes: [
     {
@@ -32,7 +32,7 @@ const contenu = {
     },
     {
       titre: 'Fermer la caisse sans recompter à la main',
-      texte: 'Le soir, Kaisly indique les espèces attendues, le total vendu par plat et l’écart avec le montant compté. Chaque journée reste dans l’historique.',
+      texte: 'Le soir, Kaislo indique les espèces attendues, le total vendu par plat et l’écart avec le montant compté. Chaque journée reste dans l’historique.',
       capture: { src: '/captures/fermeture-ordi.webp', alt: 'Fermeture de caisse avec le total vendu par plat' },
     },
   ],
@@ -47,7 +47,7 @@ const contenu = {
     ['caisse', 'Plats avec options', 'Attiéké + poisson grillé, poulet demi ou entier, suppléments alloco… le bon prix se calcule tout seul.'],
     ['imprimante', 'Ticket client', 'Ticket imprimé avec votre nom, la table, les promos et la remise éventuelle.'],
     ['accueil', 'Plats les plus vendus', 'Classement des plats et marge par plat : savez-vous lequel vous rapporte le plus ?', true],
-    ['bouclier', 'Clôture de caisse', 'En fin de service, comptez les billets : Kaisly calcule l’attendu et affiche l’écart.'],
+    ['bouclier', 'Clôture de caisse', 'En fin de service, comptez les billets : Kaislo calcule l’attendu et affiche l’écart.'],
     ['depense', 'Dépenses du jour', 'Marché, gaz, transport : notez-les, et le solde du jour s’affiche sur le tableau de bord.'],
     ['clients', 'Serveurs et droits', 'Un code PIN par serveur. Annulations protégées par le code du gérant.'],
     ['carnet', 'Clients à crédit', 'Les bureaux voisins qui paient en fin de mois : tout est noté, avec l’historique.'],
@@ -61,7 +61,7 @@ const contenu = {
     ['Puis-je envoyer l’addition par WhatsApp ?', 'Oui : pour une livraison ou une commande par téléphone, cochez « Client à distance » et le reçu s’ouvre dans WhatsApp, prêt à être envoyé.'],
     ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement mensuel simple dans la monnaie de votre pays.'],
   ],
-  titreFinal: 'Testez la démo restaurant de Kaisly.',
+  titreFinal: 'Testez la démo restaurant de Kaislo.',
   texteFinal: 'Un restaurant de démonstration déjà rempli : tables occupées, plats, statistiques. Ou créez directement le vôtre.',
 };
 

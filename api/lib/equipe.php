@@ -24,7 +24,7 @@ function routeUtilisateur(): never
     $cle = cleTelephone($telephone);
     if (!$cle) throw new ErreurApi('Indiquez le numéro de téléphone : il sert à se connecter');
     $autre = requete('SELECT id FROM utilisateurs WHERE cle_telephone = ?', [$cle])->fetch();
-    if ($autre && $autre['id'] !== $id) throw new ErreurApi('Ce numéro est déjà utilisé par un autre compte Kaisly', 409);
+    if ($autre && $autre['id'] !== $id) throw new ErreurApi('Ce numéro est déjà utilisé par un autre compte Kaislo', 409);
 
     $pin = (string) ($e['pin'] ?? '');
     if ($pin !== '' || !$existant) {

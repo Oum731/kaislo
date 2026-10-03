@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // Affiche la fenêtre demandée par s.ouvrir('type', infos)
 // ------------------------------------------------------------
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import {
   FeuilleOptions, FeuillePanier, FeuilleTicket, FeuilleAnnulation, FeuilleCuisine, FeuilleRemise,
   FeuilleChoixClient, FeuilleChoixTable, FeuilleScan, FeuilleCloture, FeuilleTicketCloture, FeuilleOuverture,
@@ -41,7 +41,7 @@ const FEUILLES = {
 };
 
 export default function Feuilles() {
-  const feuille = useKaisly((s) => s.feuille);
+  const feuille = useKaislo((s) => s.feuille);
   if (!feuille) return null;
   const Composant = FEUILLES[feuille.type];
   if (!Composant) return null;

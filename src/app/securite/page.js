@@ -7,7 +7,7 @@ import { SOCIETE } from '@/config';
 
 export const metadata = {
   title: 'Sécurité',
-  description: 'Comment Kaisly protège votre caisse et vos données : codes PIN personnels, droits des vendeurs, chiffrement, sauvegardes, et comment signaler une faille.',
+  description: 'Comment Kaislo protège votre caisse et vos données : codes PIN personnels, droits des vendeurs, chiffrement, sauvegardes, et comment signaler une faille.',
   alternates: { canonical: '/securite/' },
 };
 
@@ -78,7 +78,7 @@ export default function Page() {
   return (
     <PageLegale
       titre="Sécurité"
-      intro="Comment Kaisly protège votre caisse, votre argent et vos données."
+      intro="Comment Kaislo protège votre caisse, votre argent et vos données."
       sections={SECTIONS}
     />
   );

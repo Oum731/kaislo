@@ -1,6 +1,6 @@
 <?php
 // ------------------------------------------------------------
-// API KAISLY (PHP simple, sans framework) — point d'entrée unique.
+// API KAISLO (PHP simple, sans framework) — point d'entrée unique.
 // Toutes les adresses /api/... arrivent ici (voir api/.htaccess).
 //
 //   GET  /api/sante         l'API et la base répondent-elles ?
@@ -56,7 +56,7 @@ try {
     repondre(['ok' => false, 'erreur' => $e->getMessage()], $e->statut);
 } catch (Throwable $e) {
     // Détail dans le journal d'erreurs du serveur seulement
-    error_log('[Kaisly API] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    error_log('[Kaislo API] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
     $message = $e instanceof PDOException ? 'Base de données indisponible, réessayez dans un instant' : 'Erreur du serveur, réessayez dans un instant';
     repondre(['ok' => false, 'erreur' => $message], 500);
 }
@@ -68,7 +68,7 @@ function routeSante(): never
     if (!$c['trouve']) throw new ErreurApi('Fichier .env introuvable sur le serveur', 500);
     base(); // connexion + création des tables si besoin
     $version = (int) requete('SELECT MAX(version) AS v FROM kaisly_version')->fetch()['v'];
-    repondre(['ok' => true, 'service' => 'Kaisly API', 'base' => $c['driver'], 'versionBase' => $version, 'heure' => maintenant()]);
+    repondre(['ok' => true, 'service' => 'Kaislo API', 'base' => $c['driver'], 'versionBase' => $version, 'heure' => maintenant()]);
 }
 
 // ---------- POST /api/inscription ----------
@@ -101,7 +101,7 @@ function routeInscription(): never
 
     if (requete('SELECT 1 FROM utilisateurs WHERE cle_telephone = ?', [$cle])->fetch()) {
         noterEchec($cleIp, 20);
-        throw new ErreurApi('Ce numéro est déjà utilisé par un compte Kaisly. Connectez-vous plutôt.', 409);
+        throw new ErreurApi('Ce numéro est déjà utilisé par un compte Kaislo. Connectez-vous plutôt.', 409);
     }
 
     $pdo = base();

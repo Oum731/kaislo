@@ -1,12 +1,12 @@
 'use client';
 // ------------------------------------------------------------
-// Installer Kaisly sur l'écran d'accueil du téléphone.
+// Installer Kaislo sur l'écran d'accueil du téléphone.
 //   - Android / ordinateur (Chrome, Edge) : bouton « Installer » direct
 //   - iPhone / iPad (Safari) : pas de bouton possible, on explique les 2 gestes
-// Une fois installée, Kaisly s'ouvre en plein écran, comme une application.
+// Une fois installée, Kaislo s'ouvre en plein écran, comme une application.
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { Icone } from '@/components/ui';
 
 // Le navigateur propose l'installation très tôt : on garde sa proposition pour le bouton
@@ -24,7 +24,7 @@ const estIos = () => typeof navigator !== 'undefined' && (/iPhone|iPad|iPod/.tes
 const estInstallee = () => typeof window !== 'undefined' && (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true);
 
 export default function InstallerApp() {
-  const s = useKaisly();
+  const s = useKaislo();
   const [, rafraichir] = useState(0);
   const [client, setClient] = useState(false); // évite un affichage différent entre serveur et navigateur
   useEffect(() => {
@@ -40,14 +40,14 @@ export default function InstallerApp() {
     return (
       <div className="carte pile installer-app">
         <div className="ligne espace">
-          <b>Installer Kaisly sur votre iPhone</b>
+          <b>Installer Kaislo sur votre iPhone</b>
           <button className="icone-btn" onClick={masquer} aria-label="Masquer"><Icone nom="fermer" taille="sm" /></button>
         </div>
         <ol className="petit">
           <li>Dans Safari, touchez le bouton <b>Partager</b> (le carré avec une flèche vers le haut).</li>
           <li>Choisissez <b>« Sur l’écran d’accueil »</b>, puis <b>Ajouter</b>.</li>
         </ol>
-        <p className="tres-petit muet">Kaisly s’ouvrira en plein écran, comme une application, avec Face ID. Tickets : imprimante compatible AirPrint ou envoi par WhatsApp.</p>
+        <p className="tres-petit muet">Kaislo s’ouvrira en plein écran, comme une application, avec Face ID. Tickets : imprimante compatible AirPrint ou envoi par WhatsApp.</p>
       </div>
     );
   }
@@ -61,7 +61,7 @@ export default function InstallerApp() {
   return (
     <div className="carte ligne espace installer-app">
       <div>
-        <b>Installer l’application Kaisly</b>
+        <b>Installer l’application Kaislo</b>
         <p className="tres-petit muet">Sur l’écran d’accueil, en plein écran, même sans internet.</p>
       </div>
       <button className="btn petit" onClick={installer}><Icone nom="installer" taille="sm" /> Installer</button>

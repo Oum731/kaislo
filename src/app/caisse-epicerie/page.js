@@ -45,7 +45,7 @@ const contenu = {
     ['carnet', 'Carnet de crédit', 'Chaque client a son compte : achats, remboursements, total dû. Rappel WhatsApp en un clic, reçu imprimé.', true],
     ['scan', 'Code-barres', 'Scannez avec la caméra du téléphone ou un lecteur USB/Bluetooth. Le produit s’ajoute tout seul.'],
     ['stock', 'Stock en temps réel', 'Le stock baisse à chaque vente. Entrées fournisseur, inventaire et historique des mouvements.'],
-    ['alerte', 'Alertes de rupture', 'Choisissez le seuil de chaque produit : Kaisly vous prévient avant qu’il ne manque.', true],
+    ['alerte', 'Alertes de rupture', 'Choisissez le seuil de chaque produit : Kaislo vous prévient avant qu’il ne manque.', true],
     ['accueil', 'Marge par produit', 'Avec le prix d’achat, voyez la marge réelle de chaque article et la valeur de votre stock.'],
     ['remise', 'Promotions', 'Prix promo affiché barré à la caisse, remises en pourcentage ou en montant.'],
     ['imprimante', 'Ticket imprimé', 'Ticket clair avec vos coordonnées, et reçu pour chaque remboursement de crédit.'],
@@ -60,7 +60,7 @@ const contenu = {
     ['Et les produits vendus au poids ou en pack ?', 'Utilisez les options : par exemple « 500 g / 1 kg / 2 kg » pour les tomates, ou « Bouteille / Pack de 6 » pour l’eau, chacun avec son prix.'],
     ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement mensuel simple dans la monnaie de votre pays.'],
   ],
-  titreFinal: 'Testez la démo épicerie de Kaisly.',
+  titreFinal: 'Testez la démo épicerie de Kaislo.',
   texteFinal: 'Une épicerie de démonstration avec stock, clients à crédit et statistiques. Ou créez directement la vôtre.',
 };
 

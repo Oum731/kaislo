@@ -7,14 +7,14 @@
 //  - historique des mouvements
 // ------------------------------------------------------------
 import { useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { formatDate, formatHeure } from '@/lib/utils/format';
 import { Icone, Puces, Segment, initiales } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { exporterInventaireCsv } from '@/lib/donnees/export';
 
 export default function Stock() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [onglet, setOnglet] = useState('produits');
   const [filtre, setFiltre] = useState('tous');

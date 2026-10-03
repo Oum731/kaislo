@@ -8,7 +8,7 @@ import { EnTeteSite, PiedSite, SectionVideos, AppelFinal, LIEN_DEMO_RESTO, VIDEO
 
 export const metadata = {
   title: 'Tutoriels vidéo',
-  description: 'Kaisly en vidéo : présentation, caisse restaurant, caisse épicerie, ajout des articles et gestion des vendeurs. Avec voix, en une minute chacun.',
+  description: 'Kaislo en vidéo : présentation, caisse restaurant, caisse épicerie, ajout des articles et gestion des vendeurs. Avec voix, en une minute chacun.',
   alternates: { canonical: '/tutoriels/' },
 };
 
@@ -20,7 +20,7 @@ export default function PageTutoriels() {
         <section className="tutos-tete">
           <div className="site-largeur">
             <span className="etiquette">Tutoriels</span>
-            <h1>Apprenez Kaisly en quelques minutes.</h1>
+            <h1>Apprenez Kaislo en quelques minutes.</h1>
             <p className="chapo">Cinq courtes vidéos commentées, à regarder dans l’ordre ou selon votre besoin.</p>
             <nav className="sommaire-tutos" aria-label="Sommaire des tutoriels">
               {TUTORIELS.map((cle, i) => (

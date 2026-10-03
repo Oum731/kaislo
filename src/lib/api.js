@@ -34,7 +34,7 @@ export async function appelApi(methode, adresse, corps = null, jeton = null) {
       headers: {
         'Content-Type': 'application/json',
         // Les deux en-têtes : certains hébergements masquent « Authorization »
-        ...(jeton ? { Authorization: 'Bearer ' + jeton, 'X-Kaisly-Jeton': jeton } : {}),
+        ...(jeton ? { Authorization: 'Bearer ' + jeton, 'X-Kaislo-Jeton': jeton } : {}),
       },
       body: corps ? JSON.stringify(corps) : undefined,
       signal: controle.signal,

@@ -23,7 +23,7 @@ const STRUCTURE = [
         ],
         'cle' => ['id'], 'uniques' => [['code']], 'index' => [],
     ],
-    // Gérants et vendeurs (le numéro de téléphone est unique dans tout Kaisly)
+    // Gérants et vendeurs (le numéro de téléphone est unique dans tout Kaislo)
     'utilisateurs' => [
         'colonnes' => [
             'id' => 'ID', 'commerce_id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)',

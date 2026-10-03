@@ -8,13 +8,14 @@ import Link from 'next/link';
 import { Icone } from '@/components/ui';
 import MenuMobile from './MenuMobile';
 import { CONTACT_EMAIL, CONTACT_WHATSAPP, SITE_URL, chemin } from '@/config';
+import Marque from '@/components/Marque';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
 export const LIEN_DEMO_RESTO = '/app/?demo=resto-ivoire';
 export const LIEN_DEMO_EPICERIE = '/app/?demo=chez-sentinelle';
 
 export function Logo() {
-  return <Link href="/" className="logo"><span className="logo-marque">K</span> Kaisly</Link>;
+  return <Link href="/" className="logo"><Marque /> Kaislo</Link>;
 }
 
 // Liens du menu du site (en-tête et menu sur petit écran)
@@ -60,11 +61,11 @@ export function PiedSite() {
       <div className="site-largeur">
         <div className="colonnes">
           <div>
-            <span className="logo"><span className="logo-marque">K</span> Kaisly</span>
+            <span className="logo"><Marque /> Kaislo</span>
             <p style={{ marginTop: 12, maxWidth: 360 }}>Logiciel de caisse pour restaurants, épiceries et boutiques. Développé par Amorac.</p>
           </div>
           <div>
-            <h4>Kaisly</h4>
+            <h4>Kaislo</h4>
             <Link href="/caisse-restaurant/">Caisse pour restaurant</Link>
             <Link href="/caisse-epicerie/">Caisse pour épicerie</Link>
             <Link href="/gestion-stock/">Gestion de stock et inventaire</Link>
@@ -83,7 +84,7 @@ export function PiedSite() {
           </div>
         </div>
         <div className="bas">
-          <span>© {new Date().getFullYear()} Amorac · Kaisly</span>
+          <span>© {new Date().getFullYear()} Amorac · Kaislo</span>
           <span>Disponible en Afrique, en Europe et ailleurs</span>
         </div>
       </div>
@@ -130,8 +131,8 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
 // Les vidéos de démonstration (public/videos/, générées par "npm run videos")
 export const VIDEOS = {
   presentation: {
-    src: '/videos/presentation-kaisly.mp4', poster: '/videos/presentation-kaisly.webp', duree: '1 min 20',
-    titre: 'Présentation de Kaisly',
+    src: '/videos/presentation-kaislo.mp4', poster: '/videos/presentation-kaislo.webp', duree: '1 min 20',
+    titre: 'Présentation de Kaislo',
     texte: 'Le tour complet : tableau de bord, caisse, tables, ventes et journées de caisse, crédit, articles, équipe.',
     lienDemo: LIEN_DEMO_RESTO,
   },
@@ -186,7 +187,7 @@ export function VideoDemo({ video }) {
  * (une vidéo paysage + une verticale par ligne, ou une seule) · vignettes : liens vers les autres tutoriels
  * toutes : bouton vers la page /tutoriels/
  */
-export function SectionVideos({ titre = 'Voyez Kaisly en action, en une minute.', vedette, lignes = [], vignettes = [], toutes = false, id = 'videos' }) {
+export function SectionVideos({ titre = 'Voyez Kaislo en action, en une minute.', vedette, lignes = [], vignettes = [], toutes = false, id = 'videos' }) {
   return (
     <section className="section claire" id={id}>
       <div className="site-largeur">
@@ -298,7 +299,7 @@ export function DonneesLogiciel({ description }) {
   const donnees = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Kaisly',
+    name: 'Kaislo',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Android, iOS, Windows, macOS (navigateur web)',
     areaServed: 'Worldwide',

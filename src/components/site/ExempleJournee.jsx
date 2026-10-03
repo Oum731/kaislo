@@ -1,7 +1,7 @@
 'use client';
 // ------------------------------------------------------------
 // Exemple chiffré de la page d'accueil, avec choix de la devise
-// (pour montrer que Kaisly fonctionne dans tous les pays)
+// (pour montrer que Kaislo fonctionne dans tous les pays)
 // ------------------------------------------------------------
 import { useState } from 'react';
 import { convertirDepuisDirham } from '@/lib/donnees/demo';
@@ -22,7 +22,7 @@ export default function ExempleJournee() {
         <Puces options={DEVISES} valeur={devise} surChanger={setDevise} />
         <p className="chapo" style={{ marginTop: 16 }}>
           Imaginons une journée avec 20 poulets braisés à {p(c(60))}, 15 riz sauce graine à {p(c(45))} et 30 boissons à {p(c(12))}.
-          À chaque vente, Kaisly met à jour le tableau de bord. Le soir, le gérant voit immédiatement ce qu’il a gagné.
+          À chaque vente, Kaislo met à jour le tableau de bord. Le soir, le gérant voit immédiatement ce qu’il a gagné.
         </p>
         <p className="tres-petit muet" style={{ marginTop: 14 }}>
           Le solde correspond aux ventes moins les dépenses saisies, avant les autres charges éventuelles (loyer, salaires…).

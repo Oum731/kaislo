@@ -1,7 +1,7 @@
-# Kaisly — Caisse pour restaurants, épiceries et boutiques
+# Kaislo — Caisse pour restaurants, épiceries et boutiques
 
 Site public (pour Google) + application de caisse, en **Next.js**.
-Démo prête à présenter : un restaurant et une épicerie, tous deux nommés **Amorac Kaisly** (comme leurs gérants, vendeurs et clients), dans la devise du pays choisi.
+Démo prête à présenter : un restaurant et une épicerie, tous deux nommés **Amorac Kaislo** (comme leurs gérants, vendeurs et clients), dans la devise du pays choisi.
 
 > La version finale sera une vraie application mobile (Capacitor) reliée à un serveur Laravel.
 > Dans cette version, les données restent **dans l'appareil** (pas encore de serveur).

@@ -105,9 +105,9 @@ export const trancheGestion = (set, get) => ({
       if ((!b.id || pin) && !/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
       return get().equipeServeur({ id: b.id || undefined, nom, telephone, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises }, 'Vendeur enregistré');
     }
-    // Le numéro de téléphone sert d'identifiant de connexion : unique dans tout Kaisly
+    // Le numéro de téléphone sert d'identifiant de connexion : unique dans tout Kaislo
     if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';
-    if (telephoneDejaUtilise(telephone, (b.id || 'nouveau') + '@' + d.commerce.id)) return 'Ce numéro est déjà utilisé par un autre compte Kaisly';
+    if (telephoneDejaUtilise(telephone, (b.id || 'nouveau') + '@' + d.commerce.id)) return 'Ce numéro est déjà utilisé par un autre compte Kaislo';
     if (!/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
     // Un vendeur ne doit pas avoir le PIN du gérant (qui valide les annulations)
     if (b.role !== 'gerant' && d.utilisateurs.some((u) => u.role === 'gerant' && u.pin === pin)) return 'Choisissez un code PIN différent de celui du gérant';

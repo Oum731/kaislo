@@ -9,7 +9,7 @@
 // ------------------------------------------------------------
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { COMMERCES_DEMO } from '@/lib/donnees/demo';
 import { telephoneDejaUtilise } from '@/lib/donnees/stockage';
 import { TYPES_COMMERCE, PAYS, paysParId, paysDuNavigateur, cleTelephone } from '@/lib/donnees/modeles';
@@ -18,16 +18,17 @@ import { CONTACT_WHATSAPP, chemin } from '@/config';
 import { Icone, Avatar, ImageStockee } from '@/components/ui';
 import { nomBiometrie } from '@/lib/biometrie';
 import InstallerApp from './InstallerApp';
+import Marque from '@/components/Marque';
 
 export default function Connexion() {
-  const s = useKaisly();
+  const s = useKaislo();
   const e = s.etapeConnexion;
   return (
     <div className="connexion">
       <PanneauVisuel />
       <div className="connexion-panneau">
         <div className="ligne espace">
-          <Link href="/" className="logo"><span className="logo-marque">K</span> Kaisly</Link>
+          <Link href="/" className="logo"><Marque /> Kaislo</Link>
           {e !== 'accueil' && (e === 'inscription' || !s.d || s.estDemoActuel()) && (
             <button className="bouton-rond" onClick={s.retourConnexion} aria-label="Retour">
               <Icone nom="gauche" />
@@ -49,7 +50,7 @@ function PanneauVisuel() {
     <div className="connexion-visuel">
       <span className="cercle" style={{ width: 420, height: 420, right: -140, top: -120, background: 'rgba(233,162,59,.16)' }} />
       <span className="cercle" style={{ width: 260, height: 260, left: -90, bottom: -80, background: 'rgba(30,91,67,.6)' }} />
-      <span className="logo" style={{ color: 'var(--creme)', position: 'relative' }}><span className="logo-marque">K</span> Kaisly</span>
+      <span className="logo" style={{ color: 'var(--creme)', position: 'relative' }}><Marque /> Kaislo</span>
       <div style={{ position: 'relative' }}>
         <h2>Encaissez plus vite. Comptez moins. Gagnez plus.</h2>
         <p style={{ opacity: 0.75, marginTop: 14, maxWidth: 420 }}>
@@ -62,7 +63,7 @@ function PanneauVisuel() {
 }
 
 function Accueil() {
-  const s = useKaisly();
+  const s = useKaislo();
   const pays = paysParId(s.prefs.paysDemo || 'MA');
   return (
     <div>
@@ -70,10 +71,10 @@ function Accueil() {
         <h1>La caisse simple de votre commerce.</h1>
         <p>Restaurants, épiceries, boutiques, partout dans le monde : encaissez en quelques touches, imprimez le ticket, suivez vos ventes.</p>
       </div>
-      <button className="btn grand bloc" onClick={() => useKaisly.setState({ etapeConnexion: 'connexion' })}>
+      <button className="btn grand bloc" onClick={() => useKaislo.setState({ etapeConnexion: 'connexion' })}>
         <Icone nom="sortie" /> Se connecter
       </button>
-      <button className="btn secondaire bloc" style={{ marginTop: 10 }} onClick={() => useKaisly.setState({ etapeConnexion: 'inscription' })}>
+      <button className="btn secondaire bloc" style={{ marginTop: 10 }} onClick={() => useKaislo.setState({ etapeConnexion: 'inscription' })}>
         <Icone nom="plus" /> Créer mon commerce
       </button>
       <p className="tres-petit muet centre" style={{ marginTop: 8 }}>Essai gratuit de 30 jours · 2 minutes · sans engagement</p>
@@ -105,7 +106,7 @@ function Accueil() {
 
 // Connexion : numéro de téléphone + code PIN (clavier du PC ou du téléphone)
 function ConnexionTelephone() {
-  const s = useKaisly();
+  const s = useKaislo();
   const recents = s.d ? s.comptesRecents() : [];
   const demo = s.d && COMMERCES_DEMO.find((c) => c.id === s.d.commerce.id);
   const [telephone, setTelephone] = useState(recents[0]?.telephone || '');
@@ -214,7 +215,7 @@ function ConnexionTelephone() {
 
       {!s.d && (
         <p className="tres-petit muet centre" style={{ marginTop: 18 }}>
-          Pas encore de compte ? <button className="lien" onClick={() => useKaisly.setState({ etapeConnexion: 'inscription' })}>Créer mon commerce</button>
+          Pas encore de compte ? <button className="lien" onClick={() => useKaislo.setState({ etapeConnexion: 'inscription' })}>Créer mon commerce</button>
         </p>
       )}
       {s.d && !demo && (
@@ -228,13 +229,13 @@ function ConnexionTelephone() {
 
 // Le commerce a été suspendu par l'équipe Amorac
 function CommerceSuspendu() {
-  const s = useKaisly();
+  const s = useKaislo();
   return (
     <div className="pin-zone">
       <ImageStockee reference={s.d.commerce.logo} className="logo-commerce" alt="" secours={<span className="emoji-grand"><Icone nom="bouclier" /></span>} />
       <h2 style={{ marginTop: 14 }}>{s.d.commerce.nom}</h2>
-      <p className="alerte centre" style={{ marginTop: 16 }}>Ce compte est suspendu. Contactez l’équipe Kaisly pour le réactiver.</p>
-      <a className="btn bloc" style={{ marginTop: 16 }} href={'https://wa.me/' + CONTACT_WHATSAPP} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> Contacter Kaisly</a>
+      <p className="alerte centre" style={{ marginTop: 16 }}>Ce compte est suspendu. Contactez l’équipe Kaislo pour le réactiver.</p>
+      <a className="btn bloc" style={{ marginTop: 16 }} href={'https://wa.me/' + CONTACT_WHATSAPP} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> Contacter Kaislo</a>
       <button className="btn fantome" style={{ marginTop: 10 }} onClick={() => confirm('Déconnecter cet appareil de « ' + s.d.commerce.nom + ' » ?') && s.delierAppareil()}>Déconnecter cet appareil</button>
     </div>
   );
@@ -242,7 +243,7 @@ function CommerceSuspendu() {
 
 // Inscription en 3 étapes : type -> commerce -> gérant
 function Inscription() {
-  const s = useKaisly();
+  const s = useKaislo();
   const [etape, setEtape] = useState(1);
   const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false });
   const maj = (champ) => (e) => setF({ ...f, [champ]: e.target.value });
@@ -256,11 +257,11 @@ function Inscription() {
     if (s.connexionEnCours) return;
     if (!f.gerantNom.trim()) return s.message('Indiquez votre nom', 'erreur');
     if (!cleTelephone(f.gerantTelephone)) return s.message('Indiquez votre numéro de téléphone : il sert à vous connecter', 'erreur');
-    if (telephoneDejaUtilise(f.gerantTelephone)) return s.message('Ce numéro est déjà utilisé par un compte Kaisly. Connectez-vous plutôt.', 'erreur');
+    if (telephoneDejaUtilise(f.gerantTelephone)) return s.message('Ce numéro est déjà utilisé par un compte Kaislo. Connectez-vous plutôt.', 'erreur');
     if (!/^\d{4}$/.test(f.gerantPin)) return s.message('Le code PIN doit contenir 4 chiffres', 'erreur');
     if (f.gerantPin !== f.gerantPin2) return s.message('Les deux codes PIN ne sont pas identiques', 'erreur');
     if (!f.accepte) return s.message('Merci d’accepter les conditions d’utilisation pour continuer', 'erreur');
-    // En ligne : le commerce est créé sur le serveur (le numéro y est vérifié dans tout Kaisly)
+    // En ligne : le commerce est créé sur le serveur (le numéro y est vérifié dans tout Kaislo)
     const err = await s.inscrire({ ...f, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), telephone: f.telephone.trim(), gerantNom: f.gerantNom.trim(), gerantTelephone: f.gerantTelephone.trim() });
     if (err) s.message(err, 'erreur');
   };
@@ -289,7 +290,7 @@ function Inscription() {
       {etape === 2 && (
         <form className="pile" onSubmit={(e) => { e.preventDefault(); continuer(); }}>
           <div className="intro"><p className="petit muet">Étape 2 sur 3</p><h1 style={{ marginTop: 4 }}>Votre commerce</h1></div>
-          <label className="champ"><span>Nom du commerce</span><input value={f.nom} onChange={maj('nom')} placeholder="Ex : Amorac Kaisly" autoFocus /></label>
+          <label className="champ"><span>Nom du commerce</span><input value={f.nom} onChange={maj('nom')} placeholder="Ex : Amorac Kaislo" autoFocus /></label>
           <div className="grille-2">
             <label className="champ"><span>Pays</span>
               <select value={f.pays} onChange={maj('pays')}>
@@ -313,7 +314,7 @@ function Inscription() {
             <h1 style={{ marginTop: 4 }}>Votre compte gérant</h1>
             <p>Vous vous connecterez avec votre numéro de téléphone et votre code PIN.</p>
           </div>
-          <label className="champ"><span>Votre nom et prénom</span><input value={f.gerantNom} onChange={maj('gerantNom')} placeholder="Ex : Amorac Kaisly" autoFocus /></label>
+          <label className="champ"><span>Votre nom et prénom</span><input value={f.gerantNom} onChange={maj('gerantNom')} placeholder="Ex : Amorac Kaislo" autoFocus /></label>
           <label className="champ"><span>Votre numéro de téléphone (identifiant de connexion)</span><input type="tel" inputMode="tel" autoComplete="tel" value={f.gerantTelephone} onChange={maj('gerantTelephone')} placeholder="Ex : 06 12 34 56 78" /></label>
           <div className="grille-2">
             <label className="champ"><span>Code PIN (4 chiffres)</span><input className="pin-saisie" type="password" inputMode="numeric" autoComplete="new-password" maxLength={4} value={f.gerantPin} onChange={maj('gerantPin')} placeholder="••••" /></label>
@@ -322,7 +323,7 @@ function Inscription() {
           <p className="tres-petit muet">Ce code sert aussi à valider les annulations. Ne le donnez pas à vos vendeurs : chacun aura son propre numéro et son propre PIN.</p>
           <label className="case-accord">
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
-            <span>J’accepte les <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">conditions d’utilisation</a> et la <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">politique de confidentialité</a> de Kaisly.</span>
+            <span>J’accepte les <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">conditions d’utilisation</a> et la <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">politique de confidentialité</a> de Kaislo.</span>
           </label>
           <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours}>{s.connexionEnCours ? 'Création…' : 'Créer mon commerce'}</button>
         </form>

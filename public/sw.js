@@ -3,7 +3,7 @@
 // pour qu'elle s'ouvre vite, même avec une mauvaise connexion.
 // Changer VERSION à chaque mise en ligne force la mise à jour.
 // ------------------------------------------------------------
-const VERSION = 'kaisly-v4';
+const VERSION = 'kaislo-v5';
 // Dossier du site ("/" sur Hostinger, "/kaisly/" sur GitHub Pages)
 const RACINE = new URL(self.registration.scope).pathname;
 

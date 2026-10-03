@@ -6,7 +6,7 @@
 //    dans une fenêtre sur téléphone
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
 import { CREDIT } from '@/lib/donnees/modeles';
 import { soldeClient } from '@/lib/donnees/credit';
@@ -19,7 +19,7 @@ import { EtatCaisse } from './Ventes';
 const BILLETS = { FCFA: [500, 1000, 2000, 5000, 10000], MAD: [10, 20, 50, 100, 200] };
 
 export default function Caisse() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [recherche, setRecherche] = useState('');
   const champRecherche = useRef(null);
@@ -30,7 +30,7 @@ export default function Caisse() {
     const touche = (e) => {
       const cible = e.target;
       const dansUnChamp = ['INPUT', 'TEXTAREA', 'SELECT'].includes(cible.tagName) || cible.isContentEditable;
-      if (dansUnChamp || e.ctrlKey || e.metaKey || e.altKey || useKaisly.getState().feuille) return;
+      if (dansUnChamp || e.ctrlKey || e.metaKey || e.altKey || useKaislo.getState().feuille) return;
       if (e.key === '/' || (e.key.length === 1 && /[\p{L}\p{N}]/u.test(e.key))) {
         champRecherche.current?.focus();
         if (e.key === '/') e.preventDefault();
@@ -168,14 +168,14 @@ export default function Caisse() {
  * Utilisé dans le panneau de droite (grand écran) et dans la fenêtre (téléphone).
  */
 export function ContenuPanier({ dansFeuille = false }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d, panier } = s;
   const t = s.totaux();
   const commande = s.commandeEnCours();
   const paiement = s.paiementChoisi || d.commerce.modesPaiement[0];
   const client = s.clientCredit;
   const recu = s.montantRecu;
-  const setEtat = (x) => useKaisly.setState(x);
+  const setEtat = (x) => useKaislo.setState(x);
 
   const suggestions = [...new Set((BILLETS[s.devise()] || []).map((b) => Math.ceil(t.total / b) * b).filter((m) => m > t.total))].sort((a, b) => a - b).slice(0, 3);
   const rendu = recu > 0 ? recu - t.total : 0;

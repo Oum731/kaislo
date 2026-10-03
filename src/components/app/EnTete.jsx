@@ -1,12 +1,12 @@
 'use client';
 // En-tête des écrans : sur-titre, titre, boutons à droite, avatar (téléphone)
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { Avatar, ImageStockee } from '@/components/ui';
 import { estServeur } from '@/lib/donnees/synchro';
 
 // Petit indicateur de sauvegarde en ligne (commerces inscrits) : touché, il ouvre le détail dans « Mon compte »
 function PastilleSynchro() {
-  const s = useKaisly();
+  const s = useKaislo();
   if (!estServeur(s.d)) return null;
   const { etat, enAttente } = s.synchro;
   const [classe, texte] = etat === 'hors-ligne' ? ['hors-ligne', 'Hors ligne' + (enAttente ? ' · ' + enAttente : '')]
@@ -21,7 +21,7 @@ function PastilleSynchro() {
 }
 
 export function EnTete({ surTitre, titre, children, avecLogo = false }) {
-  const s = useKaisly();
+  const s = useKaislo();
   return (
     <header className="barre-haut">
       {avecLogo && <ImageStockee reference={s.d.commerce.logo} className="logo-commerce" alt={'Logo ' + s.d.commerce.nom} />}

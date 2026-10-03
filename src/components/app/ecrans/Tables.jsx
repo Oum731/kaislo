@@ -4,14 +4,14 @@
 // depuis combien de temps. Toucher une table ouvre sa commande.
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { sousTotal } from '@/lib/donnees/vente';
 import { EnTete } from '../EnTete';
 
 const nbArticles = (c) => c.lignes.reduce((x, l) => x + l.quantite, 0);
 
 export default function Tables() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   // Rafraîchit les durées chaque minute
   const [, setMaintenant] = useState(Date.now());

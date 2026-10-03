@@ -133,10 +133,10 @@ function creerJeton(array $utilisateur, string $appareil): string
 
 function jetonRecu(): ?string
 {
-    // Apache sur Hostinger peut masquer « Authorization » : l'en-tête X-Kaisly-Jeton sert de secours
+    // Apache sur Hostinger peut masquer « Authorization » : l'en-tête X-Kaislo-Jeton sert de secours
     $entete = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
     if (preg_match('/^Bearer\s+([a-f0-9]{64})$/i', $entete, $m)) return strtolower($m[1]);
-    $secours = $_SERVER['HTTP_X_KAISLY_JETON'] ?? '';
+    $secours = $_SERVER['HTTP_X_KAISLO_JETON'] ?? $_SERVER['HTTP_X_KAISLY_JETON'] ?? ''; // (ancien nom accepté)
     return preg_match('/^[a-f0-9]{64}$/i', $secours) ? strtolower($secours) : null;
 }
 

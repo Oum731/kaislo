@@ -4,14 +4,14 @@
 // Toucher un client : historique, remboursement, rappel WhatsApp.
 // ------------------------------------------------------------
 import { useMemo, useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { clientsAvecSolde } from '@/lib/donnees/credit';
 import { formatDate } from '@/lib/utils/format';
 import { Icone, Puces, initiales } from '@/components/ui';
 import { EnTete } from '../EnTete';
 
 export default function Clients() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [recherche, setRecherche] = useState('');
   const [filtre, setFiltre] = useState('doivent');

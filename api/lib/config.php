@@ -34,7 +34,7 @@ function config(): array
 
     // Fichier imposé (tests), sinon recherche du .env du plus sûr au moins sûr
     $candidats = array_filter([
-        getenv('KAISLY_ENV_FICHIER') ?: null,
+        getenv('KAISLO_ENV_FICHIER') ?: null,
         dirname(__DIR__, 3) . '/.env', // au-dessus de public_html
         dirname(__DIR__, 2) . '/.env', // public_html (ou racine du projet sur l'ordinateur)
         dirname(__DIR__) . '/.env',    // public_html/api
@@ -50,7 +50,7 @@ function config(): array
         'utilisateur' => $valeurs['User'] ?? '',
         'motDePasse' => $valeurs['Password'] ?? '',
         'serveur' => $valeurs['DbHost'] ?? 'localhost',
-        'fichierSqlite' => $valeurs['DbFichier'] ?? (dirname(__DIR__) . '/kaisly-test.sqlite'),
+        'fichierSqlite' => $valeurs['DbFichier'] ?? (dirname(__DIR__) . '/kaislo-test.sqlite'),
         'domaine' => $valeurs['Host'] ?? '',
         'trouve' => $valeurs !== [],
     ];

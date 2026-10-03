@@ -10,7 +10,7 @@ import {
 } from '@/components/site/Site';
 
 export const metadata = {
-  title: 'Kaisly — Caisse, gestion de stock et d’inventaire pour restaurants, épiceries et boutiques',
+  title: 'Kaislo — Caisse, gestion de stock et d’inventaire pour restaurants, épiceries et boutiques',
   description:
     'Caisse et outil de gestion sur téléphone, tablette et ordinateur : ventes, gestion de stock et d’inventaire, carnet de crédit, tables, marges, dépenses, ouverture et fermeture de caisse. Ticket imprimé, envoyé par WhatsApp ou sans impression. Toutes les devises. Essai gratuit.',
   alternates: { canonical: '/' },
@@ -29,15 +29,15 @@ const AUTRES_FONCTIONS = [
 ];
 
 const QUESTIONS = [
-  ['Faut-il acheter du matériel ?', 'Non. Kaisly fonctionne sur le téléphone, la tablette ou l’ordinateur que vous avez déjà. L’imprimante est facultative : le ticket peut être envoyé par WhatsApp ou simplement gardé dans l’historique. Si vous voulez imprimer, une petite imprimante thermique d’entrée de gamme suffit.'],
-  ['Puis-je utiliser Kaisly seulement pour gérer mon stock ?', 'Oui. Kaisly sert aussi d’outil de gestion : stock, inventaire, entrées de marchandise, dépenses et statistiques, avec ou sans encaissement au comptoir.'],
-  ['Combien coûte Kaisly ?', 'Vous commencez par un essai gratuit de 30 jours, sans engagement. Ensuite, un abonnement mensuel simple, dans la monnaie de votre pays. Contactez-nous pour connaître le tarif chez vous.'],
-  ['Dans quels pays fonctionne Kaisly ?', 'Partout. Kaisly gère le franc CFA, le dirham, l’euro, le dollar et d’autres devises, avec les moyens de paiement de chaque pays : espèces, carte, Wave, Orange Money, MTN MoMo…'],
+  ['Faut-il acheter du matériel ?', 'Non. Kaislo fonctionne sur le téléphone, la tablette ou l’ordinateur que vous avez déjà. L’imprimante est facultative : le ticket peut être envoyé par WhatsApp ou simplement gardé dans l’historique. Si vous voulez imprimer, une petite imprimante thermique d’entrée de gamme suffit.'],
+  ['Puis-je utiliser Kaislo seulement pour gérer mon stock ?', 'Oui. Kaislo sert aussi d’outil de gestion : stock, inventaire, entrées de marchandise, dépenses et statistiques, avec ou sans encaissement au comptoir.'],
+  ['Combien coûte Kaislo ?', 'Vous commencez par un essai gratuit de 30 jours, sans engagement. Ensuite, un abonnement mensuel simple, dans la monnaie de votre pays. Contactez-nous pour connaître le tarif chez vous.'],
+  ['Dans quels pays fonctionne Kaislo ?', 'Partout. Kaislo gère le franc CFA, le dirham, l’euro, le dollar et d’autres devises, avec les moyens de paiement de chaque pays : espèces, carte, Wave, Orange Money, MTN MoMo…'],
   ['Comment se connectent mes vendeurs ?', 'Chacun avec son numéro de téléphone et son code PIN à 4 chiffres. Vous les créez vous-même dans Réglages → Équipe, et vous pouvez les désactiver à tout moment.'],
   ['Puis-je envoyer le ticket au client par WhatsApp ?', 'Oui. Pour une livraison ou une commande par téléphone, cochez « Client à distance » et indiquez son numéro : le reçu complet s’ouvre dans WhatsApp, prêt à être envoyé.'],
-  ['Est-ce que ça marche sur iPhone et sur ordinateur ?', 'Oui, la caisse fonctionne sur Android, iPhone, Windows et Mac. L’impression Bluetooth depuis le navigateur fonctionne avec Chrome (Android et ordinateur) ; l’application mobile Kaisly l’apportera aussi sur iPhone.'],
-  ['Comment fonctionne le carnet de crédit ?', 'Au moment d’encaisser, choisissez « À crédit » et le client. Kaisly garde l’historique de ses achats et de ses remboursements, affiche ce qu’il doit, et prépare un rappel WhatsApp.'],
-  ['Kaisly convient-il à mon type de commerce ?', 'Kaisly est pensé pour les restaurants, maquis, snacks, cafés, épiceries, supérettes et petites boutiques. Les options (accompagnements, tailles, conditionnements) s’adaptent à chaque métier.'],
+  ['Est-ce que ça marche sur iPhone et sur ordinateur ?', 'Oui, la caisse fonctionne sur Android, iPhone, Windows et Mac. L’impression Bluetooth depuis le navigateur fonctionne avec Chrome (Android et ordinateur) ; l’application mobile Kaislo l’apportera aussi sur iPhone.'],
+  ['Comment fonctionne le carnet de crédit ?', 'Au moment d’encaisser, choisissez « À crédit » et le client. Kaislo garde l’historique de ses achats et de ses remboursements, affiche ce qu’il doit, et prépare un rappel WhatsApp.'],
+  ['Kaislo convient-il à mon type de commerce ?', 'Kaislo est pensé pour les restaurants, maquis, snacks, cafés, épiceries, supérettes et petites boutiques. Les options (accompagnements, tailles, conditionnements) s’adaptent à chaque métier.'],
 ];
 
 export default function PageAccueil() {
@@ -50,8 +50,8 @@ export default function PageAccueil() {
           chapo="Encaissez, gérez votre stock et votre inventaire, suivez le crédit de vos clients et fermez la caisse sans erreur. Ticket imprimé, envoyé par WhatsApp ou pas de ticket du tout : c’est vous qui choisissez. Sur téléphone, tablette ou ordinateur."
           lienDemo={LIEN_DEMO_RESTO}
           garanties={['Essai gratuit de 30 jours', 'Sans engagement', 'Imprimante facultative']}
-          capture={{ src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord Kaisly : chiffre d’affaires, marge, dépenses, crédit en cours' }}
-          captureMobile={{ src: '/captures/caisse-mobile.webp', alt: 'Écran de caisse Kaisly sur téléphone' }}
+          capture={{ src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord Kaislo : chiffre d’affaires, marge, dépenses, crédit en cours' }}
+          captureMobile={{ src: '/captures/caisse-mobile.webp', alt: 'Écran de caisse Kaislo sur téléphone' }}
         />
 
         <SectionVideos vedette="presentation" vignettes={["restaurant", "epicerie", "produits", "vendeurs"]} toutes />
@@ -59,17 +59,17 @@ export default function PageAccueil() {
         <section className="section" id="fonctions">
           <div className="site-largeur">
             <span className="etiquette">Fonctions</span>
-            <h2>Ce que Kaisly fait pour vous, au quotidien.</h2>
+            <h2>Ce que Kaislo fait pour vous, au quotidien.</h2>
             <FonctionLigne
               titre="Encaisser en quelques touches"
               texte="Touchez l’article, choisissez l’accompagnement ou la taille, encaissez. Le prix se calcule tout seul et le ticket part à l’imprimante."
               points={['Recherche et lecteur de code-barres', 'Remises et prix promotionnels', 'Client à distance : reçu envoyé par WhatsApp', 'Paiement en espèces avec calcul de la monnaie à rendre']}
-              capture={{ src: '/captures/caisse-ordi.webp', alt: 'Caisse Kaisly : articles et panier' }}
+              capture={{ src: '/captures/caisse-ordi.webp', alt: 'Caisse Kaislo : articles et panier' }}
             />
             <FonctionLigne
               inverse
               titre="Ouvrir et fermer la caisse chaque jour"
-              texte="Le matin, on compte le fond de caisse. Le soir, Kaisly indique les espèces attendues, le total vendu par article et l’écart, puis imprime le ticket de fermeture."
+              texte="Le matin, on compte le fond de caisse. Le soir, Kaislo indique les espèces attendues, le total vendu par article et l’écart, puis imprime le ticket de fermeture."
               points={['Qui a ouvert, qui a fermé, à quelle heure', 'Historique de toutes les journées de caisse', 'Ventes annulées uniquement avec le code du gérant']}
               capture={{ src: '/captures/fermeture-ordi.webp', alt: 'Fermeture de caisse : articles vendus et espèces attendues' }}
             />
@@ -81,7 +81,7 @@ export default function PageAccueil() {
             <FonctionLigne
               inverse
               titre="Gérer le stock et faire l’inventaire"
-              texte="Le stock baisse à chaque vente, sur tous vos appareils. Enregistrez la marchandise reçue, comptez, corrigez : Kaisly vous alerte avant la rupture et calcule la valeur de votre stock."
+              texte="Le stock baisse à chaque vente, sur tous vos appareils. Enregistrez la marchandise reçue, comptez, corrigez : Kaislo vous alerte avant la rupture et calcule la valeur de votre stock."
               points={['Entrées de marchandise avec prix d’achat et fournisseur', 'Inventaire exporté en Excel en un clic', 'Pour épiceries, boutiques, dépôts… et les boissons d’un restaurant']}
               capture={{ src: '/captures/stock-ordi.webp', alt: 'Gestion du stock et de l’inventaire' }}
             />
@@ -147,7 +147,7 @@ export default function PageAccueil() {
         </section>
 
         <AppelFinal
-          titre="Essayez Kaisly dans votre commerce."
+          titre="Essayez Kaislo dans votre commerce."
           texte="Créez votre compte en deux minutes, ou testez la démo avec un restaurant et une épicerie déjà remplis."
           lienDemo={LIEN_DEMO_EPICERIE}
         />

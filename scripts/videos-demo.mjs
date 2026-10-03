@@ -1,6 +1,6 @@
 // ------------------------------------------------------------
 // VIDÉOS DE DÉMONSTRATION du site (public/videos/), avec voix et musique
-//   presentation-kaisly : le tour complet (paysage)
+//   presentation-kaislo : le tour complet (paysage)
 //   demo-restaurant     : de la commande au ticket (paysage)
 //   demo-epicerie       : vente, crédit, caisse du soir (vertical, pour WhatsApp / réseaux)
 //   ajout-produits      : ajouter un article (paysage)
@@ -224,11 +224,11 @@ async function seConnecter(p, telephone, pin = '1234') {
   await pause(1400);
 }
 
-const INTRO = (titreVideo, sousTitre) => `<div class="k">K</div><div class="marque">Kaisly</div><h1>${titreVideo}</h1><p>${sousTitre}</p>`;
-const FIN = `<div class="k">K</div><div class="marque">Kaisly</div><h1>À vous d’encaisser.</h1>
+const INTRO = (titreVideo, sousTitre) => `<div class="k">K</div><div class="marque">Kaislo</div><h1>${titreVideo}</h1><p>${sousTitre}</p>`;
+const FIN = `<div class="k">K</div><div class="marque">Kaislo</div><h1>À vous d’encaisser.</h1>
   <p>Restaurants, épiceries, boutiques. Sur le téléphone que vous avez déjà, dans la devise de votre pays.</p>
   <div class="bouton">Essai gratuit 30 jours</div>${LIEN_FINAL ? '<div class="v-adresse">' + LIEN_FINAL + '</div>' : ''}`;
-const FIN_PAROLE = 'Kaisly : la caisse simple, sur le téléphone que vous avez déjà. Essayez-la gratuitement pendant trente jours.';
+const FIN_PAROLE = 'Kaislo : la caisse simple, sur le téléphone que vous avez déjà. Essayez-la gratuitement pendant trente jours.';
 
 // Règle l'horloge de la page sur une heure de la journée (ex : 19 h 40),
 // pour que la démo ait une journée de ventes bien remplie quel que soit le moment du tournage.
@@ -389,7 +389,7 @@ async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche }, sc
   // on refait la prise : elles sont alors dans le cache et tout est parfaitement calé.
   for (let prise = 1; prise <= 2; prise++) {
     narration = { pistes: [], finVoix: 0, manquantes: 0 };
-    const dossierTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kaisly-video-'));
+    const dossierTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-video-'));
     const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars'] });
     const p = await navigateur.newPage();
     await p.setViewport({ width: largeur, height: hauteur, deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile });
@@ -442,12 +442,12 @@ function monter(nom, dossierTmp, liste, film, affiche) {
 // ---------- 6. Les scénarios ----------
 
 // Présentation générale (restaurant, Abidjan) : le tour complet du système
-await enregistrer('presentation-kaisly', { largeur: 1280, hauteur: 720, mobile: false, affiche: 30 }, async (p, demarrer) => {
+await enregistrer('presentation-kaislo', { largeur: 1280, hauteur: 720, mobile: false, affiche: 30 }, async (p, demarrer) => {
   await regler(p, 19, 30);
   await connexion(p, 'resto-ivoire', 'CI', false);
-  await carte(p, INTRO('La caisse simple des restaurants, épiceries et boutiques.', 'Présentation de Kaisly'));
+  await carte(p, INTRO('La caisse simple des restaurants, épiceries et boutiques.', 'Présentation de Kaislo'));
   const film = await demarrer();
-  await introduction(p, 'Voici Kaisly : la caisse simple des restaurants, des épiceries et des boutiques.');
+  await introduction(p, 'Voici Kaislo : la caisse simple des restaurants, des épiceries et des boutiques.');
 
   await titre(p, 'Chacun se connecte avec <b>son numéro</b> et <b>son code PIN</b>', 'Chaque membre de l’équipe se connecte avec son numéro, et son code personnel.');
   await seConnecter(p, '06 00 00 00 01');
@@ -465,7 +465,7 @@ await enregistrer('presentation-kaisly', { largeur: 1280, hauteur: 720, mobile: 
   await toucher(p, 'Bissap', '.tuile');
   await toucher(p, 'Grand', '.option', 400);
   await toucher(p, 'Ajouter', '.feuille-pied button', 700);
-  await titre(p, 'Espèces : Kaisly calcule <b>la monnaie à rendre</b>', 'En espèces, Kaisly calcule la monnaie à rendre. Plus aucune erreur.');
+  await titre(p, 'Espèces : Kaislo calcule <b>la monnaie à rendre</b>', 'En espèces, Kaislo calcule la monnaie à rendre. Plus aucune erreur.');
   await toucher(p, 'Espèces', '.panneau-panier .choix-grille button', 500);
   await toucher(p, null, '.panneau-panier .puces .puce:nth-child(2)', 1400);
   await toucher(p, 'Encaisser', '.panneau-panier button.grand', 1800);
@@ -494,7 +494,7 @@ await enregistrer('demo-restaurant', { largeur: 1280, hauteur: 720, mobile: fals
   await connexion(p, 'resto-ivoire', 'CI', false);
   await carte(p, INTRO('De la commande au ticket, en quelques touches.', 'Démo restaurant'));
   const film = await demarrer();
-  await introduction(p, 'Découvrez comment Kaisly simplifie le service, au restaurant.');
+  await introduction(p, 'Découvrez comment Kaislo simplifie le service, au restaurant.');
 
   await titre(p, 'Chaque serveur se connecte avec <b>son numéro</b> et <b>son code</b>', 'Chaque serveur se connecte avec son numéro, et son code personnel.');
   await seConnecter(p, '06 00 00 00 01');
@@ -531,7 +531,7 @@ await enregistrer('demo-epicerie', { largeur: 390, hauteur: 780, mobile: true, a
   await connexion(p, 'chez-sentinelle', 'FR', true);
   await carte(p, INTRO('Vente, crédit et caisse du soir, sur votre téléphone.', 'Démo épicerie'));
   const film = await demarrer();
-  await introduction(p, 'Une journée d’épicerie avec Kaisly, directement sur votre téléphone.');
+  await introduction(p, 'Une journée d’épicerie avec Kaislo, directement sur votre téléphone.');
 
   await titre(p, 'Connexion : <b>numéro</b> + <b>code PIN</b>', 'Connectez-vous avec votre numéro, et votre code.');
   await seConnecter(p, '06 00 00 00 11');
@@ -560,14 +560,14 @@ await enregistrer('demo-epicerie', { largeur: 390, hauteur: 780, mobile: true, a
   await titre(p, 'Qui vous doit <b>combien</b>, en un coup d’œil', 'Et vous voyez, d’un coup d’œil, qui vous doit combien.');
   await toucher(p, 'Crédit', '.menu-lien', 1800);
 
-  await titre(p, 'Le soir : Kaisly calcule les <b>espèces attendues</b>', 'Le soir, Kaisly calcule les espèces qui doivent être dans la caisse.');
+  await titre(p, 'Le soir : Kaislo calcule les <b>espèces attendues</b>', 'Le soir, Kaislo calcule les espèces qui doivent être dans la caisse.');
   await toucher(p, 'Ventes', '.menu-lien', 900);
   await toucher(p, 'Fermer la caisse', 'button', 1400);
   // On tape exactement le montant attendu : la caisse est juste
   const attendu = await p.evaluate(() => { const l = [...document.querySelectorAll('.feuille .ligne, .feuille div')].find((e) => e.children.length === 2 && e.firstElementChild.textContent.trim() === 'Espèces attendues'); return l ? l.lastElementChild.textContent.replace(/[^\d,]/g, '') : '0'; });
   await taper(p, '.feuille input[placeholder="Montant compté"]', attendu);
   await p.evaluate(() => document.querySelector('.feuille .ecart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-  await titre(p, 'Vous comptez, Kaisly vous dit si la <b>caisse est juste</b>', 'Vous comptez, et Kaisly vous dit si la caisse est juste.');
+  await titre(p, 'Vous comptez, Kaislo vous dit si la <b>caisse est juste</b>', 'Vous comptez, et Kaislo vous dit si la caisse est juste.');
   await pause(1500);
   await conclusion(p, film);
 });
@@ -595,7 +595,7 @@ await enregistrer('ajout-produits', { largeur: 1280, hauteur: 720, mobile: false
   await titre(p, 'Le prix de vente et le <b>prix d’achat</b>', 'Indiquez le prix de vente, et le prix d’achat.');
   await taper(p, await champ(p, 'Prix ('), '4500');
   await taper(p, await champ(p, 'Prix d’achat'), '2600');
-  await titre(p, 'Kaisly calcule <b>votre marge</b> tout seul', 'Kaisly calcule votre marge, automatiquement.');
+  await titre(p, 'Kaislo calcule <b>votre marge</b> tout seul', 'Kaislo calcule votre marge, automatiquement.');
   await defiler(p, 'Marge :', 'p', 1600);
 
   await titre(p, 'Les <b>accompagnements</b> au choix', 'Ajoutez les accompagnements, au choix du client.');
@@ -640,7 +640,7 @@ await enregistrer('gestion-vendeurs', { largeur: 390, hauteur: 780, mobile: true
   await pause(800);
   await toucher(p, 'Vendeur', '.bouton-flottant', 900);
   await titre(p, 'Son nom, son numéro et <b>son code PIN</b>', 'Indiquez son nom, son numéro, et son code personnel.');
-  await taper(p, await champ(p, 'Nom et prénom'), 'Amorac Kaisly');
+  await taper(p, await champ(p, 'Nom et prénom'), 'Amorac Kaislo');
   await taper(p, await champ(p, 'Numéro de téléphone'), '07 08 09 10 11');
   await taper(p, await champ(p, 'Code PIN'), '2580');
   await pause(500);

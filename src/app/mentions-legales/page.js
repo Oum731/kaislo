@@ -14,7 +14,7 @@ const lienLicence = (c) => (c.licence === 'cc0' ? 'https://creativecommons.org/p
 
 export const metadata = {
   title: 'Mentions légales',
-  description: 'Éditeur et hébergeur du site Kaisly, propriété intellectuelle et contact.',
+  description: 'Éditeur et hébergeur du site Kaislo, propriété intellectuelle et contact.',
   alternates: { canonical: '/mentions-legales/' },
 };
 
@@ -49,7 +49,7 @@ const SECTIONS = [
     id: 'propriete',
     titre: 'Propriété intellectuelle',
     contenu: (
-      <p>Le nom Kaisly, le logo, les textes, les captures et le code du site et de l’application sont la propriété de {SOCIETE.nom}. Toute reproduction sans autorisation écrite est interdite. Les noms et chiffres visibles dans les démos sont fictifs.</p>
+      <p>Le nom Kaislo, le logo, les textes, les captures et le code du site et de l’application sont la propriété de {SOCIETE.nom}. Toute reproduction sans autorisation écrite est interdite. Les noms et chiffres visibles dans les démos sont fictifs.</p>
     ),
   },
   {
@@ -80,7 +80,7 @@ export default function Page() {
   return (
     <PageLegale
       titre="Mentions légales"
-      intro="Qui édite et qui héberge Kaisly."
+      intro="Qui édite et qui héberge Kaislo."
       sections={SECTIONS}
     />
   );

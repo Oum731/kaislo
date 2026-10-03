@@ -5,12 +5,12 @@
 // et modifier des articles, mais pas les supprimer.
 // ------------------------------------------------------------
 import { useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { Icone, Segment, Interrupteur, ImageStockee, initiales } from '@/components/ui';
 import { EnTete } from '../EnTete';
 
 export default function Produits() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [onglet, setOnglet] = useState('articles');
   const [recherche, setRecherche] = useState('');

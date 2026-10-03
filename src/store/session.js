@@ -73,7 +73,7 @@ export const trancheSession = (set, get) => ({
       get().ouvrirSession(d.utilisateurs.find((x) => x.id === u.id));
       return null;
     }
-    if (!API_ACTIVE) return 'Aucun compte Kaisly avec ce numéro';
+    if (!API_ACTIVE) return 'Aucun compte Kaislo avec ce numéro';
 
     // 2. Comptes en ligne : le serveur vérifie le code
     set({ connexionEnCours: true });
@@ -284,7 +284,7 @@ export const trancheSession = (set, get) => ({
       const d = creerCommerce(infos);
       set({ d });
       get().ouvrirSession(d.utilisateurs[0]);
-      get().message('Bienvenue sur Kaisly ! Essai gratuit de 30 jours activé.');
+      get().message('Bienvenue sur Kaislo ! Essai gratuit de 30 jours activé.');
       return null;
     }
     set({ connexionEnCours: true });
@@ -307,7 +307,7 @@ export const trancheSession = (set, get) => ({
       set({ d });
       get().ouvrirSession(d.utilisateurs[0]);
       get().demarrerSynchro();
-      get().message('Bienvenue sur Kaisly ! Essai gratuit de 30 jours activé.');
+      get().message('Bienvenue sur Kaislo ! Essai gratuit de 30 jours activé.');
       get().proposerBiometrie(d.utilisateurs[0]);
       return null;
     } catch (e) {

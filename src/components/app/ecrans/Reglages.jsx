@@ -3,7 +3,7 @@
 // RÉGLAGES (gérant) : équipe et droits, commerce, tables, imprimante
 // ------------------------------------------------------------
 import { useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { typeCommerce, paysParId } from '@/lib/donnees/modeles';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { exporterTout, exporterVentesCsv } from '@/lib/donnees/export';
@@ -13,7 +13,7 @@ import { Icone, Segment, Interrupteur, Avatar, ApercuTicket, Reglage, ChampMonta
 import { EnTete } from '../EnTete';
 
 export default function Reglages() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [onglet, setOnglet] = useState('equipe');
   const avecTables = typeCommerce(d.commerce.type).tables || d.commerce.tables.length > 0;
@@ -36,7 +36,7 @@ export default function Reglages() {
 }
 
 function Equipe() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const debut = new Date();
   debut.setHours(0, 0, 0, 0);
@@ -75,7 +75,7 @@ function Equipe() {
 }
 
 function InfosCommerce() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [b, setB] = useState({ ...d.commerce });
   const [nouveauLogo, setNouveauLogo] = useState(null);
@@ -171,7 +171,7 @@ function InfosCommerce() {
           </div>
           <button className="btn secondaire petit" onClick={() => { navigator.clipboard?.writeText(d.commerce.code); s.message('Code copié'); }}>Copier</button>
         </div>
-        <p className="tres-petit muet">Référence de votre commerce chez Kaisly (support, abonnement). Pour se connecter, chacun utilise son numéro de téléphone et son code PIN.</p>
+        <p className="tres-petit muet">Référence de votre commerce chez Kaislo (support, abonnement). Pour se connecter, chacun utilise son numéro de téléphone et son code PIN.</p>
         <AbonnementCommerce />
         <div className="grille-2">
           <label className="champ"><span>Type</span><input disabled value={typeCommerce(d.commerce.type).nom} /></label>
@@ -209,7 +209,7 @@ function InfosCommerce() {
 
 // Abonnement du commerce (géré par l'équipe Amorac)
 function AbonnementCommerce() {
-  const s = useKaisly();
+  const s = useKaislo();
   const ab = s.d.commerce.abonnement;
   const etat = etatAbonnement(ab);
   const offre = OFFRES_DEFAUT.find((o) => o.id === ab?.offre);
@@ -218,7 +218,7 @@ function AbonnementCommerce() {
     <div className="ligne espace" style={{ padding: '12px 0', borderTop: '1px solid var(--bordure)', borderBottom: '1px solid var(--bordure)' }}>
       <div>
         <p className="petit muet">Abonnement</p>
-        <b>{offre?.nom || 'Kaisly'}</b>
+        <b>{offre?.nom || 'Kaislo'}</b>
         {etat.fin && (
           <p className="tres-petit muet">
             {etat.statut === 'expire' ? 'Terminé le ' : etat.statut === 'essai' ? 'Essai jusqu’au ' : 'Prochaine échéance le '}
@@ -236,7 +236,7 @@ function AbonnementCommerce() {
  * La carte vient d'OpenStreetMap (gratuit, sans clé).
  */
 function Localisation({ b, setB }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [recherche, setRecherche] = useState(false);
   const loc = b.localisation;
 
@@ -319,7 +319,7 @@ function Localisation({ b, setB }) {
 }
 
 function ConfigTables() {
-  const s = useKaisly();
+  const s = useKaislo();
   const [tables, setTables] = useState([...s.d.commerce.tables]);
   const enregistrer = () => {
     const err = s.enregistrerTables(tables);
@@ -344,7 +344,7 @@ function ConfigTables() {
 
 // Connexion de l'imprimante, papier, aperçu (gérant et vendeurs)
 export function BlocImprimante() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d, imprimante, prefs } = s;
   const derniere = d.ventes[d.ventes.length - 1];
   return (

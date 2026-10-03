@@ -8,7 +8,7 @@ import { SOCIETE, CONTACT_EMAIL } from '@/config';
 
 export const metadata = {
   title: 'Conditions d’utilisation et d’abonnement',
-  description: 'Conditions générales d’utilisation et d’abonnement du logiciel de caisse Kaisly : compte, essai gratuit, paiement, résiliation, responsabilités.',
+  description: 'Conditions générales d’utilisation et d’abonnement du logiciel de caisse Kaislo : compte, essai gratuit, paiement, résiliation, responsabilités.',
   alternates: { canonical: '/conditions-utilisation/' },
 };
 
@@ -18,8 +18,8 @@ const SECTIONS = [
     titre: 'Objet',
     contenu: (
       <>
-        <p>Les présentes conditions encadrent l’utilisation de <b>Kaisly</b>, logiciel de caisse en ligne édité par {SOCIETE.nom} (« Amorac », « nous »), accessible sur le site, sur téléphone, tablette et ordinateur.</p>
-        <p>Kaisly s’adresse aux professionnels : restaurants, épiceries, boutiques et autres commerces (« le Commerce », « vous »). En créant un compte, vous déclarez agir pour les besoins de votre activité professionnelle et accepter ces conditions.</p>
+        <p>Les présentes conditions encadrent l’utilisation de <b>Kaislo</b>, logiciel de caisse en ligne édité par {SOCIETE.nom} (« Amorac », « nous »), accessible sur le site, sur téléphone, tablette et ordinateur.</p>
+        <p>Kaislo s’adresse aux professionnels : restaurants, épiceries, boutiques et autres commerces (« le Commerce », « vous »). En créant un compte, vous déclarez agir pour les besoins de votre activité professionnelle et accepter ces conditions.</p>
       </>
     ),
   },
@@ -42,7 +42,7 @@ const SECTIONS = [
     titre: 'Description du service',
     contenu: (
       <>
-        <p>Kaisly permet notamment d’enregistrer les ventes, d’imprimer ou d’envoyer un ticket, de suivre le crédit des clients, le stock, les dépenses, les journées de caisse et les statistiques. Les fonctions disponibles dépendent de l’offre choisie.</p>
+        <p>Kaislo permet notamment d’enregistrer les ventes, d’imprimer ou d’envoyer un ticket, de suivre le crédit des clients, le stock, les dépenses, les journées de caisse et les statistiques. Les fonctions disponibles dépendent de l’offre choisie.</p>
         <p>Nous faisons évoluer le service pour l’améliorer. Si une évolution retire une fonction importante de votre offre, nous vous prévenons au moins 30 jours à l’avance.</p>
         <p>Le service est accessible 24 h/24, sauf maintenance, panne du réseau ou cas de force majeure. Nous faisons nos meilleurs efforts pour limiter les interruptions et prévenir des maintenances programmées.</p>
       </>
@@ -93,10 +93,10 @@ const SECTIONS = [
     contenu: (
       <>
         <ul>
-          <li>Utiliser Kaisly de façon loyale et conforme aux lois de votre pays.</li>
+          <li>Utiliser Kaislo de façon loyale et conforme aux lois de votre pays.</li>
           <li>Ne pas tenter d’accéder aux données d’un autre commerce, de contourner les protections du service ou de le perturber.</li>
           <li>Informer vos clients lorsque vous enregistrez leurs coordonnées (carnet de crédit, envoi du ticket par WhatsApp) et ne les utiliser que pour votre relation commerciale avec eux.</li>
-          <li>Respecter vos <b>obligations fiscales et comptables</b> : déclaration du chiffre d’affaires, conservation des documents, et, lorsque la loi de votre pays l’exige, utilisation d’un logiciel ou d’un matériel de caisse certifié. Kaisly vous aide à tenir vos comptes mais ne remplace pas votre comptable.</li>
+          <li>Respecter vos <b>obligations fiscales et comptables</b> : déclaration du chiffre d’affaires, conservation des documents, et, lorsque la loi de votre pays l’exige, utilisation d’un logiciel ou d’un matériel de caisse certifié. Kaislo vous aide à tenir vos comptes mais ne remplace pas votre comptable.</li>
         </ul>
       </>
     ),
@@ -117,7 +117,7 @@ const SECTIONS = [
     contenu: (
       <>
         <p>Amorac s’engage à fournir le service avec soin (obligation de moyens). Nous ne sommes pas responsables des dommages indirects (perte de chiffre d’affaires, de clientèle…), ni des problèmes liés à votre matériel, votre connexion Internet, votre imprimante ou une mauvaise utilisation des comptes et codes PIN.</p>
-        <p>Vérifiez les montants affichés et comptez votre caisse : les calculs de Kaisly reposent sur les informations saisies par vos équipes.</p>
+        <p>Vérifiez les montants affichés et comptez votre caisse : les calculs de Kaislo reposent sur les informations saisies par vos équipes.</p>
         <p>Dans tous les cas, notre responsabilité est limitée au montant payé pour l’abonnement au cours des 12 derniers mois.</p>
       </>
     ),
@@ -126,7 +126,7 @@ const SECTIONS = [
     id: 'propriete',
     titre: 'Propriété intellectuelle',
     contenu: (
-      <p>Kaisly, son nom, son logo, son code et ses contenus appartiennent à Amorac. L’abonnement vous donne un droit d’utilisation personnel et non transférable pendant sa durée. Vous conservez tous les droits sur vos propres contenus (logo, photos, articles), que vous nous autorisez à héberger et afficher pour faire fonctionner le service.</p>
+      <p>Kaislo, son nom, son logo, son code et ses contenus appartiennent à Amorac. L’abonnement vous donne un droit d’utilisation personnel et non transférable pendant sa durée. Vous conservez tous les droits sur vos propres contenus (logo, photos, articles), que vous nous autorisez à héberger et afficher pour faire fonctionner le service.</p>
     ),
   },
   {
@@ -159,7 +159,7 @@ export default function Page() {
   return (
     <PageLegale
       titre="Conditions d’utilisation"
-      intro="Les règles d’utilisation de Kaisly et de l’abonnement : compte, essai gratuit, paiement, résiliation et responsabilités."
+      intro="Les règles d’utilisation de Kaislo et de l’abonnement : compte, essai gratuit, paiement, résiliation et responsabilités."
       sections={SECTIONS}
     />
   );

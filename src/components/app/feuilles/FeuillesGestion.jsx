@@ -4,7 +4,7 @@
 // client et remboursement, stock, compte, menu "Plus".
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaislo } from '@/store/kaislo';
 import { genId, formatDate, formatHeure, symbole } from '@/lib/utils/format';
 import { CATEGORIES_DEPENSES, COULEURS } from '@/lib/donnees/modeles';
 import { historiqueClient, soldeClient, lienRappelWhatsApp } from '@/lib/donnees/credit';
@@ -17,7 +17,7 @@ import { estServeur } from '@/lib/donnees/synchro';
 
 // ---------- Produit ----------
 export function FeuilleProduit({ produit, categorieId }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const { d } = s;
   const [b, setB] = useState(() =>
     produit
@@ -155,7 +155,7 @@ export function FeuilleProduit({ produit, categorieId }) {
 
 // ---------- Catégorie ----------
 export function FeuilleCategorie({ categorie }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [b, setB] = useState(categorie ? { ...categorie } : { id: null, nom: '', couleur: COULEURS[s.d.categories.length % COULEURS.length] });
   const enregistrer = () => { const r = s.enregistrerCategorie(b); r.erreur ? s.message(r.erreur, 'erreur') : s.fermer(); };
   const supprimer = () => { const err = s.supprimerCategorie(b.id); err ? s.message(err, 'erreur') : s.fermer(); };
@@ -176,7 +176,7 @@ export function FeuilleCategorie({ categorie }) {
 
 // ---------- Vendeur (PIN + droits) ----------
 export function FeuilleUtilisateur({ utilisateur }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [b, setB] = useState(utilisateur ? { ...utilisateur } : { id: null, nom: '', role: 'vendeur', telephone: '', pin: '', actif: true, peutGererProduits: false, peutFaireRemises: false });
   const [enCours, setEnCours] = useState(false);
   const enLigne = estServeur(s.d);
@@ -189,7 +189,7 @@ export function FeuilleUtilisateur({ utilisateur }) {
   return (
     <Feuille titre={b.id ? b.nom : 'Nouveau vendeur'} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer} disabled={enCours}>{enCours ? 'Enregistrement…' : 'Enregistrer'}</button>}>
       <div className="pile">
-        <label className="champ"><span>Nom et prénom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaisly" /></label>
+        <label className="champ"><span>Nom et prénom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaislo" /></label>
         <label className="champ"><span>Numéro de téléphone (identifiant de connexion)</span><input type="tel" inputMode="tel" value={b.telephone || ''} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
         <label className="champ"><span>Code PIN (4 chiffres)</span><input className="pin-saisie" inputMode="numeric" maxLength={4} value={b.pin || ''} onChange={(e) => setB({ ...b, pin: e.target.value })} placeholder="••••" /></label>
         {enLigne && b.id && <p className="tres-petit muet">Laissez vide pour garder le code actuel. Les codes sont gardés chiffrés sur le serveur : personne ne peut les lire.</p>}
@@ -212,7 +212,7 @@ export function FeuilleUtilisateur({ utilisateur }) {
 
 // ---------- Dépense ----------
 export function FeuilleDepense({ depense }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [b, setB] = useState(depense ? { ...depense } : { id: null, montant: null, categorie: CATEGORIES_DEPENSES[0], note: '', depuisCaisse: true });
   const enregistrer = () => { const err = s.enregistrerDepense(b); err ? s.message(err, 'erreur') : s.fermer(); };
   return (
@@ -234,7 +234,7 @@ export function FeuilleDepense({ depense }) {
 
 // ---------- Client (création / modification) ----------
 export function FeuilleClient({ client }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [b, setB] = useState(client ? { ...client } : { id: null, nom: '', telephone: '', note: '' });
   const enregistrer = () => {
     const res = s.enregistrerClient(b);
@@ -244,7 +244,7 @@ export function FeuilleClient({ client }) {
   return (
     <Feuille titre={b.id ? 'Modifier le client' : 'Nouveau client'} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer}>Enregistrer</button>}>
       <div className="pile">
-        <label className="champ"><span>Nom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaisly" autoFocus /></label>
+        <label className="champ"><span>Nom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaislo" autoFocus /></label>
         <label className="champ"><span>Téléphone (pour le rappel WhatsApp)</span><input type="tel" value={b.telephone} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
         <label className="champ"><span>Note</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder="Ex : paie en fin de mois" /></label>
         {b.id && s.estGerant() && (
@@ -257,7 +257,7 @@ export function FeuilleClient({ client }) {
 
 // ---------- Fiche d'un client : solde, historique, remboursement, rappel ----------
 export function FeuilleFicheClient({ clientId }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const client = s.d.clients.find((c) => c.id === clientId);
   if (!client) return null;
   const solde = soldeClient(s.d, client.id);
@@ -299,7 +299,7 @@ export function FeuilleFicheClient({ clientId }) {
 }
 
 export function FeuilleRemboursement({ clientId }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const client = s.d.clients.find((c) => c.id === clientId);
   const solde = soldeClient(s.d, clientId);
   const [montant, setMontant] = useState(solde);
@@ -329,7 +329,7 @@ export function FeuilleRemboursement({ clientId }) {
 }
 
 export function FeuilleRecuRemboursement({ remboursement, client, soldeApres }) {
-  const s = useKaisly();
+  const s = useKaislo();
   return (
     <Feuille titre="Remboursement enregistré" sousTitre={client.nom + ' · reste ' + s.prix(soldeApres)} surFermer={() => s.ouvrir('ficheClient', { clientId: client.id })}
       pied={
@@ -345,7 +345,7 @@ export function FeuilleRecuRemboursement({ remboursement, client, soldeApres }) 
 
 // ---------- Stock : entrée de marchandise ----------
 export function FeuilleEntreeStock({ produitId }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const produits = [...s.d.produits].sort((a, b) => a.nom.localeCompare(b.nom));
   const [b, setB] = useState({ produitId: produitId || '', quantite: null, prixAchat: null, fournisseur: '', note: '' });
   const p = s.d.produits.find((x) => x.id === b.produitId);
@@ -374,7 +374,7 @@ export function FeuilleEntreeStock({ produitId }) {
 
 // ---------- Stock : inventaire ----------
 export function FeuilleAjustement({ produit }) {
-  const s = useKaisly();
+  const s = useKaislo();
   const [q, setQ] = useState(produit.stock);
   const [note, setNote] = useState('');
   const valider = () => { const err = s.ajusterStock(produit.id, q, note); err ? s.message(err, 'erreur') : s.fermer(); };
@@ -391,7 +391,7 @@ export function FeuilleAjustement({ produit }) {
 
 // ---------- Mon compte ----------
 export function FeuilleCompte() {
-  const s = useKaisly();
+  const s = useKaislo();
   const enLigne = estServeur(s.d);
   const [biometrie, setBiometrie] = useState(false); // l'appareil a-t-il une empreinte / Face ID ?
   useEffect(() => { if (enLigne) biometrieDisponible().then(setBiometrie); }, [enLigne]);
@@ -435,7 +435,7 @@ export function FeuilleCompte() {
 
 // État de la synchronisation, avec un bouton pour la relancer
 export function EtatSynchroDetail() {
-  const s = useKaisly();
+  const s = useKaislo();
   const { etat, enAttente, derniere, message } = s.synchro;
   const texte = etat === 'envoi' ? 'Synchronisation en cours…'
     : etat === 'hors-ligne' ? 'Hors ligne : ' + (enAttente ? enAttente + ' modification(s) en attente' : 'tout est enregistré sur l’appareil')
@@ -455,7 +455,7 @@ export function EtatSynchroDetail() {
 
 // ---------- Proposition d'activer l'empreinte / Face ID (après la 1re connexion par code) ----------
 export function FeuilleBiometrie() {
-  const s = useKaisly();
+  const s = useKaislo();
   const nom = nomBiometrie();
   return (
     <Feuille titre={'Se connecter avec ' + nom + ' ?'} surFermer={s.refuserBiometrie} pied={
@@ -475,7 +475,7 @@ export function FeuilleBiometrie() {
 
 // ---------- Menu "Plus" (téléphone) ----------
 export function FeuilleMenu() {
-  const s = useKaisly();
+  const s = useKaislo();
   const liens = liensMenu(s).slice(4);
   return (
     <Feuille titre="Menu" surFermer={s.fermer}>

@@ -35,7 +35,7 @@ export async function activerBiometrie(jeton) {
   const cle = await navigator.credentials.create({
     publicKey: {
       challenge: versOctets(o.defi),
-      rp: { id: o.rpId, name: 'Kaisly' },
+      rp: { id: o.rpId, name: 'Kaislo' },
       user: { id: versOctets(o.utilisateur.id), name: o.utilisateur.telephone, displayName: o.utilisateur.nom },
       pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
       authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },

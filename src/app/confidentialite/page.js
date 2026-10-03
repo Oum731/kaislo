@@ -8,7 +8,7 @@ import { SOCIETE } from '@/config';
 
 export const metadata = {
   title: 'Politique de confidentialité',
-  description: 'Quelles données Kaisly utilise, pourquoi, combien de temps, avec qui elles sont partagées et comment exercer vos droits.',
+  description: 'Quelles données Kaislo utilise, pourquoi, combien de temps, avec qui elles sont partagées et comment exercer vos droits.',
   alternates: { canonical: '/confidentialite/' },
 };
 
@@ -20,7 +20,7 @@ const SECTIONS = [
     titre: 'Qui est responsable de vos données ?',
     contenu: (
       <>
-        <p><b>{SOCIETE.nom}</b>, éditeur de Kaisly, est responsable des données des comptes (gérants, vendeurs), des abonnements et des visiteurs du site.</p>
+        <p><b>{SOCIETE.nom}</b>, éditeur de Kaislo, est responsable des données des comptes (gérants, vendeurs), des abonnements et des visiteurs du site.</p>
         <p>Pour les données que le commerce enregistre sur <b>ses propres clients</b> (carnet de crédit, numéro pour l’envoi du ticket), le commerce est responsable du traitement et {SOCIETE.nom} agit comme sous-traitant : nous les hébergeons pour lui, sans les utiliser pour nous-mêmes.</p>
         <p>Contact pour toute question sur vos données : {mail}.</p>
       </>
@@ -51,7 +51,7 @@ const SECTIONS = [
         <li><b>Gérer l’abonnement</b> : essai, paiements, reçus, relances (exécution du contrat, obligations comptables).</li>
         <li><b>Sécuriser les comptes</b> : vérification des connexions, détection des abus (intérêt légitime).</li>
         <li><b>Vous assister</b> : réponses au support, information sur les évolutions importantes du service (exécution du contrat).</li>
-        <li><b>Améliorer Kaisly</b> : statistiques globales et anonymes d’utilisation (intérêt légitime).</li>
+        <li><b>Améliorer Kaislo</b> : statistiques globales et anonymes d’utilisation (intérêt légitime).</li>
       </ul>
     ),
   },
@@ -62,7 +62,7 @@ const SECTIONS = [
       <ul>
         <li>Vendre ou louer vos données, ou celles de vos clients.</li>
         <li>Utiliser vos chiffres de vente ou votre fichier clients pour faire de la publicité ou démarcher vos clients.</li>
-        <li>Afficher de la publicité dans Kaisly.</li>
+        <li>Afficher de la publicité dans Kaislo.</li>
       </ul>
     ),
   },
@@ -133,7 +133,7 @@ const SECTIONS = [
   {
     id: 'mineurs',
     titre: 'Mineurs',
-    contenu: <p>Kaisly est un outil professionnel destiné aux personnes majeures. Nous ne collectons pas sciemment de données sur des mineurs pour notre propre compte.</p>,
+    contenu: <p>Kaislo est un outil professionnel destiné aux personnes majeures. Nous ne collectons pas sciemment de données sur des mineurs pour notre propre compte.</p>,
   },
   {
     id: 'changements',
@@ -146,7 +146,7 @@ export default function Page() {
   return (
     <PageLegale
       titre="Confidentialité"
-      intro="Quelles données Kaisly utilise, pourquoi, combien de temps, et comment exercer vos droits. Sans jargon."
+      intro="Quelles données Kaislo utilise, pourquoi, combien de temps, et comment exercer vos droits. Sans jargon."
       sections={SECTIONS}
     />
   );
