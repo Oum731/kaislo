@@ -25,7 +25,7 @@ import { execFile, execFileSync, spawnSync } from 'node:child_process';
 import puppeteer from 'puppeteer-core';
 import ffmpeg from 'ffmpeg-static';
 
-const LIEN_FINAL = 'oum731.github.io/kaisly';
+//const LIEN_FINAL = 'oum731.github.io/kaisly';
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const SORTIE = 'public/videos';
 const PORT = 4310;
