@@ -11,6 +11,7 @@
 // réservé aux comptes de l'équipe Amorac.
 // ------------------------------------------------------------
 import { useEffect, useMemo, useState } from 'react';
+import Chargement from '@/components/Chargement';
 import Link from 'next/link';
 import { tousLesCommerces, enregistrerCommerce, offresActuelles, chargerAdmin, enregistrerAdmin } from '@/lib/donnees/stockage';
 import { etatAbonnement, LIBELLES_STATUT, OFFRES_DEFAUT, prolonger, DUREE_ESSAI_JOURS } from '@/lib/donnees/abonnement';
@@ -53,7 +54,7 @@ export default function Admin() {
     try { setConnecte(sessionStorage.getItem('kaisly:admin') === 'oui'); } catch { /* rien */ }
     setPret(true);
   }, []);
-  if (!pret) return null;
+  if (!pret) return <Chargement texte="Ouverture de l’espace Amorac…" />;
   if (!connecte) return <ConnexionAdmin surConnexion={() => setConnecte(true)} />;
   return <TableauAdmin surDeconnexion={() => { try { sessionStorage.removeItem('kaisly:admin'); } catch { /* rien */ } setConnecte(false); }} />;
 }

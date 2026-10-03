@@ -831,3 +831,16 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .video-demo { scroll-margin-top: 80px; }
 .video-demo:target .video-cadre { outline: 3px solid var(--safran); outline-offset: 4px; }
 #tutoriels.section { padding-top: 24px; } #tutoriels .grille-videos:first-child { margin-top: 0; }
+
+/* ---------- Écran de chargement (lancement, changement de page) ---------- */
+.chargement { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 40px 20px; text-align: center; min-height: 60vh; }
+.chargement.plein { min-height: 100dvh; background: var(--fond); }
+.chargement-logo { position: relative; width: 76px; height: 76px; display: grid; place-items: center; }
+.chargement-logo .logo-marque { width: 48px; height: 48px; border-radius: 11px; font-size: 26px; font-family: var(--marque); font-weight: 800; }
+.chargement-anneau { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--bordure); border-top-color: var(--vert); border-right-color: var(--safran); animation: tourner 0.9s linear infinite; }
+.chargement-texte { font-weight: 600; color: var(--encre-2); font-size: 15px; }
+.chargement-lent { font-size: 13.5px; color: var(--encre-3); max-width: 280px; opacity: 0; animation: apparaitre 0.4s ease 6s forwards; }
+@keyframes tourner { to { transform: rotate(360deg); } }
+@keyframes apparaitre { to { opacity: 1; } }
+/* Personnes sensibles aux animations : rotation lente plutôt que rapide */
+@media (prefers-reduced-motion: reduce) { .chargement-anneau { animation-duration: 3s; } }

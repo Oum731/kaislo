@@ -7,6 +7,7 @@ import { useKaisly } from '@/store/kaisly';
 import Connexion from './Connexion';
 import Coque from './Coque';
 import { chemin } from '@/config';
+import Chargement from '@/components/Chargement';
 
 export default function Application() {
   const pret = useKaisly((s) => s.pret);
@@ -22,13 +23,8 @@ export default function Application() {
     }
   }, []);
 
-  if (!pret) {
-    return (
-      <div className="ecran-chargement">
-        <span className="logo"><span className="logo-marque">K</span> Kaisly</span>
-      </div>
-    );
-  }
+  // Écran de lancement : visible dès l'ouverture, avant même le chargement du JavaScript
+  if (!pret) return <Chargement texte="Ouverture de votre caisse…" />;
 
   return (
     <div className="app">
