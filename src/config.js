@@ -6,6 +6,9 @@
 // (utilisée pour Google : sitemap, liens de partage…)
 export const SITE_URL = 'https://kaislo.com';
 
+// Google Search Console → Ajouter une propriété → balise HTML : coller ici le code « content » (sinon laisser vide)
+export const GOOGLE_VERIFICATION = '';
+
 // Sous-dossier du site : vide sur Hostinger, "/kaisly" pour la version de test
 // sur GitHub Pages (fixé au moment du build par NEXT_PUBLIC_BASE_PATH).
 // Les <Link> de Next l'ajoutent tout seuls ; pour les images et fichiers
@@ -30,11 +33,11 @@ export const SOCIETE = {
   emailSecurite: 'contact@amorac.com', // signalement de failles de sécurité
 };
 
-// Hébergeur du site (à modifier lors du passage sur Hostinger)
+// Hébergeur du site et de la base de données
 export const HEBERGEUR = {
-  nom: 'GitHub Pages (GitHub, Inc.)',
-  adresse: '88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis',
-  site: 'https://pages.github.com',
+  nom: 'Hostinger International Ltd',
+  adresse: '61 Lordou Vironos Street, 6023 Larnaca, Chypre',
+  site: 'https://www.hostinger.com',
 };
 
 // Date affichée en haut des pages légales (à changer à chaque modification)

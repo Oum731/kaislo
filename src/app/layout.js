@@ -2,7 +2,7 @@
 // Mise en page commune à toutes les pages (site + application)
 // ------------------------------------------------------------
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google';
-import { SITE_URL, SITE_NOM, SITE_SLOGAN, chemin } from '@/config';
+import { SITE_URL, SITE_NOM, SITE_SLOGAN, GOOGLE_VERIFICATION, BASE_PATH, chemin } from '@/config';
 import './globals.css';
 
 // Polices téléchargées au moment du "build" et servies par le site lui-même
@@ -30,7 +30,17 @@ export const metadata = {
     apple: chemin('/icons/icone-180.png'),
   },
   alternates: { canonical: '/' },
+  // Code de Google Search Console (src/config.js)
+  ...(GOOGLE_VERIFICATION ? { verification: { google: GOOGLE_VERIFICATION } } : {}),
+  // La copie de test GitHub Pages ne doit pas apparaître dans Google (seul kaislo.com compte)
+  ...(BASE_PATH ? { robots: { index: false, follow: false } } : {}),
 };
+
+// Qui édite Kaislo et quel est le site officiel (lu par Google)
+const DONNEES_SITE = [
+  { '@context': 'https://schema.org', '@type': 'Organization', name: SITE_NOM, url: SITE_URL, logo: SITE_URL + '/icons/icone-512.png', parentOrganization: { '@type': 'Organization', name: 'Amorac', url: 'https://amorac.com' } },
+  { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NOM, url: SITE_URL, inLanguage: 'fr' },
+];
 
 export const viewport = {
   themeColor: '#F6F4EE',
@@ -42,7 +52,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fr" className={`${titre.variable} ${texte.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(DONNEES_SITE) }} />
+      </body>
     </html>
   );
 }

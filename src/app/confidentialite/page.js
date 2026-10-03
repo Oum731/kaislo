@@ -36,6 +36,7 @@ const SECTIONS = [
           <tr><th>Utilisateurs</th><td>Nom, numéro de téléphone, rôle et droits, code PIN (enregistré sous forme chiffrée dans la version en ligne), dates de connexion.</td></tr>
           <tr><th>Activité</th><td>Articles, prix, ventes, tickets, remises, dépenses, stock, journées de caisse, vendeur ayant fait chaque opération.</td></tr>
           <tr><th>Clients du commerce</th><td>Nom, téléphone, note, achats à crédit et remboursements ; numéro du client pour l’envoi du ticket par WhatsApp.</td></tr>
+          <tr><th>Messages</th><td>Messages échangés avec l’équipe Kaislo depuis l’écran Aide (nom de l’auteur, date, lecture). L’équipe est prévenue par e-mail de chaque nouveau message.</td></tr>
           <tr><th>Abonnement</th><td>Offre, dates, montants et références de paiement. Les numéros de carte sont saisis chez le prestataire de paiement et ne nous sont jamais transmis.</td></tr>
           <tr><th>Technique</th><td>Type d’appareil et de navigateur, journaux de connexion et d’erreurs, adresse IP (sécurité et lutte contre la fraude).</td></tr>
         </tbody>
@@ -73,6 +74,7 @@ const SECTIONS = [
       <>
         <p>Uniquement avec les prestataires nécessaires au service, tenus à la confidentialité :</p>
         <ul>
+          <li><b>Équipe Amorac</b> : seuls les membres de l’équipe, avec un compte personnel protégé par mot de passe, accèdent aux informations des commerces pour l’assistance et les abonnements. Chaque action est enregistrée.</li>
           <li><b>Hébergeur</b> du site et des données (voir les <Link href="/mentions-legales/">mentions légales</Link>).</li>
           <li><b>Prestataires de paiement</b> (carte bancaire, mobile money, banque) pour les abonnements.</li>
           <li><b>Envoi de SMS ou de messages WhatsApp</b> pour les codes de vérification.</li>

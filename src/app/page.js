@@ -3,6 +3,8 @@
 // Les images viennent de public/captures/ (vraies captures de l'application).
 // ------------------------------------------------------------
 import Link from 'next/link';
+import { TYPES_COMMERCE } from '@/lib/donnees/modeles';
+import { ACTIVITES } from '@/components/site/activites';
 import ExempleJournee from '@/components/site/ExempleJournee';
 import {
   EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos,
@@ -10,7 +12,7 @@ import {
 } from '@/components/site/Site';
 
 export const metadata = {
-  title: 'Kaislo — Caisse, gestion de stock et d’inventaire pour restaurants, épiceries et boutiques',
+  title: 'Kaislo — Caisse, gestion de stock et d’inventaire pour tous les commerces',
   description:
     'Caisse et outil de gestion sur téléphone, tablette et ordinateur : ventes, gestion de stock et d’inventaire, carnet de crédit, tables, marges, dépenses, ouverture et fermeture de caisse. Ticket imprimé, envoyé par WhatsApp ou sans impression. Toutes les devises. Essai gratuit.',
   alternates: { canonical: '/' },
@@ -37,7 +39,7 @@ const QUESTIONS = [
   ['Puis-je envoyer le ticket au client par WhatsApp ?', 'Oui. Pour une livraison ou une commande par téléphone, cochez « Client à distance » et indiquez son numéro : le reçu complet s’ouvre dans WhatsApp, prêt à être envoyé.'],
   ['Est-ce que ça marche sur iPhone et sur ordinateur ?', 'Oui, la caisse fonctionne sur Android, iPhone, Windows et Mac. L’impression Bluetooth depuis le navigateur fonctionne avec Chrome (Android et ordinateur) ; l’application mobile Kaislo l’apportera aussi sur iPhone.'],
   ['Comment fonctionne le carnet de crédit ?', 'Au moment d’encaisser, choisissez « À crédit » et le client. Kaislo garde l’historique de ses achats et de ses remboursements, affiche ce qu’il doit, et prépare un rappel WhatsApp.'],
-  ['Kaislo convient-il à mon type de commerce ?', 'Kaislo est pensé pour les restaurants, maquis, snacks, cafés, épiceries, supérettes et petites boutiques. Les options (accompagnements, tailles, conditionnements) s’adaptent à chaque métier.'],
+  ['Kaislo convient-il à mon type de commerce ?', 'Oui : restaurants et maquis, bars, boulangeries, épiceries, grossistes et dépôts, boutiques, quincailleries, pharmacies et parapharmacies, salons de beauté, téléphonie, librairies et papeteries… À l’inscription, Kaislo prépare les catégories et l’unité de vente de votre métier (pièce, kg, litre, mètre, carton…), et vous pouvez tout modifier.'],
 ];
 
 export default function PageAccueil() {
@@ -115,6 +117,9 @@ export default function PageAccueil() {
                 <span className="suite">Créer mon commerce →</span>
               </Link>
             </div>
+            {/* Toutes les activités proposées à l'inscription (catégories et unité de vente prêtes) */}
+            <p className="muet" style={{ marginTop: 20 }}>Activités prêtes à l’emploi : {TYPES_COMMERCE.map((t) => t.nom).join(' · ')}.</p>
+            <p className="liens-activites">{Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>Caisse pour {a.nom.toLowerCase()} →</Link>)}</p>
           </div>
         </section>
 
@@ -153,7 +158,7 @@ export default function PageAccueil() {
         />
       </main>
       <PiedSite />
-      <DonneesLogiciel description="Logiciel de caisse et de gestion de stock pour restaurants, épiceries et boutiques : ventes, inventaire, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, marges, ouverture et fermeture de caisse." />
+      <DonneesLogiciel description="Logiciel de caisse et de gestion de stock pour restaurants, épiceries, boutiques, quincailleries, pharmacies, grossistes et tous les commerces : ventes, inventaire, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, marges, ouverture et fermeture de caisse." />
     </div>
   );
 }

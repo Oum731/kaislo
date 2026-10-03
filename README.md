@@ -1,10 +1,11 @@
-# Kaislo — Caisse pour restaurants, épiceries et boutiques
+# Kaislo — Caisse et gestion de stock pour tous les commerces
 
 Site public (pour Google) + application de caisse, en **Next.js**.
 Démo prête à présenter : un restaurant et une épicerie, tous deux nommés **Amorac Kaislo** (comme leurs gérants, vendeurs et clients), dans la devise du pays choisi.
 
-> La version finale sera une vraie application mobile (Capacitor) reliée à un serveur Laravel.
-> Dans cette version, les données restent **dans l'appareil** (pas encore de serveur).
+> En ligne (Hostinger), les données sont synchronisées avec le serveur PHP + MySQL et la caisse marche aussi sans internet.
+> Sur GitHub Pages (version de test), il n'y a pas de serveur : les données restent dans le navigateur.
+> Prochaine étape : application mobile (Capacitor).
 
 ## Lancer sur votre PC
 
@@ -116,7 +117,8 @@ Domaine provisoire : https://darkgrey-albatross-393608.hostingersite.com
 L'API PHP (dossier `api/`, PHP simple sans framework) répond sur `/api/...` :
 `GET /api/sante`, `POST /api/inscription`, `POST /api/connexion`, `GET /api/moi`, `POST /api/deconnexion`,
 `GET|POST /api/donnees` (synchronisation des caisses), `POST /api/utilisateurs` (vendeurs),
-`POST /api/verifier-gerant` (annulation), `POST /api/biometrie/defi|enregistrer|connexion` (empreinte / Face ID, norme WebAuthn).
+`POST /api/verifier-gerant` (annulation), `POST /api/biometrie/defi|enregistrer|connexion` (empreinte / Face ID, norme WebAuthn),
+`GET|POST /api/messages` (messagerie avec l'équipe), `/api/admin/...` (espace Amorac).
 
 **Fonctionnement :** chaque caisse garde une copie des données et marche sans internet ; les modifications partent
 dans une file d'attente envoyée dès que possible (la plus récente gagne en cas de conflit). Les codes PIN ne sont
@@ -134,7 +136,41 @@ Les tables MySQL sont créées automatiquement au premier appel.
 4. Gestionnaire de fichiers : créer le fichier `.env` dans le dossier **au-dessus** de `public_html`
    (`domains/<domaine>/.env`), avec `Db`, `User`, `Password` (base MySQL créée dans hPanel).
    Le serveur MySQL est `localhost` sur Hostinger (clé `DbHost` seulement s'il est différent).
+   Ajouter aussi :
+   - `CleAdmin=` une clé secrète de 12 caractères ou plus (sert une seule fois, pour créer le premier compte Amorac) ;
+   - `EmailEquipe=` l'adresse qui reçoit les messages des commerces ;
+   - `EmailExpediteur=` l'expéditeur des e-mails (ex : `no-reply@kaislo.com`, adresse créée dans hPanel → E-mails).
 5. Vérifier : `https://<domaine>/api/sante` doit afficher `"ok":true`.
+6. Ouvrir `https://<domaine>/admin/` : saisir la clé `CleAdmin`, son nom, son e-mail et un mot de passe
+   (10 caractères minimum, avec lettres et chiffres). Les autres membres de l'équipe sont ajoutés ensuite
+   dans l'onglet « Équipe » (rôle « admin » ou « support » ; le support ne peut ni encaisser ni suspendre).
+
+## Espace Amorac (/admin)
+
+- **Tableau de bord** : commerces inscrits, en essai, abonnés, suspendus, chiffre d'affaires de l'abonnement.
+- **Commerces** : fiche de chaque commerce (gérant, vendeurs, utilisation, journal), changement du numéro,
+  notes internes, prolongation de l'essai, suspension / réactivation, enregistrement d'un paiement
+  (espèces, mobile money, virement, carte) qui prolonge l'abonnement.
+- **Messages** : conversation avec chaque commerce (écran « Aide » de l'application). Un e-mail prévient
+  l'équipe à chaque nouveau message.
+- **Offres** et **Équipe** (administrateurs seulement).
+
+## Numéros de téléphone
+
+Chaque commerce et chaque utilisateur est identifié par son numéro, enregistré au **format international**
+(ex : `+225 07 12 34 56 78`) selon les règles du pays (`src/lib/donnees/telephone.js` et `api/lib/telephone.php`,
+à garder identiques). Un numéro ne peut appartenir qu'à un seul commerce. Pour ajouter un pays : compléter les deux fichiers.
+
+## Avant l'ouverture au public (production)
+
+- [ ] Acheter `kaislo.com`, le relier à Hostinger (hPanel → Domaines) et activer le certificat SSL.
+- [ ] `.env` du serveur complet (`Db`, `User`, `Password`, `CleAdmin`, `EmailEquipe`, `EmailExpediteur`) et **jamais** dans Git.
+- [ ] Premier compte Amorac créé dans `/admin`, puis changer ou retirer `CleAdmin` du `.env`.
+- [ ] `src/config.js` : vrai numéro WhatsApp (`CONTACT_WHATSAPP`) et informations de la société (`SOCIETE`).
+- [ ] Sauvegardes : hPanel → Bases de données → sauvegarde automatique activée ; exporter la base (phpMyAdmin) avant chaque grosse mise à jour.
+- [ ] Après chaque publication : ouvrir `/api/sante` (`versionBase` à jour) et tester une connexion.
+- Sécurité déjà en place : HTTPS forcé, en-têtes de sécurité (`public/.htaccess`), PIN et mots de passe chiffrés,
+  limitation des tentatives de connexion, API jamais mise en cache par l'application.
 
 **Tester l'API sur l'ordinateur :** PHP 8.1+ avec une base SQLite de test :
 `.env` de test avec `DbDriver=sqlite`, puis `php -S 127.0.0.1:4320 api/index.php`.

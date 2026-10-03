@@ -748,7 +748,7 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 
 .site-pied { background: var(--encre); color: rgba(246, 245, 241, 0.7); padding: 40px 0 28px; font-size: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .site-pied .colonnes { display: grid; gap: 24px; }
-@media (min-width: 800px) { .site-pied .colonnes { grid-template-columns: 1.6fr 1fr 1fr 1fr; } }
+@media (min-width: 800px) { .site-pied .colonnes { grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; } }
 .site-pied h4 { color: var(--creme); font-size: 14px; margin-bottom: 10px; }
 .site-pied a { display: block; text-decoration: none; padding: 3px 0; }
 .site-pied a:hover { color: var(--creme); }
@@ -880,3 +880,8 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .bulle.equipe { align-self: flex-start; }
 .saisie-message { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--bordure); align-items: flex-end; }
 .saisie-message textarea { flex: 1; min-width: 0; resize: vertical; }
+
+/* Liens vers les pages par activité (accueil) */
+.liens-activites { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; }
+.liens-activites a { color: var(--vert); font-weight: 600; font-size: 14.5px; text-decoration: none; }
+.liens-activites a:hover { text-decoration: underline; }

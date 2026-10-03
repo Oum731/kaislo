@@ -29,7 +29,7 @@ const contenu = {
   captureMobile: { src: '/captures/epicerie-mobile.webp', alt: 'Articles et stock sur téléphone' },
   etiquette: 'Gestion de stock et d’inventaire',
   titreFonctions: 'Sachez à tout moment ce que vous avez, ce qui part et ce que ça vaut.',
-  chapoFonctions: 'Pour les épiceries, boutiques, dépôts, restaurants (boissons, ingrédients) et tous les commerces qui achètent pour revendre.',
+  chapoFonctions: 'Pour les épiceries, grossistes et dépôts, boutiques, quincailleries, pharmacies, téléphonie, librairies, bars, restaurants (boissons, ingrédients)… Chaque article a son unité : pièce, kg, litre, mètre, carton, sac, bouteille.',
   lignes: [
     {
       titre: 'Un inventaire toujours à jour',
@@ -60,6 +60,7 @@ const contenu = {
     ['Faut-il une imprimante pour utiliser Kaislo ?', 'Non. L’impression est facultative : chaque vente est enregistrée, le ticket reste consultable dans l’historique et peut être envoyé par WhatsApp. Vous pouvez même utiliser Kaislo uniquement pour le stock et l’inventaire.'],
     ['Comment faire l’inventaire ?', 'Dans Stock, touchez l’article et indiquez la quantité comptée : Kaislo corrige le stock et garde l’écart dans l’historique. Exportez ensuite l’inventaire complet en Excel.'],
     ['Plusieurs vendeurs ou appareils peuvent-ils mettre à jour le stock ?', 'Oui. Le stock est partagé entre tous les appareils du commerce et se synchronise dès qu’il y a internet, même après une coupure.'],
+    ['Je vends au kilo, au mètre ou au carton : est-ce possible ?', 'Oui : choisissez l’unité de chaque article (pièce, kg, g, litre, mètre, carton, sac, paquet, boîte, bouteille…). Le stock, la caisse et l’inventaire Excel l’affichent partout.'],
     ['Est-ce adapté à un restaurant ?', 'Oui : activez « Gestion du stock et de l’inventaire » dans les réglages pour suivre les boissons et les ingrédients, en plus des plats.'],
     ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement mensuel simple dans la monnaie de votre pays.'],
   ],

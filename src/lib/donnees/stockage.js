@@ -8,7 +8,7 @@
 import { creerDonneesDemo, VERSION_DONNEES, COMMERCES_DEMO } from './demo.js';
 import { CATEGORIES_DEPART, TABLES_DEPART, paysParId, typeCommerce, cleTelephone } from './modeles.js';
 import { genId } from '../utils/format.js';
-import { nouvelAbonnement, OFFRES_DEFAUT } from './abonnement.js';
+import { nouvelAbonnement } from './abonnement.js';
 import { migrerClotures } from './cloture.js';
 
 const PREFIXE = 'kaislo:';
@@ -257,19 +257,3 @@ export function enregistrerPreferences(prefs) {
   ecrire('preferences', prefs);
 }
 
-// ---------- Espace Amorac (/admin) ----------
-// Dans la démo, ces réglages restent dans cet appareil.
-// Dans la vraie app : base de données du serveur, accès réservé à l'équipe.
-
-export function chargerAdmin() {
-  return lire('admin') || {};
-}
-
-export function enregistrerAdmin(admin) {
-  ecrire('admin', admin);
-}
-
-// Offres en vigueur (modifiées dans /admin, sinon celles par défaut)
-export function offresActuelles() {
-  return chargerAdmin().offres || OFFRES_DEFAUT;
-}

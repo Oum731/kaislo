@@ -9,6 +9,7 @@ import { Icone } from '@/components/ui';
 import MenuMobile from './MenuMobile';
 import { CONTACT_EMAIL, CONTACT_WHATSAPP, SITE_URL, chemin } from '@/config';
 import Marque from '@/components/Marque';
+import { ACTIVITES } from './activites';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
 export const LIEN_DEMO_RESTO = '/app/?demo=resto-ivoire';
@@ -62,7 +63,7 @@ export function PiedSite() {
         <div className="colonnes">
           <div>
             <span className="logo"><Marque /> Kaislo</span>
-            <p style={{ marginTop: 12, maxWidth: 360 }}>Logiciel de caisse pour restaurants, épiceries et boutiques. Développé par Amorac.</p>
+            <p style={{ marginTop: 12, maxWidth: 360 }}>Caisse et gestion de stock pour tous les commerces. Développé par Amorac.</p>
           </div>
           <div>
             <h4>Kaislo</h4>
@@ -71,6 +72,10 @@ export function PiedSite() {
             <Link href="/gestion-stock/">Gestion de stock et inventaire</Link>
             <Link href="/app/">Se connecter</Link>
             <Link href={LIEN_INSCRIPTION}>Créer mon commerce</Link>
+          </div>
+          <div>
+            <h4>Par activité</h4>
+            {Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>{a.nom}</Link>)}
           </div>
           <div>
             <h4>Informations légales</h4>
@@ -307,6 +312,9 @@ export function DonneesLogiciel({ description }) {
     url: SITE_URL,
     inLanguage: 'fr',
     publisher: { '@type': 'Organization', name: 'Amorac', url: 'https://amorac.com' },
+    // Essai gratuit de 30 jours (les prix de l'abonnement dépendent du pays)
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', description: 'Essai gratuit de 30 jours', url: SITE_URL + '/app/?inscription=1' },
+    screenshot: SITE_URL + '/og-image.png',
   };
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(donnees) }} />;
 }

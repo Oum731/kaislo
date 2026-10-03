@@ -6,6 +6,18 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [L,R=301]
 
+# Une seule adresse pour Google : www.kaislo.com → kaislo.com
+RewriteCond %{HTTP_HOST} ^www\.kaislo\.com$ [NC]
+RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
+
+# Quand kaislo.com sera actif : enlever les # des 2 lignes suivantes pour renvoyer
+# l'adresse provisoire Hostinger vers kaislo.com (Google garde ainsi une seule adresse)
+# RewriteCond %{HTTP_HOST} hostingersite\.com$ [NC]
+# RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
+
+# Toute autre adresse que kaislo.com (domaine provisoire…) : pas d'indexation par Google
+SetEnvIfNoCase Host ^kaislo\.com$ domaine_officiel
+
 # Page d'erreur
 ErrorDocument 404 /404.html
 
@@ -24,3 +36,20 @@ ErrorDocument 404 /404.html
   Require all denied
 </FilesMatch>
 Options -Indexes
+
+# ------------------------------------------------------------
+# Sécurité (en-têtes envoyés avec chaque page)
+#  - HTTPS obligatoire pendant un an (HSTS)
+#  - le site ne peut pas être affiché dans un autre site (protection contre le « clickjacking »)
+#  - sources autorisées : le site lui-même, la carte OpenStreetMap et sa recherche d'adresse
+#  - caméra (scan), position (carte) et Bluetooth (imprimante) : seulement pour Kaislo
+# ------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow" env=!domaine_officiel
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(self), geolocation=(self), bluetooth=(self), microphone=(), payment=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org; frame-src https://www.openstreetmap.org; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+</IfModule>
