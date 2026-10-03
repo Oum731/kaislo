@@ -4,6 +4,13 @@
 // ------------------------------------------------------------
 import PageLegale, { Info } from '@/components/site/PageLegale';
 import { SOCIETE, HEBERGEUR, CONTACT_EMAIL, CONTACT_WHATSAPP } from '@/config';
+import CREDITS_PHOTOS from '@/lib/donnees/credits-photos.json';
+
+// Licences Creative Commons des photos (obligatoire : nom de l'auteur + lien vers la licence)
+const nomLicence = (c) => (c.licence === 'cc0' ? 'CC0 (domaine public)' : c.licence === 'pdm' ? 'Domaine public' : 'CC ' + c.licence.toUpperCase() + ' ' + c.version);
+const lienLicence = (c) => (c.licence === 'cc0' ? 'https://creativecommons.org/publicdomain/zero/1.0/deed.fr'
+  : c.licence === 'pdm' ? 'https://creativecommons.org/publicdomain/mark/1.0/deed.fr'
+  : `https://creativecommons.org/licenses/${c.licence}/${c.version || '4.0'}/deed.fr`);
 
 export const metadata = {
   title: 'Mentions légales',
@@ -48,7 +55,24 @@ const SECTIONS = [
   {
     id: 'credits',
     titre: 'Crédits',
-    contenu: <p>Cartes : © les contributeurs d’OpenStreetMap. Icônes et illustrations : {SOCIETE.nom}.</p>,
+    contenu: (
+      <>
+        <p>Cartes : © les contributeurs d’OpenStreetMap. Icônes et illustrations : {SOCIETE.nom}.</p>
+        <p>Photos des articles des démos : images sous licence libre (Creative Commons), trouvées avec Openverse, recadrées et réduites.</p>
+        <details>
+          <summary>Voir le détail des {Object.keys(CREDITS_PHOTOS).length} photos</summary>
+          <ul>
+            {Object.entries(CREDITS_PHOTOS).map(([cle, c]) => (
+              <li key={cle}>
+                <b>{cle.replace(/-/g, ' ')}</b> : « {c.titre} », {c.auteur} —{' '}
+                <a href={lienLicence(c)} target="_blank" rel="noreferrer">{nomLicence(c)}</a> —{' '}
+                <a href={c.source} target="_blank" rel="noreferrer">source</a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </>
+    ),
   },
 ];
 

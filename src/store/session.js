@@ -330,8 +330,11 @@ export const trancheSession = (set, get) => ({
     return u?.role === 'gerant' || !!u?.[droit];
   },
 
+  // Stock et inventaire : activés par défaut pour épiceries et boutiques,
+  // et possibles pour tous (réglage « Gestion du stock et de l'inventaire »)
   gereStock() {
-    return typeCommerce(get().d?.commerce.type).gereStock;
+    const c = get().d?.commerce;
+    return c?.gestionStock ?? typeCommerce(c?.type).gereStock;
   },
 
   aTables() {

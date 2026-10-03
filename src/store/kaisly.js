@@ -30,6 +30,10 @@ import { estServeur, noterChangements } from '@/lib/donnees/synchro.js';
 let ignorerRetour = false; // retour déclenché par l'application elle-même (fermeture d'une fenêtre)
 let ajouterApresRetour = false; // fenêtre ouverte pendant ce retour : son étape sera ajoutée ensuite
 const navigateur = () => typeof window !== 'undefined';
+// Next.js prend en charge l'historique un instant après le démarrage. Avant cela, une étape ajoutée
+// lui serait inconnue et un « retour » rechargerait la page : on attend qu'il soit prêt.
+const historiquePret = () => navigateur() && !String(window.history.pushState).includes('[native code]');
+export const ajouterEtape = (etape) => { if (historiquePret()) window.history.pushState(etape, ''); };
 
 const trancheCommune = (set, get) => ({
   pret: false, // devient true quand les données du téléphone sont chargées
@@ -90,7 +94,7 @@ const trancheCommune = (set, get) => ({
     const etape = { kaisly: 'ecran', ecran };
     // Une fenêtre était ouverte : son étape devient celle du nouvel écran
     if (window.history.state?.kaisly === 'feuille') window.history.replaceState(etape, '');
-    else if (ecran !== avant) window.history.pushState(etape, '');
+    else if (ecran !== avant) ajouterEtape(etape);
   },
 
   ouvrir(type, infos = {}) {
@@ -99,7 +103,7 @@ const trancheCommune = (set, get) => ({
     set({ feuille: { type, ...infos, _id: Date.now() } });
     if (!navigateur() || dejaOuverte) return; // une fenêtre en remplace une autre : même étape
     if (ignorerRetour) ajouterApresRetour = true;
-    else window.history.pushState({ kaisly: 'feuille' }, '');
+    else ajouterEtape({ kaisly: 'feuille' });
   },
 
   fermer() {
@@ -118,7 +122,7 @@ const trancheCommune = (set, get) => ({
       ignorerRetour = false;
       if (ajouterApresRetour) {
         ajouterApresRetour = false;
-        window.history.pushState({ kaisly: 'feuille' }, '');
+        ajouterEtape({ kaisly: 'feuille' });
       }
       return;
     }

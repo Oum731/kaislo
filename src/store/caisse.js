@@ -130,7 +130,8 @@ export const trancheCaisse = (set, get) => ({
     set({ panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
     get().ouvrir('ticket', { vente, nouvelle: true });
     if (typeof navigator !== 'undefined') navigator.vibrate?.([30, 50, 30]);
-    if (get().imprimante.connectee) get().imprimerVente(vente);
+    // Impression automatique seulement si une imprimante est connectée ET si l'option est active (facultatif)
+    if (get().imprimante.connectee && get().prefs.impressionAuto !== false) get().imprimerVente(vente);
     return vente;
   },
 

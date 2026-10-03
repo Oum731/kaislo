@@ -25,7 +25,8 @@ import { execFile, execFileSync, spawnSync } from 'node:child_process';
 import puppeteer from 'puppeteer-core';
 import ffmpeg from 'ffmpeg-static';
 
-//const LIEN_FINAL = 'oum731.github.io/kaisly';
+// Adresse affichée sous « Essai gratuit 30 jours » à la fin des vidéos (vide = aucune adresse)
+const LIEN_FINAL = '';
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const SORTIE = 'public/videos';
 const PORT = 4310;
@@ -226,7 +227,7 @@ async function seConnecter(p, telephone, pin = '1234') {
 const INTRO = (titreVideo, sousTitre) => `<div class="k">K</div><div class="marque">Kaisly</div><h1>${titreVideo}</h1><p>${sousTitre}</p>`;
 const FIN = `<div class="k">K</div><div class="marque">Kaisly</div><h1>À vous d’encaisser.</h1>
   <p>Restaurants, épiceries, boutiques. Sur le téléphone que vous avez déjà, dans la devise de votre pays.</p>
-  <div class="bouton">Essai gratuit 30 jours</div><div class="v-adresse">${LIEN_FINAL}</div>`;
+  <div class="bouton">Essai gratuit 30 jours</div>${LIEN_FINAL ? '<div class="v-adresse">' + LIEN_FINAL + '</div>' : ''}`;
 const FIN_PAROLE = 'Kaisly : la caisse simple, sur le téléphone que vous avez déjà. Essayez-la gratuitement pendant trente jours.';
 
 // Règle l'horloge de la page sur une heure de la journée (ex : 19 h 40),
@@ -372,8 +373,18 @@ async function filmer(p, dossier, largeurPx, hauteurPx, liste, hauteDefinition) 
 const VOULUES = process.argv.slice(2);
 const veut = (nom) => !VOULUES.length || VOULUES.some((v) => nom.includes(v));
 
-async function enregistrer(nom, { largeur, hauteur, mobile, affiche }, scenario) {
+async function enregistrer(nom, options, scenario) {
   if (!veut(nom)) return;
+  // Le navigateur automatique peut rarement « décrocher » (page fermée) : on recommence une fois
+  try {
+    await enregistrerUneFois(nom, options, scenario);
+  } catch (e) {
+    console.log(`${nom} : incident (${e.message.slice(0, 80)}), nouvel essai…`);
+    await enregistrerUneFois(nom, options, scenario);
+  }
+}
+
+async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche }, scenario) {
   // Si des phrases ont dû être fabriquées pendant le tournage (petits temps morts),
   // on refait la prise : elles sont alors dans le cache et tout est parfaitement calé.
   for (let prise = 1; prise <= 2; prise++) {

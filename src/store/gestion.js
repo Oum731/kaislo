@@ -163,6 +163,7 @@ export const trancheGestion = (set, get) => ({
         logo: b.logo || null, // référence de l'image (voir images.js)
         logoSurTicket: b.logoSurTicket === true, // logo sur les reçus : seulement si demandé
         localisation: b.localisation || null, // { lat, lng }
+        gestionStock: b.gestionStock, // stock et inventaire (sinon : choix par défaut selon le type de commerce)
       },
     }));
     majCompte(d.commerce);

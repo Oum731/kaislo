@@ -21,6 +21,7 @@ export function Logo() {
 const LIENS_SITE = [
   ['/caisse-restaurant/', 'Restaurants'],
   ['/caisse-epicerie/', 'Épiceries'],
+  ['/gestion-stock/', 'Stock'],
   ['/#fonctions', 'Fonctions'],
   ['/tutoriels/', 'Tutoriels'],
   ['/#questions', 'Questions'],
@@ -66,6 +67,7 @@ export function PiedSite() {
             <h4>Kaisly</h4>
             <Link href="/caisse-restaurant/">Caisse pour restaurant</Link>
             <Link href="/caisse-epicerie/">Caisse pour épicerie</Link>
+            <Link href="/gestion-stock/">Gestion de stock et inventaire</Link>
             <Link href="/app/">Se connecter</Link>
             <Link href={LIEN_INSCRIPTION}>Créer mon commerce</Link>
           </div>

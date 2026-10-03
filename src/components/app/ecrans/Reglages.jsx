@@ -153,6 +153,12 @@ function InfosCommerce() {
         <label className="champ"><span>Fond de caisse habituel (monnaie du matin)</span>
           <ChampMontant valeur={b.fondDeCaisse} surChanger={(v) => setB({ ...b, fondDeCaisse: v })} />
         </label>
+        <Reglage
+          titre="Gestion du stock et de l’inventaire"
+          aide="Quantités en stock, entrées de marchandise, inventaire, alertes de rupture et code-barres. Utile aussi pour les boissons d’un restaurant."
+          actif={b.gestionStock ?? typeCommerce(d.commerce.type).gereStock}
+          surChanger={(v) => setB({ ...b, gestionStock: v })}
+        />
       </div>
       <button className="btn grand bloc" onClick={enregistrer}>Enregistrer les informations</button>
 
@@ -375,6 +381,7 @@ export function BlocImprimante() {
           <h3>Papier</h3>
           <Segment options={[[58, '58 mm'], [80, '80 mm']]} valeur={prefs.largeurTicket} surChanger={(v) => s.sauverPrefs({ largeurTicket: v })} />
           <Reglage titre="Imprimer les accents" aide="À désactiver si l’imprimante affiche des caractères bizarres." actif={prefs.accents} surChanger={(v) => s.sauverPrefs({ accents: v })} />
+          <Reglage titre="Imprimer automatiquement après chaque vente" aide="Sinon, le ticket s’imprime seulement si vous touchez « Imprimer ». L’impression est toujours facultative : chaque ticket reste dans les Ventes et peut être envoyé par WhatsApp." actif={prefs.impressionAuto !== false} surChanger={(v) => s.sauverPrefs({ impressionAuto: v })} />
         </div>
 
         <div className="carte petit pile">

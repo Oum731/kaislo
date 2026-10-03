@@ -1,6 +1,6 @@
 'use client';
 // ------------------------------------------------------------
-// ÉCRAN STOCK (épiceries, boutiques) :
+// ÉCRAN STOCK ET INVENTAIRE (tous les commerces qui l'activent dans Réglages) :
 //  - valeur du stock (au prix d'achat), alertes, ruptures
 //  - entrée de marchandise (fournisseur, prix d'achat)
 //  - inventaire (corriger la quantité réelle)
@@ -11,6 +11,7 @@ import { useKaisly } from '@/store/kaisly';
 import { formatDate, formatHeure } from '@/lib/utils/format';
 import { Icone, Puces, Segment, initiales } from '@/components/ui';
 import { EnTete } from '../EnTete';
+import { exporterInventaireCsv } from '@/lib/donnees/export';
 
 export default function Stock() {
   const s = useKaisly();
@@ -31,6 +32,7 @@ export default function Stock() {
   return (
     <>
       <EnTete surTitre={`${suivis.length} articles suivis`} titre="Stock">
+        <button className="btn secondaire cache-mobile" onClick={() => exporterInventaireCsv(d)}><Icone nom="installer" /> Exporter l’inventaire</button>
         <button className="btn cache-mobile" onClick={() => s.ouvrir('entreeStock')}><Icone nom="plus" /> Entrée de marchandise</button>
       </EnTete>
       <div className="contenu" style={{ maxWidth: 980 }}>
@@ -39,7 +41,10 @@ export default function Stock() {
           <div className="carte kpi"><p className="petit muet">Valeur à la vente</p><p className="kpi-valeur vert-texte">{s.prix(valeurVente)}</p><p className="sous">bénéfice possible {s.prix(valeurVente - valeur)}</p></div>
           <div className="carte kpi"><p className="petit muet">Alertes</p><p className="kpi-valeur rouge-texte">{suivis.filter(bas).length}</p><p className="sous">{suivis.filter((p) => p.stock <= 0).length} en rupture</p></div>
         </div>
-        <button className="btn bloc seulement-mobile" style={{ marginTop: 14 }} onClick={() => s.ouvrir('entreeStock')}><Icone nom="plus" /> Entrée de marchandise</button>
+        <div className="grille-2 seulement-mobile" style={{ marginTop: 14 }}>
+          <button className="btn secondaire" onClick={() => exporterInventaireCsv(d)}><Icone nom="installer" /> Inventaire</button>
+          <button className="btn" onClick={() => s.ouvrir('entreeStock')}><Icone nom="plus" /> Entrée</button>
+        </div>
 
         <div style={{ maxWidth: 420, margin: '18px 0 14px' }}>
           <Segment options={[['produits', 'Articles'], ['mouvements', 'Historique']]} valeur={onglet} surChanger={setOnglet} />

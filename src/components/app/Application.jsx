@@ -3,7 +3,7 @@
 // Point de départ de l'application (/app)
 // ------------------------------------------------------------
 import { useEffect } from 'react';
-import { useKaisly } from '@/store/kaisly';
+import { useKaisly, ajouterEtape } from '@/store/kaisly';
 import Connexion from './Connexion';
 import Coque from './Coque';
 import { chemin } from '@/config';
@@ -27,7 +27,7 @@ export default function Application() {
     // Écrans de connexion / inscription : une étape d'historique pour pouvoir revenir à l'accueil
     const desabonner = useKaisly.subscribe((etat, avant) => {
       if (!etat.utilisateur && etat.etapeConnexion !== avant.etapeConnexion && avant.etapeConnexion === 'accueil') {
-        window.history.pushState({ kaisly: 'etape' }, '');
+        ajouterEtape({ kaisly: 'etape' });
       }
     });
     return () => {

@@ -10,16 +10,16 @@ import {
 } from '@/components/site/Site';
 
 export const metadata = {
-  title: 'Kaisly — Logiciel de caisse simple pour restaurants, épiceries et boutiques',
+  title: 'Kaisly — Caisse, gestion de stock et d’inventaire pour restaurants, épiceries et boutiques',
   description:
-    'Caisse sur téléphone, tablette et ordinateur, en Afrique et partout dans le monde : ventes, ticket imprimé ou envoyé par WhatsApp, carnet de crédit, tables, stock, marges, ouverture et fermeture de caisse. Toutes les devises. Essai gratuit.',
+    'Caisse et outil de gestion sur téléphone, tablette et ordinateur : ventes, gestion de stock et d’inventaire, carnet de crédit, tables, marges, dépenses, ouverture et fermeture de caisse. Ticket imprimé, envoyé par WhatsApp ou sans impression. Toutes les devises. Essai gratuit.',
   alternates: { canonical: '/' },
 };
 
 const AUTRES_FONCTIONS = [
-  ['Stock et marges', 'Prix d’achat, entrées de marchandise, inventaire, alertes de rupture et marge par article.'],
+  ['Stock et inventaire', 'Prix d’achat, entrées de marchandise, inventaire, alertes de rupture, valeur du stock et export Excel.'],
   ['Vendeurs et droits', 'Chaque vendeur se connecte avec son numéro et son code PIN. Vous décidez qui modifie les prix ou fait des remises.'],
-  ['Ticket imprimé', 'Imprimante thermique Bluetooth 58 ou 80 mm, avec votre logo si vous le souhaitez.'],
+  ['Ticket facultatif', 'Imprimé (Bluetooth, AirPrint, USB), envoyé par WhatsApp ou simplement gardé dans l’historique : l’imprimante n’est pas obligatoire.'],
   ['Toutes les devises', 'Franc CFA, dirham, euro, dollar… et les moyens de paiement locaux : Wave, Orange Money, MTN MoMo, carte.'],
   ['Statistiques', 'Chiffre d’affaires du jour, de la semaine, du mois et de l’année, par article, par vendeur et par paiement.'],
   ['Dépenses', 'Marché, gaz, transport : le solde du jour s’affiche sur le tableau de bord.'],
@@ -29,7 +29,8 @@ const AUTRES_FONCTIONS = [
 ];
 
 const QUESTIONS = [
-  ['Faut-il acheter du matériel ?', 'Non. Kaisly fonctionne sur le téléphone, la tablette ou l’ordinateur que vous avez déjà. Pour imprimer les tickets, il suffit d’une petite imprimante thermique Bluetooth d’entrée de gamme.'],
+  ['Faut-il acheter du matériel ?', 'Non. Kaisly fonctionne sur le téléphone, la tablette ou l’ordinateur que vous avez déjà. L’imprimante est facultative : le ticket peut être envoyé par WhatsApp ou simplement gardé dans l’historique. Si vous voulez imprimer, une petite imprimante thermique d’entrée de gamme suffit.'],
+  ['Puis-je utiliser Kaisly seulement pour gérer mon stock ?', 'Oui. Kaisly sert aussi d’outil de gestion : stock, inventaire, entrées de marchandise, dépenses et statistiques, avec ou sans encaissement au comptoir.'],
   ['Combien coûte Kaisly ?', 'Vous commencez par un essai gratuit de 30 jours, sans engagement. Ensuite, un abonnement mensuel simple, dans la monnaie de votre pays. Contactez-nous pour connaître le tarif chez vous.'],
   ['Dans quels pays fonctionne Kaisly ?', 'Partout. Kaisly gère le franc CFA, le dirham, l’euro, le dollar et d’autres devises, avec les moyens de paiement de chaque pays : espèces, carte, Wave, Orange Money, MTN MoMo…'],
   ['Comment se connectent mes vendeurs ?', 'Chacun avec son numéro de téléphone et son code PIN à 4 chiffres. Vous les créez vous-même dans Réglages → Équipe, et vous pouvez les désactiver à tout moment.'],
@@ -45,10 +46,10 @@ export default function PageAccueil() {
       <EnTeteSite />
       <main>
         <Hero
-          titre="Le logiciel de caisse des restaurants, épiceries et boutiques."
-          chapo="Encaissez, imprimez ou envoyez le ticket par WhatsApp, suivez le crédit de vos clients et fermez la caisse sans erreur. Sur téléphone, tablette ou ordinateur, dans la devise de votre pays."
+          titre="La caisse et la gestion de stock des restaurants, épiceries et boutiques."
+          chapo="Encaissez, gérez votre stock et votre inventaire, suivez le crédit de vos clients et fermez la caisse sans erreur. Ticket imprimé, envoyé par WhatsApp ou pas de ticket du tout : c’est vous qui choisissez. Sur téléphone, tablette ou ordinateur."
           lienDemo={LIEN_DEMO_RESTO}
-          garanties={['Essai gratuit de 30 jours', 'Sans engagement', 'Aucun matériel coûteux']}
+          garanties={['Essai gratuit de 30 jours', 'Sans engagement', 'Imprimante facultative']}
           capture={{ src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord Kaisly : chiffre d’affaires, marge, dépenses, crédit en cours' }}
           captureMobile={{ src: '/captures/caisse-mobile.webp', alt: 'Écran de caisse Kaisly sur téléphone' }}
         />
@@ -79,6 +80,12 @@ export default function PageAccueil() {
             />
             <FonctionLigne
               inverse
+              titre="Gérer le stock et faire l’inventaire"
+              texte="Le stock baisse à chaque vente, sur tous vos appareils. Enregistrez la marchandise reçue, comptez, corrigez : Kaisly vous alerte avant la rupture et calcule la valeur de votre stock."
+              points={['Entrées de marchandise avec prix d’achat et fournisseur', 'Inventaire exporté en Excel en un clic', 'Pour épiceries, boutiques, dépôts… et les boissons d’un restaurant']}
+              capture={{ src: '/captures/stock-ordi.webp', alt: 'Gestion du stock et de l’inventaire' }}
+            />
+            <FonctionLigne
               titre="Gérer les tables et la cuisine"
               texte="Ouvrez une commande par table, ajoutez des plats pendant le repas : les nouveaux plats partent en cuisine sur un ticket sans prix. On encaisse à la fin."
               capture={{ src: '/captures/tables-ordi.webp', alt: 'Plan des tables du restaurant' }}
@@ -104,7 +111,7 @@ export default function PageAccueil() {
               </Link>
               <Link href={LIEN_INSCRIPTION} className="pour-qui">
                 <h3>Boutiques et autres commerces</h3>
-                <ul><li>Cosmétiques, quincaillerie, téléphonie…</li><li>Stock et prix d’achat</li><li>Vendeurs et droits</li></ul>
+                <ul><li>Cosmétiques, quincaillerie, téléphonie, dépôts…</li><li>Stock, inventaire et prix d’achat</li><li>Vendeurs et droits</li></ul>
                 <span className="suite">Créer mon commerce →</span>
               </Link>
             </div>
@@ -146,7 +153,7 @@ export default function PageAccueil() {
         />
       </main>
       <PiedSite />
-      <DonneesLogiciel description="Logiciel de caisse pour restaurants, épiceries et boutiques : ventes, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, stock, marges, ouverture et fermeture de caisse." />
+      <DonneesLogiciel description="Logiciel de caisse et de gestion de stock pour restaurants, épiceries et boutiques : ventes, inventaire, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, marges, ouverture et fermeture de caisse." />
     </div>
   );
 }

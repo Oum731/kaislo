@@ -13,13 +13,26 @@ import { CREDIT, paysParId } from './modeles.js';
 import { symbole } from '../utils/format.js';
 
 // À augmenter quand la structure des données change : la démo est alors recréée
-export const VERSION_DONNEES = 10;
+export const VERSION_DONNEES = 11;
 
 // Raccourcis pour écrire le catalogue de façon lisible
 let compteur = 0;
 const id = (p) => p + ++compteur;
 const opt = (nom, prix = 0) => ({ id: id('o'), nom, prix });
 const groupe = (nom, type, obligatoire, options) => ({ id: id('g'), nom, type, obligatoire, options });
+// Photos des produits de démo (public/demo/produits/), libres de droits : voir credits-photos.json
+const PHOTOS = {
+  'Attiéké': 'attieke', 'Garba': 'garba', 'Riz sauce graine': 'riz-sauce-graine', 'Foutou sauce claire': 'foutou-sauce-claire',
+  'Placali sauce kplala': 'placali', 'Poulet braisé': 'poulet-braise', 'Carpe braisée': 'carpe-braisee', 'Brochettes de bœuf (x5)': 'brochettes-boeuf',
+  'Alloco portion': 'alloco', 'Bissap': 'bissap', 'Gnamakoudji': 'gnamakoudji', 'Jus de passion': 'jus-passion', 'Soda 33cl': 'soda-33cl',
+  'Eau minérale 1,5L': 'eau-minerale', 'Malta': 'malta', 'Dêguê': 'degue', 'Salade de fruits': 'salade-fruits',
+  'Huile de table 1L': 'huile', 'Sucre en morceaux 1kg': 'sucre', 'Thé vert 200g': 'the-vert', 'Farine 1kg': 'farine', 'Pâtes 500g': 'pates',
+  'Riz 1kg': 'riz', 'Pain rond': 'pain-rond', 'Soda 1L': 'soda-1l', 'Jus d’orange 1L': 'jus-orange', 'Lait 1L': 'lait', 'Yaourt nature': 'yaourt',
+  'Raïbi': 'raibi', 'Fromage portions x8': 'fromage', 'Savon': 'savon', 'Dentifrice': 'dentifrice', 'Lessive 1kg': 'lessive',
+  'Tomates': 'tomates', 'Pommes de terre': 'pommes-de-terre', 'Oignons 1kg': 'oignons',
+};
+const photo = (nom) => (PHOTOS[nom] ? '/demo/produits/' + PHOTOS[nom] + '.webp' : null);
+
 const produit = (categorieId, nom, prix, prixAchat, emoji, extra = {}) => ({
   id: id('p'),
   categorieId,
@@ -28,6 +41,7 @@ const produit = (categorieId, nom, prix, prixAchat, emoji, extra = {}) => ({
   promo: null, // prix promotionnel (facultatif)
   prixAchat, // pour calculer la marge
   emoji,
+  image: photo(nom),
   codeBarre: '',
   suiviStock: false,
   stock: 0,
@@ -509,6 +523,12 @@ function adapterAuPays(d, paysId) {
 export function creerDonneesDemo(commerceId, paysId = 'MA') {
   const d = commerceId === 'chez-sentinelle' ? chezSentinelle() : restoIvoire();
   const graine = commerceId === 'chez-sentinelle' ? 777 : 2024;
+  // Restaurant : le stock des boissons est suivi (montre la gestion du stock et de l'inventaire)
+  if (commerceId === 'resto-ivoire') {
+    const STOCK_BOISSONS = { 'Bissap': 40, 'Gnamakoudji': 35, 'Jus de passion': 18, 'Soda 33cl': 8, 'Eau minérale 1,5L': 60, 'Malta': 24 };
+    d.commerce.gestionStock = true;
+    d.produits = d.produits.map((p) => (p.nom in STOCK_BOISSONS ? { ...p, suiviStock: true, stock: STOCK_BOISSONS[p.nom], seuilAlerte: 12 } : p));
+  }
   adapterAuPays(d, paysId);
   d.commerce.code = COMMERCES_DEMO.find((x) => x.id === commerceId).code;
   // Les démos ont un abonnement Pro actif (pour montrer l'espace Amorac)
