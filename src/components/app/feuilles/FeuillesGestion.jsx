@@ -3,7 +3,7 @@
 // Fenêtres de gestion : produit, catégorie, vendeur, dépense,
 // client et remboursement, stock, compte, menu "Plus".
 // ------------------------------------------------------------
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useKaisly } from '@/store/kaisly';
 import { genId, formatDate, formatHeure, symbole } from '@/lib/utils/format';
 import { CATEGORIES_DEPENSES, COULEURS } from '@/lib/donnees/modeles';
@@ -11,6 +11,9 @@ import { historiqueClient, soldeClient, lienRappelWhatsApp } from '@/lib/donnees
 import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, ChoixImage, initiales } from '@/components/ui';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { liensMenu } from '../Coque';
+import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
+import { cleTelephone } from '@/lib/donnees/modeles';
+import { estServeur } from '@/lib/donnees/synchro';
 
 // ---------- Produit ----------
 export function FeuilleProduit({ produit, categorieId }) {
@@ -175,13 +178,21 @@ export function FeuilleCategorie({ categorie }) {
 export function FeuilleUtilisateur({ utilisateur }) {
   const s = useKaisly();
   const [b, setB] = useState(utilisateur ? { ...utilisateur } : { id: null, nom: '', role: 'vendeur', telephone: '', pin: '', actif: true, peutGererProduits: false, peutFaireRemises: false });
-  const enregistrer = () => { const err = s.enregistrerUtilisateur(b); err ? s.message(err, 'erreur') : s.fermer(); };
+  const [enCours, setEnCours] = useState(false);
+  const enLigne = estServeur(s.d);
+  const enregistrer = async () => {
+    setEnCours(true);
+    const err = await s.enregistrerUtilisateur(b); // commerce en ligne : envoyé au serveur
+    setEnCours(false);
+    err ? s.message(err, 'erreur') : s.fermer();
+  };
   return (
-    <Feuille titre={b.id ? b.nom : 'Nouveau vendeur'} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer}>Enregistrer</button>}>
+    <Feuille titre={b.id ? b.nom : 'Nouveau vendeur'} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer} disabled={enCours}>{enCours ? 'Enregistrement…' : 'Enregistrer'}</button>}>
       <div className="pile">
         <label className="champ"><span>Nom et prénom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaisly" /></label>
         <label className="champ"><span>Numéro de téléphone (identifiant de connexion)</span><input type="tel" inputMode="tel" value={b.telephone || ''} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
-        <label className="champ"><span>Code PIN (4 chiffres)</span><input className="pin-saisie" inputMode="numeric" maxLength={4} value={b.pin} onChange={(e) => setB({ ...b, pin: e.target.value })} placeholder="••••" /></label>
+        <label className="champ"><span>Code PIN (4 chiffres)</span><input className="pin-saisie" inputMode="numeric" maxLength={4} value={b.pin || ''} onChange={(e) => setB({ ...b, pin: e.target.value })} placeholder="••••" /></label>
+        {enLigne && b.id && <p className="tres-petit muet">Laissez vide pour garder le code actuel. Les codes sont gardés chiffrés sur le serveur : personne ne peut les lire.</p>}
         <p className="tres-petit muet">Il se connectera avec ce numéro et ce code PIN, sur n’importe quel appareil du commerce.</p>
         {b.role !== 'gerant' && (
           <>
@@ -381,6 +392,14 @@ export function FeuilleAjustement({ produit }) {
 // ---------- Mon compte ----------
 export function FeuilleCompte() {
   const s = useKaisly();
+  const enLigne = estServeur(s.d);
+  const [biometrie, setBiometrie] = useState(false); // l'appareil a-t-il une empreinte / Face ID ?
+  useEffect(() => { if (enLigne) biometrieDisponible().then(setBiometrie); }, [enLigne]);
+  const empreinteActive = !!s.prefs.biometrie?.[cleTelephone(s.utilisateur.telephone)];
+  const confirmerDeconnexion = () =>
+    confirm('Déconnecter cet appareil de « ' + s.d.commerce.nom + ' » ?' + (enLigne
+      ? ' La copie des données sera retirée de cet appareil (elles restent sur le serveur). Pour revenir : votre numéro et votre code PIN.'
+      : ' Pour le reconnecter, il faudra le code du commerce (' + s.d.commerce.code + ').')) && s.delierAppareil();
   return (
     <Feuille surFermer={s.fermer} pied={
       <div className="pile">
@@ -388,11 +407,7 @@ export function FeuilleCompte() {
         {s.estDemoActuel() ? (
           <button className="btn fantome bloc" onClick={s.delierAppareil}>Quitter la démo</button>
         ) : (
-          s.estGerant() && (
-            <button className="btn fantome bloc" onClick={() => confirm('Déconnecter cet appareil de « ' + s.d.commerce.nom + ' » ? Pour le reconnecter, il faudra le code du commerce (' + s.d.commerce.code + ').') && s.delierAppareil()}>
-              Déconnecter cet appareil du commerce
-            </button>
-          )
+          s.estGerant() && <button className="btn fantome bloc" onClick={confirmerDeconnexion}>Déconnecter cet appareil du commerce</button>
         )}
       </div>
     }>
@@ -400,6 +415,59 @@ export function FeuilleCompte() {
         <span style={{ display: 'inline-block' }}><Avatar nom={s.utilisateur.nom} gerant={s.estGerant()} grand /></span>
         <h2 style={{ marginTop: 12 }}>{s.utilisateur.nom}</h2>
         <p className="muet">{s.estGerant() ? 'Gérant' : 'Vendeur'} · {s.d.commerce.nom}</p>
+      </div>
+      {enLigne && (
+        <div className="carte pile" style={{ marginTop: 18 }}>
+          <EtatSynchroDetail />
+          {biometrie && (
+            <Reglage
+              titre={'Connexion avec ' + nomBiometrie()}
+              aide="Sur cet appareil seulement. Le code PIN reste toujours possible."
+              actif={empreinteActive}
+              surChanger={(v) => (v ? s.activerBiometrie() : s.desactiverBiometrie())}
+            />
+          )}
+        </div>
+      )}
+    </Feuille>
+  );
+}
+
+// État de la synchronisation, avec un bouton pour la relancer
+export function EtatSynchroDetail() {
+  const s = useKaisly();
+  const { etat, enAttente, derniere, message } = s.synchro;
+  const texte = etat === 'envoi' ? 'Synchronisation en cours…'
+    : etat === 'hors-ligne' ? 'Hors ligne : ' + (enAttente ? enAttente + ' modification(s) en attente' : 'tout est enregistré sur l’appareil')
+    : etat === 'erreur' ? 'Erreur : ' + message
+    : enAttente ? enAttente + ' modification(s) à envoyer'
+    : derniere ? 'Données à jour (' + formatHeure(derniere) + ')' : 'Données enregistrées sur l’appareil';
+  return (
+    <div className="ligne espace">
+      <div>
+        <b>Sauvegarde en ligne</b>
+        <p className="tres-petit muet">{texte}</p>
+      </div>
+      <button className="btn secondaire petit" onClick={() => s.synchroniser()} disabled={etat === 'envoi'}>Synchroniser</button>
+    </div>
+  );
+}
+
+// ---------- Proposition d'activer l'empreinte / Face ID (après la 1re connexion par code) ----------
+export function FeuilleBiometrie() {
+  const s = useKaisly();
+  const nom = nomBiometrie();
+  return (
+    <Feuille titre={'Se connecter avec ' + nom + ' ?'} surFermer={s.refuserBiometrie} pied={
+      <div className="grille-2">
+        <button className="btn secondaire" onClick={s.refuserBiometrie}>Plus tard</button>
+        <button className="btn" onClick={s.activerBiometrie}>Activer</button>
+      </div>
+    }>
+      <div className="centre pile" style={{ paddingTop: 8 }}>
+        <span className="mini-emoji teinte-vert" style={{ margin: '0 auto', width: 56, height: 56 }}><Icone nom="bouclier" taille="lg" /></span>
+        <p>La prochaine fois, ouvrez votre caisse avec {nom}, sans taper votre code.</p>
+        <p className="tres-petit muet">Votre empreinte ou votre visage ne quittent jamais votre téléphone. Le code PIN reste toujours possible.</p>
       </div>
     </Feuille>
   );

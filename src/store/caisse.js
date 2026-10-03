@@ -6,6 +6,8 @@ import { creerLigne, cleLigne, sousTotal, montantRemise } from '@/lib/donnees/ve
 import { soldeClient } from '@/lib/donnees/credit.js';
 import { CREDIT } from '@/lib/donnees/modeles.js';
 import { arrondir, genId } from '@/lib/utils/format.js';
+import { estServeur } from '@/lib/donnees/synchro.js';
+import { appelApi } from '@/lib/api.js';
 
 export const trancheCaisse = (set, get) => ({
   panier: [], // lignes en cours
@@ -133,8 +135,33 @@ export const trancheCaisse = (set, get) => ({
   },
 
   // --- Annulation (code PIN du gérant obligatoire) ---
-  annulerVente(vente, pin, motif) {
-    const gerant = get().d.utilisateurs.find((u) => u.role === 'gerant' && u.actif && u.pin === pin);
+  // Commerce en ligne : le code est vérifié par le serveur (il n'est jamais dans l'appareil d'un vendeur).
+  // Sans internet, seul le gérant peut annuler, sur un appareil où il s'est déjà connecté.
+  async verifierPinGerant(pin) {
+    const { d, prefs } = get();
+    if (!estServeur(d)) return d.utilisateurs.find((u) => u.role === 'gerant' && u.actif && u.pin === pin) || null;
+    try {
+      const rep = await appelApi('POST', '/verifier-gerant', { pin }, get().jetonServeur());
+      return rep.gerant;
+    } catch (e) {
+      if (!e.horsLigne) {
+        get().message(e.message, 'erreur');
+        return false;
+      }
+      for (const memo of Object.values(prefs.pinsHors || {})) {
+        const g = d.utilisateurs.find((u) => u.id === memo.utilisateurId && u.role === 'gerant' && u.actif);
+        if (!g) continue;
+        const octets = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(memo.sel + ':' + pin));
+        if (Array.from(new Uint8Array(octets), (b) => b.toString(16).padStart(2, '0')).join('') === memo.hash) return g;
+      }
+      get().message('Pas de connexion internet : le code du gérant ne peut pas être vérifié ici', 'erreur');
+      return false;
+    }
+  },
+
+  async annulerVente(vente, pin, motif) {
+    const gerant = await get().verifierPinGerant(pin);
+    if (gerant === false) return false; // message déjà affiché
     if (!gerant) {
       get().message('Code PIN du gérant incorrect', 'erreur');
       return false;

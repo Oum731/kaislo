@@ -21,6 +21,19 @@ export default function Application() {
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       navigator.serviceWorker.register(chemin('/sw.js')).catch(() => {});
     }
+    // Bouton « retour » du téléphone (voir retourTelephone dans store/kaisly.js)
+    const surRetour = (e) => useKaisly.getState().retourTelephone(e.state);
+    window.addEventListener('popstate', surRetour);
+    // Écrans de connexion / inscription : une étape d'historique pour pouvoir revenir à l'accueil
+    const desabonner = useKaisly.subscribe((etat, avant) => {
+      if (!etat.utilisateur && etat.etapeConnexion !== avant.etapeConnexion && avant.etapeConnexion === 'accueil') {
+        window.history.pushState({ kaisly: 'etape' }, '');
+      }
+    });
+    return () => {
+      window.removeEventListener('popstate', surRetour);
+      desabonner();
+    };
   }, []);
 
   // Écran de lancement : visible dès l'ouverture, avant même le chargement du JavaScript

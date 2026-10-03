@@ -9,7 +9,7 @@ import {
 } from './FeuillesVente';
 import {
   FeuilleProduit, FeuilleCategorie, FeuilleUtilisateur, FeuilleDepense, FeuilleClient, FeuilleFicheClient,
-  FeuilleRemboursement, FeuilleRecuRemboursement, FeuilleEntreeStock, FeuilleAjustement, FeuilleCompte, FeuilleMenu,
+  FeuilleRemboursement, FeuilleRecuRemboursement, FeuilleEntreeStock, FeuilleAjustement, FeuilleCompte, FeuilleMenu, FeuilleBiometrie,
 } from './FeuillesGestion';
 
 const FEUILLES = {
@@ -37,6 +37,7 @@ const FEUILLES = {
   ajustement: FeuilleAjustement,
   compte: FeuilleCompte,
   menu: FeuilleMenu,
+  biometrie: FeuilleBiometrie,
 };
 
 export default function Feuilles() {

@@ -363,8 +363,9 @@ export function BlocImprimante() {
             )}
             {!imprimante.disponible && (
               <p className="astuce">
-                Ce navigateur ne permet pas le Bluetooth (iPhone, Safari, Firefox…). Utilisez <b>Chrome</b> sur Android ou sur ordinateur.
-                L’aperçu du ticket reste disponible. L’application mobile Kaisly fonctionnera sur tous les téléphones.
+                Ce navigateur ne permet pas le Bluetooth (iPhone, Safari, Firefox…). Le bouton <b>Imprimer</b> ouvre alors la fenêtre
+                d’impression du téléphone : choisissez une imprimante de tickets compatible <b>AirPrint</b> (Wi-Fi), ou envoyez le ticket par WhatsApp.
+                Pour une imprimante Bluetooth, utilisez <b>Chrome</b> sur Android ou sur ordinateur.
               </p>
             )}
           </div>

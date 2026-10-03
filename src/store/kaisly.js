@@ -10,6 +10,7 @@
 //   caisse.js     : panier, ventes, tables, annulation
 //   gestion.js    : produits, stock, équipe, dépenses, clôtures, crédit
 //   impression.js : imprimante Bluetooth et tickets
+//   synchro.js    : envoi / réception des données (commerces inscrits en ligne)
 // ------------------------------------------------------------
 import { create } from 'zustand';
 import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo } from '@/lib/donnees/stockage.js';
@@ -19,6 +20,16 @@ import { trancheSession } from './session.js';
 import { trancheCaisse } from './caisse.js';
 import { trancheGestion } from './gestion.js';
 import { trancheImpression } from './impression.js';
+import { trancheSynchro } from './synchro.js';
+import { estServeur, noterChangements } from '@/lib/donnees/synchro.js';
+
+// ---------- Bouton « retour » du téléphone ----------
+// Chaque écran et chaque fenêtre ajoutent une étape à l'historique du navigateur :
+// le bouton retour (Android, geste sur iPhone, touche du navigateur) referme la fenêtre,
+// sinon revient à l'écran d'accueil, puis quitte l'application.
+let ignorerRetour = false; // retour déclenché par l'application elle-même (fermeture d'une fenêtre)
+let ajouterApresRetour = false; // fenêtre ouverte pendant ce retour : son étape sera ajoutée ensuite
+const navigateur = () => typeof window !== 'undefined';
 
 const trancheCommune = (set, get) => ({
   pret: false, // devient true quand les données du téléphone sont chargées
@@ -57,6 +68,8 @@ const trancheCommune = (set, get) => ({
     const d = get().d;
     const nouvelles = { ...d, ...recette(d) };
     enregistrerCommerce(nouvelles);
+    // Commerce en ligne : la modification part dans la file d'attente, envoyée au serveur
+    if (estServeur(nouvelles)) get().planifierSynchro(noterChangements(d, nouvelles));
     // Garde la personne connectée à jour (droits modifiés par le gérant…)
     const u = get().utilisateur;
     set({ d: nouvelles, utilisateur: u ? nouvelles.utilisateurs.find((x) => x.id === u.id) || u : u });
@@ -70,17 +83,55 @@ const trancheCommune = (set, get) => ({
   },
 
   allerA(ecran) {
+    const avant = get().ecran;
     set({ ecran, feuille: null });
-    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+    if (!navigateur()) return;
+    window.scrollTo(0, 0);
+    const etape = { kaisly: 'ecran', ecran };
+    // Une fenêtre était ouverte : son étape devient celle du nouvel écran
+    if (window.history.state?.kaisly === 'feuille') window.history.replaceState(etape, '');
+    else if (ecran !== avant) window.history.pushState(etape, '');
   },
 
   ouvrir(type, infos = {}) {
+    const dejaOuverte = !!get().feuille;
     // _id : chaque ouverture repart d'un formulaire neuf
     set({ feuille: { type, ...infos, _id: Date.now() } });
+    if (!navigateur() || dejaOuverte) return; // une fenêtre en remplace une autre : même étape
+    if (ignorerRetour) ajouterApresRetour = true;
+    else window.history.pushState({ kaisly: 'feuille' }, '');
   },
 
   fermer() {
+    if (!get().feuille) return;
     set({ feuille: null });
+    // Retire l'étape de la fenêtre, comme si on avait appuyé sur « retour »
+    if (navigateur() && window.history.state?.kaisly === 'feuille') {
+      ignorerRetour = true;
+      window.history.back();
+    }
+  },
+
+  // Appelé quand on appuie sur le bouton « retour » du téléphone (événement popstate)
+  retourTelephone(etat) {
+    if (ignorerRetour) {
+      ignorerRetour = false;
+      if (ajouterApresRetour) {
+        ajouterApresRetour = false;
+        window.history.pushState({ kaisly: 'feuille' }, '');
+      }
+      return;
+    }
+    const s = get();
+    if (s.feuille) return set({ feuille: null }); // 1. ferme la fenêtre ouverte
+    if (s.utilisateur) {
+      // 2. revient à l'écran précédent (ou à l'accueil)
+      const accueil = s.utilisateur.role === 'gerant' ? 'accueil' : 'caisse';
+      set({ ecran: etat?.kaisly === 'ecran' ? etat.ecran : accueil });
+      window.scrollTo(0, 0);
+      return;
+    }
+    if (s.etapeConnexion === 'inscription' || s.etapeConnexion === 'connexion') s.retourConnexion(); // 3. écrans de connexion
   },
 
   // Petit message temporaire en haut de l'écran
@@ -108,4 +159,5 @@ export const useKaisly = create((set, get) => ({
   ...trancheCaisse(set, get),
   ...trancheGestion(set, get),
   ...trancheImpression(set, get),
+  ...trancheSynchro(set, get),
 }));

@@ -15,7 +15,8 @@ const DEPOT = 'https://github.com/Oum731/kaisly.git';
 const lancer = (cmd, options = {}) => execSync(cmd, { stdio: 'inherit', ...options });
 
 // 1. Construction avec le sous-dossier
-lancer('npx next build', { env: { ...process.env, NEXT_PUBLIC_BASE_PATH: '/kaisly' } });
+// Version de test : pas de serveur (API_ACTIVE faux), les comptes restent dans le navigateur
+lancer('npx next build', { env: { ...process.env, NEXT_PUBLIC_BASE_PATH: '/kaisly', NEXT_PUBLIC_API: 'non' } });
 
 // GitHub Pages ignore les dossiers commençant par "_" (comme _next) sans ce fichier
 fs.writeFileSync('out/.nojekyll', '');

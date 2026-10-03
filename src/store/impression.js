@@ -15,6 +15,7 @@ import {
   ticketTest,
 } from '@/lib/impression/index.js';
 import { numeroWhatsApp } from '@/lib/donnees/modeles.js';
+import { imprimerSysteme } from '@/lib/impression/systeme.js';
 
 export const trancheImpression = (set, get) => ({
   imprimante: { disponible: false, connectee: false, nom: '' },
@@ -40,11 +41,13 @@ export const trancheImpression = (set, get) => ({
     get().message('Imprimante déconnectée');
   },
 
-  // Imprime une liste de lignes déjà mise en page
+  // Imprime une liste de lignes déjà mise en page.
+  // Sans imprimante Bluetooth (iPhone, ordinateur…) : fenêtre d'impression du système
+  // (imprimante AirPrint, imprimante de tickets USB ou réseau).
   async imprimer(lignes, messageOk = 'Ticket imprimé') {
     const { imprimante } = get();
     if (!imprimante.connectee && !imprimante.nom) {
-      get().message('Connectez d’abord une imprimante (menu Imprimante)', 'erreur');
+      await imprimerSysteme(lignes, get().prefs.largeurTicket);
       return;
     }
     set({ impressionEnCours: true });

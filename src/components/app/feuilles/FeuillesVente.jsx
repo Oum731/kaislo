@@ -174,15 +174,20 @@ export function FeuilleAnnulation({ vente }) {
   const s = useKaisly();
   const [motif, setMotif] = useState('');
   const [pin, setPin] = useState('');
-  const confirmer = () => {
-    if (!s.annulerVente(vente, pin, motif)) setPin('');
+  const [enCours, setEnCours] = useState(false);
+  const confirmer = async () => {
+    if (enCours) return;
+    setEnCours(true);
+    const ok = await s.annulerVente(vente, pin, motif); // code vérifié par le serveur pour un commerce en ligne
+    setEnCours(false);
+    if (!ok) setPin('');
   };
   return (
     <Feuille
       titre={'Annuler la vente n° ' + vente.numero}
       sousTitre={s.prix(vente.total) + ' · ' + vente.vendeurNom}
       surFermer={() => s.ouvrir('ticket', { vente })}
-      pied={<button className="btn danger bloc" disabled={pin.length < 4} onClick={confirmer}>Confirmer l’annulation</button>}
+      pied={<button className="btn danger bloc" disabled={pin.length < 4 || enCours} onClick={confirmer}>{enCours ? 'Vérification…' : 'Confirmer l’annulation'}</button>}
     >
       <div className="pile">
         <label className="champ"><span>Motif</span><input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Ex : erreur de saisie, client parti…" /></label>

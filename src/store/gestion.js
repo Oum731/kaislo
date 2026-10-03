@@ -6,7 +6,9 @@
 import { genId, arrondir } from '@/lib/utils/format.js';
 import { calculerCloture, caisseOuverte } from '@/lib/donnees/cloture.js';
 import { soldeClient } from '@/lib/donnees/credit.js';
-import { reinitialiserCommerce, majCompte, supprimerCommerce, telephoneDejaUtilise } from '@/lib/donnees/stockage.js';
+import { reinitialiserCommerce, majCompte, supprimerCommerce, telephoneDejaUtilise, enregistrerCommerce } from '@/lib/donnees/stockage.js';
+import { estServeur } from '@/lib/donnees/synchro.js';
+import { appelApi } from '@/lib/api.js';
 import { cleTelephone } from '@/lib/donnees/modeles.js';
 import { supprimerImage } from '@/lib/donnees/images.js';
 
@@ -89,12 +91,20 @@ export const trancheGestion = (set, get) => ({
   },
 
   // ---------- Équipe ----------
-  enregistrerUtilisateur(b) {
+  // Commerce en ligne : les vendeurs sont créés par le serveur (qui garde les codes PIN chiffrés).
+  // Renvoie (promesse) un message d'erreur, ou null.
+  async enregistrerUtilisateur(b) {
     const nom = b.nom.trim();
     const pin = String(b.pin || '').trim();
     const telephone = String(b.telephone || '').trim();
     const { d } = get();
     if (!nom) return 'Indiquez le nom';
+    if (estServeur(d)) {
+      if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';
+      // Modification d'un vendeur : PIN vide = inchangé
+      if ((!b.id || pin) && !/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
+      return get().equipeServeur({ id: b.id || undefined, nom, telephone, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises }, 'Vendeur enregistré');
+    }
     // Le numéro de téléphone sert d'identifiant de connexion : unique dans tout Kaisly
     if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';
     if (telephoneDejaUtilise(telephone, (b.id || 'nouveau') + '@' + d.commerce.id)) return 'Ce numéro est déjà utilisé par un autre compte Kaisly';
@@ -111,9 +121,30 @@ export const trancheGestion = (set, get) => ({
     return null;
   },
 
-  basculerUtilisateur(id) {
+  async basculerUtilisateur(id) {
     if (id === get().utilisateur.id) return get().message('Vous ne pouvez pas désactiver votre propre compte', 'erreur');
-    get().majDonnees((d) => ({ utilisateurs: d.utilisateurs.map((u) => (u.id === id ? { ...u, actif: !u.actif } : u)) }));
+    const u = get().d.utilisateurs.find((x) => x.id === id);
+    if (estServeur(get().d)) {
+      const erreur = await get().equipeServeur({ id, nom: u.nom, telephone: u.telephone, actif: !u.actif, peutGererProduits: !!u.peutGererProduits, peutFaireRemises: !!u.peutFaireRemises }, u.actif ? 'Compte désactivé : ses appareils sont déconnectés' : 'Compte réactivé');
+      if (erreur) get().message(erreur, 'erreur');
+      return;
+    }
+    get().majDonnees((d) => ({ utilisateurs: d.utilisateurs.map((x) => (x.id === id ? { ...x, actif: !x.actif } : x)) }));
+  },
+
+  // Envoie un vendeur au serveur et met à jour l'équipe de l'appareil (pas de file d'attente : internet obligatoire)
+  async equipeServeur(vendeur, messageOk) {
+    try {
+      const rep = await appelApi('POST', '/utilisateurs', vendeur, get().jetonServeur());
+      const d = { ...get().d, utilisateurs: rep.utilisateurs };
+      enregistrerCommerce(d);
+      const moi = rep.utilisateurs.find((x) => x.id === get().utilisateur.id);
+      set({ d, utilisateur: moi || get().utilisateur });
+      get().message(messageOk);
+      return null;
+    } catch (e) {
+      return e.horsLigne ? 'Connexion internet nécessaire pour gérer l’équipe' : e.message;
+    }
   },
 
   // ---------- Commerce ----------

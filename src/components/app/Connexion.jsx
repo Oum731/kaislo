@@ -16,6 +16,8 @@ import { TYPES_COMMERCE, PAYS, paysParId, paysDuNavigateur, cleTelephone } from 
 import { symbole, NOMS_DEVISES } from '@/lib/utils/format';
 import { CONTACT_WHATSAPP, chemin } from '@/config';
 import { Icone, Avatar, ImageStockee } from '@/components/ui';
+import { nomBiometrie } from '@/lib/biometrie';
+import InstallerApp from './InstallerApp';
 
 export default function Connexion() {
   const s = useKaisly();
@@ -75,6 +77,7 @@ function Accueil() {
         <Icone nom="plus" /> Créer mon commerce
       </button>
       <p className="tres-petit muet centre" style={{ marginTop: 8 }}>Essai gratuit de 30 jours · 2 minutes · sans engagement</p>
+      <div style={{ marginTop: 16 }}><InstallerApp /></div>
 
       <p className="section-titre">Essayer avec un commerce d’exemple</p>
       <label className="champ" style={{ marginBottom: 12 }}>
@@ -109,9 +112,12 @@ function ConnexionTelephone() {
   const [pin, setPin] = useState('');
   const [erreur, setErreur] = useState('');
   const champPin = useRef(null);
+  // Comptes de cet appareil avec l'empreinte / Face ID activé (même commerce, ou tous si aucun commerce ouvert)
+  const biometrie = s.comptesBiometrie().filter((b) => !s.d || b.commerceId === s.d.commerce.id);
 
-  const valider = (tel = telephone, code = pin) => {
-    const err = s.connecterParTelephone(tel, code);
+  const valider = async (tel = telephone, code = pin) => {
+    if (s.connexionEnCours) return;
+    const err = await s.connecterParTelephone(tel, code); // vérifié par le serveur pour un commerce en ligne
     if (err) {
       setErreur(err);
       setPin('');
@@ -161,15 +167,29 @@ function ConnexionTelephone() {
           />
         </label>
         {erreur && <p className="alerte">{erreur}</p>}
-        <button type="submit" className="btn grand bloc">Se connecter</button>
+        <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours}>{s.connexionEnCours ? 'Connexion…' : 'Se connecter'}</button>
       </form>
+
+      {biometrie.length > 0 && (
+        <>
+          <p className="section-titre">Ou avec {nomBiometrie()}</p>
+          {biometrie.map((b) => (
+            <button key={b.credentialId} type="button" className="choix-carte" disabled={s.connexionEnCours}
+              onClick={async () => { setErreur(''); const err = await s.connecterParBiometrie(b); if (err) setErreur(err); }}>
+              <span className="mini-emoji teinte-vert"><Icone nom="bouclier" /></span>
+              <span className="grandit"><h3>{b.nom}</h3><span className="petit muet">{b.telephone}</span></span>
+              <Icone nom="droite" className="muet" />
+            </button>
+          ))}
+        </>
+      )}
 
       {recents.length > 0 && !demo && (
         <>
           <p className="section-titre">Comptes récents sur cet appareil</p>
           <div className="puces" style={{ flexWrap: 'wrap' }}>
             {recents.map((r) => (
-              <button key={r.nom} type="button" className={`puce ${cleTelephone(r.telephone) === cleTelephone(telephone) ? 'actif' : ''}`} onClick={() => choisir(r.telephone)}>{r.nom}</button>
+              <button key={r.telephone || r.nom} type="button" className={`puce ${cleTelephone(r.telephone) === cleTelephone(telephone) ? 'actif' : ''}`} onClick={() => choisir(r.telephone)}>{r.nom}</button>
             ))}
           </div>
         </>
@@ -232,14 +252,17 @@ function Inscription() {
     if (!f.ville.trim()) return s.message('Indiquez la ville', 'erreur');
     setEtape(3);
   };
-  const terminer = () => {
+  const terminer = async () => {
+    if (s.connexionEnCours) return;
     if (!f.gerantNom.trim()) return s.message('Indiquez votre nom', 'erreur');
     if (!cleTelephone(f.gerantTelephone)) return s.message('Indiquez votre numéro de téléphone : il sert à vous connecter', 'erreur');
     if (telephoneDejaUtilise(f.gerantTelephone)) return s.message('Ce numéro est déjà utilisé par un compte Kaisly. Connectez-vous plutôt.', 'erreur');
     if (!/^\d{4}$/.test(f.gerantPin)) return s.message('Le code PIN doit contenir 4 chiffres', 'erreur');
     if (f.gerantPin !== f.gerantPin2) return s.message('Les deux codes PIN ne sont pas identiques', 'erreur');
     if (!f.accepte) return s.message('Merci d’accepter les conditions d’utilisation pour continuer', 'erreur');
-    s.inscrire({ ...f, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), telephone: f.telephone.trim(), gerantNom: f.gerantNom.trim(), gerantTelephone: f.gerantTelephone.trim() });
+    // En ligne : le commerce est créé sur le serveur (le numéro y est vérifié dans tout Kaisly)
+    const err = await s.inscrire({ ...f, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), telephone: f.telephone.trim(), gerantNom: f.gerantNom.trim(), gerantTelephone: f.gerantTelephone.trim() });
+    if (err) s.message(err, 'erreur');
   };
   const pays = paysParId(f.pays);
 
@@ -301,7 +324,7 @@ function Inscription() {
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
             <span>J’accepte les <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">conditions d’utilisation</a> et la <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">politique de confidentialité</a> de Kaisly.</span>
           </label>
-          <button type="submit" className="btn grand bloc">Créer mon commerce</button>
+          <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours}>{s.connexionEnCours ? 'Création…' : 'Créer mon commerce'}</button>
         </form>
       )}
     </div>

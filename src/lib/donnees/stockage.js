@@ -1,10 +1,9 @@
 // ------------------------------------------------------------
 // STOCKAGE des données.
 //
-// Dans la démo, tout est enregistré DANS LE TÉLÉPHONE (localStorage).
-// Dans la vraie application, seul ce fichier changera : ces fonctions
-// appelleront l'API du serveur Laravel au lieu du localStorage.
-// Le reste de l'application n'a pas besoin de savoir où vont les données.
+// Toutes les données sont gardées DANS L'APPAREIL (localStorage) : la caisse
+// marche sans internet. Pour les commerces inscrits en ligne, synchro.js
+// envoie les modifications au serveur (API PHP) et récupère celles des autres appareils.
 // ------------------------------------------------------------
 import { creerDonneesDemo, VERSION_DONNEES, COMMERCES_DEMO } from './demo.js';
 import { CATEGORIES_DEPART, TABLES_DEPART, paysParId, typeCommerce, cleTelephone } from './modeles.js';
@@ -32,6 +31,10 @@ function ecrire(cle, valeur) {
     console.warn('Impossible d’enregistrer', e);
   }
 }
+
+// Accès direct pour les autres modules (file d'attente de synchronisation…)
+export const lireLocal = lire;
+export const ecrireLocal = ecrire;
 
 function effacer(cle) {
   try {
@@ -116,14 +119,16 @@ export function trouverParCode(code) {
  * infos = { type, nom, pays, ville, telephone, gerantNom, gerantPin }
  * Dans la vraie app : appel à l'API (POST /inscription).
  */
-export function creerCommerce(infos) {
+export function creerCommerce(infos, serveur = null) {
   const pays = paysParId(infos.pays);
-  const id = genId('com');
+  // Commerce inscrit en ligne : identifiants et code donnés par le serveur
+  const id = serveur?.commerce.id || genId('com');
   const donnees = {
     version: VERSION_DONNEES,
     commerce: {
       id,
-      code: nouveauCode(),
+      code: serveur?.commerce.code || nouveauCode(),
+      ...(serveur ? { serveur: true } : {}),
       nom: infos.nom,
       type: infos.type,
       pays: pays.id,
@@ -138,11 +143,12 @@ export function creerCommerce(infos) {
       creeLe: new Date().toISOString(),
       gerantNom: infos.gerantNom,
       conditionsAccepteesLe: infos.conditionsAccepteesLe || null, // date d'acceptation des conditions d'utilisation
-      abonnement: nouvelAbonnement(), // essai gratuit de 30 jours
+      abonnement: serveur ? { ...nouvelAbonnement(), ...serveur.commerce.abonnement } : nouvelAbonnement(), // essai gratuit de 30 jours
     },
-    utilisateurs: [
-      { id: genId('u'), nom: infos.gerantNom, role: 'gerant', telephone: infos.gerantTelephone, pin: infos.gerantPin, actif: true },
-    ],
+    // En ligne, le code PIN reste sur le serveur (chiffré) : jamais dans l'appareil
+    utilisateurs: serveur
+      ? [serveur.utilisateur]
+      : [{ id: genId('u'), nom: infos.gerantNom, role: 'gerant', telephone: infos.gerantTelephone, pin: infos.gerantPin, actif: true }],
     categories: (CATEGORIES_DEPART[infos.type] || CATEGORIES_DEPART.autre).map((c) => ({ ...c, id: genId('c') })),
     produits: [],
     ventes: [],
@@ -155,7 +161,32 @@ export function creerCommerce(infos) {
     prochainNumero: 1,
   };
   ecrire('commerce:' + id, donnees);
-  ecrire('comptes', [...listeComptes(), resumeCompte(donnees.commerce)]);
+  ecrire('comptes', [...listeComptes().filter((c) => c.id !== id), resumeCompte(donnees.commerce)]);
+  return donnees;
+}
+
+/**
+ * Commerce inscrit en ligne, ouvert sur un nouvel appareil : copie locale vide,
+ * remplie ensuite par la synchronisation. rep = réponse de /api/connexion.
+ */
+export function commerceDepuisServeur(rep) {
+  const existant = lire('commerce:' + rep.commerce.id);
+  if (existant) return existant;
+  const c = rep.commerce;
+  const pays = paysParId(c.pays);
+  const donnees = {
+    version: VERSION_DONNEES,
+    commerce: {
+      id: c.id, code: c.code, serveur: true, nom: c.nom, type: c.type, pays: c.pays, devise: c.devise, ville: c.ville,
+      adresse: '', telephone: c.telephone, piedTicket: 'Merci et à bientôt !', modesPaiement: pays.paiements, fondDeCaisse: 0,
+      tables: [], creeLe: c.creeLe, conditionsAccepteesLe: c.conditionsAccepteesLe, abonnement: { ...nouvelAbonnement(), ...c.abonnement },
+    },
+    utilisateurs: [rep.utilisateur],
+    categories: [], produits: [], ventes: [], depenses: [], sessionsCaisse: [], clients: [], remboursements: [], mouvements: [], commandes: [],
+    prochainNumero: 1,
+  };
+  ecrire('commerce:' + c.id, donnees);
+  ecrire('comptes', [...listeComptes().filter((x) => x.id !== c.id), resumeCompte(donnees.commerce)]);
   return donnees;
 }
 

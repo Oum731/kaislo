@@ -114,7 +114,14 @@ Pour un usage commercial à grande échelle, prévoir les mêmes voix via Azure 
 Domaine provisoire : https://darkgrey-albatross-393608.hostingersite.com
 
 L'API PHP (dossier `api/`, PHP simple sans framework) répond sur `/api/...` :
-`GET /api/sante`, `POST /api/inscription`, `POST /api/connexion`, `GET /api/moi`, `POST /api/deconnexion`.
+`GET /api/sante`, `POST /api/inscription`, `POST /api/connexion`, `GET /api/moi`, `POST /api/deconnexion`,
+`GET|POST /api/donnees` (synchronisation des caisses), `POST /api/utilisateurs` (vendeurs),
+`POST /api/verifier-gerant` (annulation), `POST /api/biometrie/defi|enregistrer|connexion` (empreinte / Face ID, norme WebAuthn).
+
+**Fonctionnement :** chaque caisse garde une copie des données et marche sans internet ; les modifications partent
+dans une file d'attente envoyée dès que possible (la plus récente gagne en cas de conflit). Les codes PIN ne sont
+jamais sur les appareils des vendeurs : le serveur les garde chiffrés. La version GitHub Pages (`npm run publier-github`)
+n'a pas de serveur : les comptes y restent dans le navigateur.
 Les tables MySQL sont créées automatiquement au premier appel.
 
 **Publier :** `npm run publier-hostinger` (site + API envoyés sur la branche `hostinger` de GitHub).
