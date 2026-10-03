@@ -22,6 +22,7 @@ const LIENS_SITE = [
   ['/caisse-restaurant/', 'Restaurants'],
   ['/caisse-epicerie/', 'Épiceries'],
   ['/#fonctions', 'Fonctions'],
+  ['/videos/', 'Vidéos'],
   ['/#questions', 'Questions'],
 ];
 
@@ -118,6 +119,84 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
         <div className="hero-capture hero-captures">
           <Capture src={capture.src} alt={capture.alt} largeur={1440} hauteur={900} />
           {captureMobile && <Capture src={captureMobile.src} alt={captureMobile.alt} telephone largeur={390} hauteur={844} />}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Les vidéos de démonstration (public/videos/, générées par "npm run videos")
+export const VIDEOS = {
+  presentation: {
+    src: '/videos/presentation-kaisly.mp4', poster: '/videos/presentation-kaisly.webp', duree: '1 min',
+    titre: 'Kaisly en 1 minute',
+    texte: 'Le tour complet : tableau de bord, caisse, tables, ventes et journées de caisse, crédit, articles, équipe.',
+    lienDemo: LIEN_DEMO_RESTO,
+  },
+  restaurant: {
+    src: '/videos/demo-restaurant.mp4', poster: '/videos/demo-restaurant.webp', duree: '40 s',
+    titre: 'Restaurant : de la commande au ticket',
+    texte: 'Plats avec accompagnements, paiement Wave, ticket imprimé ou envoyé par WhatsApp, chiffre du jour.',
+    lienDemo: LIEN_DEMO_RESTO,
+  },
+  epicerie: {
+    src: '/videos/demo-epicerie.mp4', poster: '/videos/demo-epicerie.webp', duree: '45 s', vertical: true,
+    titre: 'Épicerie : vente, crédit et caisse du soir',
+    texte: 'Recherche d’article, vente à crédit notée dans le carnet, fermeture de caisse juste.',
+    lienDemo: LIEN_DEMO_EPICERIE,
+  },
+  produits: {
+    src: '/videos/ajout-produits.mp4', poster: '/videos/ajout-produits.webp', duree: '50 s',
+    titre: 'Ajouter un article',
+    texte: 'Nouveau plat, nouvelle catégorie, prix d’achat et marge calculée, accompagnements et suppléments : prêt à vendre tout de suite.',
+    lienDemo: LIEN_DEMO_RESTO,
+  },
+  vendeurs: {
+    src: '/videos/gestion-vendeurs.mp4', poster: '/videos/gestion-vendeurs.webp', duree: '40 s', vertical: true,
+    titre: 'Gérer ses vendeurs',
+    texte: 'Un compte et un code PIN par vendeur, des droits au choix, désactivation en un geste, ventes de chacun.',
+    lienDemo: LIEN_DEMO_RESTO,
+  },
+};
+
+// Une vidéo de démonstration avec son titre et un lien pour essayer la même démo.
+// preload="none" : rien n'est téléchargé avant que le visiteur appuie sur lecture.
+export function VideoDemo({ video }) {
+  const v = VIDEOS[video];
+  return (
+    <figure className={`video-demo ${v.vertical ? 'vertical' : ''}`}>
+      <div className="video-cadre">
+        <video src={chemin(v.src)} poster={chemin(v.poster)} controls playsInline muted preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
+      </div>
+      <figcaption>
+        <h3>{v.titre} <span className="badge">{v.duree}</span></h3>
+        <p>{v.texte}</p>
+        <Link href={v.lienDemo} className="suite">Essayer la démo →</Link>
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Section de vidéos.
+ * vedette : une vidéo mise en avant en grand · lignes : vidéos par ligne
+ * (une vidéo paysage + une verticale par ligne, ou une seule) · toutes : lien vers la page /videos/
+ */
+export function SectionVideos({ titre = 'Voyez Kaisly en action, en moins d’une minute.', vedette, lignes = [], toutes = false, id = 'videos' }) {
+  return (
+    <section className="section claire" id={id}>
+      <div className="site-largeur">
+        <span className="etiquette">Démonstration en vidéo</span>
+        <h2>{titre}</h2>
+        {vedette && <div className="grille-videos n1 vedette"><VideoDemo video={vedette} /></div>}
+        {lignes.map((ligne) => (
+          <div key={ligne.join()} className={`grille-videos n${ligne.length}`}>
+            {ligne.map((v) => <VideoDemo key={v} video={v} />)}
+          </div>
+        ))}
+        <div className="boutons" style={{ marginTop: 28 }}>
+          <Link href={LIEN_INSCRIPTION} className="btn grand">Créer mon commerce gratuitement</Link>
+          {toutes && <Link href="/videos/" className="btn secondaire grand">Toutes les vidéos <Icone nom="droite" taille="sm" /></Link>}
         </div>
       </div>
     </section>

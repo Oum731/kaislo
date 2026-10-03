@@ -789,3 +789,22 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .case-accord { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--encre-2); line-height: 1.5; cursor: pointer; }
 .case-accord input { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: var(--vert); }
 .case-accord a { color: var(--vert); }
+
+/* ---------- Vidéos de démonstration ---------- */
+.grille-videos { display: grid; gap: 32px; margin-top: 32px; align-items: start; }
+@media (min-width: 900px) { .grille-videos.n2 { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 40px; } }
+.video-demo { margin: 0; min-width: 0; }
+.video-cadre { border: 1px solid var(--bordure-forte); border-radius: 10px; overflow: hidden; background: var(--encre); box-shadow: 0 20px 50px rgba(20, 33, 28, 0.12); }
+.video-cadre video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--encre); }
+/* Vidéo verticale : présentée comme un téléphone, sans dépasser la hauteur de l'écran */
+.video-demo.vertical .video-cadre { width: min(100%, 300px); margin: 0 auto; border: 8px solid var(--encre); border-radius: 30px; }
+.video-demo.vertical video { aspect-ratio: 1 / 2; }
+.video-demo figcaption { margin-top: 16px; }
+.video-demo.vertical figcaption { max-width: 360px; margin-left: auto; margin-right: auto; }
+.video-demo h3 { font-size: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.video-demo p { color: var(--encre-2); margin-top: 6px; }
+.video-demo .suite { display: inline-block; margin-top: 10px; font-weight: 600; color: var(--vert); text-decoration: none; }
+.section .boutons { display: flex; flex-wrap: wrap; gap: 10px; }
+.grille-videos.n1 { max-width: 860px; }
+.grille-videos.vedette { max-width: 960px; }
+.grille-videos + .grille-videos { margin-top: 48px; }

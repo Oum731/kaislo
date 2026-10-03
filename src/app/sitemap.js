@@ -10,6 +10,7 @@ export default function sitemap() {
     { url: SITE_URL + '/', lastModified: maintenant, changeFrequency: 'weekly', priority: 1 },
     { url: SITE_URL + '/caisse-restaurant/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
     { url: SITE_URL + '/caisse-epicerie/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
+    { url: SITE_URL + '/videos/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.8 },
     ...PAGES_LEGALES.map(([lien]) => ({ url: SITE_URL + lien, lastModified: maintenant, changeFrequency: 'yearly', priority: 0.3 })),
   ];
 }

@@ -16,6 +16,8 @@ export const metadata = {
 const contenu = {
   variante: 'epicerie',
   lienDemo: LIEN_DEMO_EPICERIE,
+  videos: ['epicerie'],
+  titreVideo: 'Une journée d’épicerie, en 45 secondes.',
   description,
   titre: 'Le logiciel de caisse pour épiceries et supérettes.',
   capture: { src: '/captures/epicerie-ordi.webp', alt: 'Caisse de l’épicerie avec code-barres et stock' },

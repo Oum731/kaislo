@@ -2,7 +2,7 @@
 // Modèle commun des pages "Caisse pour restaurant" et
 // "Caisse pour épicerie" (même structure, contenus différents)
 // ------------------------------------------------------------
-import { EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel } from './Site';
+import { EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos } from './Site';
 
 export default function PageMetier({ c }) {
   return (
@@ -10,6 +10,7 @@ export default function PageMetier({ c }) {
       <EnTeteSite />
       <main>
         <Hero titre={c.titre} chapo={c.chapo} lienDemo={c.lienDemo} garanties={c.garanties} capture={c.capture} captureMobile={c.captureMobile} />
+        {c.videos && <SectionVideos titre={c.titreVideo} lignes={[c.videos]} toutes />}
         <section className="section">
           <div className="site-largeur">
             <span className="etiquette">{c.etiquette}</span>

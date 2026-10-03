@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import ExempleJournee from '@/components/site/ExempleJournee';
 import {
-  EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel,
+  EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos,
   LIEN_DEMO_RESTO, LIEN_DEMO_EPICERIE, LIEN_INSCRIPTION,
 } from '@/components/site/Site';
 
@@ -52,6 +52,8 @@ export default function PageAccueil() {
           capture={{ src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord Kaisly : chiffre d’affaires, marge, dépenses, crédit en cours' }}
           captureMobile={{ src: '/captures/caisse-mobile.webp', alt: 'Écran de caisse Kaisly sur téléphone' }}
         />
+
+        <SectionVideos vedette="presentation" lignes={[["restaurant", "epicerie"]]} toutes />
 
         <section className="section" id="fonctions">
           <div className="site-largeur">
