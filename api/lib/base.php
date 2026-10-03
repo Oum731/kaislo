@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 2;
+const VERSION_BASE = 3;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -20,8 +20,10 @@ const STRUCTURE = [
             'pays' => 'VARCHAR(4)', 'devise' => 'VARCHAR(6)', 'ville' => 'TEXTE', 'telephone' => 'VARCHAR(40)',
             'offre' => 'VARCHAR(20)', 'statut' => 'VARCHAR(20)', 'essai_fin' => 'DATE', 'periode_fin' => 'DATE',
             'conditions_acceptees_le' => 'DATE', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
+            'cle_telephone' => 'VARCHAR(20)', // numéro du commerce (chiffres du format international) : unique
+            'notes' => 'LONG', // notes internes de l'équipe Amorac
         ],
-        'cle' => ['id'], 'uniques' => [['code']], 'index' => [],
+        'cle' => ['id'], 'uniques' => [['code'], ['cle_telephone']], 'index' => [],
     ],
     // Gérants et vendeurs (le numéro de téléphone est unique dans tout Kaislo)
     'utilisateurs' => [
@@ -78,8 +80,29 @@ const STRUCTURE = [
     ],
     // Comptes de l'équipe Amorac (espace /admin)
     'admins' => [
-        'colonnes' => ['id' => 'ID', 'email' => 'VARCHAR(190)', 'nom' => 'TEXTE', 'mdp_hash' => 'TEXTE', 'cree_le' => 'DATE'],
+        'colonnes' => [
+            'id' => 'ID', 'email' => 'VARCHAR(190)', 'nom' => 'TEXTE', 'mdp_hash' => 'TEXTE', 'cree_le' => 'DATE',
+            'role' => 'VARCHAR(20)', 'actif' => 'ENTIER', 'vu_le' => 'DATE', // role : 'admin' (tout) ou 'support' (messages, consultation)
+        ],
         'cle' => ['id'], 'uniques' => [['email']], 'index' => [],
+    ],
+    // Sessions de l'espace Amorac (8 heures, empreinte du jeton seulement)
+    'jetons_admin' => [
+        'colonnes' => ['jeton_hash' => 'VARCHAR(64)', 'admin_id' => 'ID', 'cree_le' => 'DATE', 'expire_le' => 'DATE', 'appareil' => 'TEXTE'],
+        'cle' => ['jeton_hash'], 'uniques' => [], 'index' => [['admin_id']],
+    ],
+    // Messagerie entre chaque commerce et l'équipe Amorac
+    'messages' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'auteur' => 'VARCHAR(10)', // 'commerce' ou 'amorac'
+            'auteur_id' => 'ID', 'auteur_nom' => 'TEXTE', 'texte' => 'LONG', 'cree_le' => 'DATE', 'lu_le' => 'DATE',
+        ],
+        'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id', 'cree_le']],
+    ],
+    // Réglages de l'équipe Amorac (offres d'abonnement…), en JSON
+    'reglages_amorac' => [
+        'colonnes' => ['cle' => 'VARCHAR(40)', 'valeur' => 'LONG', 'modifie_le' => 'DATE'],
+        'cle' => ['cle'], 'uniques' => [], 'index' => [],
     ],
     // Journal des actions importantes (inscription, connexion, suspension…)
     'journal' => [
@@ -135,9 +158,20 @@ function migrer(PDO $pdo, string $driver): void
 
     // Base déjà installée en version 1 : colonne recu_le ajoutée aux éléments
     // (si deux visiteurs arrivent au même instant, le second ignore « colonne déjà ajoutée »)
+    $essayer = function (string $sql) use ($pdo) { try { $pdo->exec($sql); } catch (PDOException) { /* déjà fait */ } };
     if ($version === 1) {
-        try { $pdo->exec('ALTER TABLE elements ADD COLUMN recu_le VARCHAR(30) NULL'); } catch (PDOException) { /* déjà fait */ }
-        try { $pdo->exec('CREATE INDEX i_elements_1 ON elements (commerce_id, recu_le)'); } catch (PDOException) { /* déjà fait */ }
+        $essayer('ALTER TABLE elements ADD COLUMN recu_le VARCHAR(30) NULL');
+        $essayer('CREATE INDEX i_elements_1 ON elements (commerce_id, recu_le)');
+    }
+    // Bases en version 1 ou 2 : numéro du commerce, notes Amorac, rôles de l'équipe
+    $texteLong = $driver !== 'sqlite' ? 'MEDIUMTEXT' : 'TEXT';
+    if ($version >= 1 && $version < 3) {
+        $essayer('ALTER TABLE commerces ADD COLUMN cle_telephone VARCHAR(20) NULL');
+        $essayer("ALTER TABLE commerces ADD COLUMN notes $texteLong NULL");
+        $essayer('CREATE UNIQUE INDEX u_commerces_1 ON commerces (cle_telephone)');
+        $essayer('ALTER TABLE admins ADD COLUMN role VARCHAR(20) NULL');
+        $essayer('ALTER TABLE admins ADD COLUMN actif INTEGER NULL');
+        $essayer('ALTER TABLE admins ADD COLUMN vu_le VARCHAR(30) NULL');
     }
 
     foreach (STRUCTURE as $table => $t) {
@@ -157,5 +191,22 @@ function migrer(PDO $pdo, string $driver): void
             foreach ($t['index'] as $i => $cols) $pdo->exec("CREATE INDEX IF NOT EXISTS i_{$table}_$i ON $table (" . implode(', ', $cols) . ')');
         }
     }
+    // Numéros déjà enregistrés : mis au format international (pays du commerce)
+    if ($version >= 1 && $version < 3) normaliserNumerosExistants($pdo);
     $pdo->prepare('INSERT INTO kaisly_version (version) VALUES (?)')->execute([VERSION_BASE]);
+}
+
+// (migration v3) « 07 07 12 34 56 » -> « +225 07 07 12 34 56 » et clé unique sur le numéro complet
+function normaliserNumerosExistants(PDO $pdo): void
+{
+    foreach ($pdo->query('SELECT u.id, u.telephone, c.pays FROM utilisateurs u JOIN commerces c ON c.id = u.commerce_id')->fetchAll() as $u) {
+        $n = normaliserTelephone((string) $u['telephone'], (string) $u['pays']);
+        if (!$n['ok']) continue;
+        try { $pdo->prepare('UPDATE utilisateurs SET telephone = ?, cle_telephone = ? WHERE id = ?')->execute([$n['affichage'], $n['cle'], $u['id']]); } catch (PDOException) { /* doublon : on garde l'ancien */ }
+    }
+    foreach ($pdo->query('SELECT id, telephone, pays FROM commerces')->fetchAll() as $c) {
+        $n = normaliserTelephone((string) $c['telephone'], (string) $c['pays']);
+        if (!$n['ok']) continue;
+        try { $pdo->prepare('UPDATE commerces SET telephone = ?, cle_telephone = ? WHERE id = ?')->execute([$n['affichage'], $n['cle'], $c['id']]); } catch (PDOException) { /* doublon */ }
+    }
 }

@@ -5,6 +5,7 @@
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
 import { lireImage, estImageLocale, adresseImage, reduireImage } from '@/lib/donnees/images';
+import { normaliserTelephone, exempleTelephone, indicatifPays } from '@/lib/donnees/telephone';
 
 // Dessins des icônes (style "Lucide", trait de 2 px)
 const DESSINS = {
@@ -242,6 +243,34 @@ export function Vide({ emoji, titre, texte, children }) {
       {texte && <p className="petit" style={{ marginTop: 4 }}>{texte}</p>}
       {children && <div style={{ marginTop: 16 }}>{children}</div>}
     </div>
+  );
+}
+
+/**
+ * Numéro de téléphone selon le pays : l'indicatif est affiché devant, le numéro est vérifié
+ * quand on quitte le champ (format international montré en vert, ou erreur en rouge).
+ * Le parent garde la saisie brute et appelle normaliserTelephone() avant d'enregistrer.
+ */
+export function ChampTelephone({ libelle, valeur, surChanger, pays, aide, autoFocus, onKeyDown, champRef, requis = true, verifier = true }) {
+  const [vu, setVu] = useState(false); // vérifier seulement après la première sortie du champ
+  const n = valeur && verifier ? normaliserTelephone(valeur, pays) : null; // démos : numéros fictifs, pas de vérification
+  const indicatif = indicatifPays(pays);
+  return (
+    <label className="champ">
+      <span>{libelle}{requis ? '' : ' (facultatif)'}</span>
+      <span className="champ-telephone">
+        {indicatif && !String(valeur || '').trim().startsWith('+') && <span className="indicatif">{indicatif}</span>}
+        <input
+          ref={champRef} type="tel" inputMode="tel" autoComplete="tel" autoFocus={autoFocus}
+          placeholder={'Ex : ' + exempleTelephone(pays)} value={valeur || ''}
+          onChange={(e) => surChanger(e.target.value)} onBlur={() => setVu(true)} onKeyDown={onKeyDown}
+          aria-invalid={vu && n && !n.ok ? 'true' : undefined}
+        />
+      </span>
+      {vu && n && !n.ok && <span className="tres-petit rouge-texte">{n.erreur}</span>}
+      {n?.ok && <span className="tres-petit vert-texte">✓ {n.affichage}</span>}
+      {aide && !(vu && n && !n.ok) && !n?.ok && <span className="tres-petit muet">{aide}</span>}
+    </label>
   );
 }
 

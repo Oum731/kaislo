@@ -10,6 +10,7 @@
 // ------------------------------------------------------------
 import { chargerCommerce, creerCommerce, commerceDepuisServeur, enregistrerCommerce, estDemo, trouverParTelephone, supprimerCommerce } from '@/lib/donnees/stockage.js';
 import { typeCommerce, cleTelephone } from '@/lib/donnees/modeles.js';
+import { normaliserTelephone } from '@/lib/donnees/telephone.js';
 import { etatAbonnement } from '@/lib/donnees/abonnement.js';
 import { estServeur, noterTout, tailleFile } from '@/lib/donnees/synchro.js';
 import { API_ACTIVE, appelApi, nomAppareil } from '@/lib/api.js';
@@ -52,7 +53,7 @@ export const trancheSession = (set, get) => ({
    * Connexion avec le numéro de téléphone et le code PIN.
    * Renvoie (promesse) un message d'erreur, ou null si la connexion a réussi.
    */
-  async connecterParTelephone(telephone, pin) {
+  async connecterParTelephone(telephone, pin, pays) {
     const cle = cleTelephone(telephone);
     if (!cle) return 'Entrez votre numéro de téléphone';
     if (!/^\d{4}$/.test(String(pin))) return 'Le code PIN contient 4 chiffres';
@@ -74,11 +75,14 @@ export const trancheSession = (set, get) => ({
       return null;
     }
     if (!API_ACTIVE) return 'Aucun compte Kaislo avec ce numéro';
+    const numero = normaliserTelephone(telephone, pays);
+    if (!numero.ok) return numero.erreur;
+    get().sauverPrefs({ paysConnexion: pays });
 
     // 2. Comptes en ligne : le serveur vérifie le code
     set({ connexionEnCours: true });
     try {
-      const rep = await appelApi('POST', '/connexion', { telephone, pin: String(pin), appareil: nomAppareil() });
+      const rep = await appelApi('POST', '/connexion', { telephone: numero.e164, pays, pin: String(pin), appareil: nomAppareil() });
       // Empreinte du PIN pour les reconnexions sans internet sur cet appareil
       const sel = crypto.getRandomValues(new Uint32Array(2)).join('-');
       const pinsHors = { ...(get().prefs.pinsHors || {}), [cle]: { sel, hash: await empreintePin(sel, pin), utilisateurId: rep.utilisateur.id, commerceId: rep.commerce.id } };

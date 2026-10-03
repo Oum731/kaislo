@@ -75,3 +75,10 @@ export function initiales(nom) {
     .map((m) => m[0].toUpperCase())
     .join('');
 }
+
+// Quantité avec son unité : « 12 kg », « 3 carton » ; la pièce reste implicite (« 12 »)
+export function quantiteUnite(quantite, unite) {
+  const q = Number(quantite) || 0;
+  const texte = Number.isInteger(q) ? String(q) : q.toLocaleString('fr-FR', { maximumFractionDigits: 3 });
+  return !unite || unite === 'pièce' ? texte : texte + ' ' + unite;
+}

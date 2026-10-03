@@ -68,14 +68,14 @@ export function exporterVentesCsv(d) {
 // Inventaire : un article par ligne, quantité, prix et valeur du stock (pour compter ou pour le comptable)
 export function exporterInventaireCsv(d) {
   const categorie = (id) => d.categories.find((c) => c.id === id)?.nom || '';
-  const entete = ['Article', 'Catégorie', 'Code-barres', 'Quantité en stock', 'Alerte à partir de', 'Prix d’achat', 'Prix de vente', 'Valeur au prix d’achat', 'Valeur à la vente', 'Devise', 'État'];
+  const entete = ['Article', 'Catégorie', 'Code-barres', 'Unité', 'Quantité en stock', 'Alerte à partir de', 'Prix d’achat', 'Prix de vente', 'Valeur au prix d’achat', 'Valeur à la vente', 'Devise', 'État'];
   const lignes = d.produits
     .filter((p) => p.suiviStock)
     .sort((a, b) => categorie(a.categorieId).localeCompare(categorie(b.categorieId)) || a.nom.localeCompare(b.nom))
     .map((p) => {
       const stock = Number(p.stock) || 0;
       const etat = stock <= 0 ? 'Rupture' : stock <= (p.seuilAlerte ?? 5) ? 'Stock bas' : 'OK';
-      return [p.nom, categorie(p.categorieId), p.codeBarre, montant(stock), montant(p.seuilAlerte ?? 5), montant(p.prixAchat), montant(p.prix), montant(stock * (p.prixAchat || 0)), montant(stock * p.prix), d.commerce.devise, etat];
+      return [p.nom, categorie(p.categorieId), p.codeBarre, p.unite || 'pièce', montant(stock), montant(p.seuilAlerte ?? 5), montant(p.prixAchat), montant(p.prix), montant(stock * (p.prixAchat || 0)), montant(stock * p.prix), d.commerce.devise, etat];
     });
   const csv = '﻿' + [entete, ...lignes].map((l) => l.map(cellule).join(';')).join('\r\n');
   telecharger(`kaislo-inventaire-${nomFichier(d.commerce.nom)}-${jour()}.csv`, csv, 'text/csv;charset=utf-8');

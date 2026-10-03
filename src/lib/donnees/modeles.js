@@ -2,21 +2,36 @@
 // MODÈLES utilisés à la création d'un commerce :
 // types de commerce, pays (devise + paiements), catégories de départ.
 // ------------------------------------------------------------
+import { normaliserTelephone } from './telephone.js';
 
 // Mode de paiement spécial : la vente est notée dans le carnet du client
 export const CREDIT = 'Crédit';
 
-// Types de commerce.
-//  gereStock : scan code-barres + suivi du stock
+// Types d'activité : chacun a ses catégories de départ, son unité habituelle,
+// et le stock et/ou les tables activés par défaut (modifiables dans Réglages).
+//  gereStock : scan code-barres + suivi du stock et inventaire
 //  tables    : commandes ouvertes par table + ticket cuisine
+//  unite     : unité proposée pour les nouveaux articles
 export const TYPES_COMMERCE = [
-  { id: 'restaurant', nom: 'Restaurant / maquis', emoji: '🍽️', description: 'Tables, ticket cuisine, plats avec options', gereStock: false, tables: true },
-  { id: 'epicerie', nom: 'Épicerie / supérette', emoji: '🛒', description: 'Code-barres, stock, carnet de crédit', gereStock: true, tables: false },
-  { id: 'autre', nom: 'Autre commerce', emoji: '🏪', description: 'Boutique, quincaillerie, cosmétiques…', gereStock: true, tables: false },
+  { id: 'restaurant', nom: 'Restaurant / maquis', icone: 'cuisine', description: 'Tables, ticket cuisine, plats avec accompagnements', gereStock: false, tables: true, unite: 'portion' },
+  { id: 'bar', nom: 'Bar / café / lounge', icone: 'tables', description: 'Tables, boissons, stock des bouteilles', gereStock: true, tables: true, unite: 'bouteille' },
+  { id: 'boulangerie', nom: 'Boulangerie / pâtisserie', icone: 'etoile', description: 'Pains, viennoiseries, gâteaux sur commande', gereStock: true, tables: false, unite: 'pièce' },
+  { id: 'epicerie', nom: 'Épicerie / supérette / alimentation', icone: 'caisse', description: 'Code-barres, stock, carnet de crédit', gereStock: true, tables: false, unite: 'pièce' },
+  { id: 'grossiste', nom: 'Grossiste / dépôt / distributeur', icone: 'stock', description: 'Cartons, sacs, gros volumes, crédit clients', gereStock: true, tables: false, unite: 'carton' },
+  { id: 'boutique', nom: 'Boutique de vêtements / chaussures', icone: 'produits', description: 'Tailles, couleurs, stock par article', gereStock: true, tables: false, unite: 'pièce' },
+  { id: 'quincaillerie', nom: 'Quincaillerie / matériaux', icone: 'reglages', description: 'Outillage, au mètre ou au kilo, gros stock', gereStock: true, tables: false, unite: 'pièce' },
+  { id: 'pharmacie', nom: 'Pharmacie / parapharmacie', icone: 'bouclier', description: 'Médicaments, hygiène, alertes de rupture', gereStock: true, tables: false, unite: 'boîte' },
+  { id: 'beaute', nom: 'Cosmétiques / beauté / salon', icone: 'photo', description: 'Produits de beauté et prestations', gereStock: true, tables: false, unite: 'pièce' },
+  { id: 'telephonie', nom: 'Téléphonie / électronique', icone: 'telephone', description: 'Téléphones, accessoires, crédit, réparations', gereStock: true, tables: false, unite: 'pièce' },
+  { id: 'librairie', nom: 'Librairie / papeterie', icone: 'carnet', description: 'Livres, fournitures scolaires et de bureau', gereStock: true, tables: false, unite: 'pièce' },
+  { id: 'autre', nom: 'Autre commerce ou service', icone: 'menu', description: 'Tout ce qui se vend ou se stocke', gereStock: true, tables: false, unite: 'pièce' },
 ];
 
+// Unités de mesure des articles (stock et inventaire, au détail ou en gros)
+export const UNITES = ['pièce', 'kg', 'g', 'litre', 'mètre', 'carton', 'sac', 'paquet', 'boîte', 'bouteille', 'portion', 'lot', 'prestation'];
+
 export function typeCommerce(id) {
-  return TYPES_COMMERCE.find((t) => t.id === id) || TYPES_COMMERCE[0];
+  return TYPES_COMMERCE.find((t) => t.id === id) || TYPES_COMMERCE.find((t) => t.id === 'autre');
 }
 
 // Pays proposés : la devise, les modes de paiement et l'indicatif
@@ -51,22 +66,18 @@ export function paysDuNavigateur() {
   return PAYS.some((p) => p.id === region) ? region : 'MA';
 }
 
-// Clé d'identification d'un numéro : ses 9 derniers chiffres.
+// Clé LOCALE d'un numéro (démos et comptes gardés dans l'appareil) : ses 9 derniers chiffres.
+// Les comptes en ligne utilisent le format international (voir telephone.js).
 // "06 12 34 56 78", "+212 6 12 34 56 78" et "00212612345678" donnent la même clé.
 export function cleTelephone(telephone) {
   const chiffres = String(telephone || '').replace(/\D/g, '');
   return chiffres.length >= 8 ? chiffres.slice(-9) : '';
 }
 
-// Numéro au format international pour WhatsApp : "06 12 34 56 78" -> "212612345678"
+// Numéro au format international pour WhatsApp : « 06 12 34 56 78 » (Maroc) -> « 212612345678 »
 export function numeroWhatsApp(telephone, paysId) {
-  let n = String(telephone || '').replace(/[^\d+]/g, '');
-  if (n.startsWith('+')) return n.slice(1);
-  if (n.startsWith('00')) return n.slice(2);
-  const ind = paysParId(paysId).indicatif;
-  if (ind && n.startsWith(ind) && n.length > 9) return n;
-  if (n.startsWith('0') && !['CI', 'BJ', 'TG'].includes(paysId)) n = n.slice(1); // 0 de tête national
-  return (ind || '') + n;
+  const n = normaliserTelephone(telephone, paysId);
+  return n.ok ? n.e164.slice(1) : String(telephone || '').replace(/\D/g, '');
 }
 
 // Catégories créées automatiquement (le gérant peut les modifier ensuite)
@@ -77,6 +88,19 @@ export const CATEGORIES_DEPART = {
     { nom: 'Boissons', couleur: 'bleu' },
     { nom: 'Desserts', couleur: 'safran' },
   ],
+  bar: [
+    { nom: 'Bières', couleur: 'safran' },
+    { nom: 'Sodas et jus', couleur: 'bleu' },
+    { nom: 'Vins et alcools', couleur: 'prune' },
+    { nom: 'Cocktails', couleur: 'terre' },
+    { nom: 'Grignotage', couleur: 'vert' },
+  ],
+  boulangerie: [
+    { nom: 'Pains', couleur: 'safran' },
+    { nom: 'Viennoiseries', couleur: 'terre' },
+    { nom: 'Pâtisseries', couleur: 'prune' },
+    { nom: 'Boissons', couleur: 'bleu' },
+  ],
   epicerie: [
     { nom: 'Épicerie', couleur: 'safran' },
     { nom: 'Boissons', couleur: 'bleu' },
@@ -84,9 +108,54 @@ export const CATEGORIES_DEPART = {
     { nom: 'Hygiène', couleur: 'prune' },
     { nom: 'Fruits & légumes', couleur: 'terre' },
   ],
+  grossiste: [
+    { nom: 'Alimentaire', couleur: 'safran' },
+    { nom: 'Boissons', couleur: 'bleu' },
+    { nom: 'Hygiène et entretien', couleur: 'prune' },
+    { nom: 'Divers', couleur: 'vert' },
+  ],
+  boutique: [
+    { nom: 'Femmes', couleur: 'prune' },
+    { nom: 'Hommes', couleur: 'bleu' },
+    { nom: 'Enfants', couleur: 'safran' },
+    { nom: 'Chaussures', couleur: 'terre' },
+    { nom: 'Accessoires', couleur: 'vert' },
+  ],
+  quincaillerie: [
+    { nom: 'Outillage', couleur: 'terre' },
+    { nom: 'Plomberie', couleur: 'bleu' },
+    { nom: 'Électricité', couleur: 'safran' },
+    { nom: 'Peinture', couleur: 'prune' },
+    { nom: 'Matériaux', couleur: 'vert' },
+  ],
+  pharmacie: [
+    { nom: 'Médicaments', couleur: 'vert' },
+    { nom: 'Hygiène', couleur: 'bleu' },
+    { nom: 'Bébé', couleur: 'safran' },
+    { nom: 'Parapharmacie', couleur: 'prune' },
+  ],
+  beaute: [
+    { nom: 'Soins', couleur: 'vert' },
+    { nom: 'Cheveux', couleur: 'terre' },
+    { nom: 'Maquillage', couleur: 'prune' },
+    { nom: 'Prestations', couleur: 'safran' },
+  ],
+  telephonie: [
+    { nom: 'Téléphones', couleur: 'bleu' },
+    { nom: 'Accessoires', couleur: 'vert' },
+    { nom: 'Crédit et forfaits', couleur: 'safran' },
+    { nom: 'Réparations', couleur: 'terre' },
+  ],
+  librairie: [
+    { nom: 'Livres', couleur: 'terre' },
+    { nom: 'Fournitures scolaires', couleur: 'safran' },
+    { nom: 'Bureau', couleur: 'bleu' },
+    { nom: 'Impression et photocopie', couleur: 'vert' },
+  ],
   autre: [
     { nom: 'Articles', couleur: 'vert' },
     { nom: 'Accessoires', couleur: 'bleu' },
+    { nom: 'Services', couleur: 'safran' },
   ],
 };
 

@@ -10,7 +10,7 @@ const PAYS = [
     'NE' => 'FCFA', 'GN' => 'GNF', 'CM' => 'FCFA', 'GA' => 'FCFA', 'CG' => 'FCFA', 'FR' => 'EUR', 'BE' => 'EUR',
     'CA' => 'CAD', 'XX' => 'USD',
 ];
-const TYPES_COMMERCE = ['restaurant', 'epicerie', 'autre'];
+const TYPES_COMMERCE = ['restaurant', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'pharmacie', 'beaute', 'telephonie', 'librairie', 'autre'];
 const DUREE_ESSAI_JOURS = 30;
 const DUREE_JETON_JOURS = 90;   // un appareil reste connecté 90 jours sans utilisation
 const ESSAIS_AVANT_BLOCAGE = 5; // codes faux autorisés…
@@ -59,14 +59,6 @@ function maintenant(int $decalageSecondes = 0): string
 function nouvelId(string $prefixe = ''): string
 {
     return $prefixe . bin2hex(random_bytes(10));
-}
-
-// Clé d'un numéro de téléphone : ses 9 derniers chiffres (« +225 07 08… » = « 07 08… »)
-// Même règle que cleTelephone() dans l'application.
-function cleTelephone(string $telephone): string
-{
-    $chiffres = preg_replace('/\D/', '', $telephone);
-    return strlen($chiffres) >= 8 ? substr($chiffres, -9) : '';
 }
 
 function adresseIp(): string

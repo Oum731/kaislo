@@ -8,7 +8,7 @@
 // ------------------------------------------------------------
 import { useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
-import { formatDate, formatHeure } from '@/lib/utils/format';
+import { formatDate, formatHeure, quantiteUnite } from '@/lib/utils/format';
 import { Icone, Puces, Segment, initiales } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { exporterInventaireCsv } from '@/lib/donnees/export';
@@ -67,7 +67,7 @@ export default function Stock() {
                     <b className="bloc-texte tronque">{p.nom}</b>
                     <span className="tres-petit muet">Alerte à {p.seuilAlerte ?? 5} · achat {p.prixAchat ? s.prix(p.prixAchat) : '—'}</span>
                   </span>
-                  <span className={`badge ${p.stock <= 0 ? 'rouge' : bas(p) ? 'safran' : 'gris'}`} style={{ minWidth: 48, justifyContent: 'center' }}>{p.stock}</span>
+                  <span className={`badge ${p.stock <= 0 ? 'rouge' : bas(p) ? 'safran' : 'gris'}`} style={{ minWidth: 48, justifyContent: 'center' }}>{quantiteUnite(p.stock, p.unite)}</span>
                   <button className="icone-btn" title="Entrée de marchandise" onClick={() => s.ouvrir('entreeStock', { produitId: p.id })}><Icone nom="plus" taille="sm" /></button>
                   <button className="icone-btn" title="Inventaire (corriger)" onClick={() => s.ouvrir('ajustement', { produit: p })}><Icone nom="reglages" taille="sm" /></button>
                 </div>

@@ -10,6 +10,7 @@ import { reinitialiserCommerce, majCompte, supprimerCommerce, telephoneDejaUtili
 import { estServeur } from '@/lib/donnees/synchro.js';
 import { appelApi } from '@/lib/api.js';
 import { cleTelephone } from '@/lib/donnees/modeles.js';
+import { normaliserTelephone } from '@/lib/donnees/telephone.js';
 import { supprimerImage } from '@/lib/donnees/images.js';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
@@ -100,10 +101,12 @@ export const trancheGestion = (set, get) => ({
     const { d } = get();
     if (!nom) return 'Indiquez le nom';
     if (estServeur(d)) {
-      if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';
+      // Numéro au format international du pays du commerce (le serveur vérifie qu'il est unique)
+      const numero = normaliserTelephone(telephone, d.commerce.pays);
+      if (!numero.ok) return numero.erreur;
       // Modification d'un vendeur : PIN vide = inchangé
       if ((!b.id || pin) && !/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
-      return get().equipeServeur({ id: b.id || undefined, nom, telephone, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises }, 'Vendeur enregistré');
+      return get().equipeServeur({ id: b.id || undefined, nom, telephone: numero.affichage, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises }, 'Vendeur enregistré');
     }
     // Le numéro de téléphone sert d'identifiant de connexion : unique dans tout Kaislo
     if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';

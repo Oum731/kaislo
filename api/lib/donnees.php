@@ -116,12 +116,13 @@ function enregistrerElement(array $u, array $e): ?string
     if ($type === 'reglages') {
         if ($id !== 'commerce') return 'identifiant invalide';
         // Champs gérés uniquement par le serveur (abonnement, code…) : jamais pris de l'appareil
-        foreach (['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur'] as $champ) unset($contenu[$champ]);
+        foreach (['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur', 'telephone'] as $champ) unset($contenu[$champ]);
         $json = json_encode($contenu, JSON_UNESCAPED_UNICODE);
         $nom = trim((string) ($contenu['nom'] ?? ''));
         if ($nom !== '') {
-            requete('UPDATE commerces SET nom = ?, ville = ?, telephone = ?, modifie_le = ? WHERE id = ?', [
-                mb_substr($nom, 0, 120), mb_substr((string) ($contenu['ville'] ?? ''), 0, 120), mb_substr((string) ($contenu['telephone'] ?? ''), 0, 40), maintenant(), $u['commerce_id'],
+            // Le numéro du commerce (son identifiant) n'est changé que par l'équipe Amorac
+            requete('UPDATE commerces SET nom = ?, ville = ?, modifie_le = ? WHERE id = ?', [
+                mb_substr($nom, 0, 120), mb_substr((string) ($contenu['ville'] ?? ''), 0, 120), maintenant(), $u['commerce_id'],
             ]);
         }
     }

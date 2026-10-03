@@ -10,7 +10,7 @@ import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
 import { CREDIT } from '@/lib/donnees/modeles';
 import { soldeClient } from '@/lib/donnees/credit';
-import { formatHeure } from '@/lib/utils/format';
+import { formatHeure, quantiteUnite } from '@/lib/utils/format';
 import { Icone, Puces, ChampMontant, ImageStockee, Reglage, initiales } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { EtatCaisse } from './Ventes';
@@ -109,7 +109,7 @@ export default function Caisse() {
                         {base < p.prix && <s>{s.prix(p.prix)}</s>}
                         {(p.groupes.length ? 'dès ' : '') + s.prix(depart)}
                       </span>
-                      {p.suiviStock && <span className={`tuile-stock ${p.stock <= (p.seuilAlerte ?? 5) ? 'bas' : ''}`}>{p.stock <= 0 ? 'Rupture' : 'Stock ' + p.stock}</span>}
+                      {p.suiviStock && <span className={`tuile-stock ${p.stock <= (p.seuilAlerte ?? 5) ? 'bas' : ''}`}>{p.stock <= 0 ? 'Rupture' : 'Stock ' + quantiteUnite(p.stock, p.unite)}</span>}
                     </span>
                   </>
                 );

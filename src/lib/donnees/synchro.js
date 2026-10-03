@@ -133,7 +133,12 @@ export function fusionServeur(d, rep) {
   const numeroMax = Math.max(0, ...(d.ventes || []).map((v) => Number(v.numero) || 0));
   return {
     ...d,
-    commerce: ab ? { ...d.commerce, abonnement: { ...(d.commerce.abonnement || {}), ...ab, paiements: d.commerce.abonnement?.paiements || [] } } : d.commerce,
+    commerce: {
+      ...d.commerce,
+      // Numéro du commerce : tenu par le serveur (identifiant, changé seulement par l'équipe Amorac)
+      ...(rep.commerce?.telephone ? { telephone: rep.commerce.telephone } : {}),
+      ...(ab ? { abonnement: { ...(d.commerce.abonnement || {}), ...ab, paiements: d.commerce.abonnement?.paiements || [] } } : {}),
+    },
     utilisateurs: rep.utilisateurs || d.utilisateurs,
     prochainNumero: Math.max(d.prochainNumero || 1, numeroMax + 1),
   };

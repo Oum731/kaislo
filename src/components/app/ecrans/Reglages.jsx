@@ -137,7 +137,14 @@ function InfosCommerce() {
       <div className="carte pile">
         <label className="champ"><span>Nom du commerce</span><input value={b.nom} onChange={maj('nom')} /></label>
         <div className="grille-2">
-          <label className="champ"><span>Téléphone</span><input type="tel" value={b.telephone || ''} onChange={maj('telephone')} placeholder="+212 6…" /></label>
+          {d.commerce.serveur ? (
+            <label className="champ"><span>Téléphone (identifiant du commerce)</span>
+              <input value={b.telephone || ''} disabled />
+              <span className="tres-petit muet">Pour le changer, écrivez à l’équipe Kaislo (Messages).</span>
+            </label>
+          ) : (
+            <label className="champ"><span>Téléphone</span><input type="tel" value={b.telephone || ''} onChange={maj('telephone')} placeholder="+225 07…" /></label>
+          )}
           <label className="champ"><span>E-mail (facultatif)</span><input type="email" value={b.email || ''} onChange={maj('email')} placeholder="contact@…" /></label>
         </div>
         <label className="champ"><span>Adresse</span><input value={b.adresse || ''} onChange={maj('adresse')} placeholder="N°, rue, quartier" /></label>

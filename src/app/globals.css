@@ -862,3 +862,10 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 @keyframes pulser { 50% { opacity: 0.3; } }
 .installer-app ol { padding-left: 20px; margin: 4px 0; }
 .installer-app li + li { margin-top: 4px; }
+
+/* Champ téléphone : indicatif du pays devant le numéro */
+.champ-telephone { display: flex; align-items: stretch; }
+.champ-telephone .indicatif { display: grid; place-items: center; padding: 0 12px; border: 1px solid var(--bordure-forte); border-right: 0; border-radius: var(--rayon-petit) 0 0 var(--rayon-petit); background: var(--fond); font-weight: 600; color: var(--encre-2); font-variant-numeric: tabular-nums; }
+.champ-telephone .indicatif + input { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.champ-telephone input { flex: 1; min-width: 0; }
+.champ input[aria-invalid="true"] { border-color: var(--rouge); }

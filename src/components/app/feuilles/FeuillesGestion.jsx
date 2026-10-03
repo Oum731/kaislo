@@ -5,10 +5,10 @@
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
-import { genId, formatDate, formatHeure, symbole } from '@/lib/utils/format';
-import { CATEGORIES_DEPENSES, COULEURS } from '@/lib/donnees/modeles';
+import { genId, formatDate, formatHeure, symbole, quantiteUnite } from '@/lib/utils/format';
+import { CATEGORIES_DEPENSES, COULEURS, UNITES, typeCommerce } from '@/lib/donnees/modeles';
 import { historiqueClient, soldeClient, lienRappelWhatsApp } from '@/lib/donnees/credit';
-import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, ChoixImage, initiales } from '@/components/ui';
+import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, ChoixImage, initiales, ChampTelephone } from '@/components/ui';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { liensMenu } from '../Coque';
 import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
@@ -22,7 +22,7 @@ export function FeuilleProduit({ produit, categorieId }) {
   const [b, setB] = useState(() =>
     produit
       ? JSON.parse(JSON.stringify(produit))
-      : { id: null, categorieId: categorieId || d.categories[0]?.id, nom: '', prix: null, promo: null, prixAchat: null, emoji: '', image: null, codeBarre: '', suiviStock: false, stock: 0, seuilAlerte: 5, actif: true, groupes: [] }
+      : { id: null, categorieId: categorieId || d.categories[0]?.id, nom: '', prix: null, promo: null, prixAchat: null, emoji: '', image: null, codeBarre: '', unite: typeCommerce(d.commerce.type).unite, suiviStock: false, stock: 0, seuilAlerte: 5, actif: true, groupes: [] }
   );
   const [nouvelleImage, setNouvelleImage] = useState(null); // photo choisie, pas encore enregistrée
   const [imageRetiree, setImageRetiree] = useState(false);
@@ -108,11 +108,18 @@ export function FeuilleProduit({ produit, categorieId }) {
         )}
         <p className="tres-petit muet">Prix promo : affiché barré à la caisse tant qu’il est rempli. Prix d’achat : sert à calculer vos marges (jamais montré au client).</p>
 
-        {s.gereStock() && <label className="champ"><span>Code-barres</span><input inputMode="numeric" value={b.codeBarre} onChange={(e) => maj({ codeBarre: e.target.value })} placeholder="Facultatif" /></label>}
+        <div className="grille-2">
+          <label className="champ"><span>Unité de vente et de stock</span>
+            <select value={b.unite || 'pièce'} onChange={(e) => maj({ unite: e.target.value })}>
+              {UNITES.map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </label>
+          {s.gereStock() && <label className="champ"><span>Code-barres</span><input inputMode="numeric" value={b.codeBarre} onChange={(e) => maj({ codeBarre: e.target.value })} placeholder="Facultatif" /></label>}
+        </div>
         <Reglage titre="Suivre le stock" aide="Le stock baisse à chaque vente ; alerte quand il devient bas." actif={b.suiviStock} surChanger={(v) => maj({ suiviStock: v })} />
         {b.suiviStock && (
           <div className="grille-2">
-            <label className="champ"><span>Quantité en stock</span><ChampMontant valeur={b.stock} surChanger={(v) => maj({ stock: v })} /></label>
+            <label className="champ"><span>Quantité en stock ({b.unite || 'pièce'})</span><ChampMontant valeur={b.stock} surChanger={(v) => maj({ stock: v })} /></label>
             <label className="champ"><span>Alerte à partir de</span><ChampMontant valeur={b.seuilAlerte} surChanger={(v) => maj({ seuilAlerte: v })} /></label>
           </div>
         )}
@@ -190,7 +197,7 @@ export function FeuilleUtilisateur({ utilisateur }) {
     <Feuille titre={b.id ? b.nom : 'Nouveau vendeur'} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer} disabled={enCours}>{enCours ? 'Enregistrement…' : 'Enregistrer'}</button>}>
       <div className="pile">
         <label className="champ"><span>Nom et prénom</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder="Ex : Amorac Kaislo" /></label>
-        <label className="champ"><span>Numéro de téléphone (identifiant de connexion)</span><input type="tel" inputMode="tel" value={b.telephone || ''} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder="Ex : 06 12 34 56 78" /></label>
+        <ChampTelephone libelle="Numéro de téléphone (pour se connecter)" pays={s.d.commerce.pays} verifier={!s.estDemoActuel()} valeur={b.telephone || ''} surChanger={(v) => setB({ ...b, telephone: v })} />
         <label className="champ"><span>Code PIN (4 chiffres)</span><input className="pin-saisie" inputMode="numeric" maxLength={4} value={b.pin || ''} onChange={(e) => setB({ ...b, pin: e.target.value })} placeholder="••••" /></label>
         {enLigne && b.id && <p className="tres-petit muet">Laissez vide pour garder le code actuel. Les codes sont gardés chiffrés sur le serveur : personne ne peut les lire.</p>}
         <p className="tres-petit muet">Il se connectera avec ce numéro et ce code PIN, sur n’importe quel appareil du commerce.</p>
@@ -366,7 +373,7 @@ export function FeuilleEntreeStock({ produitId }) {
         </div>
         <label className="champ"><span>Fournisseur</span><input list="fournisseurs" value={b.fournisseur} onChange={(e) => setB({ ...b, fournisseur: e.target.value })} placeholder="Ex : Grossiste Derb Omar" /></label>
         <datalist id="fournisseurs">{fournisseurs.map((f) => <option key={f} value={f} />)}</datalist>
-        {p && b.quantite > 0 && <p className="info-verte">Nouveau stock : {p.stock + Number(b.quantite)}{(b.prixAchat || p.prixAchat) ? ' · coût ' + s.prix(b.quantite * (b.prixAchat || p.prixAchat)) : ''}</p>}
+        {p && b.quantite > 0 && <p className="info-verte">Nouveau stock : {quantiteUnite(p.stock + Number(b.quantite), p.unite)}{(b.prixAchat || p.prixAchat) ? ' · coût ' + s.prix(b.quantite * (b.prixAchat || p.prixAchat)) : ''}</p>}
       </div>
     </Feuille>
   );
