@@ -17,6 +17,7 @@ const contenu = {
   variante: 'epicerie',
   lienDemo: LIEN_DEMO_EPICERIE,
   videos: ['epicerie'],
+  vignettes: ['presentation', 'produits', 'vendeurs'],
   titreVideo: 'Une journée d’épicerie, expliquée en une minute.',
   description,
   titre: 'Le logiciel de caisse pour épiceries et supérettes.',

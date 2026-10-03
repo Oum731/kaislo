@@ -1,32 +1,21 @@
 // ------------------------------------------------------------
-// PAGE « VIDÉOS » : toutes les démonstrations sur un seul lien,
-// à envoyer aux prospects (WhatsApp, e-mail, réseaux sociaux).
+// Ancienne adresse /videos/ : redirige vers /tutoriels/
+// (les liens déjà envoyés aux prospects continuent de marcher)
 // ------------------------------------------------------------
-import { EnTeteSite, PiedSite, SectionVideos, AppelFinal, LIEN_DEMO_RESTO } from '@/components/site/Site';
+import Link from 'next/link';
+import { chemin } from '@/config';
 
 export const metadata = {
-  title: 'Vidéos de démonstration',
-  description: 'Kaisly en vidéo : présentation en 1 minute, caisse restaurant, caisse épicerie, ajout des articles et gestion des vendeurs.',
-  alternates: { canonical: '/videos/' },
+  title: 'Tutoriels vidéo',
+  robots: { index: false },
+  alternates: { canonical: '/tutoriels/' },
 };
 
-export default function PageVideos() {
+export default function AncienneAdresseVideos() {
   return (
-    <div className="site">
-      <EnTeteSite />
-      <main>
-        <SectionVideos
-          titre="Kaisly en vidéo : regardez, puis essayez."
-          vedette="presentation"
-          lignes={[['restaurant', 'epicerie'], ['produits', 'vendeurs']]}
-        />
-        <AppelFinal
-          titre="Convaincu ? Essayez avec vos propres articles."
-          texte="Créez votre commerce en deux minutes : 30 jours gratuits, sans carte bancaire."
-          lienDemo={LIEN_DEMO_RESTO}
-        />
-      </main>
-      <PiedSite />
-    </div>
+    <>
+      <meta httpEquiv="refresh" content={'0; url=' + chemin('/tutoriels/')} />
+      <p style={{ padding: 24 }}>Les vidéos ont déménagé : <Link href="/tutoriels/">voir les tutoriels</Link>.</p>
+    </>
   );
 }

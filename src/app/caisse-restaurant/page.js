@@ -17,6 +17,7 @@ const contenu = {
   variante: 'resto',
   lienDemo: LIEN_DEMO_RESTO,
   videos: ['restaurant', 'vendeurs'],
+  vignettes: ['presentation', 'produits', 'epicerie'],
   titreVideo: 'Une commande complète, expliquée en une minute.',
   description,
   titre: 'Le logiciel de caisse pour restaurants, maquis et snacks.',

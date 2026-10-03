@@ -53,7 +53,7 @@ export default function PageAccueil() {
           captureMobile={{ src: '/captures/caisse-mobile.webp', alt: 'Écran de caisse Kaisly sur téléphone' }}
         />
 
-        <SectionVideos vedette="presentation" lignes={[["restaurant", "epicerie"]]} toutes />
+        <SectionVideos vedette="presentation" vignettes={["restaurant", "epicerie", "produits", "vendeurs"]} toutes />
 
         <section className="section" id="fonctions">
           <div className="site-largeur">

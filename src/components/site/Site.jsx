@@ -22,7 +22,7 @@ const LIENS_SITE = [
   ['/caisse-restaurant/', 'Restaurants'],
   ['/caisse-epicerie/', 'Épiceries'],
   ['/#fonctions', 'Fonctions'],
-  ['/videos/', 'Vidéos'],
+  ['/tutoriels/', 'Tutoriels'],
   ['/#questions', 'Questions'],
 ];
 
@@ -165,7 +165,7 @@ export const VIDEOS = {
 export function VideoDemo({ video }) {
   const v = VIDEOS[video];
   return (
-    <figure className={`video-demo ${v.vertical ? 'vertical' : ''}`}>
+    <figure id={video} className={`video-demo ${v.vertical ? 'vertical' : ''}`}>
       <div className="video-cadre">
         <video src={chemin(v.src)} poster={chemin(v.poster)} controls playsInline preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
       </div>
@@ -181,28 +181,62 @@ export function VideoDemo({ video }) {
 /**
  * Section de vidéos.
  * vedette : une vidéo mise en avant en grand · lignes : vidéos par ligne
- * (une vidéo paysage + une verticale par ligne, ou une seule) · toutes : lien vers la page /videos/
+ * (une vidéo paysage + une verticale par ligne, ou une seule) · vignettes : liens vers les autres tutoriels
+ * toutes : bouton vers la page /tutoriels/
  */
-export function SectionVideos({ titre = 'Voyez Kaisly en action, en une minute.', vedette, lignes = [], toutes = false, id = 'videos' }) {
+export function SectionVideos({ titre = 'Voyez Kaisly en action, en une minute.', vedette, lignes = [], vignettes = [], toutes = false, id = 'videos' }) {
   return (
     <section className="section claire" id={id}>
       <div className="site-largeur">
-        <span className="etiquette">Démonstration en vidéo</span>
-        <h2>{titre}</h2>
+        {titre && (
+          <>
+            <span className="etiquette">Démonstration en vidéo</span>
+            <h2>{titre}</h2>
+          </>
+        )}
         {vedette && <div className="grille-videos n1 vedette"><VideoDemo video={vedette} /></div>}
         {lignes.map((ligne) => (
           <div key={ligne.join()} className={`grille-videos n${ligne.length}`}>
             {ligne.map((v) => <VideoDemo key={v} video={v} />)}
           </div>
         ))}
+        {vignettes.length > 0 && <VignettesTutos videos={vignettes} />}
         <div className="boutons" style={{ marginTop: 28 }}>
           <Link href={LIEN_INSCRIPTION} className="btn grand">Créer mon commerce gratuitement</Link>
-          {toutes && <Link href="/videos/" className="btn secondaire grand">Toutes les vidéos <Icone nom="droite" taille="sm" /></Link>}
+          {toutes && <Link href="/tutoriels/" className="btn secondaire grand">Tous les tutoriels <Icone nom="droite" taille="sm" /></Link>}
         </div>
       </div>
     </section>
   );
 }
+
+// Vignettes cliquables : image, titre et durée ; mènent à la vidéo sur la page Tutoriels
+export function VignettesTutos({ videos, titre = 'Les autres tutoriels' }) {
+  return (
+    <div className="vignettes-tutos">
+      <h3>{titre}</h3>
+      <div className="grille-vignettes">
+        {videos.map((cle) => {
+          const v = VIDEOS[cle];
+          return (
+            <Link key={cle} href={'/tutoriels/#' + cle} className="vignette-tuto">
+              <span className="vignette-image">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={chemin(v.poster)} alt="" loading="lazy" decoding="async" />
+                <span className="vignette-lecture" aria-hidden="true">▶</span>
+                <span className="vignette-duree">{v.duree}</span>
+              </span>
+              <b>{v.titre}</b>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Liste des tutoriels, dans l'ordre de la page /tutoriels/
+export const TUTORIELS = ['presentation', 'restaurant', 'epicerie', 'produits', 'vendeurs'];
 
 // Une fonction expliquée à côté d'une capture
 export function FonctionLigne({ titre, texte, points = [], capture, inverse = false }) {

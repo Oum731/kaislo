@@ -10,7 +10,7 @@ export default function PageMetier({ c }) {
       <EnTeteSite />
       <main>
         <Hero titre={c.titre} chapo={c.chapo} lienDemo={c.lienDemo} garanties={c.garanties} capture={c.capture} captureMobile={c.captureMobile} />
-        {c.videos && <SectionVideos titre={c.titreVideo} lignes={[c.videos]} toutes />}
+        {c.videos && <SectionVideos titre={c.titreVideo} lignes={[c.videos]} vignettes={c.vignettes} toutes />}
         <section className="section">
           <div className="site-largeur">
             <span className="etiquette">{c.etiquette}</span>

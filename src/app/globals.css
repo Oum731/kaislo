@@ -808,3 +808,26 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .grille-videos.n1 { max-width: 860px; }
 .grille-videos.vedette { max-width: 960px; }
 .grille-videos + .grille-videos { margin-top: 48px; }
+
+/* ---------- Tutoriels : vignettes, sommaire, vidéo ciblée ---------- */
+.vignettes-tutos { margin-top: 40px; }
+.vignettes-tutos h3 { font-size: 18px; margin-bottom: 14px; }
+.grille-vignettes { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) { .grille-vignettes { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.vignette-tuto { display: block; text-decoration: none; color: var(--encre); }
+.vignette-tuto b { display: block; margin-top: 8px; font-size: 14.5px; line-height: 1.3; }
+.vignette-tuto:hover b { color: var(--vert); }
+.vignette-image { position: relative; display: block; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; border: 1px solid var(--bordure-forte); background: var(--encre); }
+.vignette-image img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; transition: transform .3s; }
+.vignette-tuto:hover .vignette-image img { transform: scale(1.04); }
+.vignette-lecture { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 46px; height: 46px; border-radius: 50%;
+  background: rgba(20, 33, 28, 0.82); color: #fff; display: grid; place-items: center; font-size: 16px; padding-left: 3px; }
+.vignette-duree { position: absolute; right: 8px; bottom: 8px; background: rgba(20, 33, 28, 0.82); color: #fff; font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
+.tutos-tete { padding: 48px 0 8px; background: var(--fond); }
+.tutos-tete h1 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -0.025em; line-height: 1.1; }
+.tutos-tete .chapo { font-size: 17px; color: var(--encre-2); margin-top: 12px; }
+.sommaire-tutos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.sommaire-tutos .puce { text-decoration: none; }
+.video-demo { scroll-margin-top: 80px; }
+.video-demo:target .video-cadre { outline: 3px solid var(--safran); outline-offset: 4px; }
+#tutoriels.section { padding-top: 24px; } #tutoriels .grille-videos:first-child { margin-top: 0; }
