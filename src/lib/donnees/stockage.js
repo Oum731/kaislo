@@ -137,6 +137,7 @@ export function creerCommerce(infos) {
       tables: typeCommerce(infos.type).tables ? TABLES_DEPART : [],
       creeLe: new Date().toISOString(),
       gerantNom: infos.gerantNom,
+      conditionsAccepteesLe: infos.conditionsAccepteesLe || null, // date d'acceptation des conditions d'utilisation
       abonnement: nouvelAbonnement(), // essai gratuit de 30 jours
     },
     utilisateurs: [

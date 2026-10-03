@@ -18,6 +18,28 @@ export const SITE_SLOGAN = 'La caisse simple pour restaurants et épiceries';
 export const CONTACT_WHATSAPP = '212600000000'; // numéro WhatsApp d'Amorac (sans +)
 export const CONTACT_EMAIL = 'contact@amorac.com';
 
+// Informations légales (pages Mentions légales, Confidentialité, Conditions…).
+// À COMPLÉTER avant le lancement commercial : un champ vide n'est pas affiché.
+export const SOCIETE = {
+  nom: 'Amorac',
+  formeJuridique: '', // ex : SARL au capital de 100 000 MAD
+  adresse: '', // adresse du siège
+  immatriculation: '', // ex : RC Casablanca 123456 · ICE 000000000000000
+  directeurPublication: '', // nom de la personne responsable du site
+  emailDonnees: 'contact@amorac.com', // demandes sur les données personnelles
+  emailSecurite: 'contact@amorac.com', // signalement de failles de sécurité
+};
+
+// Hébergeur du site (à modifier lors du passage sur Hostinger)
+export const HEBERGEUR = {
+  nom: 'GitHub Pages (GitHub, Inc.)',
+  adresse: '88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis',
+  site: 'https://pages.github.com',
+};
+
+// Date affichée en haut des pages légales (à changer à chaque modification)
+export const DATE_PAGES_LEGALES = '3 octobre 2026';
+
 // Mot de passe de l'espace Amorac (/admin) — DÉMONSTRATION SEULEMENT.
 // Dans la vraie version, l'accès sera protégé par le serveur (comptes de l'équipe).
 export const ADMIN_MOT_DE_PASSE = 'amorac2026';

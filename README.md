@@ -83,3 +83,11 @@ npm run publier-github
 
 Le site est alors construit pour le sous-dossier `/kaisly` et envoyé sur la branche `gh-pages`.
 Ensuite, relancez `npm run build` avant tout envoi sur Hostinger (dossier `out/` normal).
+
+## Pages légales
+
+Conditions d'utilisation, confidentialité, cookies, sécurité, mentions légales : `src/app/<page>/page.js`.
+Avant le lancement commercial :
+- compléter `SOCIETE` et `HEBERGEUR` dans `src/config.js` (forme juridique, siège, immatriculation, responsable) ;
+- changer `DATE_PAGES_LEGALES` à chaque modification ;
+- faire relire les textes par un juriste du pays du siège d'Amorac.

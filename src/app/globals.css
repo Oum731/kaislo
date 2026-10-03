@@ -734,9 +734,41 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 
 .site-pied { background: var(--encre); color: rgba(246, 245, 241, 0.7); padding: 40px 0 28px; font-size: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .site-pied .colonnes { display: grid; gap: 24px; }
-@media (min-width: 800px) { .site-pied .colonnes { grid-template-columns: 2fr 1fr 1fr; } }
+@media (min-width: 800px) { .site-pied .colonnes { grid-template-columns: 1.6fr 1fr 1fr 1fr; } }
 .site-pied h4 { color: var(--creme); font-size: 14px; margin-bottom: 10px; }
 .site-pied a { display: block; text-decoration: none; padding: 3px 0; }
 .site-pied a:hover { color: var(--creme); }
 .site-pied .logo { color: var(--creme); }
 .site-pied .bas { border-top: 1px solid rgba(255, 255, 255, 0.08); margin-top: 32px; padding-top: 18px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+
+/* ---------- Pages légales (conditions, confidentialité, cookies…) ---------- */
+.legal { padding-top: 48px; padding-bottom: 72px; }
+.legal-tete { max-width: 760px; padding-bottom: 28px; border-bottom: 1px solid var(--bordure); }
+.legal-tete h1 { font-size: clamp(30px, 4vw, 42px); letter-spacing: -0.025em; line-height: 1.1; }
+.legal-tete .chapo { font-size: 17px; color: var(--encre-2); margin: 12px 0 10px; }
+.legal-grille { display: grid; gap: 28px; margin-top: 32px; }
+.legal-sommaire { display: none; }
+.legal-sommaire a { display: block; padding: 5px 0; font-size: 14px; color: var(--encre-2); text-decoration: none; }
+.legal-sommaire a:hover { color: var(--vert); }
+.legal-texte { max-width: 760px; min-width: 0; }
+.legal-texte section { padding: 6px 0 22px; scroll-margin-top: 80px; }
+.legal-texte h2 { font-size: 21px; letter-spacing: -0.015em; margin-bottom: 10px; }
+.legal-texte h3 { font-size: 16px; margin: 16px 0 6px; }
+.legal-texte p, .legal-texte li { color: var(--encre-2); line-height: 1.65; }
+.legal-texte p + p { margin-top: 10px; }
+.legal-texte ul { padding-left: 20px; margin: 8px 0; }
+.legal-texte li + li { margin-top: 4px; }
+.legal-texte a { color: var(--vert); }
+.legal-texte .tableau-legal { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14.5px; display: block; overflow-x: auto; }
+.legal-texte .tableau-legal th, .legal-texte .tableau-legal td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--bordure); vertical-align: top; color: var(--encre-2); }
+.legal-texte .tableau-legal th { color: var(--encre); font-weight: 600; white-space: nowrap; }
+.legal-texte .encadre { background: var(--fond); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 14px 16px; margin: 10px 0; }
+@media (min-width: 960px) {
+  .legal-grille { grid-template-columns: 220px minmax(0, 1fr); gap: 56px; }
+  .legal-sommaire { display: block; position: sticky; top: 86px; align-self: start; }
+}
+
+/* Case « J'accepte les conditions » (inscription) */
+.case-accord { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--encre-2); line-height: 1.5; cursor: pointer; }
+.case-accord input { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: var(--vert); }
+.case-accord a { color: var(--vert); }

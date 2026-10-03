@@ -14,7 +14,7 @@ import { COMMERCES_DEMO } from '@/lib/donnees/demo';
 import { telephoneDejaUtilise } from '@/lib/donnees/stockage';
 import { TYPES_COMMERCE, PAYS, paysParId, paysDuNavigateur, cleTelephone } from '@/lib/donnees/modeles';
 import { symbole, NOMS_DEVISES } from '@/lib/utils/format';
-import { CONTACT_WHATSAPP } from '@/config';
+import { CONTACT_WHATSAPP, chemin } from '@/config';
 import { Icone, Avatar, ImageStockee } from '@/components/ui';
 
 export default function Connexion() {
@@ -224,7 +224,7 @@ function CommerceSuspendu() {
 function Inscription() {
   const s = useKaisly();
   const [etape, setEtape] = useState(1);
-  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '' });
+  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false });
   const maj = (champ) => (e) => setF({ ...f, [champ]: e.target.value });
 
   const continuer = () => {
@@ -238,7 +238,8 @@ function Inscription() {
     if (telephoneDejaUtilise(f.gerantTelephone)) return s.message('Ce numéro est déjà utilisé par un compte Kaisly. Connectez-vous plutôt.', 'erreur');
     if (!/^\d{4}$/.test(f.gerantPin)) return s.message('Le code PIN doit contenir 4 chiffres', 'erreur');
     if (f.gerantPin !== f.gerantPin2) return s.message('Les deux codes PIN ne sont pas identiques', 'erreur');
-    s.inscrire({ ...f, nom: f.nom.trim(), ville: f.ville.trim(), telephone: f.telephone.trim(), gerantNom: f.gerantNom.trim(), gerantTelephone: f.gerantTelephone.trim() });
+    if (!f.accepte) return s.message('Merci d’accepter les conditions d’utilisation pour continuer', 'erreur');
+    s.inscrire({ ...f, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), telephone: f.telephone.trim(), gerantNom: f.gerantNom.trim(), gerantTelephone: f.gerantTelephone.trim() });
   };
   const pays = paysParId(f.pays);
 
@@ -296,6 +297,10 @@ function Inscription() {
             <label className="champ"><span>Confirmez le PIN</span><input className="pin-saisie" type="password" inputMode="numeric" autoComplete="new-password" maxLength={4} value={f.gerantPin2} onChange={maj('gerantPin2')} placeholder="••••" /></label>
           </div>
           <p className="tres-petit muet">Ce code sert aussi à valider les annulations. Ne le donnez pas à vos vendeurs : chacun aura son propre numéro et son propre PIN.</p>
+          <label className="case-accord">
+            <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
+            <span>J’accepte les <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">conditions d’utilisation</a> et la <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">politique de confidentialité</a> de Kaisly.</span>
+          </label>
           <button type="submit" className="btn grand bloc">Créer mon commerce</button>
         </form>
       )}

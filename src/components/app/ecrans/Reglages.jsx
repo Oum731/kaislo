@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useKaisly } from '@/store/kaisly';
 import { typeCommerce, paysParId } from '@/lib/donnees/modeles';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
+import { exporterTout, exporterVentesCsv } from '@/lib/donnees/export';
 import { NOMS_DEVISES, formatDate } from '@/lib/utils/format';
 import { etatAbonnement, LIBELLES_STATUT, OFFRES_DEFAUT } from '@/lib/donnees/abonnement';
 import { Icone, Segment, Interrupteur, Avatar, ApercuTicket, Reglage, ChampMontant, ChoixImage, ImageStockee } from '@/components/ui';
@@ -171,6 +172,16 @@ function InfosCommerce() {
           <label className="champ"><span>Devise</span><input disabled value={NOMS_DEVISES[d.commerce.devise] || d.commerce.devise} /></label>
         </div>
         <p className="tres-petit muet">Paiements acceptés : {d.commerce.modesPaiement.join(', ')} et crédit client.</p>
+      </div>
+
+      <p className="section-titre">Vos données</p>
+      <div className="carte pile">
+        <p className="petit muet">Vos données vous appartiennent. Téléchargez-les à tout moment : pour votre comptable, ou pour garder une copie.</p>
+        <div className="grille-2">
+          <button className="btn secondaire" onClick={() => exporterVentesCsv(d)}>Ventes (Excel, CSV)</button>
+          <button className="btn secondaire" onClick={() => exporterTout(d)}>Sauvegarde complète</button>
+        </div>
+        <p className="tres-petit muet">La sauvegarde complète contient articles, ventes, clients, dépenses et journées de caisse. Les codes PIN n’y figurent pas.</p>
       </div>
 
       <p className="section-titre">Cet appareil</p>

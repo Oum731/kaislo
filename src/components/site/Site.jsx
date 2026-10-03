@@ -36,6 +36,15 @@ export function EnTeteSite() {
   );
 }
 
+// Liste des pages légales (reprise dans le pied de page et le sitemap)
+export const PAGES_LEGALES = [
+  ['/conditions-utilisation/', 'Conditions d’utilisation'],
+  ['/confidentialite/', 'Confidentialité'],
+  ['/cookies/', 'Cookies et stockage'],
+  ['/securite/', 'Sécurité'],
+  ['/mentions-legales/', 'Mentions légales'],
+];
+
 export function PiedSite() {
   return (
     <footer className="site-pied">
@@ -51,6 +60,10 @@ export function PiedSite() {
             <Link href="/caisse-epicerie/">Caisse pour épicerie</Link>
             <Link href="/app/">Se connecter</Link>
             <Link href={LIEN_INSCRIPTION}>Créer mon commerce</Link>
+          </div>
+          <div>
+            <h4>Informations légales</h4>
+            {PAGES_LEGALES.map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
           </div>
           <div>
             <h4>Contact</h4>
