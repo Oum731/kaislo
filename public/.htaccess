@@ -18,3 +18,9 @@ ErrorDocument 404 /404.html
     Header set Cache-Control "no-cache"
   </FilesMatch>
 </IfModule>
+
+# Fichiers cachés (.env…) jamais accessibles depuis le web
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+Options -Indexes

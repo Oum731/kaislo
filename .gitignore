@@ -6,3 +6,6 @@ dist
 *.log
 .env*
 videos-erreur.png
+
+# Base SQLite des tests locaux de l API
+*.sqlite

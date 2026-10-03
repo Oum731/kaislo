@@ -1,0 +1,25 @@
+# ------------------------------------------------------------
+# API Kaisly sur Hostinger (Apache) : toutes les adresses /api/... vont vers index.php
+# ------------------------------------------------------------
+RewriteEngine On
+
+# Toujours en HTTPS (les règles du dossier parent ne s'appliquent pas ici)
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Le dossier lib/ (code interne) n'est jamais accessible depuis le web
+RewriteRule ^lib(/|$) - [F,L]
+
+# Transmet l'en-tête Authorization à PHP (Hostinger le masque sinon)
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Tout le reste passe par index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]
+
+# Fichiers cachés (.env…) et bases de test : interdits
+<FilesMatch "(^\.|\.(sqlite|env|log)$)">
+  Require all denied
+</FilesMatch>
+Options -Indexes

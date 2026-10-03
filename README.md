@@ -108,3 +108,26 @@ Textes dits et sous-titres : `scripts/videos-demo.mjs` (fonction `titre(p, sous-
 Les phrases déjà fabriquées sont gardées dans `outils/voix-cache/`.
 Note : la voix passe par le service de lecture à voix haute de Microsoft Edge (outil edge-tts, non officiel).
 Pour un usage commercial à grande échelle, prévoir les mêmes voix via Azure Speech (offre gratuite disponible).
+
+## Hébergement Hostinger (site + API PHP)
+
+Domaine provisoire : https://darkgrey-albatross-393608.hostingersite.com
+
+L'API PHP (dossier `api/`, PHP simple sans framework) répond sur `/api/...` :
+`GET /api/sante`, `POST /api/inscription`, `POST /api/connexion`, `GET /api/moi`, `POST /api/deconnexion`.
+Les tables MySQL sont créées automatiquement au premier appel.
+
+**Publier :** `npm run publier-hostinger` (site + API envoyés sur la branche `hostinger` de GitHub).
+
+**Réglages à faire une seule fois dans hPanel :**
+1. Avancé → Configuration PHP : PHP 8.1 ou plus récent.
+2. Gestionnaire de fichiers : vider `public_html` (supprimer la page par défaut).
+3. Avancé → GIT : dépôt `https://github.com/Oum731/kaisly.git`, branche `hostinger`, dossier vide → Créer, puis « Déployer ».
+   Facultatif : activer le déploiement automatique et coller l'adresse du webhook dans GitHub → Settings → Webhooks.
+4. Gestionnaire de fichiers : créer le fichier `.env` dans le dossier **au-dessus** de `public_html`
+   (`domains/<domaine>/.env`), avec `Db`, `User`, `Password` (base MySQL créée dans hPanel).
+   Le serveur MySQL est `localhost` sur Hostinger (clé `DbHost` seulement s'il est différent).
+5. Vérifier : `https://<domaine>/api/sante` doit afficher `"ok":true`.
+
+**Tester l'API sur l'ordinateur :** PHP 8.1+ avec une base SQLite de test :
+`.env` de test avec `DbDriver=sqlite`, puis `php -S 127.0.0.1:4320 api/index.php`.
