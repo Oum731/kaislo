@@ -3,4 +3,4 @@ Allow: /
 Disallow: /app/
 Disallow: /admin/
 
-Sitemap: https://kaisly.amorac.com/sitemap.xml
+Sitemap: https://kaislo.com/sitemap.xml

@@ -3,7 +3,7 @@
 // pour qu'elle s'ouvre vite, même avec une mauvaise connexion.
 // Changer VERSION à chaque mise en ligne force la mise à jour.
 // ------------------------------------------------------------
-const VERSION = 'kaisly-v4';
+const VERSION = 'kaislo-v6'; // v6 : les réponses de l'API ne sont plus jamais mises en cache
 // Dossier du site ("/" sur Hostinger, "/kaisly/" sur GitHub Pages)
 const RACINE = new URL(self.registration.scope).pathname;
 
@@ -18,7 +18,10 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  const adresse = new URL(e.request.url);
+  if (e.request.method !== 'GET' || adresse.origin !== location.origin) return;
+  // L'API (données, messages, connexion) passe toujours par le réseau : jamais de copie périmée
+  if (adresse.pathname.startsWith(RACINE + 'api/')) return;
   // Pages : réseau d'abord (dernière version), sinon la copie
   if (e.request.mode === 'navigate') {
     e.respondWith(

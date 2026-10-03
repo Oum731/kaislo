@@ -1,6 +1,6 @@
 <?php
 // ------------------------------------------------------------
-// API KAISLY (PHP simple, sans framework) — point d'entrée unique.
+// API KAISLO (PHP simple, sans framework) — point d'entrée unique.
 // Toutes les adresses /api/... arrivent ici (voir api/.htaccess).
 //
 //   GET  /api/sante         l'API et la base répondent-elles ?
@@ -11,6 +11,8 @@
 //   GET|POST /api/donnees   synchronisation des caisses (voir lib/donnees.php)
 //   POST /api/utilisateurs  vendeurs (gérant) · POST /api/verifier-gerant (annulation)
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
+//   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
+//   /api/admin/...          espace Amorac : commerces, abonnements, offres, équipe (voir lib/admin.php)
 //
 // Réponses en JSON : { ok: true, ... } ou { ok: false, erreur: "message" }.
 // PHP 8.1 minimum (à choisir dans hPanel → Avancé → Configuration PHP).
@@ -20,9 +22,12 @@ declare(strict_types=1);
 require __DIR__ . '/lib/config.php';
 require __DIR__ . '/lib/base.php';
 require __DIR__ . '/lib/outils.php';
+require __DIR__ . '/lib/telephone.php';
 require __DIR__ . '/lib/donnees.php';
 require __DIR__ . '/lib/equipe.php';
 require __DIR__ . '/lib/biometrie.php';
+require __DIR__ . '/lib/messages.php';
+require __DIR__ . '/lib/admin.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -50,13 +55,30 @@ try {
         'POST /biometrie/defi' => routeBiometrieDefi(),
         'POST /biometrie/enregistrer' => routeBiometrieEnregistrer(),
         'POST /biometrie/connexion' => routeBiometrieConnexion(),
+        'GET /messages' => routeMessagesLire(),
+        'POST /messages' => routeMessagesEcrire(),
+        'GET /admin/etat' => routeAdminEtat(),
+        'POST /admin/installer' => routeAdminInstaller(),
+        'POST /admin/connexion' => routeAdminConnexion(),
+        'POST /admin/deconnexion' => routeAdminDeconnexion(),
+        'GET /admin/moi' => routeAdminMoi(),
+        'GET /admin/commerces' => routeAdminCommerces(),
+        'GET /admin/commerce' => routeAdminCommerce(),
+        'POST /admin/commerce' => routeAdminActionCommerce(),
+        'POST /admin/paiement' => routeAdminPaiement(),
+        'POST /admin/offres' => routeAdminOffres(),
+        'GET /admin/equipe' => routeAdminEquipe(),
+        'POST /admin/equipe' => routeAdminEquipeEnregistrer(),
+        'GET /admin/conversations' => routeAdminConversations(),
+        'GET /admin/messages' => routeAdminMessagesLire(),
+        'POST /admin/messages' => routeAdminMessagesEcrire(),
         default => throw new ErreurApi('Adresse inconnue', 404),
     };
 } catch (ErreurApi $e) {
     repondre(['ok' => false, 'erreur' => $e->getMessage()], $e->statut);
 } catch (Throwable $e) {
     // Détail dans le journal d'erreurs du serveur seulement
-    error_log('[Kaisly API] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    error_log('[Kaislo API] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
     $message = $e instanceof PDOException ? 'Base de données indisponible, réessayez dans un instant' : 'Erreur du serveur, réessayez dans un instant';
     repondre(['ok' => false, 'erreur' => $message], 500);
 }
@@ -68,7 +90,7 @@ function routeSante(): never
     if (!$c['trouve']) throw new ErreurApi('Fichier .env introuvable sur le serveur', 500);
     base(); // connexion + création des tables si besoin
     $version = (int) requete('SELECT MAX(version) AS v FROM kaisly_version')->fetch()['v'];
-    repondre(['ok' => true, 'service' => 'Kaisly API', 'base' => $c['driver'], 'versionBase' => $version, 'heure' => maintenant()]);
+    repondre(['ok' => true, 'service' => 'Kaislo API', 'base' => $c['driver'], 'versionBase' => $version, 'heure' => maintenant()]);
 }
 
 // ---------- POST /api/inscription ----------
@@ -89,19 +111,24 @@ function routeInscription(): never
     $pays = strtoupper((string) ($commerce['pays'] ?? ''));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Pays non pris en charge');
     $ville = texte($commerce, 'ville', 'la ville');
-    $telCommerce = texte($commerce, 'telephone', 'le téléphone du commerce', false, 40);
-
+    // Numéros obligatoires, au format international du pays, uniques dans tout Kaislo
+    $numCommerce = telephoneValide(texte($commerce, 'telephone', 'le téléphone du commerce', true, 40), $pays, 'téléphone du commerce');
     $nomGerant = texte($gerant, 'nom', 'votre nom');
-    $telGerant = texte($gerant, 'telephone', 'votre numéro de téléphone', true, 40);
-    $cle = cleTelephone($telGerant);
-    if (!$cle) throw new ErreurApi('Numéro de téléphone incomplet');
+    $numGerant = telephoneValide(texte($gerant, 'telephone', 'votre numéro de téléphone', true, 40), $pays, 'votre numéro');
+    $cle = $numGerant['cle'];
+    $telGerant = $numGerant['affichage'];
     $pin = (string) ($gerant['pin'] ?? '');
     if (!preg_match('/^\d{4}$/', $pin)) throw new ErreurApi('Le code PIN doit contenir 4 chiffres');
     if (($e['conditionsAcceptees'] ?? false) !== true) throw new ErreurApi('Merci d’accepter les conditions d’utilisation');
 
-    if (requete('SELECT 1 FROM utilisateurs WHERE cle_telephone = ?', [$cle])->fetch()) {
+    if (numeroPrisAilleurs($cle, null)) {
         noterEchec($cleIp, 20);
-        throw new ErreurApi('Ce numéro est déjà utilisé par un compte Kaisly. Connectez-vous plutôt.', 409);
+        throw new ErreurApi('Votre numéro est déjà utilisé par un compte Kaislo. Connectez-vous plutôt.', 409);
+    }
+    // Le numéro du commerce peut être celui du gérant, mais pas celui d'un autre compte ou commerce
+    if ($numCommerce['cle'] !== $cle && numeroPrisAilleurs($numCommerce['cle'], null)) {
+        noterEchec($cleIp, 20);
+        throw new ErreurApi('Le numéro du commerce est déjà utilisé par un autre compte Kaislo.', 409);
     }
 
     $pdo = base();
@@ -110,9 +137,9 @@ function routeInscription(): never
         // Code du commerce : 6 chiffres, unique
         do { $code = (string) random_int(100000, 999999); } while (requete('SELECT 1 FROM commerces WHERE code = ?', [$code])->fetch());
         $idCommerce = nouvelId('com');
-        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $telCommerce ?: $telGerant,
+        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $numCommerce['affichage'], $numCommerce['cle'],
             'essai', 'essai', maintenant(DUREE_ESSAI_JOURS * 86400), null, maintenant(), maintenant(), maintenant(),
         ]);
         $utilisateur = [
@@ -136,13 +163,13 @@ function routeInscription(): never
 }
 
 // ---------- POST /api/connexion ----------
-// { telephone, pin, appareil }
+// { telephone, pays, pin, appareil } — pays : celui choisi sur l'écran de connexion
 function routeConnexion(): never
 {
     $e = entree();
-    $cle = cleTelephone((string) ($e['telephone'] ?? ''));
+    $cle = cleConnexion((string) ($e['telephone'] ?? ''), strtoupper((string) ($e['pays'] ?? '')));
     $pin = (string) ($e['pin'] ?? '');
-    if (!$cle) throw new ErreurApi('Indiquez votre numéro de téléphone');
+    if (!$cle) throw new ErreurApi('Numéro de téléphone incomplet : vérifiez le pays et le numéro');
     if (!preg_match('/^\d{4}$/', $pin)) throw new ErreurApi('Le code PIN contient 4 chiffres');
 
     // Blocage par numéro (5 codes faux) et par adresse (30 codes faux, tous numéros confondus)

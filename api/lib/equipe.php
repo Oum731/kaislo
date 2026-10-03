@@ -20,11 +20,13 @@ function routeUtilisateur(): never
     if ($id !== '' && !$existant) throw new ErreurApi('Vendeur introuvable', 404);
 
     $nom = texte($e, 'nom', 'le nom');
-    $telephone = texte($e, 'telephone', 'le numéro de téléphone', true, 40);
-    $cle = cleTelephone($telephone);
-    if (!$cle) throw new ErreurApi('Indiquez le numéro de téléphone : il sert à se connecter');
+    // Numéro au format international du pays du commerce, unique dans tout Kaislo
+    $pays = (string) requete('SELECT pays FROM commerces WHERE id = ?', [$moi['commerce_id']])->fetch()['pays'];
+    $numero = telephoneValide(texte($e, 'telephone', 'le numéro de téléphone', true, 40), $pays, 'numéro de téléphone');
+    $telephone = $numero['affichage'];
+    $cle = $numero['cle'];
     $autre = requete('SELECT id FROM utilisateurs WHERE cle_telephone = ?', [$cle])->fetch();
-    if ($autre && $autre['id'] !== $id) throw new ErreurApi('Ce numéro est déjà utilisé par un autre compte Kaisly', 409);
+    if (($autre && $autre['id'] !== $id) || numeroPrisAilleurs($cle, $moi['commerce_id'])) throw new ErreurApi('Ce numéro est déjà utilisé par un autre compte Kaislo', 409);
 
     $pin = (string) ($e['pin'] ?? '');
     if ($pin !== '' || !$existant) {

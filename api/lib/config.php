@@ -12,6 +12,9 @@
 //   Host                : nom de domaine du site (informatif)
 //   DbDriver            : « mysql » (par défaut) ou « sqlite » (tests sur ordinateur)
 //   DbFichier           : chemin du fichier SQLite (tests seulement)
+//   CleAdmin            : clé pour créer le premier compte de l'espace Amorac (12 caractères ou plus)
+//   EmailEquipe         : adresse qui reçoit les messages des commerces (par défaut contact@amorac.com)
+//   EmailExpediteur     : expéditeur des e-mails envoyés par Kaislo (ex : no-reply@kaislo.com)
 // ------------------------------------------------------------
 
 function lireFichierEnv(string $fichier): array
@@ -34,7 +37,7 @@ function config(): array
 
     // Fichier imposé (tests), sinon recherche du .env du plus sûr au moins sûr
     $candidats = array_filter([
-        getenv('KAISLY_ENV_FICHIER') ?: null,
+        getenv('KAISLO_ENV_FICHIER') ?: null,
         dirname(__DIR__, 3) . '/.env', // au-dessus de public_html
         dirname(__DIR__, 2) . '/.env', // public_html (ou racine du projet sur l'ordinateur)
         dirname(__DIR__) . '/.env',    // public_html/api
@@ -50,9 +53,17 @@ function config(): array
         'utilisateur' => $valeurs['User'] ?? '',
         'motDePasse' => $valeurs['Password'] ?? '',
         'serveur' => $valeurs['DbHost'] ?? 'localhost',
-        'fichierSqlite' => $valeurs['DbFichier'] ?? (dirname(__DIR__) . '/kaisly-test.sqlite'),
+        'fichierSqlite' => $valeurs['DbFichier'] ?? (dirname(__DIR__) . '/kaislo-test.sqlite'),
         'domaine' => $valeurs['Host'] ?? '',
         'trouve' => $valeurs !== [],
+        'brut' => $valeurs, // toutes les clés du .env (CleAdmin, EmailEquipe…)
     ];
     return $config;
+}
+
+// Valeur d'une clé du .env (null si absente)
+function lireFichierEnvCle(string $cle): ?string
+{
+    $v = config()['brut'][$cle] ?? null;
+    return $v === null || $v === '' ? null : (string) $v;
 }
