@@ -91,3 +91,20 @@ Avant le lancement commercial :
 - compléter `SOCIETE` et `HEBERGEUR` dans `src/config.js` (forme juridique, siège, immatriculation, responsable) ;
 - changer `DATE_PAGES_LEGALES` à chaque modification ;
 - faire relire les textes par un juriste du pays du siège d'Amorac.
+
+## Vidéos de démonstration
+
+Les 5 vidéos de `public/videos/` (présentation, restaurant, épicerie, ajout d'articles, vendeurs)
+sont tournées automatiquement dans la vraie démo, avec voix off (Vivienne) et musique composée par le script.
+
+```
+pip install edge-tts      # une seule fois : la voix
+npm run build
+npm run videos            # toutes les vidéos (environ 15 min la première fois)
+npm run videos -- produits   # une seule vidéo
+```
+
+Textes dits et sous-titres : `scripts/videos-demo.mjs` (fonction `titre(p, sous-titre, phrase dite)`).
+Les phrases déjà fabriquées sont gardées dans `outils/voix-cache/`.
+Note : la voix passe par le service de lecture à voix haute de Microsoft Edge (outil edge-tts, non officiel).
+Pour un usage commercial à grande échelle, prévoir les mêmes voix via Azure Speech (offre gratuite disponible).

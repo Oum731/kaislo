@@ -128,31 +128,31 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
 // Les vidéos de démonstration (public/videos/, générées par "npm run videos")
 export const VIDEOS = {
   presentation: {
-    src: '/videos/presentation-kaisly.mp4', poster: '/videos/presentation-kaisly.webp', duree: '1 min',
-    titre: 'Kaisly en 1 minute',
+    src: '/videos/presentation-kaisly.mp4', poster: '/videos/presentation-kaisly.webp', duree: '1 min 20',
+    titre: 'Présentation de Kaisly',
     texte: 'Le tour complet : tableau de bord, caisse, tables, ventes et journées de caisse, crédit, articles, équipe.',
     lienDemo: LIEN_DEMO_RESTO,
   },
   restaurant: {
-    src: '/videos/demo-restaurant.mp4', poster: '/videos/demo-restaurant.webp', duree: '40 s',
+    src: '/videos/demo-restaurant.mp4', poster: '/videos/demo-restaurant.webp', duree: '1 min',
     titre: 'Restaurant : de la commande au ticket',
     texte: 'Plats avec accompagnements, paiement Wave, ticket imprimé ou envoyé par WhatsApp, chiffre du jour.',
     lienDemo: LIEN_DEMO_RESTO,
   },
   epicerie: {
-    src: '/videos/demo-epicerie.mp4', poster: '/videos/demo-epicerie.webp', duree: '45 s', vertical: true,
+    src: '/videos/demo-epicerie.mp4', poster: '/videos/demo-epicerie.webp', duree: '1 min', vertical: true,
     titre: 'Épicerie : vente, crédit et caisse du soir',
     texte: 'Recherche d’article, vente à crédit notée dans le carnet, fermeture de caisse juste.',
     lienDemo: LIEN_DEMO_EPICERIE,
   },
   produits: {
-    src: '/videos/ajout-produits.mp4', poster: '/videos/ajout-produits.webp', duree: '50 s',
+    src: '/videos/ajout-produits.mp4', poster: '/videos/ajout-produits.webp', duree: '1 min 10',
     titre: 'Ajouter un article',
     texte: 'Nouveau plat, nouvelle catégorie, prix d’achat et marge calculée, accompagnements et suppléments : prêt à vendre tout de suite.',
     lienDemo: LIEN_DEMO_RESTO,
   },
   vendeurs: {
-    src: '/videos/gestion-vendeurs.mp4', poster: '/videos/gestion-vendeurs.webp', duree: '40 s', vertical: true,
+    src: '/videos/gestion-vendeurs.mp4', poster: '/videos/gestion-vendeurs.webp', duree: '1 min', vertical: true,
     titre: 'Gérer ses vendeurs',
     texte: 'Un compte et un code PIN par vendeur, des droits au choix, désactivation en un geste, ventes de chacun.',
     lienDemo: LIEN_DEMO_RESTO,
@@ -161,15 +161,16 @@ export const VIDEOS = {
 
 // Une vidéo de démonstration avec son titre et un lien pour essayer la même démo.
 // preload="none" : rien n'est téléchargé avant que le visiteur appuie sur lecture.
+// Les vidéos ont une voix et une musique : pas de « muted ».
 export function VideoDemo({ video }) {
   const v = VIDEOS[video];
   return (
     <figure className={`video-demo ${v.vertical ? 'vertical' : ''}`}>
       <div className="video-cadre">
-        <video src={chemin(v.src)} poster={chemin(v.poster)} controls playsInline muted preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
+        <video src={chemin(v.src)} poster={chemin(v.poster)} controls playsInline preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
       </div>
       <figcaption>
-        <h3>{v.titre} <span className="badge">{v.duree}</span></h3>
+        <h3>{v.titre} <span className="badge">{v.duree} · avec voix</span></h3>
         <p>{v.texte}</p>
         <Link href={v.lienDemo} className="suite">Essayer la démo →</Link>
       </figcaption>
@@ -182,7 +183,7 @@ export function VideoDemo({ video }) {
  * vedette : une vidéo mise en avant en grand · lignes : vidéos par ligne
  * (une vidéo paysage + une verticale par ligne, ou une seule) · toutes : lien vers la page /videos/
  */
-export function SectionVideos({ titre = 'Voyez Kaisly en action, en moins d’une minute.', vedette, lignes = [], toutes = false, id = 'videos' }) {
+export function SectionVideos({ titre = 'Voyez Kaisly en action, en une minute.', vedette, lignes = [], toutes = false, id = 'videos' }) {
   return (
     <section className="section claire" id={id}>
       <div className="site-largeur">

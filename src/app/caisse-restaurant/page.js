@@ -17,7 +17,7 @@ const contenu = {
   variante: 'resto',
   lienDemo: LIEN_DEMO_RESTO,
   videos: ['restaurant', 'vendeurs'],
-  titreVideo: 'Une commande complète, en 40 secondes.',
+  titreVideo: 'Une commande complète, expliquée en une minute.',
   description,
   titre: 'Le logiciel de caisse pour restaurants, maquis et snacks.',
   capture: { src: '/captures/tables-ordi.webp', alt: 'Plan des tables du restaurant dans Kaisly' },

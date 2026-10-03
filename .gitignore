@@ -5,3 +5,4 @@ outils
 dist
 *.log
 .env*
+videos-erreur.png
