@@ -3,12 +3,12 @@
 // BASE DE DONNÉES : connexion (MySQL sur Hostinger, SQLite pour les tests)
 // et création automatique des tables à la première utilisation.
 //
-// Pour ajouter une table ou une colonne : l'ajouter dans STRUCTURE,
-// puis augmenter VERSION_BASE (les tables existantes ne sont pas touchées ;
-// une nouvelle colonne demande une petite migration dans migrer()).
+// Pour ajouter une table : l'ajouter dans STRUCTURE et augmenter VERSION_BASE.
+// Pour ajouter une colonne à une table existante : l'ajouter dans STRUCTURE
+// ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 1;
+const VERSION_BASE = 2;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -50,8 +50,9 @@ const STRUCTURE = [
         'colonnes' => [
             'commerce_id' => 'ID', 'type' => 'VARCHAR(20)', 'id' => 'VARCHAR(40)', 'contenu' => 'LONG',
             'modifie_le' => 'DATE', 'supprime' => 'ENTIER',
+            'recu_le' => 'DATE', // heure d'arrivée sur le serveur : sert à envoyer les nouveautés aux autres appareils
         ],
-        'cle' => ['commerce_id', 'type', 'id'], 'uniques' => [], 'index' => [['commerce_id', 'modifie_le']],
+        'cle' => ['commerce_id', 'type', 'id'], 'uniques' => [], 'index' => [['commerce_id', 'modifie_le'], ['commerce_id', 'recu_le']],
     ],
     // Paiements des abonnements (enregistrés par l'équipe Amorac ou le prestataire de paiement)
     'paiements' => [
@@ -60,6 +61,20 @@ const STRUCTURE = [
             'mois' => 'ENTIER', 'moyen' => 'VARCHAR(30)', 'note' => 'TEXTE', 'cree_par' => 'TEXTE',
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id']],
+    ],
+    // Empreinte / Face ID : clé publique de chaque appareil (la clé secrète ne quitte jamais le téléphone)
+    'cles_biometriques' => [
+        'colonnes' => [
+            'id_hash' => 'VARCHAR(64)', 'credential_id' => 'LONG', 'utilisateur_id' => 'ID', 'commerce_id' => 'ID',
+            'cle_publique' => 'LONG', 'algo' => 'ENTIER', 'compteur' => 'ENTIER', 'appareil' => 'TEXTE',
+            'cree_le' => 'DATE', 'utilise_le' => 'DATE',
+        ],
+        'cle' => ['id_hash'], 'uniques' => [], 'index' => [['utilisateur_id']],
+    ],
+    // Défis à usage unique (5 minutes) pour l'empreinte / Face ID
+    'defis' => [
+        'colonnes' => ['defi_hash' => 'VARCHAR(64)', 'type' => 'VARCHAR(20)', 'utilisateur_id' => 'ID', 'expire_le' => 'DATE'],
+        'cle' => ['defi_hash'], 'uniques' => [], 'index' => [],
     ],
     // Comptes de l'équipe Amorac (espace /admin)
     'admins' => [
@@ -117,6 +132,13 @@ function migrer(PDO $pdo, string $driver): void
     $pdo->exec('CREATE TABLE IF NOT EXISTS kaisly_version (version INTEGER NOT NULL)');
     $version = (int) ($pdo->query('SELECT MAX(version) AS v FROM kaisly_version')->fetch()['v'] ?? 0);
     if ($version >= VERSION_BASE) return;
+
+    // Base déjà installée en version 1 : colonne recu_le ajoutée aux éléments
+    // (si deux visiteurs arrivent au même instant, le second ignore « colonne déjà ajoutée »)
+    if ($version === 1) {
+        try { $pdo->exec('ALTER TABLE elements ADD COLUMN recu_le VARCHAR(30) NULL'); } catch (PDOException) { /* déjà fait */ }
+        try { $pdo->exec('CREATE INDEX i_elements_1 ON elements (commerce_id, recu_le)'); } catch (PDOException) { /* déjà fait */ }
+    }
 
     foreach (STRUCTURE as $table => $t) {
         $lignes = [];

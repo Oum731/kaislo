@@ -8,6 +8,9 @@
 //   POST /api/connexion     se connecter avec téléphone + code PIN
 //   GET  /api/moi           utilisateur et commerce connectés
 //   POST /api/deconnexion   déconnecter cet appareil
+//   GET|POST /api/donnees   synchronisation des caisses (voir lib/donnees.php)
+//   POST /api/utilisateurs  vendeurs (gérant) · POST /api/verifier-gerant (annulation)
+//   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
 //
 // Réponses en JSON : { ok: true, ... } ou { ok: false, erreur: "message" }.
 // PHP 8.1 minimum (à choisir dans hPanel → Avancé → Configuration PHP).
@@ -17,6 +20,9 @@ declare(strict_types=1);
 require __DIR__ . '/lib/config.php';
 require __DIR__ . '/lib/base.php';
 require __DIR__ . '/lib/outils.php';
+require __DIR__ . '/lib/donnees.php';
+require __DIR__ . '/lib/equipe.php';
+require __DIR__ . '/lib/biometrie.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -37,6 +43,13 @@ try {
         'POST /connexion' => routeConnexion(),
         'GET /moi' => routeMoi(),
         'POST /deconnexion' => routeDeconnexion(),
+        'GET /donnees' => routeDonneesLire(),
+        'POST /donnees' => routeDonneesEcrire(),
+        'POST /utilisateurs' => routeUtilisateur(),
+        'POST /verifier-gerant' => routeVerifierGerant(),
+        'POST /biometrie/defi' => routeBiometrieDefi(),
+        'POST /biometrie/enregistrer' => routeBiometrieEnregistrer(),
+        'POST /biometrie/connexion' => routeBiometrieConnexion(),
         default => throw new ErreurApi('Adresse inconnue', 404),
     };
 } catch (ErreurApi $e) {
