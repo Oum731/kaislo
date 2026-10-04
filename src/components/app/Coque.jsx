@@ -34,7 +34,9 @@ export function liensMenu(s) {
   liens.push(['clients', 'Crédit', 'carnet']);
   if (s.peut('peutGererProduits')) liens.push(['produits', 'Produits', 'produits']);
   if (s.gereStock() && s.peut('peutGererProduits')) liens.push(['stock', 'Stock', 'stock']);
-  liens.push(gerant ? ['reglages', 'Réglages', 'reglages'] : ['imprimante', 'Imprimante', 'imprimante']);
+  // Vendeur : pas d'onglet « Imprimante » (bouton imprimante en haut de la caisse, et dans « Mon compte »),
+  // pour que son menu tienne en 5 liens maximum, sans « Plus »
+  if (gerant) liens.push(['reglages', 'Réglages', 'reglages']);
   // Aide et messagerie avec l'équipe Kaislo (pastille : réponses pas encore lues)
   liens.push(['aide', 'Aide', 'whatsapp', s.messagesNonLus || null]);
   return liens;

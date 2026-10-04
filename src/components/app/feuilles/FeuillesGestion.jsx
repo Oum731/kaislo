@@ -434,6 +434,16 @@ export function FeuilleCompte() {
         <h2 style={{ marginTop: 12 }}>{s.utilisateur.nom}</h2>
         <p className="muet">{s.estGerant() ? 'Gérant' : 'Vendeur'} · {s.d.commerce.nom}</p>
       </div>
+      {!s.estGerant() && (
+        <div className="liste" style={{ marginTop: 18 }}>
+          <button className="liste-item" onClick={() => s.allerA('imprimante')}>
+            <span className="mini-emoji teinte-vert"><Icone nom="imprimante" /></span>
+            <b className="grandit">Imprimante</b>
+            <span className="petit muet">{s.imprimante.connectee ? 'Connectée' : 'Non connectée'}</span>
+            <Icone nom="droite" className="muet" />
+          </button>
+        </div>
+      )}
       {enLigne && (
         <div className="carte pile" style={{ marginTop: 18 }}>
           <EtatSynchroDetail />

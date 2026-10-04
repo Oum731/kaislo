@@ -56,6 +56,16 @@ const SECTIONS = [
     ),
   },
   {
+    id: 'role',
+    titre: 'Rôle de Kaislo : outil de gestion, pas un système de paiement',
+    contenu: (
+      <>
+        <p>Kaislo permet au Commerce de noter ses ventes, de suivre son stock et ses crédits et de préparer ses comptes de fin de journée. <b>Kaislo ne reçoit, ne détient et ne transmet aucun paiement entre le Commerce et ses clients</b> : ceux-ci paient directement le Commerce. Les modes de paiement indiqués dans l’application (espèces, mobile money, carte…) servent uniquement à répartir les totaux dans les comptes du Commerce.</p>
+        <p>Le Commerce reste responsable du respect des règles qui s’appliquent à son activité dans son pays (comptabilité, fiscalité, facturation, appareils ou logiciels de caisse certifiés lorsqu’ils sont exigés). Kaislo ne remplace pas ces obligations ; il peut être utilisé en complément d’un appareil ou d’un logiciel imposé par la loi.</p>
+      </>
+    ),
+  },
+  {
     id: 'abonnement',
     titre: 'Abonnement, prix et paiement',
     contenu: (
