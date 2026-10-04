@@ -1,0 +1,7 @@
+User-Agent: *
+Allow: /
+Disallow: /app/
+Disallow: /admin/
+Disallow: /commercial/
+
+Sitemap: https://kaislo.com/sitemap.xml
