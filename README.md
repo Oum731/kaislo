@@ -111,7 +111,7 @@ Pour un usage commercial à grande échelle, prévoir les mêmes voix via Azure 
 
 ## Hébergement Hostinger (site + API PHP)
 
-Domaine provisoire : https://darkgrey-albatross-393608.hostingersite.com
+Domaine : https://kaislo.com (adresse provisoire Hostinger : https://darkgrey-albatross-393608.hostingersite.com, renvoyée vers kaislo.com une fois le domaine actif)
 
 L'API PHP (dossier `api/`, PHP simple sans framework) répond sur `/api/...` :
 `GET /api/sante`, `POST /api/inscription`, `POST /api/connexion`, `GET /api/moi`, `POST /api/deconnexion`,

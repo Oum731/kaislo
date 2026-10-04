@@ -14,6 +14,7 @@ import { PAYS } from '@/lib/donnees/modeles';
 import { SITE_URL, CONTACT_WHATSAPP } from '@/config';
 import { Icone, ChampTelephone } from '@/components/ui';
 import { CarteClient, totalDevises } from './Commerciaux';
+import BulleChat from '@/components/BulleChat';
 
 const CLE = 'kaislo:commercial-jeton';
 const lireJeton = () => { try { return localStorage.getItem(CLE); } catch { return null; } };
@@ -43,8 +44,12 @@ export default function EspaceCommercial() {
 
   if (!etat.pret) return <Chargement texte="Ouverture de votre espace…" />;
   if (!API_ACTIVE) return <Cadre><p className="astuce">L’espace commercial fonctionne sur le site hébergé (kaislo.com).</p></Cadre>;
-  if (!etat.infos) return <ConnexionCommercial surConnexion={(jeton) => { garderJeton(jeton); charger(jeton); }} />;
-  return <Tableau infos={etat.infos} sortir={sortir} actualiser={() => charger(etat.jeton)} />;
+  return (
+    <>
+      {etat.infos ? <Tableau infos={etat.infos} sortir={sortir} actualiser={() => charger(etat.jeton)} /> : <ConnexionCommercial surConnexion={(jeton) => { garderJeton(jeton); charger(jeton); }} />}
+      <BulleChat />
+    </>
+  );
 }
 
 function Cadre({ children }) {

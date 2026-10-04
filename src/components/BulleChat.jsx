@@ -15,10 +15,11 @@ import { Icone } from '@/components/ui';
 /**
  * messagerie : contenu affiché à la place du formulaire (commerce connecté), sinon null
  * nonLus     : réponses de l'équipe pas encore lues (pastille)
- * position   : 'site' (à droite) ou 'app' (à gauche sur téléphone, au-dessus du menu)
+ * position   : 'site' (site, connexion, espace commercial) ou 'app' (application connectée)
  */
 export default function BulleChat({ messagerie = null, nonLus = 0, position = 'site' }) {
   const [ouvert, setOuvert] = useState(false);
+  const classe = position === 'app' ? ' chat-dans-app' : '';
   // Échap ferme le panneau
   useEffect(() => {
     if (!ouvert) return;
@@ -30,7 +31,7 @@ export default function BulleChat({ messagerie = null, nonLus = 0, position = 's
   return (
     <>
       {ouvert && (
-        <div className={'chat-panneau ' + position} role="dialog" aria-label="Discuter avec l’équipe Kaislo">
+        <div className={'chat-panneau' + classe} role="dialog" aria-label="Discuter avec l’équipe Kaislo">
           <div className="chat-entete">
             <span className="chat-avatar"><Icone nom="whatsapp" taille="sm" /></span>
             <span className="grandit">
@@ -42,7 +43,7 @@ export default function BulleChat({ messagerie = null, nonLus = 0, position = 's
           <div className="chat-corps">{messagerie || <FormulaireContact />}</div>
         </div>
       )}
-      <button className={'chat-bouton ' + position + (ouvert ? ' ouvert' : '')} onClick={() => setOuvert(!ouvert)} aria-expanded={ouvert}>
+      <button className={'chat-bouton' + classe + (ouvert ? ' ouvert' : '')} onClick={() => setOuvert(!ouvert)} aria-expanded={ouvert} aria-label="Discuter avec l’équipe Kaislo" title="Discuter avec nous">
         <Icone nom={ouvert ? 'fermer' : 'whatsapp'} />
         <span className="chat-libelle">{ouvert ? 'Fermer' : 'Discuter avec nous'}</span>
         {nonLus > 0 && !ouvert ? <span className="pastille-nb">{nonLus}</span> : null}

@@ -886,30 +886,42 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 .liens-activites a { color: var(--vert); font-weight: 600; font-size: 14.5px; text-decoration: none; }
 .liens-activites a:hover { text-decoration: underline; }
 
-/* ---------- Bulle « Discuter avec nous » (site et application) ---------- */
+/* ---------- Bulle « Discuter avec nous » (site, connexion, application) ----------
+   Ordinateur : pastille avec le texte, en bas à droite.
+   Téléphone  : simple rond (ne cache pas le contenu) ; dans l'application, à gauche au-dessus du menu
+   (à droite, il y a les boutons « + Article », « + Vendeur »…). */
 .chat-bouton {
-  position: fixed; z-index: 45; right: 18px; bottom: calc(18px + var(--bas-securise));
-  display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 18px 0 14px;
+  position: fixed; z-index: 45; right: 24px; bottom: calc(24px + var(--bas-securise));
+  display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 18px 0 14px;
   border-radius: 999px; background: var(--vert); color: var(--blanc); font-weight: 600;
   box-shadow: 0 8px 22px rgba(20, 33, 28, 0.25);
 }
 .chat-bouton:hover { filter: brightness(1.08); }
 .chat-bouton .pastille-nb { position: absolute; top: -4px; right: -4px; }
-/* Dans l'application sur téléphone : rond, à gauche, au-dessus du menu */
+/* Dans l'application : rond discret, le libellé « Aide » du menu suffit */
+.chat-bouton.chat-dans-app { width: 48px; height: 48px; padding: 0; }
+.chat-bouton.chat-dans-app .chat-libelle { display: none; }
 @media (max-width: 767px) {
-  .chat-bouton.app { left: 12px; right: auto; width: 46px; height: 46px; padding: 0; justify-content: center; bottom: calc(var(--nav-h) + var(--bas-securise) + 14px); }
-  .chat-bouton.app .chat-libelle { display: none; }
+  .chat-bouton { right: 16px; bottom: calc(16px + var(--bas-securise)); width: 54px; height: 54px; padding: 0; }
+  .chat-bouton .chat-libelle { display: none; }
+  .chat-bouton.chat-dans-app { right: auto; left: 12px; width: 46px; height: 46px; bottom: calc(var(--nav-h) + var(--bas-securise) + 14px); }
+  /* Le bas du pied de page reste lisible au-dessus de la bulle */
+  .site-pied { padding-bottom: 96px; }
 }
+/* Menu du site ouvert sur téléphone : la bulle s'efface */
+body:has(.menu-site-voile) .chat-bouton { display: none; }
+/* Écrans de connexion et d inscription : le dernier choix reste visible au-dessus de la bulle */
+@media (max-width: 767px) { .connexion { padding-bottom: 84px; } }
 .chat-panneau {
-  position: fixed; z-index: 46; right: 18px; bottom: calc(80px + var(--bas-securise));
-  width: min(380px, calc(100vw - 24px)); max-height: min(620px, calc(100dvh - 110px));
+  position: fixed; z-index: 46; right: 24px; bottom: calc(86px + var(--bas-securise));
+  width: min(380px, calc(100vw - 24px)); max-height: min(620px, calc(100dvh - 120px));
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon);
   box-shadow: 0 18px 50px rgba(20, 33, 28, 0.25); animation: fondu 0.15s;
 }
 @media (max-width: 767px) {
-  .chat-panneau { left: 12px; right: 12px; width: auto; }
-  .chat-panneau.app { bottom: calc(var(--nav-h) + var(--bas-securise) + 70px); max-height: calc(100dvh - var(--nav-h) - 100px); }
+  .chat-panneau { left: 10px; right: 10px; width: auto; bottom: calc(82px + var(--bas-securise)); max-height: calc(100dvh - 100px); }
+  .chat-panneau.chat-dans-app { bottom: calc(var(--nav-h) + var(--bas-securise) + 70px); max-height: calc(100dvh - var(--nav-h) - 90px); }
 }
 .chat-entete { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--vert); color: var(--blanc); }
 .chat-entete .icone-btn { color: inherit; width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--rayon-petit); }

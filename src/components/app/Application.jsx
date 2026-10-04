@@ -8,6 +8,7 @@ import Connexion from './Connexion';
 import Coque from './Coque';
 import { chemin } from '@/config';
 import Chargement from '@/components/Chargement';
+import BulleChat from '@/components/BulleChat';
 
 export default function Application() {
   const pret = useKaislo((s) => s.pret);
@@ -41,7 +42,7 @@ export default function Application() {
 
   return (
     <div className="app">
-      {connecte ? <Coque /> : <Connexion />}
+      {connecte ? <Coque /> : <><Connexion /><BulleChat /></>}
       {toast && (
         <div key={toast.id} className={`toast ${toast.type === 'erreur' ? 'erreur' : ''}`} role="status">
           {toast.texte}

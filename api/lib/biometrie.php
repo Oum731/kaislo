@@ -26,10 +26,15 @@ function b64url_encode(string $octets): string
     return rtrim(strtr(base64_encode($octets), '+/', '-_'), '=');
 }
 
+const DOMAINE_OFFICIEL = 'kaislo.com';
+
 // Nom de domaine du site (« rp id » de WebAuthn) et adresse attendue de la page
 function domaineSite(): string
 {
-    $hote = config()['domaine'] ?: ($_SERVER['HTTP_HOST'] ?? '');
+    // Le domaine officiel kaislo.com est reconnu directement (même si le .env indique encore l'adresse provisoire)
+    $demande = strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
+    if ($demande === DOMAINE_OFFICIEL) return DOMAINE_OFFICIEL;
+    $hote = config()['domaine'] ?: $demande;
     return strtolower(preg_replace('/:\d+$/', '', $hote));
 }
 

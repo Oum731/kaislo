@@ -88,10 +88,9 @@ export default function Coque() {
       <main className="principal">
         <Ecran />
       </main>
-      {s.ecran !== 'aide' && (
-        <div className={['caisse', 'tables'].includes(s.ecran) ? 'cache-mobile' : ''}>
-          <BulleChat position="app" nonLus={s.messagesNonLus} messagerie={estServeur(s.d) ? <Messagerie /> : null} />
-        </div>
+      {/* Bulle de discussion : pas sur la caisse ni les tables (boutons d'encaissement en bas), ni sur Aide (messagerie déjà affichée) */}
+      {!['aide', 'caisse', 'tables'].includes(s.ecran) && (
+        <BulleChat position="app" nonLus={s.messagesNonLus} messagerie={estServeur(s.d) ? <Messagerie /> : null} />
       )}
       <Feuilles />
     </div>
