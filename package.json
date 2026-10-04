@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "npx serve out",
+    "test": "node --no-warnings --test tests/*.test.mjs",
     "icones": "node scripts/generer-icones.mjs",
     "partager": "node scripts/partager.mjs",
     "arreter-partage": "node scripts/arreter-partage.mjs",

@@ -1,0 +1,26 @@
+name: Vérifications
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - run: npm ci
+      - name: Tests des calculs d'argent
+        run: npm test
+      - name: Syntaxe PHP de l'API
+        run: find api -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Construction du site
+        run: npm run build

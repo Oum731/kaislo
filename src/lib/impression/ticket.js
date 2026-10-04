@@ -146,7 +146,12 @@ export function construireTicketCloture(cl, commerce, largeurPapier = 58) {
   if (cl.totalRemises) colonnes('Remises accordées', formatNombre(cl.totalRemises, dev));
   separateur();
   ajouter('PAR MODE DE PAIEMENT', { gras: true });
-  for (const p of cl.parPaiement) if (p.nb || p.mode === 'Espèces') colonnes(p.mode + ' (' + p.nb + ')', formatNombre(p.total, dev));
+  for (const p of cl.parPaiement) {
+    if (!(p.nb || p.rembourse || p.mode === 'Espèces')) continue;
+    colonnes(p.mode + ' (' + p.nb + ')', formatNombre(p.total, dev));
+    if (p.rembourse) colonnes('  + crédits remboursés', formatNombre(p.rembourse, dev));
+  }
+  if (cl.totalRecu !== undefined) colonnes('TOTAL REÇU', formatPrix(cl.totalRecu, dev), { gras: true });
   separateur();
 
   // Total vendu par article (pour les comptes de fin de journée)

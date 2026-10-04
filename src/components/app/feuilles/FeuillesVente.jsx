@@ -426,8 +426,12 @@ export function FeuilleCloture() {
           <div className="carte">
             <div className="ligne espace"><b>Ventes ({c.nbVentes} tickets)</b><b className="chiffre">{s.prix(c.totalVentes)}</b></div>
             {c.parPaiement.map((p) => (
-              <div key={p.mode} className="ligne espace petit" style={{ marginTop: 8 }}><span className="muet">{p.mode} ({p.nb})</span><span className="chiffre">{s.prix(p.total)}</span></div>
+              <div key={p.mode} className="ligne espace petit" style={{ marginTop: 8 }}>
+                <span className="muet">{p.mode} ({p.nb}){p.rembourse > 0 ? ' + crédits remboursés ' + s.prix(p.rembourse) : ''}</span>
+                <span className="chiffre">{s.prix(p.total + (p.rembourse || 0))}</span>
+              </div>
             ))}
+            {c.totalRecu !== undefined && <div className="ligne espace" style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--bordure)' }}><b>Total reçu (hors crédit)</b><b className="chiffre">{s.prix(c.totalRecu)}</b></div>}
             {c.totalRemises > 0 && <div className="ligne espace petit" style={{ marginTop: 8 }}><span className="muet">Remises accordées</span><span className="chiffre">{s.prix(c.totalRemises)}</span></div>}
             {c.nbAnnulees > 0 && <p className="tres-petit muet" style={{ marginTop: 8 }}>{c.nbAnnulees} vente(s) annulée(s), non comptée(s)</p>}
           </div>

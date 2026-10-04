@@ -38,9 +38,13 @@ export function calculerCloture(d, debut, fin, fondDeCaisse) {
   // Total par mode de paiement (dans l'ordre du commerce, + Crédit s'il y en a)
   const modes = [...d.commerce.modesPaiement];
   if (ventes.some((v) => v.paiement === CREDIT)) modes.push(CREDIT);
+  // Chaque mode donne : total vendu, crédits remboursés reçus par ce mode, et « recu » = ce que le vendeur a vraiment reçu
+  // (le Crédit n'est pas de l'argent reçu : il reste dans le carnet)
   const parPaiement = modes.map((mode) => {
     const liste = ventes.filter((v) => v.paiement === mode);
-    return { mode, nb: liste.length, total: arrondir(liste.reduce((s, v) => s + v.total, 0), dev) };
+    const total = arrondir(liste.reduce((s, v) => s + v.total, 0), dev);
+    const rembourse = arrondir(remboursements.filter((r) => r.mode === mode).reduce((s, r) => s + r.montant, 0), dev);
+    return { mode, nb: liste.length, total, rembourse, recu: mode === CREDIT ? 0 : arrondir(total + rembourse, dev) };
   });
 
   // Total vendu par article (pour faciliter les comptes à la fermeture)
@@ -70,6 +74,7 @@ export function calculerCloture(d, debut, fin, fondDeCaisse) {
     totalVentes: arrondir(ventes.reduce((s, v) => s + v.total, 0), dev),
     totalRemises: arrondir(ventes.reduce((s, v) => s + (v.remise || 0), 0), dev),
     parPaiement,
+    totalRecu: arrondir(parPaiement.reduce((s, p) => s + p.recu, 0), dev),
     parArticle,
     nbArticles: parArticle.reduce((s, a) => s + a.quantite, 0),
     fondDeCaisse: fond,
