@@ -10,10 +10,10 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [L,R=301]
 RewriteCond %{HTTP_HOST} ^www\.kaislo\.com$ [NC]
 RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 
-# Quand kaislo.com sera actif : enlever les # des 2 lignes suivantes pour renvoyer
-# l'adresse provisoire Hostinger vers kaislo.com (Google garde ainsi une seule adresse)
-# RewriteCond %{HTTP_HOST} hostingersite\.com$ [NC]
-# RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
+# L'adresse provisoire Hostinger est renvoyée vers kaislo.com (Google garde ainsi une seule adresse)
+# En cas de problème avec le domaine : remettre un # devant les 2 lignes suivantes
+RewriteCond %{HTTP_HOST} hostingersite\.com$ [NC]
+RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 
 # Toute autre adresse que kaislo.com (domaine provisoire…) : pas d'indexation par Google
 SetEnvIfNoCase Host ^kaislo\.com$ domaine_officiel
