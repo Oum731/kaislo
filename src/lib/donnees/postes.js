@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // POSTES : un poste est un point d'impression (le téléphone ou la tablette
 // relié(e) à l'imprimante), avec 5 vendeurs au maximum.
-//  - le gérant crée ses postes (« Comptoir », « Terrasse », « Caisse 2 »…)
+//  - le gérant crée ses postes (« Comptoir », « Terrasse », « Comptoir 2 »…)
 //  - chaque vendeur est affecté à un seul poste ; ses tickets s'impriment sur l'imprimante de ce poste
 //  - le gérant vend depuis n'importe quel poste et ne compte pas dans la limite
 // Chaque formule comprend 1 poste ; au-delà, un poste supplémentaire est facturé (voir tarifs.js).

@@ -17,7 +17,7 @@ const SECTIONS = [
     titre: 'En résumé',
     contenu: (
       <div className="encadre">
-        <p><b>Pas de publicité, pas de pistage, pas de mesure d’audience.</b> Kaislo enregistre seulement sur votre appareil ce qui est indispensable pour faire fonctionner la caisse. C’est pourquoi aucun bandeau de consentement ne vous est demandé.</p>
+        <p><b>Pas de publicité, pas de pistage, pas de mesure d’audience.</b> Kaislo enregistre seulement sur votre appareil ce qui est indispensable pour faire fonctionner Kaislo. C’est pourquoi aucun bandeau de consentement ne vous est demandé.</p>
       </div>
     ),
   },
@@ -31,7 +31,7 @@ const SECTIONS = [
         </thead>
         <tbody>
           <tr><td>kaislo:preferences</td><td>Commerce relié à l’appareil, session ouverte, derniers comptes utilisés, largeur du ticket, pays choisi pour la démo.</td><td>Jusqu’à la déconnexion de l’appareil</td></tr>
-          <tr><td>kaislo:commerce:…</td><td>Données du commerce gardées sur l’appareil pour que la caisse marche même avec une mauvaise connexion.</td><td>Jusqu’à suppression ou déconnexion</td></tr>
+          <tr><td>kaislo:commerce:…</td><td>Données du commerce gardées sur l’appareil pour que Kaislo marche même avec une mauvaise connexion.</td><td>Jusqu’à suppression ou déconnexion</td></tr>
           <tr><td>kaislo:comptes</td><td>Liste des commerces enregistrés sur cet appareil.</td><td>Jusqu’à suppression</td></tr>
           <tr><td>kaislo-images</td><td>Photos des articles et logo, pour un affichage rapide.</td><td>Jusqu’à suppression</td></tr>
           <tr><td>kaislo-v… (cache)</td><td>Copie de l’application pour qu’elle s’ouvre vite et hors connexion.</td><td>Remplacée à chaque mise à jour</td></tr>

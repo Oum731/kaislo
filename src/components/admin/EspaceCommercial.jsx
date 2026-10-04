@@ -95,7 +95,7 @@ function Tableau({ infos, sortir, actualiser }) {
   const { commercial: c, clients, primes, programme } = infos;
   const [copie, setCopie] = useState(false);
   const lien = SITE_URL + '/app/?inscription=1&ref=' + c.code;
-  const texteWhatsApp = 'Bonjour ! Je vous présente Kaislo : la caisse et la gestion de stock simples, sur téléphone. Essai gratuit de 30 jours : ' + lien;
+  const texteWhatsApp = 'Bonjour ! Je vous présente Kaislo : la gestion des ventes et du stock, simple, sur téléphone. Essai gratuit de 30 jours : ' + lien;
   const copier = async () => { try { await navigator.clipboard.writeText(lien); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch { /* rien */ } };
   const enEssai = clients.filter((x) => x.statut === 'essai').length;
   const abonnes = clients.filter((x) => x.statut === 'actif').length;

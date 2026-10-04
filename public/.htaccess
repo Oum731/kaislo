@@ -10,6 +10,9 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [L,R=301]
 RewriteCond %{HTTP_HOST} ^www\.kaislo\.com$ [NC]
 RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 
+# Anciennes adresses des pages par activité (« caisse-… » devenues « gestion-… »)
+RewriteRule ^caisse-(restaurant|epicerie|boutique|quincaillerie|pharmacie|boulangerie|bar)/?$ /gestion-$1/ [R=301,L]
+
 # L'adresse provisoire Hostinger est renvoyée vers kaislo.com (Google garde ainsi une seule adresse)
 # En cas de problème avec le domaine : remettre un # devant les 2 lignes suivantes
 RewriteCond %{HTTP_HOST} hostingersite\.com$ [NC]

@@ -51,8 +51,8 @@ export default function Tables() {
           <p className="astuce">Aucune table configurée. Le gérant peut en ajouter dans Réglages → Tables.</p>
         )}
         <p className="tres-petit muet" style={{ marginTop: 18 }}>
-          Une table devient orange après 45 minutes. Touchez une table occupée pour ajouter des plats ou encaisser.
-          {s.estGerant() && ' Pour libérer une table sans encaisser, ouvrez-la puis touchez « Libérer ».'}
+          Une table devient orange après 45 minutes. Touchez une table occupée pour ajouter des plats ou terminer la vente.
+          {s.estGerant() && ' Pour libérer une table sans terminer la vente, ouvrez-la puis touchez « Libérer ».'}
         </p>
       </div>
     </>

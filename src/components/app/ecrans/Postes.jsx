@@ -85,7 +85,7 @@ export default function Postes() {
       {edition && (
         <Feuille titre={edition.id ? edition.nom : 'Nouveau poste'} surFermer={() => setEdition(null)} pied={<button className="btn bloc" onClick={enregistrer}>Enregistrer</button>}>
           <div className="pile">
-            <label className="champ"><span>Nom du poste</span><input value={edition.nom} onChange={(e) => setEdition({ ...edition, nom: e.target.value })} placeholder="Ex : Comptoir, Terrasse, Caisse 2" autoFocus /></label>
+            <label className="champ"><span>Nom du poste</span><input value={edition.nom} onChange={(e) => setEdition({ ...edition, nom: e.target.value })} placeholder="Ex : Comptoir, Terrasse, Comptoir 2" autoFocus /></label>
             {!edition.id && tarif && <p className="tres-petit muet">Chaque poste au-delà du premier ajoute {s.prix(tarif.prixPoste)} par mois à votre abonnement.</p>}
             {edition.id && <button className="btn danger bloc" onClick={() => { supprimer(edition); setEdition(null); }}>Supprimer ce poste</button>}
           </div>

@@ -64,7 +64,7 @@ export default function Caisse() {
 
   return (
     <>
-      <EnTete surTitre={d.commerce.nom} titre={commande ? commande.table : 'Caisse'}>
+      <EnTete surTitre={d.commerce.nom} titre={commande ? commande.table : 'Vendre'}>
         <button className={`bouton-rond ${s.imprimante.connectee ? 'actif' : ''}`} onClick={() => s.allerA(s.estGerant() ? 'reglages' : 'imprimante')} aria-label="Imprimante" title={s.imprimante.connectee ? 'Imprimante connectée' : 'Connecter l’imprimante'}>
           <Icone nom="imprimante" />
         </button>
@@ -156,7 +156,7 @@ export default function Caisse() {
             <span className="tres-petit bloc-texte" style={{ opacity: 0.8 }}>{commande ? commande.table : 'Total'}</span>
             <span className="total">{s.prix(t.total)}</span>
           </span>
-          <button className="btn" onClick={() => s.ouvrir('panier')}>{commande ? 'Commande' : 'Encaisser'} <Icone nom="droite" taille="sm" /></button>
+          <button className="btn" onClick={() => s.ouvrir('panier')}>{commande ? 'Commande' : 'Valider'} <Icone nom="droite" taille="sm" /></button>
         </div>
       )}
     </>
@@ -205,7 +205,7 @@ export function ContenuPanier({ dansFeuille = false }) {
             <p className="petit muet">{t.nbArticles} article{t.nbArticles > 1 ? 's' : ''}</p>
           </div>
           {commande && commande.lignes.length ? (
-            s.estGerant() && <button className="btn fantome petit" onClick={() => confirm('Libérer ' + commande.table + ' sans encaisser ?') && s.libererTable(commande.id)}><Icone nom="poubelle" taille="sm" /> Libérer</button>
+            s.estGerant() && <button className="btn fantome petit" onClick={() => confirm('Libérer ' + commande.table + ' sans terminer la vente ?') && s.libererTable(commande.id)}><Icone nom="poubelle" taille="sm" /> Libérer</button>
           ) : (
             <button className="btn fantome petit" onClick={s.viderPanier}><Icone nom="poubelle" taille="sm" /> Vider</button>
           )}
@@ -329,7 +329,7 @@ export function ContenuPanier({ dansFeuille = false }) {
         )}
         <button className="btn grand bloc" onClick={encaisser} disabled={paiement === CREDIT && !client}>
           <Icone nom={s.imprimante.connectee ? 'imprimante' : 'ok'} />
-          {paiement === CREDIT ? 'Noter à crédit' : s.imprimante.connectee ? 'Encaisser et imprimer' : 'Encaisser'}
+          {paiement === CREDIT ? 'Noter à crédit' : s.imprimante.connectee ? 'Valider et imprimer' : 'Valider la vente'}
         </button>
       </div>
     </>

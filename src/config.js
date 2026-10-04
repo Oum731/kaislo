@@ -17,7 +17,7 @@ export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
 export const chemin = (p) => BASE_PATH + p;
 
 export const SITE_NOM = 'Kaislo';
-export const SITE_SLOGAN = 'La caisse et la gestion de stock simples, pour tous les commerces';
+export const SITE_SLOGAN = 'La gestion des ventes et du stock, simple, pour tous les commerces';
 export const CONTACT_WHATSAPP = '212600000000'; // numéro WhatsApp d'Amorac (sans +)
 export const CONTACT_EMAIL = 'contact@amorac.com';
 

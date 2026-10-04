@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // CLÔTURE DE CAISSE (fin de journée ou fin de service)
 //
-// Espèces attendues = fond de caisse
+// Espèces attendues = fond de départ
 //                   + ventes payées en espèces
 //                   + remboursements de crédit reçus en espèces
 //                   − dépenses payées avec l'argent de la caisse
@@ -91,7 +91,7 @@ export function calculerCloture(d, debut, fin, fondDeCaisse) {
 //                       fermeLe, fermePar, cloture }]   (cloture = résumé de fermeture)
 // ------------------------------------------------------------
 
-// La journée de caisse en cours (ouverte et pas encore fermée), ou null
+// La journée de vente en cours (ouverte et pas encore fermée), ou null
 export function caisseOuverte(d) {
   return (d?.sessionsCaisse || []).find((x) => !x.fermeLe) || null;
 }
@@ -101,7 +101,7 @@ export function historiqueCaisse(d) {
   return [...(d?.sessionsCaisse || [])].sort((a, b) => b.ouverteLe.localeCompare(a.ouverteLe));
 }
 
-// Anciennes données (avant l'ouverture de caisse) : chaque clôture devient une journée
+// Anciennes données (avant l'ouverture de la journée) : chaque clôture devient une journée
 export function migrerClotures(d) {
   if (d.sessionsCaisse) return false;
   d.sessionsCaisse = (d.clotures || []).map((cl) => ({

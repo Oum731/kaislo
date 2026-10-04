@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// Contenu des pages « Caisse pour … » par activité (référencement Google).
+// Contenu des pages « Gestion pour … » par activité (référencement Google).
 // Chaque page utilise le modèle PageMetier. Pour ajouter une activité :
 // une entrée ici + un dossier src/app/<lien>/page.js de 3 lignes.
 // ------------------------------------------------------------
@@ -10,19 +10,19 @@ const LIEN_DEMO_RESTO = '/app/?demo=resto-ivoire';
 
 // Captures communes (stock, caisse, crédit)
 const STOCK = { src: '/captures/stock-ordi.webp', alt: 'Gestion du stock et de l’inventaire dans Kaislo' };
-const CAISSE = { src: '/captures/epicerie-ordi.webp', alt: 'Caisse Kaislo sur ordinateur' };
-const MOBILE = { src: '/captures/epicerie-mobile.webp', alt: 'Caisse Kaislo sur téléphone' };
+const CAISSE = { src: '/captures/epicerie-ordi.webp', alt: 'Kaislo sur ordinateur' };
+const MOBILE = { src: '/captures/epicerie-mobile.webp', alt: 'Kaislo sur téléphone' };
 const CREDIT = { src: '/captures/credit-ordi.webp', alt: 'Carnet de crédit des clients' };
 
 // Fonctions présentes sur toutes les pages
 const COMMUNES = [
   ['imprimante', 'Ticket imprimé ou WhatsApp', 'Imprimante thermique facultative : le ticket peut aussi partir par WhatsApp ou rester dans l’historique.'],
-  ['bouclier', 'Clôture de caisse', 'Le soir, l’écart entre les espèces attendues et comptées s’affiche immédiatement.'],
+  ['bouclier', 'Clôture de la journée', 'Le soir, l’écart entre les espèces attendues et comptées s’affiche immédiatement.'],
   ['clients', 'Vendeurs et droits', 'Un code PIN par vendeur. Vous décidez qui peut modifier les prix ou faire des remises.'],
 ];
 const QUESTIONS_COMMUNES = [
   ['Faut-il une imprimante ?', 'Non. Le ticket peut être envoyé par WhatsApp ou simplement gardé dans l’historique. Une imprimante thermique Bluetooth ou USB reste possible.'],
-  ['Et sans internet ?', 'La caisse continue de fonctionner. Les ventes sont envoyées au serveur dès que la connexion revient.'],
+  ['Et sans internet ?', 'Kaislo continue de fonctionner. Les ventes sont envoyées au serveur dès que la connexion revient.'],
   ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement selon votre métier : à partir de 149 DH ou 9 000 FCFA par mois, 1 poste et 5 vendeurs inclus, 2 mois offerts à l’année. Détail sur la page Tarifs.'],
 ];
 
@@ -46,17 +46,17 @@ function page({ lien, nom, titreSeo, description, titre, chapo, etiquette, titre
 
 export const ACTIVITES = {
   boutique: page({
-    lien: '/caisse-boutique/', nom: 'Boutique',
-    titreSeo: 'Caisse pour boutique — vêtements, cosmétiques, accessoires',
-    description: 'Logiciel de caisse et de stock pour boutique de vêtements, chaussures, cosmétiques et accessoires : tailles et couleurs, stock par article, promotions, crédit client, tickets WhatsApp. Essai gratuit.',
-    titre: 'La caisse et le stock de votre boutique.',
+    lien: '/gestion-boutique/', nom: 'Boutique',
+    titreSeo: 'Gestion pour boutique — vêtements, cosmétiques, accessoires',
+    description: 'Logiciel de gestion des ventes et de stock pour boutique de vêtements, chaussures, cosmétiques et accessoires : tailles et couleurs, stock par article, promotions, crédit client, tickets WhatsApp. Essai gratuit.',
+    titre: 'La gestion des ventes et du stock de votre boutique.',
     chapo: 'Vêtements, chaussures, cosmétiques, accessoires : chaque taille et chaque couleur a son prix et son stock. Vous savez ce qui se vend et ce qu’il faut racheter.',
     etiquette: 'Pour les boutiques', titreFonctions: 'Vendez plus, sans perdre le fil du stock.',
     chapoFonctions: 'Fini les articles introuvables et les ruptures sur les meilleures tailles.',
     lignes: [{ titre: 'Le stock de chaque article', texte: 'Le stock baisse à chaque vente. Enregistrez les arrivages avec le prix d’achat et voyez la valeur de votre boutique.', points: ['Alertes de stock bas', 'Inventaire exporté en Excel', 'Marge par article'], capture: STOCK }],
     fonctions: [
       ['produits', 'Tailles et couleurs', 'Options par article (S, M, L ou couleurs), chacune avec son prix.', true],
-      ['remise', 'Promotions et soldes', 'Prix barré à la caisse, remises en pourcentage ou en montant.'],
+      ['remise', 'Promotions et soldes', 'Prix barré au moment de la vente, remises en pourcentage ou en montant.'],
       ['carnet', 'Crédit client', 'Les clients fidèles paient plus tard : achats, remboursements et rappel WhatsApp.'],
       ['scan', 'Code-barres', 'Scannez les étiquettes avec la caméra du téléphone ou un lecteur.'],
       ['stock', 'Stock et inventaire', 'Entrées de marchandise, corrections et historique.', true],
@@ -65,14 +65,14 @@ export const ACTIVITES = {
     questions: [['Puis-je gérer les tailles et les couleurs ?', 'Oui : ajoutez des options à un article (tailles, couleurs, modèles), chacune avec son propre prix.']],
   }),
   quincaillerie: page({
-    lien: '/caisse-quincaillerie/', nom: 'Quincaillerie',
-    titreSeo: 'Caisse pour quincaillerie — vente au mètre, au kg, au sac',
-    description: 'Logiciel de caisse et de gestion de stock pour quincaillerie et matériaux : vente à la pièce, au mètre, au kg, au sac ou au carton, inventaire, prix d’achat et marges, crédit client. Essai gratuit.',
-    titre: 'La caisse et le stock de votre quincaillerie.',
+    lien: '/gestion-quincaillerie/', nom: 'Quincaillerie',
+    titreSeo: 'Gestion pour quincaillerie — vente au mètre, au kg, au sac',
+    description: 'Logiciel de gestion des ventes et de gestion de stock pour quincaillerie et matériaux : vente à la pièce, au mètre, au kg, au sac ou au carton, inventaire, prix d’achat et marges, crédit client. Essai gratuit.',
+    titre: 'La gestion des ventes et du stock de votre quincaillerie.',
     chapo: 'Vis à la pièce, câble au mètre, ciment au sac, peinture au litre : chaque article a son unité, son prix et son stock.',
     etiquette: 'Pour les quincailleries et matériaux', titreFonctions: 'Des milliers de références, enfin bien rangées.',
     chapoFonctions: 'Outillage, plomberie, électricité, peinture, matériaux : vos catégories sont prêtes dès l’inscription.',
-    lignes: [{ titre: 'Chaque unité de vente', texte: 'Choisissez l’unité de chaque article : pièce, mètre, kg, litre, sac, carton. Le stock, la caisse et l’inventaire l’affichent partout.', points: ['Ciment au sac, câble au mètre', 'Inventaire Excel avec unités', 'Valeur du stock au prix d’achat'], capture: STOCK }],
+    lignes: [{ titre: 'Chaque unité de vente', texte: 'Choisissez l’unité de chaque article : pièce, mètre, kg, litre, sac, carton. Le stock, les ventes et l’inventaire l’affichent partout.', points: ['Ciment au sac, câble au mètre', 'Inventaire Excel avec unités', 'Valeur du stock au prix d’achat'], capture: STOCK }],
     fonctions: [
       ['stock', 'Unités de vente', 'Pièce, mètre, kg, litre, sac, carton, lot : chaque article a la sienne.', true],
       ['scan', 'Recherche et code-barres', 'Retrouvez un article par son nom ou scannez son code.'],
@@ -84,13 +84,13 @@ export const ACTIVITES = {
     questions: [['Puis-je vendre au mètre ou au sac ?', 'Oui : chaque article a son unité (pièce, mètre, kg, litre, sac, carton…). Le stock se compte dans cette unité.']],
   }),
   pharmacie: page({
-    lien: '/caisse-pharmacie/', nom: 'Pharmacie',
-    titreSeo: 'Caisse et stock pour pharmacie et parapharmacie',
-    description: 'Logiciel de caisse et de gestion de stock pour pharmacie, parapharmacie et dépôt pharmaceutique : stock par boîte, alertes de rupture, inventaire, prix d’achat, vendeurs avec code PIN. Essai gratuit.',
-    titre: 'La caisse et le stock de votre pharmacie.',
-    chapo: 'Médicaments, parapharmacie, hygiène : suivez le stock boîte par boîte, soyez prévenu avant la rupture et contrôlez la caisse de chaque vendeur.',
+    lien: '/gestion-pharmacie/', nom: 'Pharmacie',
+    titreSeo: 'Gestion et stock pour pharmacie et parapharmacie',
+    description: 'Logiciel de gestion des ventes et de gestion de stock pour pharmacie, parapharmacie et dépôt pharmaceutique : stock par boîte, alertes de rupture, inventaire, prix d’achat, vendeurs avec code PIN. Essai gratuit.',
+    titre: 'La gestion des ventes et du stock de votre pharmacie.',
+    chapo: 'Médicaments, parapharmacie, hygiène : suivez le stock boîte par boîte, soyez prévenu avant la rupture et contrôlez les comptes de chaque vendeur.',
     etiquette: 'Pour les pharmacies et parapharmacies', titreFonctions: 'Moins de ruptures, plus de contrôle.',
-    chapoFonctions: 'Un outil simple pour la caisse et le stock. Kaislo n’est pas un logiciel de dossier patient ni de tiers payant.',
+    chapoFonctions: 'Un outil simple pour les ventes et le stock. Kaislo n’est pas un logiciel de dossier patient ni de tiers payant.',
     lignes: [{ titre: 'Le stock à la boîte près', texte: 'Le stock baisse à chaque vente. Enregistrez les livraisons du grossiste avec le prix d’achat et faites vos inventaires.', points: ['Alertes de stock bas', 'Historique des entrées', 'Inventaire exporté en Excel'], capture: STOCK }],
     fonctions: [
       ['alerte', 'Alertes de rupture', 'Un seuil par produit : commandez à temps.', true],
@@ -100,15 +100,15 @@ export const ACTIVITES = {
       ['carnet', 'Crédit client', 'Suivi des clients qui paient plus tard.', true],
       ['remise', 'Remises', 'Remises contrôlées : seuls les vendeurs autorisés peuvent en faire.'],
     ],
-    questions: [['Kaislo gère-t-il les ordonnances ?', 'Non : Kaislo est une caisse et un outil de stock. Il ne gère ni dossier patient, ni tiers payant, ni ordonnances.']],
+    questions: [['Kaislo gère-t-il les ordonnances ?', 'Non : Kaislo est un outil de vente et de stock. Il ne gère ni dossier patient, ni tiers payant, ni ordonnances.']],
   }),
   boulangerie: page({
-    lien: '/caisse-boulangerie/', nom: 'Boulangerie',
-    titreSeo: 'Caisse pour boulangerie et pâtisserie',
-    description: 'Logiciel de caisse pour boulangerie et pâtisserie : vente rapide au comptoir, pains, viennoiseries, gâteaux, crédit client, clôture de caisse, stock des ingrédients. Essai gratuit.',
-    titre: 'La caisse rapide de votre boulangerie.',
-    chapo: 'Pains, viennoiseries, gâteaux : encaissez en un geste aux heures de pointe, et sachez chaque soir ce qui s’est vendu.',
-    etiquette: 'Pour les boulangeries et pâtisseries', titreFonctions: 'Le comptoir va vite, la caisse suit.',
+    lien: '/gestion-boulangerie/', nom: 'Boulangerie',
+    titreSeo: 'Gestion pour boulangerie et pâtisserie',
+    description: 'Logiciel de gestion des ventes pour boulangerie et pâtisserie : vente rapide au comptoir, pains, viennoiseries, gâteaux, crédit client, clôture de la journée, stock des ingrédients. Essai gratuit.',
+    titre: 'La vente rapide dans votre boulangerie.',
+    chapo: 'Pains, viennoiseries, gâteaux : validez une vente en un geste aux heures de pointe, et sachez chaque soir ce qui s’est vendu.',
+    etiquette: 'Pour les boulangeries et pâtisseries', titreFonctions: 'Le comptoir va vite, les comptes suivent.',
     chapoFonctions: 'Des grandes tuiles avec photo pour vendre vite, et des chiffres clairs le soir.',
     capture: { src: '/captures/caisse-ordi.webp', alt: 'Caisse rapide avec tuiles et photos' },
     lignes: [{ titre: 'Ce qui se vend, heure par heure', texte: 'Voyez les ventes par heure et les meilleurs produits pour mieux préparer la fournée du lendemain.', capture: { src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord des ventes' } }],
@@ -120,23 +120,23 @@ export const ACTIVITES = {
       ['accueil', 'Ventes par heure', 'Préparez la bonne quantité au bon moment.', true],
       ['depense', 'Dépenses', 'Achats du jour notés pour connaître votre vrai résultat.'],
     ],
-    questions: [['Peut-on vendre très vite aux heures de pointe ?', 'Oui : chaque produit est une grande tuile, un toucher l’ajoute au ticket et l’encaissement prend deux secondes.']],
+    questions: [['Peut-on vendre très vite aux heures de pointe ?', 'Oui : chaque produit est une grande tuile, un toucher l’ajoute au ticket et la validation prend deux secondes.']],
   }),
   bar: page({
-    lien: '/caisse-bar/', nom: 'Bar',
-    titreSeo: 'Caisse pour bar, café et lounge — tables et stock des boissons',
-    description: 'Logiciel de caisse pour bar, café, lounge et maquis : commandes par table, stock des bouteilles, alertes de rupture, vendeurs avec code PIN, clôture de caisse. Essai gratuit.',
-    titre: 'La caisse et le stock de votre bar.',
-    chapo: 'Commandes par table, stock des bouteilles et des casiers, et une caisse de serveur contrôlée chaque soir.',
-    etiquette: 'Pour les bars, cafés et lounges', titreFonctions: 'Chaque bouteille comptée, chaque table encaissée.',
+    lien: '/gestion-bar/', nom: 'Bar',
+    titreSeo: 'Gestion pour bar, café et lounge — tables et stock des boissons',
+    description: 'Logiciel de gestion des ventes pour bar, café, lounge et maquis : commandes par table, stock des bouteilles, alertes de rupture, vendeurs avec code PIN, clôture de la journée. Essai gratuit.',
+    titre: 'La gestion des ventes et du stock de votre bar.',
+    chapo: 'Commandes par table, stock des bouteilles et des casiers, et les comptes de chaque serveur contrôlés chaque soir.',
+    etiquette: 'Pour les bars, cafés et lounges', titreFonctions: 'Chaque bouteille comptée, chaque table réglée.',
     chapoFonctions: 'Le stock des boissons baisse à chaque vente : les écarts sautent aux yeux.',
     lienDemo: LIEN_DEMO_RESTO,
     capture: { src: '/captures/tables-ordi.webp', alt: 'Plan des tables du bar' },
     lignes: [{ titre: 'Le stock des boissons', texte: 'Bouteilles, casiers, fûts : enregistrez les livraisons et comparez le stock réel au stock attendu.', points: ['Alertes de rupture', 'Inventaire en fin de mois', 'Marge par boisson'], capture: STOCK }],
     fonctions: [
-      ['tables', 'Commandes par table', 'Ouvrez une table, ajoutez au fil de la soirée, encaissez à la fin.', true],
+      ['tables', 'Commandes par table', 'Ouvrez une table, ajoutez au fil de la soirée, validez la vente à la fin.', true],
       ['stock', 'Stock des bouteilles', 'À la bouteille ou au casier, avec alertes de rupture.'],
-      ['clients', 'Caisse par serveur', 'Chaque serveur a son code : vous savez qui a vendu quoi.'],
+      ['clients', 'Comptes par serveur', 'Chaque serveur a son code : vous savez qui a vendu quoi.'],
       ['remise', 'Happy hour', 'Prix promo et remises contrôlées.'],
       ['accueil', 'Soirées en chiffres', 'Ventes par heure et meilleures boissons.', true],
       ['carnet', 'Ardoises', 'Les ardoises des habitués, suivies comme un carnet de crédit.'],
@@ -145,9 +145,9 @@ export const ACTIVITES = {
   }),
   grossiste: page({
     lien: '/logiciel-grossiste/', nom: 'Commerce de gros',
-    titreSeo: 'Logiciel de stock et de caisse pour grossiste et dépôt',
-    description: 'Logiciel de gestion de stock et de caisse pour grossiste, demi-grossiste, dépôt de boissons et distributeur : vente au carton, au sac ou au lot, inventaire, crédit clients revendeurs, marges. Essai gratuit.',
-    titre: 'Le stock et la caisse de votre dépôt.',
+    titreSeo: 'Logiciel de stock et de gestion pour grossiste et dépôt',
+    description: 'Logiciel de gestion de stock et de gestion pour grossiste, demi-grossiste, dépôt de boissons et distributeur : vente au carton, au sac ou au lot, inventaire, crédit clients revendeurs, marges. Essai gratuit.',
+    titre: 'Les ventes et le stock de votre dépôt.',
     chapo: 'Cartons, sacs, palettes, lots : suivez ce qui entre et ce qui sort, et le crédit de chaque revendeur.',
     etiquette: 'Pour les grossistes et dépôts', titreFonctions: 'Un stock juste, même avec de gros volumes.',
     chapoFonctions: 'Dépôts de boissons, grossistes alimentaires, distributeurs : les catégories sont prêtes à l’inscription.',

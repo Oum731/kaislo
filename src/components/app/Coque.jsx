@@ -28,7 +28,7 @@ export function liensMenu(s) {
   const gerant = s.estGerant();
   const liens = [];
   if (gerant) liens.push(['accueil', 'Accueil', 'accueil']);
-  liens.push(['caisse', 'Caisse', 'caisse']);
+  liens.push(['caisse', 'Vendre', 'caisse']);
   if (s.aTables()) liens.push(['tables', 'Tables', 'tables', (s.d.commandes || []).filter((c) => c.lignes.length).length || null]);
   liens.push(['ventes', gerant ? 'Ventes' : 'Mes ventes', 'ventes']);
   liens.push(['clients', 'Crédit', 'carnet']);
@@ -90,7 +90,7 @@ export default function Coque() {
       <main className="principal">
         <Ecran />
       </main>
-      {/* Bulle de discussion : pas sur la caisse ni les tables (boutons d'encaissement en bas), ni sur Aide (messagerie déjà affichée) */}
+      {/* Bulle de discussion : pas sur l'écran de vente ni les tables (boutons de validation en bas), ni sur Aide (messagerie déjà affichée) */}
       {!['aide', 'caisse', 'tables'].includes(s.ecran) && (
         <BulleChat position="app" nonLus={s.messagesNonLus} messagerie={estServeur(s.d) ? <Messagerie /> : null} />
       )}

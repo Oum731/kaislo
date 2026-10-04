@@ -1,16 +1,16 @@
 // ------------------------------------------------------------
-// Page "Logiciel de caisse pour épicerie" (référencement Google)
+// Page "Logiciel de gestion des ventes pour épicerie" (référencement Google)
 // ------------------------------------------------------------
 import PageMetier from '@/components/site/PageMetier';
 import { LIEN_DEMO_EPICERIE } from '@/components/site/Site';
 
 const description =
-  'Caisse pour épicerie et supérette : code-barres, gestion de stock, alertes de rupture, carnet de crédit avec rappel WhatsApp, marge par produit, ticket imprimé. Gratuit pour démarrer.';
+  'Gestion pour épicerie et supérette : code-barres, gestion de stock, alertes de rupture, carnet de crédit avec rappel WhatsApp, marge par produit, ticket imprimé. Gratuit pour démarrer.';
 
 export const metadata = {
-  title: 'Caisse pour épicerie et supérette — stock, code-barres, carnet de crédit',
+  title: 'Gestion pour épicerie et supérette — stock, code-barres, carnet de crédit',
   description,
-  alternates: { canonical: '/caisse-epicerie/' },
+  alternates: { canonical: '/gestion-epicerie/' },
 };
 
 const contenu = {
@@ -20,9 +20,9 @@ const contenu = {
   vignettes: ['presentation', 'produits', 'vendeurs'],
   titreVideo: 'Une journée d’épicerie, expliquée en une minute.',
   description,
-  titre: 'Le logiciel de caisse pour épiceries et supérettes.',
-  capture: { src: '/captures/epicerie-ordi.webp', alt: 'Caisse de l’épicerie avec code-barres et stock' },
-  captureMobile: { src: '/captures/epicerie-mobile.webp', alt: 'Caisse de l’épicerie sur téléphone' },
+  titre: 'Le logiciel de gestion des ventes pour épiceries et supérettes.',
+  capture: { src: '/captures/epicerie-ordi.webp', alt: 'Écran de vente de l’épicerie avec code-barres et stock' },
+  captureMobile: { src: '/captures/epicerie-mobile.webp', alt: 'Écran de vente de l’épicerie sur téléphone' },
   lignes: [
     {
       titre: 'Le carnet de crédit, sans le cahier',
@@ -47,14 +47,14 @@ const contenu = {
     ['stock', 'Stock en temps réel', 'Le stock baisse à chaque vente. Entrées fournisseur, inventaire et historique des mouvements.'],
     ['alerte', 'Alertes de rupture', 'Choisissez le seuil de chaque produit : Kaislo vous prévient avant qu’il ne manque.', true],
     ['accueil', 'Marge par produit', 'Avec le prix d’achat, voyez la marge réelle de chaque article et la valeur de votre stock.'],
-    ['remise', 'Promotions', 'Prix promo affiché barré à la caisse, remises en pourcentage ou en montant.'],
+    ['remise', 'Promotions', 'Prix promo affiché barré au moment de la vente, remises en pourcentage ou en montant.'],
     ['imprimante', 'Ticket imprimé', 'Ticket clair avec vos coordonnées, et reçu pour chaque remboursement de crédit.'],
-    ['bouclier', 'Clôture de caisse', 'Le soir, l’écart entre les espèces attendues et comptées s’affiche immédiatement.'],
+    ['bouclier', 'Clôture de la journée', 'Le soir, l’écart entre les espèces attendues et comptées s’affiche immédiatement.'],
     ['clients', 'Vendeurs et droits', 'Un code PIN par vendeur. Vous décidez qui peut ajouter des produits ou faire des remises.'],
   ],
   titreFaq: 'Questions des épiciers',
   questions: [
-    ['Comment marche le carnet de crédit ?', 'Au moment d’encaisser, choisissez « À crédit » puis le client (ou créez-le en une seconde). Le ticket indique le total dû. Quand le client rembourse, vous enregistrez le montant et un reçu s’imprime.'],
+    ['Comment marche le carnet de crédit ?', 'Au moment de valider la vente, choisissez « À crédit » puis le client (ou créez-le en une seconde). Le ticket indique le total dû. Quand le client rembourse, vous enregistrez le montant et un reçu s’imprime.'],
     ['Puis-je scanner les codes-barres ?', 'Oui, avec la caméra du téléphone (Chrome sur Android) ou avec un lecteur de code-barres USB ou Bluetooth, qui fonctionne sur tous les appareils.'],
     ['Comment suivre mon stock ?', 'Activez « Suivre le stock » sur vos articles. Le stock baisse à chaque vente ; ajoutez la marchandise reçue avec le prix d’achat et le fournisseur, et corrigez après inventaire.'],
     ['Et les produits vendus au poids ou en pack ?', 'Utilisez les options : par exemple « 500 g / 1 kg / 2 kg » pour les tomates, ou « Bouteille / Pack de 6 » pour l’eau, chacun avec son prix.'],

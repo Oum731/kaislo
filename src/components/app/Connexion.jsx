@@ -53,7 +53,7 @@ function PanneauVisuel() {
       <span className="cercle" style={{ width: 260, height: 260, left: -90, bottom: -80, background: 'rgba(30,91,67,.6)' }} />
       <span className="logo" style={{ color: 'var(--creme)', position: 'relative' }}><Marque /> Kaislo</span>
       <div style={{ position: 'relative' }}>
-        <h2>Encaissez plus vite. Comptez moins. Gagnez plus.</h2>
+        <h2>Vendez plus vite. Comptez moins. Gagnez plus.</h2>
         <p style={{ opacity: 0.75, marginTop: 14, maxWidth: 420 }}>
           Ventes, tickets, carnet de crédit, tables, stock et marges : tout votre commerce dans votre poche.
         </p>
@@ -69,8 +69,8 @@ function Accueil() {
   return (
     <div>
       <div className="intro">
-        <h1>La caisse simple de votre commerce.</h1>
-        <p>Restaurants, épiceries, boutiques, partout dans le monde : encaissez en quelques touches, imprimez le ticket, suivez vos ventes.</p>
+        <h1>La gestion simple de votre commerce.</h1>
+        <p>Restaurants, épiceries, boutiques, partout dans le monde : enregistrez vos ventes en quelques touches, imprimez le ticket, suivez vos ventes.</p>
       </div>
       <button className="btn grand bloc" onClick={() => useKaislo.setState({ etapeConnexion: 'connexion' })}>
         <Icone nom="sortie" /> Se connecter

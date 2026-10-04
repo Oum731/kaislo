@@ -7,7 +7,7 @@
 // ------------------------------------------------------------
 const nextConfig = {
   output: 'export',
-  trailingSlash: true, // /caisse-epicerie/ -> /caisse-epicerie/index.html (Hostinger)
+  trailingSlash: true, // /gestion-epicerie/ -> /gestion-epicerie/index.html (Hostinger)
   images: { unoptimized: true },
   reactStrictMode: true,
   // Version de test GitHub Pages : le site vit dans /kaislo (voir npm run publier-github)

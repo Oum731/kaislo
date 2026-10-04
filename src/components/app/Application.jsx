@@ -38,7 +38,7 @@ export default function Application() {
   }, []);
 
   // Écran de lancement : visible dès l'ouverture, avant même le chargement du JavaScript
-  if (!pret) return <Chargement texte="Ouverture de votre caisse…" />;
+  if (!pret) return <Chargement texte="Ouverture de votre commerce…" />;
 
   return (
     <div className="app">

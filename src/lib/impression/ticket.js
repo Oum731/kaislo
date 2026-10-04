@@ -116,7 +116,7 @@ export function construireTicket(vente, commerce, largeurPapier = 58) {
 
   // Pied de ticket
   if (commerce.piedTicket) for (const l of decouper(commerce.piedTicket, L)) ajouter(centrer(l, L));
-  ajouter(centrer('Caisse Kaislo', L));
+  ajouter(centrer('Kaislo', L));
   return out;
 }
 
@@ -133,7 +133,7 @@ export function construireTicketCloture(cl, commerce, largeurPapier = 58) {
   const signe = (m) => (m > 0 ? '+' : '') + formatPrix(m, dev);
 
   for (const l of decouper(commerce.nom.toUpperCase(), L)) ajouter(centrer(l, L), { gras: true, grand: true });
-  ajouter(centrer('FERMETURE DE CAISSE', L), { gras: true });
+  ajouter(centrer('FERMETURE DE LA JOURNÉE', L), { gras: true });
   separateur();
   colonnes('Ouverture', formatDate(cl.debut) + ' ' + formatHeure(cl.debut));
   if (cl.ouvertePar) ajouter('  par ' + cl.ouvertePar);
@@ -161,8 +161,8 @@ export function construireTicketCloture(cl, commerce, largeurPapier = 58) {
     separateur();
   }
 
-  ajouter('ESPÈCES DANS LA CAISSE', { gras: true });
-  colonnes('Fond de caisse', formatNombre(cl.fondDeCaisse, dev));
+  ajouter('ESPÈCES EN MAIN', { gras: true });
+  colonnes('Fond de départ', formatNombre(cl.fondDeCaisse, dev));
   colonnes('+ Ventes en espèces', formatNombre(cl.ventesEspeces, dev));
   if (cl.remboursementsEspeces) colonnes('+ Crédits remboursés', formatNombre(cl.remboursementsEspeces, dev));
   colonnes('- Dépenses payées', formatNombre(cl.depensesCaisse, dev));
@@ -170,13 +170,13 @@ export function construireTicketCloture(cl, commerce, largeurPapier = 58) {
   colonnes('Compté', formatPrix(cl.compte, dev), { gras: true });
   separateur();
   colonnes('ÉCART', signe(cl.ecart), { gras: true, grand: true });
-  ajouter(centrer(cl.ecart === 0 ? 'Caisse juste' : cl.ecart < 0 ? 'Il manque de l’argent' : 'Excédent en caisse', L));
+  ajouter(centrer(cl.ecart === 0 ? 'Comptes justes' : cl.ecart < 0 ? 'Il manque de l’argent' : 'Excédent dans les comptes', L));
   separateur();
   if (cl.note) for (const l of decouper('Note : ' + cl.note, L)) ajouter(l);
   ajouter('');
   ajouter('Signature :');
   ajouter('');
-  ajouter(centrer('Caisse Kaislo', L));
+  ajouter(centrer('Kaislo', L));
   return out;
 }
 
@@ -221,7 +221,7 @@ export function construireTicketRemboursement(r, client, soldeApres, commerce, l
   colonnes('Reste dû', formatPrix(soldeApres, dev), { gras: true });
   ajouter('-'.repeat(L));
   ajouter(centrer(soldeApres > 0 ? 'Merci !' : 'Compte soldé. Merci !', L));
-  ajouter(centrer('Caisse Kaislo', L));
+  ajouter(centrer('Kaislo', L));
   return out;
 }
 
