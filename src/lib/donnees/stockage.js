@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // STOCKAGE des données.
 //
-// Toutes les données sont gardées DANS L'APPAREIL (localStorage) : la caisse
+// Toutes les données sont gardées DANS L'APPAREIL (IndexedDB, voir memoire.js) : l'application
 // marche sans internet. Pour les commerces inscrits en ligne, synchro.js
 // envoie les modifications au serveur (API PHP) et récupère celles des autres appareils.
 // ------------------------------------------------------------
@@ -10,36 +10,17 @@ import { CATEGORIES_DEPART, TABLES_DEPART, paysParId, typeCommerce, cleTelephone
 import { genId } from '../utils/format.js';
 import { nouvelAbonnement } from './abonnement.js';
 import { migrerClotures } from './cloture.js';
+import { lireMemoire, ecrireMemoire, effacerMemoire } from './memoire.js';
 
-const PREFIXE = 'kaislo:';
-function lire(cle) {
-  if (typeof window === 'undefined') return null;
-  try {
-    const brut = localStorage.getItem(PREFIXE + cle);
-    return brut ? JSON.parse(brut) : null;
-  } catch {
-    return null; // navigation privée, stockage bloqué…
-  }
-}
-
-function ecrire(cle, valeur) {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(PREFIXE + cle, JSON.stringify(valeur));
-  } catch (e) {
-    console.warn('Impossible d’enregistrer', e);
-  }
-}
+// Lecture / écriture : en mémoire + IndexedDB (voir memoire.js). initialiserStockage() est appelé au démarrage de l'application.
+export { initialiserStockage, surErreurStockage } from './memoire.js';
+const lire = lireMemoire;
+const ecrire = ecrireMemoire;
+const effacer = effacerMemoire;
 
 // Accès direct pour les autres modules (file d'attente de synchronisation…)
 export const lireLocal = lire;
 export const ecrireLocal = ecrire;
-
-function effacer(cle) {
-  try {
-    localStorage.removeItem(PREFIXE + cle);
-  } catch { /* rien */ }
-}
 
 // Les deux commerces d'exemple (restaurant, épicerie)
 export function estDemo(commerceId) {

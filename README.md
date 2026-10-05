@@ -168,6 +168,12 @@ en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/s
    (10 caractères minimum, avec lettres et chiffres). Les autres membres de l'équipe sont ajoutés ensuite
    dans l'onglet « Équipe » (rôle « admin » ou « support » ; le support ne peut ni encaisser ni suspendre).
 
+## Stockage sur l'appareil
+
+Les données du commerce sont gardées dans l'appareil (IndexedDB, `src/lib/donnees/memoire.js`) : lecture instantanée, marche sans internet, et plus de limite de 5 Mo
+comme avec `localStorage` (testé avec 40 000 ventes). Au premier lancement après la mise à jour, les anciennes données de `localStorage` sont reprises automatiquement,
+puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un message d'erreur s'affiche.
+
 ## Règles appliquées par le serveur
 
 - **Ventes** : une vente enregistrée ne change plus. Un vendeur ne peut que l'annuler, et seulement si le code du gérant a été saisi sur son appareil
