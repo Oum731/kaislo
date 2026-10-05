@@ -14,6 +14,7 @@
 //   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
 //   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
+//   GET  /api/pays          pays du visiteur d'après son adresse IP (voir lib/pays.php)
 //   /api/commercial/...     espace des commerciaux Kaislo (voir lib/commerciaux.php)
 //   /api/admin/...          espace Amorac : commerces, abonnements, offres, équipe (voir lib/admin.php)
 //
@@ -33,6 +34,7 @@ require __DIR__ . '/lib/messages.php';
 require __DIR__ . '/lib/admin.php';
 require __DIR__ . '/lib/contact.php';
 require __DIR__ . '/lib/tarifs.php';
+require __DIR__ . '/lib/pays.php';
 require __DIR__ . '/lib/commerciaux.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
@@ -82,6 +84,7 @@ try {
         'POST /admin/commissions' => routeAdminCommissions(),
         'POST /admin/programme' => routeAdminProgramme(),
         'GET /tarifs' => routeTarifs(),
+        'GET /pays' => routePays(),
         'POST /commercial/connexion' => routeCommercialConnexion(),
         'GET /commercial/moi' => routeCommercialMoi(),
         'POST /commercial/pin' => routeCommercialPin(),

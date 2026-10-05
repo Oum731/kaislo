@@ -1,16 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 <url>
 <loc>https://kaislo.com/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-restaurant/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-restaurant/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/restaurant-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-restaurant/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-epicerie/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-epicerie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/grocery-store-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-epicerie/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-stock/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-stock/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/stock-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-stock/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-boutique/</loc>
@@ -32,9 +44,15 @@
 </url>
 <url>
 <loc>https://kaislo.com/tarifs/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/tarifs/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pricing/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tarifs/" />
 </url>
 <url>
 <loc>https://kaislo.com/tutoriels/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/tutoriels/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/tutorials/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tutoriels/" />
 </url>
 <url>
 <loc>https://kaislo.com/pays/cote-d-ivoire/</loc>
@@ -98,5 +116,41 @@
 </url>
 <url>
 <loc>https://kaislo.com/mentions-legales/</loc>
+</url>
+<url>
+<loc>https://kaislo.com/en/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/pricing/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/tarifs/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pricing/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tarifs/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/restaurant-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-restaurant/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/restaurant-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-restaurant/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/grocery-store-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-epicerie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/grocery-store-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-epicerie/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/stock-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-stock/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/stock-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-stock/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/tutorials/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/tutoriels/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/tutorials/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tutoriels/" />
 </url>
 </urlset>
