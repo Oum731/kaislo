@@ -18,7 +18,7 @@ const toutes = process.argv.includes('--tout');
 // Site public : les pages traduites sont dans src/components/site/pages ; les pages légales, par pays et par activité suivront
 const DOSSIERS = ['src/components', 'src/store', 'src/lib'];
 // Espace équipe (français seulement), données de démonstration, dictionnaires
-const IGNORES = [/src\/components\/admin\//, /src\/components\/site\/(activites\.js|PageLegale\.jsx|SelecteurLangueSite\.jsx)/, /src\/lib\/donnees\/demo\.js/, /src\/lib\/i18n\//, /credits-photos/];
+const IGNORES = [/src\/components\/admin\//, /src\/components\/site\/(PageLegale\.jsx|SelecteurLangueSite\.jsx)/, /src\/lib\/donnees\/demo\.js/, /src\/lib\/i18n\//, /credits-photos/];
 
 function fichiers(dossier) {
   return fs.readdirSync(dossier, { withFileTypes: true }).flatMap((e) => {

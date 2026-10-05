@@ -11,7 +11,7 @@ export const dynamic = 'force-static';
 export default function sitemap() {
   const pages = [
     '/', '/gestion-restaurant/', '/gestion-epicerie/', '/gestion-stock/',
-    ...Object.values(ACTIVITES).map((a) => a.lien),
+    ...Object.values(ACTIVITES()).map((a) => a.lien),
     '/tarifs/', '/tutoriels/', ...PAYS_SEO.map(lienPays), '/devenir-commercial/',
     ...PAGES_LEGALES().map(([lien]) => lien),
   ];

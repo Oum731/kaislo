@@ -1,9 +1,8 @@
-// Page « boulangerie » pour Google : contenu dans src/components/site/activites.js
-import PageMetier from '@/components/site/PageMetier';
-import { ACTIVITES } from '@/components/site/activites';
+// Version française : contenu dans src/components/site/activites.js
+import Activite, { meta } from '@/components/site/pages/Activite';
 
-export const metadata = ACTIVITES.boulangerie.metadata;
+export const metadata = meta('boulangerie', 'fr');
 
 export default function Page() {
-  return <PageMetier c={ACTIVITES.boulangerie.contenu} />;
+  return <Activite cle="boulangerie" lang="fr" />;
 }

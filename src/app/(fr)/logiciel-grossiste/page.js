@@ -1,9 +1,8 @@
-// Page « grossiste » pour Google : contenu dans src/components/site/activites.js
-import PageMetier from '@/components/site/PageMetier';
-import { ACTIVITES } from '@/components/site/activites';
+// Version française : contenu dans src/components/site/activites.js
+import Activite, { meta } from '@/components/site/pages/Activite';
 
-export const metadata = ACTIVITES.grossiste.metadata;
+export const metadata = meta('grossiste', 'fr');
 
 export default function Page() {
-  return <PageMetier c={ACTIVITES.grossiste.contenu} />;
+  return <Activite cle="grossiste" lang="fr" />;
 }

@@ -88,12 +88,10 @@ export function PiedSite() {
             <Link href="/app/">{tr('Se connecter')}</Link>
             <Link href={LIEN_INSCRIPTION}>{tr('Créer mon commerce')}</Link>
           </div>
-          {langueActive() === 'fr' && (
-            <div>
-              <h4>{tr('Par activité')}</h4>
-              {Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>{a.nom}</Link>)}
-            </div>
-          )}
+          <div>
+            <h4>{tr('Par activité')}</h4>
+            {Object.values(ACTIVITES()).map((a) => <Link key={a.lien} href={lien(a.lien)}>{a.nom}</Link>)}
+          </div>
           <div>
             <h4>{tr('Informations légales')}</h4>
             {PAGES_LEGALES().map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}

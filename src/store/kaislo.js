@@ -16,6 +16,7 @@ import { create } from 'zustand';
 import { avecStocks } from '@/lib/donnees/stock.js';
 import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo, initialiserStockage, surErreurStockage } from '@/lib/donnees/stockage.js';
 import { PAYS, paysDuNavigateur } from '@/lib/donnees/modeles.js';
+import { lirePaysChoisi, devinerPays, paysParIp } from '@/lib/pays-visiteur';
 import { formatPrix, formatNombre } from '@/lib/utils/format.js';
 import { trancheSession } from './session.js';
 import { trancheCaisse } from './caisse.js';
@@ -68,8 +69,17 @@ const trancheCommune = (set, get) => ({
     const params = new URLSearchParams(window.location.search);
     // Lien d'un commercial Kaislo : /app/?ref=CODE (code repris à l'inscription)
     if (params.get('ref')) get().sauverPrefs({ codeParrain: params.get('ref').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) });
-    if (!get().prefs.paysDemo) get().choisirPaysDemo(paysDuNavigateur());
-    if (params.get('pays') && PAYS.some((p) => p.id === params.get('pays'))) get().choisirPaysDemo(params.get('pays'));
+    // Pays des démos (devise, ville, paiements) : celui choisi par le visiteur (aussi sur le site), sinon celui de son appareil,
+    // puis, dès que l'adresse IP répond, celui de sa connexion (sauf s'il a déjà choisi ou ouvert la démo)
+    const choisiSurLeSite = lirePaysChoisi();
+    if (choisiSurLeSite && !get().prefs.paysDemoManuel) get().choisirPaysDemo(choisiSurLeSite);
+    else if (!get().prefs.paysDemo) get().choisirPaysDemo(devinerPays() || paysDuNavigateur());
+    if (params.get('pays') && PAYS.some((p) => p.id === params.get('pays'))) get().choisirPaysDemo(params.get('pays'), true);
+    if (!get().prefs.paysDemoManuel && !choisiSurLeSite) {
+      paysParIp().then((p) => {
+        if (p && p !== get().prefs.paysDemo && !get().utilisateur && !get().prefs.paysDemoManuel) get().choisirPaysDemo(p);
+      });
+    }
     const demo = params.get('demo');
     // Lien de démo rouvert (ou page rechargée) : on garde la session en cours
     if (demo && estDemo(demo) && get().prefs.commerceAppareil === demo) get().restaurerSession();

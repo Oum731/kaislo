@@ -16,6 +16,7 @@ import { estServeur, noterTout, tailleFile } from '@/lib/donnees/synchro.js';
 import { API_ACTIVE, appelApi, nomAppareil } from '@/lib/api.js';
 import { biometrieDisponible, activerBiometrie, connexionBiometrie, nomBiometrie } from '@/lib/biometrie.js';
 import { tr } from '@/lib/i18n';
+import { choisirPays } from '@/lib/pays-visiteur';
 
 // Empreinte du code PIN gardée dans l'appareil : permet de se reconnecter SANS internet
 // (seulement sur un appareil où la personne s'est déjà connectée en ligne)
@@ -195,8 +196,10 @@ export const trancheSession = (set, get) => ({
   },
 
   // Démos : le visiteur choisit son pays (devise, ville, paiements)
-  choisirPaysDemo(pays) {
-    get().sauverPrefs({ paysDemo: pays });
+  // manuel : le visiteur l'a choisi lui-même (on ne le change plus ensuite, et le site le retient aussi)
+  choisirPaysDemo(pays, manuel = false) {
+    get().sauverPrefs(manuel ? { paysDemo: pays, paysDemoManuel: true } : { paysDemo: pays });
+    if (manuel) choisirPays(pays);
   },
 
   // Personnes déjà connectées sur cet appareil (pour remplir le numéro en un clic)
