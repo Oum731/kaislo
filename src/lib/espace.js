@@ -21,7 +21,12 @@ export function espaceMemorise() {
   try { const e = localStorage.getItem(CLE); return ADRESSES_ESPACES[e] ? e : null; } catch { return null; }
 }
 
+// Kaislo ouvert comme une application installée (écran d'accueil du téléphone, Chrome/Edge « Installer », Safari « Sur l'écran d'accueil »)
+export const enModeApplication = () => typeof window !== 'undefined' && (!!window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true);
+
 // Petit script placé tout en haut de la page d'accueil du site : redirige avant l'affichage (pas de flash).
+//  - application installée : toujours dans l'application (sur iPhone, l'icône garde l'adresse de la page où on l'a ajoutée, souvent l'accueil du site)
+//  - quelqu'un de connecté : dans son espace
 // Ajouter ?site=1 à l'adresse pour voir quand même la page publique.
 export const SCRIPT_REDIRECTION_ESPACE =
-  `try{var e=localStorage.getItem('${CLE}'),a=${JSON.stringify(ADRESSES_ESPACES)};if(e&&a[e]&&!/[?&]site\\b/.test(location.search))location.replace('${BASE_PATH}'+a[e])}catch(_){}`;
+  `try{var s=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true,e=localStorage.getItem('${CLE}'),a=${JSON.stringify(ADRESSES_ESPACES)};if(s)location.replace('${BASE_PATH}/app/');else if(e&&a[e]&&!/[?&]site\\b/.test(location.search))location.replace('${BASE_PATH}'+a[e])}catch(_){}`;

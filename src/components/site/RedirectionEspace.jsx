@@ -5,11 +5,12 @@
 // replace : l'accueil public ne reste pas dans l'historique. Ajouter ?site=1 à l'adresse pour voir la page publique.
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ADRESSES_ESPACES, espaceMemorise } from '@/lib/espace';
+import { ADRESSES_ESPACES, enModeApplication, espaceMemorise } from '@/lib/espace';
 
 export default function RedirectionEspace() {
   const router = useRouter();
   useEffect(() => {
+    if (enModeApplication()) return router.replace('/app/'); // application installée : toujours dans l'application
     if (/[?&]site\b/.test(window.location.search)) return;
     const espace = espaceMemorise();
     if (espace) router.replace(ADRESSES_ESPACES[espace]);
