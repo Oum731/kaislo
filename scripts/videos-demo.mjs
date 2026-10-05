@@ -152,7 +152,9 @@ async function voix(texte) {
   }
   if (!fs.existsSync(f)) {
     narration.manquantes++;
-    await execFileAsync(PYTHON, ['-m', 'edge_tts', '--voice', VOIX, `--rate=${VOIX_VITESSE}`, `--pitch=${VOIX_HAUTEUR}`, '--text', texte, '--write-media', f]);
+    // Environnement cloud (proxy qui réencrypte le TLS) : on fait confiance à l'autorité du proxy (voir scripts/voix-proxy/)
+    const env = fs.existsSync('/root/.ccr/ca-bundle.crt') ? { ...process.env, PYTHONPATH: [path.resolve('scripts/voix-proxy'), process.env.PYTHONPATH].filter(Boolean).join(path.delimiter) } : process.env;
+    await execFileAsync(PYTHON, ['-m', 'edge_tts', '--voice', VOIX, `--rate=${VOIX_VITESSE}`, `--pitch=${VOIX_HAUTEUR}`, '--text', texte, '--write-media', f], { env });
   }
   return { f, duree: dureeAudio(f) };
 }
