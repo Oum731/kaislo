@@ -13,7 +13,7 @@ import { CREDIT, paysParId } from './modeles.js';
 import { symbole } from '../utils/format.js';
 
 // À augmenter quand la structure des données change : la démo est alors recréée
-export const VERSION_DONNEES = 11;
+export const VERSION_DONNEES = 12;
 
 // Raccourcis pour écrire le catalogue de façon lisible
 let compteur = 0;
@@ -553,5 +553,8 @@ export function creerDonneesDemo(commerceId, paysId = 'MA') {
   d.sessionsCaisse = genererAnnulationsEtClotures(d, graine + 2);
   d.mouvements = genererMouvements(d, graine + 4);
   d.commandes = genererCommandes(d);
+  // Stock calculé à partir des ventes et des mouvements (voir stock.js) : la quantité actuelle est le point de départ, à partir de maintenant
+  const maintenant = new Date().toISOString();
+  d.produits = d.produits.map((p) => (p.suiviStock ? { ...p, stockBase: p.stock, stockDepuis: maintenant } : p));
   return d;
 }

@@ -175,6 +175,14 @@ en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/s
    (10 caractères minimum, avec lettres et chiffres). Les autres membres de l'équipe sont ajoutés ensuite
    dans l'onglet « Équipe » (rôle « admin » ou « support » ; le support ne peut ni encaisser ni suspendre).
 
+## Stock calculé à partir des mouvements
+
+Le stock n'est plus un nombre réécrit à chaque vente (deux appareils hors ligne s'écrasaient). Il se calcule :
+`stock = quantité de départ (stockBase) + entrées et corrections d'inventaire (mouvements) − articles vendus (ventes non annulées)`, comptés depuis `stockDepuis`.
+Ventes et mouvements ne changent jamais une fois enregistrés : à la synchronisation, tout s'additionne sans conflit. La fiche du produit n'est plus renvoyée au serveur à chaque vente
+(le stock calculé, `stockActuel`, reste dans l'appareil). Code : `src/lib/donnees/stock.js`, tests : `tests/stock.test.mjs`.
+Produits d'avant ce changement : l'ancien champ `stock` sert de départ, compté depuis le 5 octobre 2026 (`DEPUIS_ANCIENS`).
+
 ## Stockage sur l'appareil
 
 Les données du commerce sont gardées dans l'appareil (IndexedDB, `src/lib/donnees/memoire.js`) : lecture instantanée, marche sans internet, et plus de limite de 5 Mo

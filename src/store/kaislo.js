@@ -13,6 +13,7 @@
 //   synchro.js    : envoi / réception des données (commerces inscrits en ligne)
 // ------------------------------------------------------------
 import { create } from 'zustand';
+import { avecStocks } from '@/lib/donnees/stock.js';
 import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo, initialiserStockage, surErreurStockage } from '@/lib/donnees/stockage.js';
 import { PAYS, paysDuNavigateur } from '@/lib/donnees/modeles.js';
 import { formatPrix, formatNombre } from '@/lib/utils/format.js';
@@ -78,7 +79,7 @@ const trancheCommune = (set, get) => ({
    */
   majDonnees(recette) {
     const d = get().d;
-    const nouvelles = { ...d, ...recette(d) };
+    const nouvelles = avecStocks({ ...d, ...recette(d) });
     enregistrerCommerce(nouvelles);
     // Commerce en ligne : la modification part dans la file d'attente, envoyée au serveur
     if (estServeur(nouvelles)) get().planifierSynchro(noterChangements(d, nouvelles));

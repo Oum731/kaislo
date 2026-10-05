@@ -5,6 +5,7 @@
 //  - panier : toujours visible à droite sur grand écran,
 //    dans une fenêtre sur téléphone
 // ------------------------------------------------------------
+import { stockDe } from '@/lib/donnees/stock.js';
 import { useEffect, useRef, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
@@ -109,12 +110,12 @@ export default function Caisse() {
                         {base < p.prix && <s>{s.prix(p.prix)}</s>}
                         {(p.groupes.length ? 'dès ' : '') + s.prix(depart)}
                       </span>
-                      {p.suiviStock && <span className={`tuile-stock ${p.stock <= (p.seuilAlerte ?? 5) ? 'bas' : ''}`}>{p.stock <= 0 ? 'Rupture' : 'Stock ' + quantiteUnite(p.stock, p.unite)}</span>}
+                      {p.suiviStock && <span className={`tuile-stock ${stockDe(p) <= (p.seuilAlerte ?? 5) ? 'bas' : ''}`}>{stockDe(p) <= 0 ? 'Rupture' : 'Stock ' + quantiteUnite(stockDe(p), p.unite)}</span>}
                     </span>
                   </>
                 );
                 return (
-                  <button key={p.id} className={`tuile teinte-${couleur(p)} ${p.image ? 'avec-photo' : ''} ${q ? 'dans-panier' : ''} ${p.suiviStock && p.stock <= 0 ? 'rupture' : ''}`} onClick={() => toucher(p)}>
+                  <button key={p.id} className={`tuile teinte-${couleur(p)} ${p.image ? 'avec-photo' : ''} ${q ? 'dans-panier' : ''} ${p.suiviStock && stockDe(p) <= 0 ? 'rupture' : ''}`} onClick={() => toucher(p)}>
                     {q > 0 && <span className="tuile-compteur">{q}</span>}
                     {base < p.prix && <span className="badge safran tuile-promo">Promo</span>}
                     {p.image ? (

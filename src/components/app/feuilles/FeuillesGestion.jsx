@@ -3,6 +3,7 @@
 // Fenêtres de gestion : produit, catégorie, vendeur, dépense,
 // client et remboursement, stock, compte, menu "Plus".
 // ------------------------------------------------------------
+import { stockDe } from '@/lib/donnees/stock.js';
 import { useEffect, useState } from 'react';
 import { postesDe, vendeursDuPoste } from '@/lib/donnees/postes';
 import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs';
@@ -23,7 +24,7 @@ export function FeuilleProduit({ produit, categorieId }) {
   const { d } = s;
   const [b, setB] = useState(() =>
     produit
-      ? JSON.parse(JSON.stringify(produit))
+      ? { ...JSON.parse(JSON.stringify(produit)), stock: stockDe(produit) } // le champ « stock » du formulaire montre le stock actuel (calculé)
       : { id: null, categorieId: categorieId || d.categories[0]?.id, nom: '', prix: null, promo: null, prixAchat: null, emoji: '', image: null, codeBarre: '', unite: typeCommerce(d.commerce.type).unite, suiviStock: false, stock: 0, seuilAlerte: 5, actif: true, groupes: [] }
   );
   const [nouvelleImage, setNouvelleImage] = useState(null); // photo choisie, pas encore enregistrée
@@ -375,7 +376,7 @@ export function FeuilleEntreeStock({ produitId }) {
         <label className="champ"><span>Article</span>
           <select value={b.produitId} onChange={(e) => setB({ ...b, produitId: e.target.value })}>
             <option value="">Choisir…</option>
-            {produits.map((x) => <option key={x.id} value={x.id}>{x.nom}{x.suiviStock ? ' (stock ' + x.stock + ')' : ''}</option>)}
+            {produits.map((x) => <option key={x.id} value={x.id}>{x.nom}{x.suiviStock ? ' (stock ' + stockDe(x) + ')' : ''}</option>)}
           </select>
         </label>
         <div className="grille-2">
@@ -384,7 +385,7 @@ export function FeuilleEntreeStock({ produitId }) {
         </div>
         <label className="champ"><span>Fournisseur</span><input list="fournisseurs" value={b.fournisseur} onChange={(e) => setB({ ...b, fournisseur: e.target.value })} placeholder="Ex : Grossiste Derb Omar" /></label>
         <datalist id="fournisseurs">{fournisseurs.map((f) => <option key={f} value={f} />)}</datalist>
-        {p && b.quantite > 0 && <p className="info-verte">Nouveau stock : {quantiteUnite(p.stock + Number(b.quantite), p.unite)}{(b.prixAchat || p.prixAchat) ? ' · coût ' + s.prix(b.quantite * (b.prixAchat || p.prixAchat)) : ''}</p>}
+        {p && b.quantite > 0 && <p className="info-verte">Nouveau stock : {quantiteUnite(stockDe(p) + Number(b.quantite), p.unite)}{(b.prixAchat || p.prixAchat) ? ' · coût ' + s.prix(b.quantite * (b.prixAchat || p.prixAchat)) : ''}</p>}
       </div>
     </Feuille>
   );
@@ -393,14 +394,14 @@ export function FeuilleEntreeStock({ produitId }) {
 // ---------- Stock : inventaire ----------
 export function FeuilleAjustement({ produit }) {
   const s = useKaislo();
-  const [q, setQ] = useState(produit.stock);
+  const [q, setQ] = useState(stockDe(produit));
   const [note, setNote] = useState('');
   const valider = () => { const err = s.ajusterStock(produit.id, q, note); err ? s.message(err, 'erreur') : s.fermer(); };
   return (
-    <Feuille titre="Inventaire" sousTitre={produit.nom + ' · stock actuel ' + produit.stock} surFermer={s.fermer} pied={<button className="btn bloc" onClick={valider}>Corriger le stock</button>}>
+    <Feuille titre="Inventaire" sousTitre={produit.nom + ' · stock actuel ' + stockDe(produit)} surFermer={s.fermer} pied={<button className="btn bloc" onClick={valider}>Corriger le stock</button>}>
       <div className="pile">
         <label className="champ"><span>Quantité réellement comptée</span><ChampMontant valeur={q} surChanger={setQ} grand autoFocus /></label>
-        {q !== null && q !== produit.stock && <p className={q > produit.stock ? 'info-verte' : 'alerte'}>Écart : {q > produit.stock ? '+' : ''}{q - produit.stock}</p>}
+        {q !== null && q !== stockDe(produit) && <p className={q > stockDe(produit) ? 'info-verte' : 'alerte'}>Écart : {q > stockDe(produit) ? '+' : ''}{q - stockDe(produit)}</p>}
         <label className="champ"><span>Raison (facultatif)</span><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex : casse, périmé, erreur de comptage" /></label>
       </div>
     </Feuille>

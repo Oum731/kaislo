@@ -5,6 +5,7 @@
 // L'état « synchro » est affiché dans l'en-tête (à jour, en attente, hors ligne).
 // ------------------------------------------------------------
 import { appelApi } from '@/lib/api.js';
+import { avecStocks } from '@/lib/donnees/stock.js';
 import { enregistrerCommerce } from '@/lib/donnees/stockage.js';
 import { estServeur, chargerFile, tailleFile, preparerEnvoi, retirerDeLaFile, appliquerElements, fusionServeur } from '@/lib/donnees/synchro.js';
 
@@ -93,6 +94,7 @@ export const trancheSynchro = (set, get) => ({
             if (base?.commerce.id !== id) return false; // l'appareil a changé de commerce entre-temps
             resultat = await transformer(base);
           } while (get().d !== base);
+          resultat = avecStocks(resultat); // ventes et mouvements des autres appareils : le stock se recalcule
           enregistrerCommerce(resultat);
           const u = get().utilisateur;
           set({ d: resultat, utilisateur: (u && resultat.utilisateurs.find((x) => x.id === u.id)) || u });

@@ -4,6 +4,7 @@
 // et catégories (gérant). Les vendeurs autorisés peuvent ajouter
 // et modifier des articles, mais pas les supprimer.
 // ------------------------------------------------------------
+import { stockDe } from '@/lib/donnees/stock.js';
 import { useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { Icone, Segment, Interrupteur, ImageStockee, initiales } from '@/components/ui';
@@ -61,7 +62,7 @@ export default function Produits() {
                               {prixVente < p.prix ? <><s>{s.prix(p.prix)}</s> {s.prix(prixVente)}</> : s.prix(p.prix)}
                               {marge !== null && ` · marge ${marge} %`}
                               {p.groupes.length > 0 && ' · ' + p.groupes.map((g) => g.nom).join(', ')}
-                              {p.suiviStock && ' · stock ' + p.stock}
+                              {p.suiviStock && ' · stock ' + stockDe(p)}
                             </span>
                           </span>
                           <span onClick={(e) => e.stopPropagation()}>
