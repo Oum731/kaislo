@@ -51,7 +51,7 @@ const QUESTIONS = () => ([
   [tr('Puis-je envoyer le ticket au client par WhatsApp ?'), tr('Oui. Pour une livraison ou une commande par téléphone, cochez « Client à distance » et indiquez son numéro : le reçu complet s’ouvre dans WhatsApp, prêt à être envoyé.')],
   [tr('Est-ce que ça marche sur iPhone et sur ordinateur ?'), tr('Oui, Kaislo fonctionne sur Android, iPhone, Windows et Mac. L’impression Bluetooth depuis le navigateur fonctionne avec Chrome (Android et ordinateur) ; l’application mobile Kaislo l’apportera aussi sur iPhone.')],
   [tr('Comment fonctionne le carnet de crédit ?'), tr('Au moment de valider la vente, choisissez « À crédit » et le client. Kaislo garde l’historique de ses achats et de ses remboursements, affiche ce qu’il doit, et prépare un rappel WhatsApp.')],
-  [tr('Kaislo convient-il à mon type de commerce ?'), tr('Oui : restaurants et maquis, bars, boulangeries, épiceries, grossistes et dépôts, boutiques, quincailleries, pharmacies et parapharmacies, salons de beauté, téléphonie, librairies et papeteries… À l’inscription, Kaislo prépare les catégories et l’unité de vente de votre métier (pièce, kg, litre, mètre, carton…), et vous pouvez tout modifier.')],
+  [tr('Kaislo convient-il à mon type de commerce ?'), tr('Oui : restaurants et maquis, bars, boulangeries, épiceries, grossistes et dépôts, boutiques, quincailleries, salons de beauté, téléphonie, librairies et papeteries… À l’inscription, Kaislo prépare les catégories et l’unité de vente de votre métier (pièce, kg, litre, mètre, carton…), et vous pouvez tout modifier.')],
 ]);
 
 export default function Accueil({ lang }) {
@@ -65,7 +65,7 @@ export default function Accueil({ lang }) {
       <main>
         <Hero
           titre={tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}
-          chapo={tr('Restaurants, épiceries, boutiques, bars, pharmacies : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir. Toutes les devises et les moyens de paiement de votre pays (espèces, carte, mobile money). Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent. Sur téléphone, tablette ou ordinateur.')}
+          chapo={tr('Restaurants, épiceries, boutiques, bars, boulangeries : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir. Toutes les devises et les moyens de paiement de votre pays (espèces, carte, mobile money). Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent. Sur téléphone, tablette ou ordinateur.')}
           lienDemo={LIEN_DEMO_RESTO}
           garanties={[tr('Essai gratuit de 30 jours'), tr('Vos clients vous paient directement'), tr('Imprimante facultative')]}
           capture={{ src: '/captures/tableau-ordi.webp', alt: tr('Tableau de bord Kaislo : chiffre d’affaires, marge, dépenses, crédit en cours') }}
@@ -188,7 +188,7 @@ export default function Accueil({ lang }) {
         />
       </main>
       <PiedSite />
-      <DonneesLogiciel description={tr('Logiciel de gestion des ventes et de gestion de stock pour restaurants, épiceries, boutiques, quincailleries, pharmacies, grossistes et tous les commerces : ventes, inventaire, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, marges, ouverture et fermeture de la journée.')} />
+      <DonneesLogiciel description={tr('Logiciel de gestion des ventes et de gestion de stock pour restaurants, épiceries, boutiques, quincailleries, grossistes et tous les commerces : ventes, inventaire, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, marges, ouverture et fermeture de la journée.')} />
     </div>
   );
 }

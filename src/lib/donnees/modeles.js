@@ -12,6 +12,7 @@ export const CREDIT = 'Crédit';
 //  gereStock : scan code-barres + suivi du stock et inventaire
 //  tables    : commandes ouvertes par table + ticket cuisine
 //  unite     : unité proposée pour les nouveaux articles
+// Métiers proposés à l'inscription. Les métiers soumis à une réglementation propre (pharmacie…) ne sont plus proposés.
 export const TYPES_COMMERCE = [
   { id: 'restaurant', nom: 'Restaurant', icone: 'cuisine', description: 'Tables, ticket cuisine, plats avec accompagnements', gereStock: false, tables: true, unite: 'portion' },
   { id: 'maquis', nom: 'Maquis / snack / fast-food', icone: 'caisse', description: 'Service rapide, grillades, boissons', gereStock: true, tables: true, unite: 'portion' },
@@ -21,18 +22,22 @@ export const TYPES_COMMERCE = [
   { id: 'grossiste', nom: 'Grossiste / dépôt / distributeur', icone: 'stock', description: 'Cartons, sacs, gros volumes, crédit clients', gereStock: true, tables: false, unite: 'carton' },
   { id: 'boutique', nom: 'Boutique de vêtements / chaussures', icone: 'produits', description: 'Tailles, couleurs, stock par article', gereStock: true, tables: false, unite: 'pièce' },
   { id: 'quincaillerie', nom: 'Quincaillerie / matériaux', icone: 'reglages', description: 'Outillage, au mètre ou au kilo, gros stock', gereStock: true, tables: false, unite: 'pièce' },
-  { id: 'pharmacie', nom: 'Pharmacie / parapharmacie', icone: 'bouclier', description: 'Médicaments, hygiène, alertes de rupture', gereStock: true, tables: false, unite: 'boîte' },
   { id: 'beaute', nom: 'Cosmétiques / beauté / salon', icone: 'photo', description: 'Produits de beauté et prestations', gereStock: true, tables: false, unite: 'pièce' },
   { id: 'telephonie', nom: 'Téléphonie / électronique', icone: 'telephone', description: 'Téléphones, accessoires, crédit, réparations', gereStock: true, tables: false, unite: 'pièce' },
   { id: 'librairie', nom: 'Librairie / papeterie', icone: 'carnet', description: 'Livres, fournitures scolaires et de bureau', gereStock: true, tables: false, unite: 'pièce' },
   { id: 'autre', nom: 'Autre commerce ou service', icone: 'menu', description: 'Tout ce qui se vend ou se stocke', gereStock: true, tables: false, unite: 'pièce' },
 ];
 
+// Anciens métiers : plus proposés, mais les commerces déjà inscrits sous ce type continuent de fonctionner (nom, unité, catégories, prix)
+export const TYPES_ANCIENS = [
+  { id: 'pharmacie', nom: 'Pharmacie / parapharmacie', icone: 'bouclier', description: 'Médicaments, hygiène, alertes de rupture', gereStock: true, tables: false, unite: 'boîte' },
+];
+
 // Unités de mesure des articles (stock et inventaire, au détail ou en gros)
 export const UNITES = ['pièce', 'kg', 'g', 'litre', 'mètre', 'carton', 'sac', 'paquet', 'boîte', 'bouteille', 'portion', 'lot', 'prestation'];
 
 export function typeCommerce(id) {
-  return TYPES_COMMERCE.find((t) => t.id === id) || TYPES_COMMERCE.find((t) => t.id === 'autre');
+  return TYPES_COMMERCE.find((t) => t.id === id) || TYPES_ANCIENS.find((t) => t.id === id) || TYPES_COMMERCE.find((t) => t.id === 'autre');
 }
 
 // Pays proposés : la devise, les modes de paiement et l'indicatif

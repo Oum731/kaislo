@@ -16,7 +16,6 @@ export const PAGES = [
   ['/tutoriels/', '/en/tutorials/'],
   ['/gestion-boutique/', '/en/boutique-management/'],
   ['/gestion-quincaillerie/', '/en/hardware-store-management/'],
-  ['/gestion-pharmacie/', '/en/pharmacy-management/'],
   ['/gestion-boulangerie/', '/en/bakery-management/'],
   ['/gestion-bar/', '/en/bar-management/'],
   ['/logiciel-grossiste/', '/en/wholesale-management/'],

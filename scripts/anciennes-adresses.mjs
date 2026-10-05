@@ -9,12 +9,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ACTIVITES = ['restaurant', 'epicerie', 'boutique', 'quincaillerie', 'pharmacie', 'boulangerie', 'bar'];
+const ACTIVITES = ['restaurant', 'epicerie', 'boutique', 'quincaillerie', 'boulangerie', 'bar'];
+// Pages retirées (métier réglementé non proposé) : redirigées vers l'accueil ou les guides
+const RETIREES = [
+  ['caisse-pharmacie', '/'], ['gestion-pharmacie', '/'], ['en/pharmacy-management', '/en/'],
+  ['guides/gerer-le-stock-dune-pharmacie-peremptions', '/guides/'], ['en/guides/managing-pharmacy-stock-and-expiry-dates', '/en/guides/'],
+];
 const SITE = 'https://kaislo.com';
 
-for (const a of ACTIVITES) {
-  const cible = `/gestion-${a}/`;
-  const dossier = path.join('out', `caisse-${a}`);
+const ecrire = (dossierRelatif, cible) => {
+  const dossier = path.join('out', dossierRelatif);
   fs.mkdirSync(dossier, { recursive: true });
   fs.writeFileSync(path.join(dossier, 'index.html'), `<!doctype html>
 <html lang="fr">
@@ -31,5 +35,7 @@ for (const a of ACTIVITES) {
 </body>
 </html>
 `);
-}
-console.log(`Anciennes adresses : ${ACTIVITES.length} pages de redirection écrites dans out/`);
+};
+for (const a of ACTIVITES) ecrire(`caisse-${a}`, `/gestion-${a}/`);
+for (const [ancienne, cible] of RETIREES) ecrire(ancienne, cible);
+console.log(`Anciennes adresses : ${ACTIVITES.length + RETIREES.length} pages de redirection écrites dans out/`);

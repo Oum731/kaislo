@@ -4,7 +4,7 @@
 // (deviné par l'appareil, modifiable). Même grille que le serveur (tarifs.js).
 // ------------------------------------------------------------
 import { FORMULES, REGLES_TARIFS, prixCatalogue, catalogueEnVigueur, remiseCodeParrain } from '@/lib/donnees/tarifs';
-import { PAYS, typeCommerce } from '@/lib/donnees/modeles';
+import { PAYS, TYPES_COMMERCE, typeCommerce } from '@/lib/donnees/modeles';
 import { symbole } from '@/lib/utils/format';
 import { useSelectionPays } from '@/lib/pays-visiteur';
 import { tr, tt } from '@/lib/i18n';
@@ -47,7 +47,7 @@ export default function TarifsPays() {
               <table>
                 <thead><tr><th>{tr('Métier')}</th><th>{tr('Par mois')}</th>{catalogue && <th>{tr('Avec un code parrain')}</th>}</tr></thead>
                 <tbody>
-                  {formules.flatMap((f) => f.types.filter((t) => t !== 'autre').map((t) => (
+                  {formules.flatMap((f) => f.types.filter((t) => t !== 'autre' && TYPES_COMMERCE.some((x) => x.id === t)).map((t) => (
                     <tr key={t}><td>{tt(typeCommerce(t).nom)}</td><td><b>{formatPrix(public_(f.prix[d]), d)}</b></td>{catalogue && <td><b className="vert-texte">{formatPrix(f.prix[d], d)}</b> <span className="tres-petit muet">(−{remiseCodeParrain(f, d)} %)</span></td>}</tr>
                   )))}
                 </tbody>

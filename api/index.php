@@ -161,7 +161,7 @@ function routeInscription(): never
 
     $nom = texte($commerce, 'nom', 'le nom du commerce');
     $type = (string) ($commerce['type'] ?? '');
-    if (!in_array($type, TYPES_COMMERCE, true)) throw new ErreurApi('Type de commerce inconnu');
+    if (!in_array($type, TYPES_COMMERCE_OFFERTS, true)) throw new ErreurApi('Type de commerce inconnu');
     $pays = strtoupper((string) ($commerce['pays'] ?? ''));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Pays non pris en charge');
     $ville = texte($commerce, 'ville', 'la ville');

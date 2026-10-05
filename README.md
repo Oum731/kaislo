@@ -299,3 +299,7 @@ Réglages → « Vos données » → « Rapport d'activité », ou le bouton « 
 Trois manifestes, un par espace : `public/manifest.webmanifest` (`/app/`), `manifest-admin.webmanifest` (`/admin/`) et `manifest-commercial.webmanifest` (`/commercial/`), chacun avec son `id`, son `start_url` et son `scope`. Installer depuis `/admin/` ou `/commercial/` ouvre donc cette page, et non l'application des commerces. L'accueil du site (`/`, `/en/`), ouvert en mode application, renvoie vers le dernier espace utilisé (sinon `/app/`). La session de l'espace Amorac reste limitée à l'onglet/à l'ouverture (sécurité) : l'application affiche alors la connexion de l'équipe ; l'espace commercial garde la connexion 30 jours.
 
 `src/lib/guides-pays.js` génère un guide par pays (15) à partir des données réelles du pays (devise, moyens de paiement, ville, commerces courants, prix), en français et en anglais : `/guides/gerer-son-commerce-<pays>/`, `/en/guides/running-a-business-in-<country>/`. Pas d'information juridique : ils renvoient vers les autorités locales.
+
+## Métiers réglementés
+
+Les métiers soumis à une réglementation propre (pharmacie…) ne sont plus proposés : ni à l'inscription (`TYPES_COMMERCE` dans `src/lib/donnees/modeles.js`, `TYPES_COMMERCE_OFFERTS` dans `api/lib/outils.php`), ni sur le site (pages, guides, textes). Les commerces déjà inscrits sous ce type (`TYPES_ANCIENS`) continuent de fonctionner avec la même formule de prix. Les anciennes adresses du site sont redirigées vers l'accueil ou les guides (`scripts/anciennes-adresses.mjs`, `.htaccess`).
