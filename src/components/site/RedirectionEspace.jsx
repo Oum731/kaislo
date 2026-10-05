@@ -10,9 +10,10 @@ import { ADRESSES_ESPACES, enModeApplication, espaceMemorise } from '@/lib/espac
 export default function RedirectionEspace() {
   const router = useRouter();
   useEffect(() => {
-    if (enModeApplication()) return router.replace('/app/'); // application installée : toujours dans l'application
-    if (/[?&]site\b/.test(window.location.search)) return;
     const espace = espaceMemorise();
+    // Application installée : directement dans son espace (le dernier utilisé, sinon l'application des commerces)
+    if (enModeApplication()) return router.replace(ADRESSES_ESPACES[espace || 'app']);
+    if (/[?&]site\b/.test(window.location.search)) return;
     if (espace) router.replace(ADRESSES_ESPACES[espace]);
   }, [router]);
   return null;

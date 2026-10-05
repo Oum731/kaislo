@@ -16,7 +16,7 @@ import { SITE_URL, CONTACT_WHATSAPP } from '@/config';
 import { Icone, ChampTelephone } from '@/components/ui';
 import { CarteClient, totalDevises } from './Commerciaux';
 import BulleChat from '@/components/BulleChat';
-import { memoriserEspace, oublierEspace } from '@/lib/espace';
+import { memoriserEspace, oublierEspace, enregistrerServiceWorker } from '@/lib/espace';
 
 const CLE = 'kaislo:commercial-jeton';
 const lireJeton = () => { try { return localStorage.getItem(CLE); } catch { return null; } };
@@ -35,6 +35,7 @@ export default function EspaceCommercial() {
     }
   }, []);
   useEffect(() => {
+    enregistrerServiceWorker(); // installation sur l'écran d'accueil
     const jeton = API_ACTIVE ? lireJeton() : null;
     if (jeton) charger(jeton);
     else setEtat({ pret: true, jeton: null, infos: null });

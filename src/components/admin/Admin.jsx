@@ -18,7 +18,7 @@ import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
 import { prixAbonnement, prixCatalogue } from '@/lib/donnees/tarifs';
-import { memoriserEspace, oublierEspace } from '@/lib/espace';
+import { memoriserEspace, oublierEspace, enregistrerServiceWorker } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
 
 const JOUR = 86400000;
@@ -34,6 +34,7 @@ const garderJeton = (j) => { try { j ? sessionStorage.setItem(CLE_SESSION, j) : 
 export default function Admin() {
   const [etat, setEtat] = useState({ pret: false, admin: null, installe: true, jeton: null });
   useEffect(() => {
+    enregistrerServiceWorker(); // installation sur l'écran d'accueil
     if (!API_ACTIVE) return setEtat({ pret: true, admin: null, installe: true, jeton: null });
     (async () => {
       const jeton = lireJeton();
