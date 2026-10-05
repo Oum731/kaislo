@@ -84,7 +84,8 @@ const trancheCommune = (set, get) => ({
     // Lien de démo rouvert (ou page rechargée) : on garde la session en cours
     if (demo && estDemo(demo) && get().prefs.commerceAppareil === demo) get().restaurerSession();
     else if (demo && estDemo(demo)) get().relierAppareil(demo);
-    else if (params.get('inscription')) set({ etapeConnexion: 'inscription' });
+    // Adresse d'inscription rouverte par un retour en arrière alors qu'un compte est déjà ouvert : on garde la session, pas le formulaire
+    else if (params.get('inscription') && !get().prefs.session) set({ etapeConnexion: 'inscription' });
     else get().restaurerSession();
     set({ pret: true });
   },
