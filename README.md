@@ -281,3 +281,9 @@ Réglages → « Vos données » → « Rapport d'activité », ou le bouton « 
 - **Excel (.xlsx)** : un vrai classeur (exceljs) avec un onglet Résumé (chiffre d'affaires, tickets, panier moyen, remises, reçu, crédit, dépenses, solde, marge, annulations, paiements) puis ventes, articles, évolution, vendeurs, dépenses, crédits remboursés et dus, journées de vente, stock. Montants et dates sont de vrais nombres/dates, en-tête figé, filtres, totaux, mise en page A4 paysage.
 - **PDF** (jsPDF) : synthèse, graphique, tableaux ; détail des tickets pour le jour et la semaine.
 - Les chiffres sont calculés par `src/lib/donnees/rapport.js`, avec les mêmes règles que le tableau de bord et la fermeture de la journée (ventes annulées exclues, crédit ≠ argent reçu) ; `tests/rapport.test.mjs` et `tests/export-rapport.test.mjs` le vérifient. Sur téléphone, le fichier passe par la feuille de partage (WhatsApp, e-mail, Fichiers).
+
+## Référencement : guides et modèles Excel
+
+- `src/lib/guides.js` : les guides pratiques (FR + EN), un par entrée. Ajouter une entrée crée la page (`/guides/<slug>/`, `/en/guides/<slug>/`), le plan du site, les liens hreflang et les données structurées (Article, FAQ, fil d'Ariane).
+- `scripts/modeles.mjs` : régénère les modèles Excel gratuits de `public/modeles/` (inventaire, suivi des ventes), liés depuis les guides.
+- Après chaque changement : `npm run build && npm run seo` (titres ≤ 65 caractères avec « | Kaislo », descriptions 50–160, un seul h1, canonique, sitemap).
