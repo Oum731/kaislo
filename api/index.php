@@ -85,6 +85,8 @@ try {
         'POST /admin/programme' => routeAdminProgramme(),
         'GET /tarifs' => routeTarifs(),
         'GET /pays' => routePays(),
+        'POST /commercial/inscription' => routeCommercialInscription(),
+        'POST /admin/commercial-validation' => routeAdminCommercialValidation(),
         'POST /commercial/connexion' => routeCommercialConnexion(),
         'GET /commercial/moi' => routeCommercialMoi(),
         'POST /commercial/pin' => routeCommercialPin(),

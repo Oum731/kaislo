@@ -9,6 +9,7 @@ import ExempleJournee from '@/components/site/ExempleJournee';
 import { metaPage } from '@/lib/seo';
 import { tr, tt, choisirLangue } from '@/lib/i18n';
 import { alternates, lien } from '@/lib/site-routes';
+import { SCRIPT_REDIRECTION_ESPACE } from '@/lib/espace';
 import {
   EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos,
   LIEN_DEMO_RESTO, LIEN_DEMO_EPICERIE, LIEN_INSCRIPTION,
@@ -56,11 +57,13 @@ export default function Accueil({ lang }) {
   choisirLangue(lang);
   return (
     <div className="site">
+      {/* Quelqu'un déjà connecté arrive directement dans son espace, pas sur cette page publique (?site=1 pour la voir) */}
+      <script dangerouslySetInnerHTML={{ __html: SCRIPT_REDIRECTION_ESPACE }} />
       <EnTeteSite lang={lang} />
       <main>
         <Hero
-          titre={tr('La gestion des ventes et du stock des restaurants, épiceries et boutiques.')}
-          chapo={tr('Notez vos ventes, gérez votre stock et votre inventaire, suivez le crédit de vos clients et retrouvez vos comptes chaque soir : total vendu, espèces, Wave, Orange Money… Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent. Sur téléphone, tablette ou ordinateur.')}
+          titre={tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}
+          chapo={tr('Restaurants, épiceries, boutiques, bars, pharmacies : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir. Toutes les devises et les moyens de paiement de votre pays (espèces, carte, mobile money). Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent. Sur téléphone, tablette ou ordinateur.')}
           lienDemo={LIEN_DEMO_RESTO}
           garanties={[tr('Essai gratuit de 30 jours'), tr('Vos clients vous paient directement'), tr('Imprimante facultative')]}
           capture={{ src: '/captures/tableau-ordi.webp', alt: tr('Tableau de bord Kaislo : chiffre d’affaires, marge, dépenses, crédit en cours') }}

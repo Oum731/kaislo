@@ -21,7 +21,9 @@
 //     POST /api/admin/commercial                  créer / modifier un commercial
 //     POST /api/admin/commissions                 { action: valider | annuler | payer | prime, … }
 //     POST /api/admin/programme                   règles du programme
+//     POST /api/admin/commercial-validation       { id, action: valider | refuser } : inscription faite par le commercial lui-même
 //   Espace commercial (/commercial/) :
+//     POST /api/commercial/inscription            { nom, telephone, pays, email?, pin, conditionsAcceptees } : compte « en attente », code parrain automatique
 //     POST /api/commercial/connexion              { telephone, pays, pin }
 //     GET  /api/commercial/moi                    son code, ses clients, ses commissions, ses primes
 //     POST /api/commercial/pin                    { ancien, nouveau }
@@ -141,7 +143,8 @@ function versCommercial(array $c): array
     $nb = requete("SELECT COUNT(*) AS n, SUM(CASE WHEN commission_validee_le IS NOT NULL THEN 1 ELSE 0 END) AS v, SUM(CASE WHEN statut = 'actif' THEN 1 ELSE 0 END) AS a FROM commerces WHERE commercial_id = ?", [$c['id']])->fetch();
     return [
         'id' => $c['id'], 'nom' => $c['nom'], 'telephone' => $c['telephone'], 'email' => $c['email'], 'pays' => $c['pays'], 'code' => $c['code'],
-        'taux' => (float) $c['taux'], 'actif' => (bool) $c['actif'], 'notes' => $c['notes'], 'creeLe' => $c['cree_le'], 'vuLe' => $c['vu_le'],
+        'taux' => (float) $c['taux'], 'actif' => (bool) $c['actif'], 'enAttente' => empty($c['valide_le']) && !$c['actif'], 'valideLe' => $c['valide_le'] ?? null,
+        'notes' => $c['notes'], 'creeLe' => $c['cree_le'], 'vuLe' => $c['vu_le'],
         'clients' => (int) $nb['n'], 'clientsAbonnes' => (int) $nb['a'], 'clientsValides' => (int) $nb['v'], 'totaux' => totauxCommissions($c['id']),
     ];
 }
@@ -150,6 +153,18 @@ function versCommercial(array $c): array
 function codeParrainPropre(string $code): string
 {
     return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+}
+
+// Code parrain automatique : début du nom (sans accents) + 2 chiffres, unique. Ex : « Awa Traoré » → AWA42
+function genererCodeParrain(string $nom): string
+{
+    $lettres = strtoupper(preg_replace('/[^A-Za-z]/', '', (string) iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nom)));
+    $debut = substr($lettres . 'KAISLO', 0, 3);
+    for ($essai = 0; $essai < 200; $essai++) {
+        $code = $debut . ($essai < 90 ? sprintf('%02d', random_int(10, 99)) : (string) random_int(1000, 9999));
+        if (!requete('SELECT 1 FROM commerciaux WHERE code = ?', [$code])->fetch()) return $code;
+    }
+    return $debut . strtoupper(bin2hex(random_bytes(3)));
 }
 
 // Commercial correspondant au code saisi à l'inscription (ou erreur claire)
@@ -194,6 +209,8 @@ function routeAdminCommercialEnregistrer(): never
     $autre = requete('SELECT id FROM commerciaux WHERE cle_telephone = ?', [$num['cle']])->fetch();
     if ($autre && $autre['id'] !== $id) throw new ErreurApi('Ce numéro est déjà celui d’un autre commercial', 409);
     $code = codeParrainPropre((string) ($e['code'] ?? ''));
+    if ($code === '' && !$id) $code = genererCodeParrain($nom); // nouveau commercial : code automatique si on n'en saisit pas
+    if ($code === '' && $id) $code = (string) $avant['code'];
     if (strlen($code) < 4 || strlen($code) > 12) throw new ErreurApi('Code parrain : 4 à 12 lettres ou chiffres');
     $autre = requete('SELECT id FROM commerciaux WHERE code = ?', [$code])->fetch();
     if ($autre && $autre['id'] !== $id) throw new ErreurApi('Ce code parrain est déjà pris', 409);
@@ -212,8 +229,8 @@ function routeAdminCommercialEnregistrer(): never
         if ($pin !== '' || !$actif) requete('DELETE FROM jetons_commerciaux WHERE commercial_id = ?', [$id]);
     } else {
         $id = nouvelId('co');
-        requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, code, pin_hash, taux, actif, notes, cree_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $code, password_hash($pin, PASSWORD_DEFAULT), $taux, $actif, $notes, maintenant()]);
+        requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $code, password_hash($pin, PASSWORD_DEFAULT), $taux, $actif, $notes, maintenant(), maintenant()]);
     }
     journaliser(null, $admin['id'], 'amorac-commercial', ['commercial' => $nom, 'code' => $code, 'par' => $admin['email']]);
     repondre(['ok' => true, 'commercial' => versCommercial(requete('SELECT * FROM commerciaux WHERE id = ?', [$id])->fetch())]);
@@ -308,6 +325,66 @@ function commercialConnecte(): array
     return $c;
 }
 
+// ---------- Inscription d'un commercial par lui-même (validée ensuite par l'équipe Amorac) ----------
+// { nom, telephone, pays, email?, pin, conditionsAcceptees: true }
+function routeCommercialInscription(): never
+{
+    $e = entree();
+    $cleIp = 'ip-inscription-commercial:' . adresseIp();
+    verifierBlocage($cleIp);
+    if (($e['conditionsAcceptees'] ?? false) !== true) throw new ErreurApi('Merci d’accepter les conditions du programme commercial');
+    $nom = texte($e, 'nom', 'votre nom', true, 80);
+    $pays = strtoupper((string) ($e['pays'] ?? ''));
+    if (!isset(PAYS[$pays])) throw new ErreurApi('Choisissez votre pays');
+    $num = telephoneValide(texte($e, 'telephone', 'votre téléphone', true, 40), $pays, 'votre téléphone');
+    if (requete('SELECT 1 FROM commerciaux WHERE cle_telephone = ?', [$num['cle']])->fetch()) {
+        noterEchec($cleIp, 10);
+        throw new ErreurApi('Ce numéro a déjà un compte commercial : connectez-vous, ou attendez la validation de l’équipe.', 409);
+    }
+    $email = trim((string) ($e['email'] ?? ''));
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) throw new ErreurApi('Adresse e-mail invalide');
+    $pin = (string) ($e['pin'] ?? '');
+    if (!preg_match('/^\d{6}$/', $pin)) throw new ErreurApi('Code PIN : 6 chiffres');
+    // Au plus quelques demandes par heure et par adresse IP (une demande réussie compte aussi)
+    if (noterEchec($cleIp, 6)) throw new ErreurApi('Trop de demandes : réessayez plus tard.', 429);
+    $id = nouvelId('co');
+    $code = genererCodeParrain($nom);
+    requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NULL)',
+        [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $code, password_hash($pin, PASSWORD_DEFAULT), (float) programme()['taux'], 'Inscription faite par le commercial lui-même', maintenant()]);
+    journaliser(null, null, 'commercial-inscription', ['commercial' => $nom, 'code' => $code]);
+    envoyerEmail(
+        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
+        'Kaislo — nouveau commercial à valider : ' . $nom,
+        "Un commercial vient de s'inscrire.\n\nNom : $nom\nTéléphone : " . $num['affichage'] . "\nPays : $pays\n" . ($email !== '' ? "E-mail : $email\n" : '') . "\nÀ valider dans l'espace Amorac → Commerciaux : https://" . (domaineSite() ?: 'kaislo.com') . "/admin/"
+    );
+    repondre(['ok' => true, 'enAttente' => true, 'code' => $code], 201);
+}
+
+// POST /api/admin/commercial-validation { id, action: valider | refuser }
+function routeAdminCommercialValidation(): never
+{
+    $admin = adminConnecte(true);
+    $e = entree();
+    $c = requete('SELECT * FROM commerciaux WHERE id = ?', [(string) ($e['id'] ?? '')])->fetch();
+    if (!$c) throw new ErreurApi('Commercial introuvable', 404);
+    $action = (string) ($e['action'] ?? '');
+    if ($action === 'valider') {
+        requete('UPDATE commerciaux SET actif = 1, valide_le = ? WHERE id = ?', [maintenant(), $c['id']]);
+        if (!empty($c['email'])) {
+            envoyerEmail($c['email'], 'Kaislo — votre compte commercial est validé',
+                "Bonjour {$c['nom']},\n\nVotre compte commercial Kaislo est validé.\nVotre code parrain : {$c['code']}\nVotre espace : https://" . (domaineSite() ?: 'kaislo.com') . "/commercial/ (numéro de téléphone et code PIN choisi à l'inscription).\n\nL'équipe Kaislo");
+        }
+    } elseif ($action === 'refuser') {
+        if (!empty($c['valide_le'])) throw new ErreurApi('Ce commercial est déjà validé : désactivez-le plutôt');
+        requete('DELETE FROM commerciaux WHERE id = ?', [$c['id']]);
+        requete('DELETE FROM jetons_commerciaux WHERE commercial_id = ?', [$c['id']]);
+    } else {
+        throw new ErreurApi('Action inconnue');
+    }
+    journaliser(null, $admin['id'], 'amorac-commercial-' . $action, ['commercial' => $c['nom'], 'par' => $admin['email']]);
+    repondre(['ok' => true]);
+}
+
 function routeCommercialConnexion(): never
 {
     $e = entree();
@@ -318,6 +395,10 @@ function routeCommercialConnexion(): never
     verifierBlocage($cle);
     $c = $n['ok'] ? requete('SELECT * FROM commerciaux WHERE cle_telephone = ?', [$n['cle']])->fetch() : null;
     $valide = password_verify((string) ($e['pin'] ?? ''), $c ? $c['pin_hash'] : password_hash('leurre', PASSWORD_DEFAULT));
+    // Mot de passe juste mais inscription pas encore validée par l'équipe : message clair (seule la personne concernée le voit)
+    if ($c && $valide && !$c['actif'] && empty($c['valide_le'])) {
+        throw new ErreurApi('Votre inscription est en cours de validation par l’équipe Kaislo. Nous vous prévenons dès qu’elle est validée.', 403);
+    }
     if (!$c || !$valide || !$c['actif']) {
         $bloque = noterEchec($cle);
         $bloque = noterEchec($cleIp, 20) || $bloque;
@@ -335,7 +416,7 @@ function routeCommercialMoi(): never
     $c = commercialConnecte();
     $infos = versCommercial($c);
     unset($infos['notes']); // notes internes de l'équipe
-    repondre(['ok' => true, 'commercial' => $infos, 'clients' => clientsCommercial($c['id'], false), 'primes' => primesCommercial($c['id']), 'programme' => programme()]);
+    repondre(['ok' => true, 'commercial' => $infos, 'clients' => clientsCommercial($c['id'], false), 'primes' => primesCommercial($c['id']), 'programme' => programme() + ['remiseParrain' => (float) reglesTarifs()['remiseParrain']]]);
 }
 
 function routeCommercialPin(): never

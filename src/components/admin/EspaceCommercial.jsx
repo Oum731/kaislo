@@ -4,7 +4,8 @@
 //  - son code parrain et son lien d'inscription à partager
 //  - ses clients, leur ancienneté et le contrôle des 6 mois
 //  - ses commissions (en attente, à payer, payées) et ses primes
-// Connexion : pays + numéro de téléphone + code PIN à 6 chiffres (donné par l'équipe Amorac).
+// Inscription : le commercial crée lui-même sa demande (code parrain automatique) ; l'équipe Amorac la valide.
+// Connexion : pays + numéro de téléphone + code PIN à 6 chiffres (choisi à l'inscription).
 // ------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
 import Chargement from '@/components/Chargement';
@@ -15,6 +16,7 @@ import { SITE_URL, CONTACT_WHATSAPP } from '@/config';
 import { Icone, ChampTelephone } from '@/components/ui';
 import { CarteClient, totalDevises } from './Commerciaux';
 import BulleChat from '@/components/BulleChat';
+import { memoriserEspace, oublierEspace } from '@/lib/espace';
 
 const CLE = 'kaislo:commercial-jeton';
 const lireJeton = () => { try { return localStorage.getItem(CLE); } catch { return null; } };
@@ -25,6 +27,7 @@ export default function EspaceCommercial() {
   const charger = useCallback(async (jeton) => {
     try {
       const infos = await appelApi('GET', '/commercial/moi', null, jeton);
+      memoriserEspace('commercial');
       setEtat({ pret: true, jeton, infos });
     } catch (e) {
       if (e.statut === 401 || e.statut === 403) garderJeton(null);
@@ -39,6 +42,7 @@ export default function EspaceCommercial() {
   const sortir = () => {
     appelApi('POST', '/commercial/deconnexion', null, etat.jeton).catch(() => {});
     garderJeton(null);
+    oublierEspace('commercial');
     setEtat({ pret: true, jeton: null, infos: null });
   };
 
@@ -64,6 +68,73 @@ function Cadre({ children }) {
 }
 
 function ConnexionCommercial({ surConnexion }) {
+  const [mode, setMode] = useState(() => (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('inscription') ? 'inscription' : 'connexion'));
+  return (
+    <Cadre>
+      <div className="segment" role="tablist" style={{ marginBottom: 4 }}>
+        <button role="tab" aria-selected={mode === 'connexion'} className={mode === 'connexion' ? 'actif' : ''} onClick={() => setMode('connexion')}>Se connecter</button>
+        <button role="tab" aria-selected={mode === 'inscription'} className={mode === 'inscription' ? 'actif' : ''} onClick={() => setMode('inscription')}>Créer mon compte</button>
+      </div>
+      {mode === 'connexion' ? <FormulaireConnexion surConnexion={surConnexion} /> : <FormulaireInscription surConnexion={() => setMode('connexion')} />}
+    </Cadre>
+  );
+}
+
+// Inscription d'un commercial : demande « en attente », l'équipe Amorac la valide ; le code parrain est créé automatiquement
+function FormulaireInscription() {
+  const [f, setF] = useState({ pays: 'CI', nom: '', telephone: '', email: '', pin: '', pin2: '', accepte: false });
+  const [erreur, setErreur] = useState('');
+  const [enCours, setEnCours] = useState(false);
+  const [envoye, setEnvoye] = useState(null);
+  const maj = (c) => (e) => setF({ ...f, [c]: e.target.value });
+  const valider = async (e) => {
+    e.preventDefault();
+    setErreur('');
+    if (!f.nom.trim()) return setErreur('Indiquez votre nom');
+    if (!/^\d{6}$/.test(f.pin)) return setErreur('Le code PIN doit contenir 6 chiffres');
+    if (f.pin !== f.pin2) return setErreur('Les deux codes PIN ne sont pas identiques');
+    if (!f.accepte) return setErreur('Merci d’accepter les conditions du programme');
+    setEnCours(true);
+    try {
+      const rep = await appelApi('POST', '/commercial/inscription', { nom: f.nom, telephone: f.telephone, pays: f.pays, email: f.email, pin: f.pin, conditionsAcceptees: true });
+      setEnvoye(rep);
+    } catch (err) { setErreur(err.message); }
+    setEnCours(false);
+  };
+  if (envoye) {
+    return (
+      <div className="pile">
+        <h2>Demande envoyée</h2>
+        <p className="info-verte">Merci ! L’équipe Kaislo vérifie votre demande et la valide rapidement. Votre code parrain est déjà réservé : <b>{envoye.code}</b>.</p>
+        <p className="petit muet">Dès que votre compte est validé, vous pouvez vous connecter ici avec votre numéro et votre code PIN, et votre code parrain est accepté par vos clients.</p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <h2>Devenir commercial Kaislo</h2>
+      <p className="petit muet">Créez votre compte en une minute. Votre code parrain est généré automatiquement ; l’équipe Kaislo valide ensuite votre demande.</p>
+      <form className="pile" onSubmit={valider}>
+        <label className="champ"><span>Votre nom et prénom</span><input value={f.nom} onChange={maj('nom')} autoComplete="name" /></label>
+        <label className="champ"><span>Pays du numéro</span>
+          <select value={f.pays} onChange={maj('pays')}>{PAYS.filter((p) => p.indicatif).map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}</select>
+        </label>
+        <ChampTelephone libelle="Votre numéro (WhatsApp de préférence)" pays={f.pays} valeur={f.telephone} surChanger={(v) => setF({ ...f, telephone: v })} />
+        <label className="champ"><span>E-mail (facultatif)</span><input type="email" value={f.email} onChange={maj('email')} autoComplete="email" /></label>
+        <label className="champ"><span>Choisissez un code PIN (6 chiffres)</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={6} value={f.pin} onChange={maj('pin')} placeholder="••••••" autoComplete="new-password" /></label>
+        <label className="champ"><span>Confirmez le code PIN</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={6} value={f.pin2} onChange={maj('pin2')} placeholder="••••••" autoComplete="new-password" /></label>
+        <label className="case-accord">
+          <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
+          <span>J’ai lu <a className="lien" href="/devenir-commercial/" target="_blank" rel="noreferrer">les conditions du programme commercial</a> (commission, validation à 6 mois) et j’accepte la <a className="lien" href="/confidentialite/" target="_blank" rel="noreferrer">politique de confidentialité</a>.</span>
+        </label>
+        {erreur && <p className="alerte">{erreur}</p>}
+        <button className="btn bloc" disabled={enCours}>{enCours ? 'Envoi…' : 'Envoyer ma demande'}</button>
+      </form>
+    </>
+  );
+}
+
+function FormulaireConnexion({ surConnexion }) {
   const [f, setF] = useState({ pays: 'CI', telephone: '', pin: '' });
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
@@ -74,7 +145,7 @@ function ConnexionCommercial({ surConnexion }) {
     setEnCours(false);
   };
   return (
-    <Cadre>
+    <>
       <h2>Espace commercial</h2>
       <p className="petit muet">Vos clients, vos commissions et votre lien de parrainage.</p>
       <form className="pile" onSubmit={valider}>
@@ -86,8 +157,8 @@ function ConnexionCommercial({ surConnexion }) {
         {erreur && <p className="alerte">{erreur}</p>}
         <button className="btn bloc" disabled={enCours}>{enCours ? 'Connexion…' : 'Se connecter'}</button>
       </form>
-      <p className="tres-petit muet">Pas encore commercial Kaislo ? <a className="lien" href={'https://wa.me/' + CONTACT_WHATSAPP + '?text=' + encodeURIComponent('Bonjour, je souhaite devenir commercial Kaislo.')} target="_blank" rel="noreferrer">Écrivez-nous sur WhatsApp</a>.</p>
-    </Cadre>
+      <p className="tres-petit muet">Une question avant de vous inscrire ? <a className="lien" href={'https://wa.me/' + CONTACT_WHATSAPP + '?text=' + encodeURIComponent('Bonjour, je souhaite devenir commercial Kaislo.')} target="_blank" rel="noreferrer">Écrivez-nous sur WhatsApp</a>.</p>
+    </>
   );
 }
 
@@ -95,7 +166,8 @@ function Tableau({ infos, sortir, actualiser }) {
   const { commercial: c, clients, primes, programme } = infos;
   const [copie, setCopie] = useState(false);
   const lien = SITE_URL + '/app/?inscription=1&ref=' + c.code;
-  const texteWhatsApp = 'Bonjour ! Je vous présente Kaislo : la gestion des ventes et du stock, simple, sur téléphone. Essai gratuit de 30 jours : ' + lien;
+  const remise = Math.round(programme.remiseParrain || 0);
+  const texteWhatsApp = 'Bonjour ! Je vous présente Kaislo : la gestion des ventes et du stock, simple, sur téléphone. Essai gratuit de 30 jours' + (remise > 0 ? ', puis environ ' + remise + ' % de remise sur l’abonnement avec mon code ' + c.code : '') + ' : ' + lien;
   const copier = async () => { try { await navigator.clipboard.writeText(lien); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch { /* rien */ } };
   const enEssai = clients.filter((x) => x.statut === 'essai').length;
   const abonnes = clients.filter((x) => x.statut === 'actif').length;

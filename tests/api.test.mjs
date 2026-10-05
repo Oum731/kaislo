@@ -44,7 +44,7 @@ function uneVente(id, vendeurId, { quantite = 2, remise = 0 } = {}) {
 let gerant, vendeur, idVendeur, idGerant;
 
 before(async () => {
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }
@@ -188,4 +188,72 @@ test('pays du visiteur : en-tête du serveur reconnu, adresse locale sans résul
   assert.deepEqual(sans, { ok: true, pays: null });
   const faux = await fetch(U + '/pays', { headers: { 'CF-IPCountry': 'XX' } }).then((r) => r.json());
   assert.equal(faux.pays, null);
+});
+
+test('commercial : inscription libre, code automatique, validation par l’équipe, remise du code parrain', async () => {
+  // 1. Le commercial s'inscrit lui-même : compte en attente, code généré
+  const ins = await api('POST', '/commercial/inscription', { nom: 'Awa Traoré', telephone: '0712340000', pays: 'CI', pin: '123456', conditionsAcceptees: true });
+  assert.equal(ins.ok, true, JSON.stringify(ins));
+  assert.match(ins.code, /^AWA\d{2,}$/);
+  const sansAccord = await api('POST', '/commercial/inscription', { nom: 'Autre', telephone: '0712340001', pays: 'CI', pin: '123456' });
+  assert.equal(sansAccord.ok, false);
+  const doublon = await api('POST', '/commercial/inscription', { nom: 'Awa bis', telephone: '0712340000', pays: 'CI', pin: '654321', conditionsAcceptees: true });
+  assert.equal(doublon.statut, 409);
+
+  // 2. En attente : ni connexion, ni code parrain accepté
+  const attente = await api('POST', '/commercial/connexion', { telephone: '0712340000', pays: 'CI', pin: '123456' });
+  assert.equal(attente.statut, 403);
+  assert.match(attente.erreur, /validation/);
+  const codeRefuse = await api('POST', '/inscription', {
+    commerce: { nom: 'Chez Avant', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345611' },
+    gerant: { nom: 'G Avant', telephone: '0712345612', pin: '1234' }, codeParrain: ins.code, conditionsAcceptees: true,
+  });
+  assert.equal(codeRefuse.ok, false);
+
+  // 3. L'équipe valide
+  const install = await api('POST', '/admin/installer', { cle: 'cle-de-test-0123456789', nom: 'Équipe', email: 'equipe@kaislo.test', motDePasse: 'MotDePasse2026' });
+  assert.equal(install.ok, true, JSON.stringify(install));
+  const liste = await api('GET', '/admin/commerciaux', null, install.jeton);
+  const awa = liste.commerciaux.find((c) => c.code === ins.code);
+  assert.equal(awa.enAttente, true);
+  assert.equal((await api('POST', '/admin/commercial-validation', { id: awa.id, action: 'valider' }, install.jeton)).ok, true);
+  const conn = await api('POST', '/commercial/connexion', { telephone: '0712340000', pays: 'CI', pin: '123456' });
+  assert.equal(conn.ok, true, JSON.stringify(conn));
+
+  // 4. Un commerce inscrit avec le code paie le tarif actuel ; sans code, le prix catalogue (plus élevé, jamais plus bas)
+  const avecCode = await api('POST', '/inscription', {
+    commerce: { nom: 'Chez Code', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345621' },
+    gerant: { nom: 'G Code', telephone: '0712345622', pin: '1234' }, codeParrain: ins.code, conditionsAcceptees: true,
+  });
+  assert.equal(avecCode.ok, true, JSON.stringify(avecCode));
+  const sansCode = await api('POST', '/inscription', {
+    commerce: { nom: 'Chez Sans Code', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345631' },
+    gerant: { nom: 'G Sans', telephone: '0712345632', pin: '1234' }, conditionsAcceptees: true,
+  });
+  const regles = (await api('GET', '/tarifs')).regles;
+  const formules = (await api('GET', '/tarifs')).formules;
+  const fixerDate = (jours) => api('POST', '/admin/tarifs', { formules, regles: { ...regles, catalogueDepuis: new Date(Date.now() + jours * 86400000).toISOString().slice(0, 10) } }, install.jeton);
+  const tarifs = async () => Object.fromEntries((await api('GET', '/admin/commerces', null, install.jeton)).commerces.map((c) => [c.commerce.nom, c.tarif]));
+
+  // Catalogue prévu pour demain : tous les commerces d'aujourd'hui gardent leur prix actuel
+  await fixerDate(1);
+  let t = await tarifs();
+  assert.equal(t['Chez Sans Code'].parMois, 9000);
+  assert.equal(t['Chez Sans Code'].mode, 'base');
+
+  // Catalogue en vigueur depuis hier : sans code = prix catalogue ; avec code = tarif actuel ; commerces plus anciens inchangés
+  await fixerDate(-1);
+  t = await tarifs();
+  assert.equal(t['Chez Code'].parMois, 9000); // tarif actuel inchangé
+  assert.equal(t['Chez Code'].parrain, true);
+  assert.equal(t['Chez Sans Code'].parMois, 10000); // catalogue = 9000 ÷ 0,9
+  assert.equal(t['Chez Sans Code'].mode, 'catalogue');
+  assert.ok(t['Chez Sans Code'].annuel > t['Chez Code'].annuel);
+
+  // 5. Refuser une demande en attente la supprime
+  const autre = await api('POST', '/commercial/inscription', { nom: 'Zoé', telephone: '0712340002', pays: 'CI', pin: '111111', conditionsAcceptees: true });
+  const l2 = await api('GET', '/admin/commerciaux', null, install.jeton);
+  const zoe = l2.commerciaux.find((c) => c.code === autre.code);
+  assert.equal((await api('POST', '/admin/commercial-validation', { id: zoe.id, action: 'refuser' }, install.jeton)).ok, true);
+  assert.equal((await api('GET', '/admin/commerciaux', null, install.jeton)).commerciaux.some((c) => c.code === autre.code), false);
 });

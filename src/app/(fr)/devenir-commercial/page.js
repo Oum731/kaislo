@@ -4,7 +4,7 @@
 // ------------------------------------------------------------
 import Link from 'next/link';
 import { EnTeteSite, PiedSite, Faq } from '@/components/site/Site';
-import { FORMULES } from '@/lib/donnees/tarifs';
+import { FORMULES, REGLES_TARIFS } from '@/lib/donnees/tarifs';
 import { CONTACT_WHATSAPP } from '@/config';
 import { metaPage } from '@/lib/seo';
 
@@ -21,7 +21,9 @@ const commission = mensuel * 0.25;
 
 const QUESTIONS = [
   ['Faut-il être salarié ?', 'Non. Vous êtes indépendant : auto-entrepreneur au Maroc, statut d’entreprenant en Côte d’Ivoire et au Sénégal. Un accord écrit simple précise les règles et le calendrier de paiement.'],
-  ['Comment mes clients sont-ils reliés à moi ?', 'Chaque commercial reçoit un code parrain. Le commerçant le saisit à la création de son compte, ou s’inscrit avec votre lien personnel : le code est alors rempli tout seul.'],
+  ['Comment m’inscrire ?', 'Vous créez vous-même votre compte commercial en une minute (nom, numéro, code PIN). L’équipe Kaislo vérifie votre demande et la valide : votre code parrain, créé automatiquement, est alors actif.'],
+  ['Comment mes clients sont-ils reliés à moi ?', 'Votre code parrain est créé automatiquement. Le commerçant le saisit à la création de son compte, ou s’inscrit avec votre lien personnel : le code est alors rempli tout seul.'],
+  ['Qu’est-ce que le code apporte à mes clients ?', 'Une remise sur l’abonnement (environ ' + REGLES_TARIFS.remiseParrain + ' %) par rapport au prix catalogue des clients qui s’inscrivent sans code. C’est un vrai argument pour convaincre un commerçant hésitant.'],
   ['Quand suis-je payé ?', 'Au 6e mois payé par le client, s’il a enregistré des ventes au moins chaque semaine : vous recevez d’un coup les commissions des mois 1 à 6. Ensuite, du 7e au 12e mois, chaque mois. Versements par mobile money ou virement.'],
   ['Et si le client arrête ?', 'Si le client arrête avant 6 mois, aucune commission n’est due. C’est pourquoi nous vous encourageons à accompagner vos clients au démarrage.'],
   ['Où suivre mes commissions ?', 'Dans votre espace commercial : vos clients, leur ancienneté, et vos commissions en attente, à recevoir et déjà reçues.'],
@@ -39,16 +41,17 @@ export default function PageDevenirCommercial() {
             <h1>Présentez Kaislo, touchez 25 % pendant 12 mois.</h1>
             <p className="chapo">Vous connaissez les commerçants de votre quartier ? Faites-leur découvrir la journée et la gestion de stock Kaislo, et touchez <b>25 % de tout ce qu’ils paient</b> pendant leurs 12 premiers mois.</p>
             <div className="ligne" style={{ gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
-              <a href={lienWhatsApp} className="btn grand" target="_blank" rel="noreferrer">Je veux devenir commercial</a>
-              <Link href="/commercial/" className="btn secondaire grand">Espace commercial</Link>
+              <Link href="/commercial/?inscription=1" className="btn grand">Créer mon compte commercial</Link>
+              <Link href="/commercial/" className="btn secondaire grand">J’ai déjà un compte</Link>
+              <a href={lienWhatsApp} className="btn secondaire grand" target="_blank" rel="noreferrer">Une question ? WhatsApp</a>
             </div>
           </div>
         </section>
         <section className="section">
           <div className="site-largeur">
             <div className="grille-pour-qui">
-              <div className="pour-qui"><h3>1. Votre code parrain</h3><ul><li>Un code personnel et un lien à partager</li><li>Saisi à la création du compte du commerce</li></ul></div>
-              <div className="pour-qui"><h3>2. Vos clients s’abonnent</h3><ul><li>30 jours d’essai gratuit</li><li>Puis l’abonnement de leur métier</li></ul></div>
+              <div className="pour-qui"><h3>1. Votre code parrain</h3><ul><li>Vous créez votre compte, l’équipe le valide</li><li>Code créé automatiquement, avec un lien à partager</li></ul></div>
+              <div className="pour-qui"><h3>2. Vos clients s’abonnent</h3><ul><li>30 jours d’essai gratuit</li><li>Puis l’abonnement de leur métier, avec une remise grâce à votre code</li></ul></div>
               <div className="pour-qui"><h3>3. Vous êtes payé</h3><ul><li>25 % pendant 12 mois, postes compris</li><li>Mois 1 à 6 versés d’un coup au 6e mois</li><li>Puis chaque mois</li></ul></div>
             </div>
             <div className="carte pile" style={{ marginTop: 24 }}>

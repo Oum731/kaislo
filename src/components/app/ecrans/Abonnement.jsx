@@ -61,6 +61,9 @@ export default function AbonnementCommerce() {
           </div>
         </div>
       )}
+      {tarif?.parrain && tarif.parMoisCatalogue > tarif.parMois && (
+        <p className="info-verte petit">{tr('Code parrain : remise de {0} % sur l’abonnement (prix catalogue : {1} par mois).', [Math.round((1 - tarif.parMois / tarif.parMoisCatalogue) * 100), s.prix(tarif.parMoisCatalogue)])}</p>
+      )}
       {tarif?.fondateur && <p className="info-verte petit">{tr('Tarif fondateur : remise à vie déjà appliquée. Merci de faire partie des premiers !')}</p>}
       <p className="tres-petit muet">{tr('Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.')}</p>
     </div>

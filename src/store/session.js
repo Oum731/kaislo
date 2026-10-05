@@ -17,6 +17,7 @@ import { API_ACTIVE, appelApi, nomAppareil } from '@/lib/api.js';
 import { biometrieDisponible, activerBiometrie, connexionBiometrie, nomBiometrie } from '@/lib/biometrie.js';
 import { tr } from '@/lib/i18n';
 import { choisirPays } from '@/lib/pays-visiteur';
+import { memoriserEspace, oublierEspace } from '@/lib/espace';
 
 // Empreinte du code PIN gardée dans l'appareil : permet de se reconnecter SANS internet
 // (seulement sur un appareil où la personne s'est déjà connectée en ligne)
@@ -231,6 +232,7 @@ export const trancheSession = (set, get) => ({
       get().arreterSynchro();
       supprimerCommerce(d.commerce.id);
     }
+    oublierEspace('app');
     get().sauverPrefs({ commerceAppareil: null, session: null });
     set({ d: null, utilisateur: null, feuille: null, panier: [], commandeActive: null, etapeConnexion: 'accueil' });
   },
@@ -244,6 +246,7 @@ export const trancheSession = (set, get) => ({
     // Mémorise ce compte comme "récent" sur cet appareil (numéro + nom, jamais le PIN)
     const recents = [{ commerceId: id, telephone: u.telephone || '', nom: u.nom }, ...(get().prefs.recents || []).filter((r) => !(r.commerceId === id && r.telephone === u.telephone))].slice(0, 8);
     get().sauverPrefs({ commerceAppareil: id, session: { commerceId: id, utilisateurId: u.id }, recents });
+    if (!estDemo(id)) memoriserEspace('app'); // arrivera directement dans l'application, pas sur la page publique du site
     set({
       utilisateur: u,
       ecran: u.role === 'gerant' ? 'accueil' : 'caisse',
@@ -256,6 +259,7 @@ export const trancheSession = (set, get) => ({
 
   // Change de personne, l'appareil reste relié au commerce
   seDeconnecter() {
+    oublierEspace('app');
     get().sauverPrefs({ session: null });
     set({ utilisateur: null, feuille: null, etapeConnexion: 'connexion', panier: [], commandeActive: null });
   },

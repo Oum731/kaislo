@@ -120,6 +120,21 @@ export function Reglage({ titre, aide, actif, surChanger }) {
 }
 
 // Onglets : options = [[valeur, libellé], …]
+// Choix de langue discret (petit globe + FR · EN), pour l'accueil de l'application
+export function SelecteurLangueDiscret({ langue, surChanger }) {
+  return (
+    <span className="lien-langue-app" role="group" aria-label="Langue / Language">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z" /></svg>
+      {LANGUES.map(([id, nom], i) => (
+        <span key={id} style={{ display: 'inline-flex', alignItems: 'center' }}>
+          {i > 0 && <span style={{ color: 'var(--encre-3)', opacity: 0.5 }} aria-hidden="true">·</span>}
+          <button type="button" lang={id} aria-pressed={langue === id} className={langue === id ? 'actif' : ''} onClick={() => surChanger(id)} style={{ fontWeight: langue === id ? 700 : 500 }}>{id.toUpperCase()}<span className="sr-only"> {nom}</span></button>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 // Choix de la langue de l'application (Français / English)
 export function SelecteurLangue({ langue, surChanger }) {
   return (

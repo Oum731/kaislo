@@ -167,7 +167,8 @@ function routeAdminCommerces(): never
 {
     adminConnecte();
     repondre(['ok' => true, 'commerces' => resumesCommerces(), 'formules' => formules(), 'regles' => reglesTarifs(),
-        'fondateurs' => (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE fondateur = 1')->fetch()['n'], 'contactsNonTraites' => contactsNonTraites()]);
+        'fondateurs' => (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE fondateur = 1')->fetch()['n'], 'contactsNonTraites' => contactsNonTraites(),
+        'commerciauxEnAttente' => (int) requete('SELECT COUNT(*) AS n FROM commerciaux WHERE actif = 0 AND valide_le IS NULL')->fetch()['n']]);
 }
 
 // Détail d'un commerce : résumé + équipe + journal récent
@@ -263,7 +264,7 @@ function routeAdminPaiement(): never
     if ($montant <= 0) throw new ErreurApi('Indiquez le montant reçu');
     $formule = formuleParId((string) ($e['formule'] ?? '')) ?? formuleDuType($c['type']);
     $postes = max(1, min(50, (int) ($e['postes'] ?? nombrePostes($c['id']))));
-    $calcul = prixAbonnement($formule, $c['devise'], $postes, $mois, (bool) $c['fondateur']);
+    $calcul = prixAbonnement($formule, $c['devise'], $postes, $mois, (bool) $c['fondateur'], modeTarif($c));
     $moyen = mb_substr((string) ($e['moyen'] ?? 'Espèces'), 0, 30);
     $idPaiement = nouvelId('pa');
     $pdo = base();
@@ -271,7 +272,7 @@ function routeAdminPaiement(): never
     try {
         requete('INSERT INTO paiements (id, commerce_id, date, montant, devise, mois, moyen, note, cree_par, postes, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             $idPaiement, $c['id'], maintenant(), $montant, $c['devise'], $mois, $moyen, mb_substr((string) ($e['note'] ?? ''), 0, 200), $admin['email'], $postes,
-            json_encode(['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur']], JSON_UNESCAPED_UNICODE),
+            json_encode(['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur'], 'mode' => modeTarif($c)], JSON_UNESCAPED_UNICODE),
         ]);
         // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
         requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, modifie_le = ? WHERE id = ?", [

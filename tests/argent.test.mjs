@@ -191,3 +191,27 @@ test('téléphone : format international, refus des numéros vides ou invalides'
   assert.equal(normaliserTelephone('', 'CI').ok, false);
   assert.equal(normaliserTelephone('12', 'CI').ok, false);
 });
+
+test('prix catalogue : le code parrain ne baisse jamais les tarifs actuels', async () => {
+  const { FORMULES, REGLES_TARIFS, prixCatalogue, prixAbonnement, modeTarif, remiseCodeParrain } = await import('../src/lib/donnees/tarifs.js');
+  for (const f of FORMULES) {
+    for (const devise of Object.keys(f.prix)) {
+      for (const montant of [f.prix[devise], f.prixPoste[devise]]) {
+        const cat = prixCatalogue(montant, devise);
+        assert.ok(cat >= montant, `${f.id} ${devise} : le catalogue ne peut pas être sous le tarif actuel`);
+        // Après la remise du code, le client paie au moins le tarif actuel : on ne perd rien
+        assert.ok(cat * (1 - REGLES_TARIFS.remiseParrain / 100) >= montant - 0.01, `${f.id} ${devise} : ${cat} avec remise < ${montant}`);
+      }
+      assert.ok(remiseCodeParrain(f, devise) >= 8 && remiseCodeParrain(f, devise) <= 15, `${f.id} ${devise} : remise affichée raisonnable`);
+    }
+  }
+  const f = FORMULES.find((x) => x.id === 'proximite');
+  assert.equal(prixAbonnement({ formule: f, devise: 'FCFA' }).parMois, 9000); // avec code : tarif actuel
+  assert.equal(prixAbonnement({ formule: f, devise: 'FCFA', mode: 'catalogue' }).parMois, 10000);
+  assert.equal(prixAbonnement({ formule: f, devise: 'FCFA', postes: 2, mode: 'catalogue' }).parMois, 10000 + 3500);
+  // Mode : code parrain ou inscription avant la date → tarif actuel
+  assert.equal(modeTarif({ commercialId: 'co1', creeLe: '2027-01-01T00:00:00Z' }), 'base');
+  assert.equal(modeTarif({ commercialId: null, creeLe: '2026-10-05T10:00:00Z' }), 'base');
+  assert.equal(modeTarif({ commercialId: null, creeLe: '2026-10-06T00:00:01Z' }), 'catalogue');
+  assert.equal(modeTarif({ commercialId: null, creeLe: '2027-01-01T00:00:00Z' }, { ...REGLES_TARIFS, catalogueActif: false }), 'base');
+});

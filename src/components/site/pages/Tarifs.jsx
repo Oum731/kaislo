@@ -32,6 +32,7 @@ const QUESTIONS = () => ([
   [tr('Qu’est-ce qu’un poste ?'), `C’est un point d’impression : le téléphone ou la tablette relié(e) à l’imprimante. Il accueille ${VENDEURS_PAR_POSTE} vendeurs au maximum, qui travaillent sur leur propre téléphone ; leurs tickets s’impriment tous sur l’imprimante du poste. Au-delà de ${VENDEURS_PAR_POSTE} vendeurs, il faut un poste de plus.`],
   [tr('Le gérant compte-t-il dans les vendeurs ?'), tr('Non. Le gérant peut vendre depuis n’importe quel poste et ne compte jamais dans la limite.')],
   [tr('Faut-il une imprimante ?'), tr('Non, l’impression est facultative : le ticket peut partir par WhatsApp ou rester dans l’historique. L’imprimante est vendue ou louée à part si vous en voulez une.')],
+  [tr('Comment fonctionne le code parrain ?'), tr('Un commercial Kaislo vous a présenté l’application et vous a donné son code ? Saisissez-le à la création de votre compte : vous payez le prix de la colonne « Avec un code parrain », soit environ 10 % de moins que le prix catalogue. Le code se saisit une seule fois, à l’inscription.')],
   [tr('Comment payer ?'), tr('Par mobile money (Wave, Orange Money, MTN MoMo…), virement, ou espèces auprès de l’équipe. Au mois, ou à l’année avec 2 mois offerts.')],
   [tr('Les prix sont-ils les mêmes partout ?'), tr('Non : les prix s’affichent dans la devise de votre pays, avec une grille adaptée à votre marché. Si le pays détecté n’est pas le vôtre, changez-le au-dessus du tableau.')],
 ]);
