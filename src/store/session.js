@@ -14,7 +14,7 @@ import { normaliserTelephone } from '@/lib/donnees/telephone.js';
 import { etatAbonnement } from '@/lib/donnees/abonnement.js';
 import { estServeur, noterTout, tailleFile } from '@/lib/donnees/synchro.js';
 import { API_ACTIVE, appelApi, nomAppareil } from '@/lib/api.js';
-import { biometrieDisponible, activerBiometrie, connexionBiometrie, nomBiometrie } from '@/lib/biometrie.js';
+import { biometrieDisponible, activerBiometrie, connexionBiometrie, nomBiometrie, verifierBiometrieLocale } from '@/lib/biometrie.js';
 import { tr } from '@/lib/i18n';
 import { choisirPays } from '@/lib/pays-visiteur';
 import { memoriserEspace, oublierEspace } from '@/lib/espace';
@@ -26,9 +26,13 @@ async function empreintePin(sel, pin) {
   return Array.from(new Uint8Array(octets), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Personnes qui ont dit « plus tard » à l'empreinte pendant CETTE ouverture de l'application : on le leur redemande à la prochaine
+const reporteesCetteFois = new Set();
+
 export const trancheSession = (set, get) => ({
   etapeConnexion: 'accueil', // 'accueil' | 'inscription' | 'connexion' | 'suspendu'
   connexionEnCours: false,
+  verrouille: false, // application verrouillée : empreinte / Face ID (ou code PIN) demandés avant de montrer le commerce
 
   // Au démarrage : rouvre le commerce relié à cet appareil (et la dernière session)
   restaurerSession() {
@@ -40,8 +44,48 @@ export const trancheSession = (set, get) => ({
     if (estServeur(d)) get().demarrerSynchro();
     if (get().commerceSuspendu()) return set({ etapeConnexion: 'suspendu' });
     const u = session && d.utilisateurs.find((x) => x.id === session.utilisateurId && x.actif);
-    if (u) get().ouvrirSession(u);
-    else set({ etapeConnexion: 'connexion' });
+    if (u) {
+      get().ouvrirSession(u);
+      // Session rouverte : la première connexion a eu lieu, les suivantes demandent l'empreinte / Face ID
+      if (get().aVerrou(u)) set({ verrouille: true });
+      else if (estServeur(d)) get().proposerBiometrie(u);
+    } else set({ etapeConnexion: 'connexion' });
+  },
+
+  // ---------- Verrouillage par empreinte / Face ID ----------
+
+  // Cette personne a-t-elle l'empreinte activée sur cet appareil (vrai commerce seulement) ?
+  aVerrou(u = get().utilisateur) {
+    const cle = cleTelephone(u?.telephone);
+    return !!cle && !!get().prefs.biometrie?.[cle] && !!get().d && !estDemo(get().d.commerce.id);
+  },
+
+  verrouiller() {
+    if (get().utilisateur && get().aVerrou()) set({ verrouille: true });
+  },
+
+  /** Déverrouille avec l'empreinte ou le visage. Renvoie un message d'erreur, ou null. */
+  async deverrouillerParBiometrie() {
+    const entree = get().prefs.biometrie?.[cleTelephone(get().utilisateur?.telephone)];
+    if (!entree) return set({ verrouille: false }), null;
+    try {
+      await verifierBiometrieLocale(entree.credentialId);
+      set({ verrouille: false });
+      return null;
+    } catch (e) {
+      if (e.name === 'NotAllowedError') return tr('Non reconnu. Réessayez ou utilisez votre code PIN.');
+      return e.message || tr('Non reconnu. Réessayez ou utilisez votre code PIN.');
+    }
+  },
+
+  /** Déverrouille avec le code PIN (vérifié dans l'appareil, sans internet). Renvoie un message d'erreur, ou null. */
+  async deverrouillerParPin(pin) {
+    const u = get().utilisateur;
+    const memo = get().prefs.pinsHors?.[cleTelephone(u?.telephone)];
+    if (!memo) return tr('Code PIN indisponible sur cet appareil : changez de compte pour vous reconnecter.');
+    if ((await empreintePin(memo.sel, pin)) !== memo.hash) return tr('Code PIN incorrect');
+    set({ verrouille: false });
+    return null;
   },
 
   // Démos : on relie l'appareil et on affiche l'écran de connexion
@@ -141,8 +185,8 @@ export const trancheSession = (set, get) => ({
   // Après une connexion par code : propose d'activer l'empreinte (une seule fois par appareil)
   async proposerBiometrie(u) {
     const cle = cleTelephone(u.telephone);
-    const { biometrie = {}, biometrieRefusee = {} } = get().prefs;
-    if (!cle || biometrie[cle] || biometrieRefusee[cle]) return;
+    const { biometrie = {} } = get().prefs;
+    if (!cle || biometrie[cle] || reporteesCetteFois.has(cle) || estDemo(get().d?.commerce.id)) return;
     if (await biometrieDisponible()) get().ouvrir('biometrie');
   },
 
@@ -163,7 +207,7 @@ export const trancheSession = (set, get) => ({
 
   refuserBiometrie() {
     const cle = cleTelephone(get().utilisateur?.telephone);
-    if (cle) get().sauverPrefs({ biometrieRefusee: { ...(get().prefs.biometrieRefusee || {}), [cle]: true } });
+    if (cle) reporteesCetteFois.add(cle); // « plus tard » : redemandé à la prochaine ouverture, jamais définitivement refusé
     get().fermer();
   },
 
@@ -234,7 +278,7 @@ export const trancheSession = (set, get) => ({
     }
     oublierEspace('app');
     get().sauverPrefs({ commerceAppareil: null, session: null });
-    set({ d: null, utilisateur: null, feuille: null, panier: [], commandeActive: null, etapeConnexion: 'accueil' });
+    set({ d: null, utilisateur: null, verrouille: false, feuille: null, panier: [], commandeActive: null, etapeConnexion: 'accueil' });
   },
 
   commerceSuspendu() {
@@ -255,6 +299,7 @@ export const trancheSession = (set, get) => ({
       }
     }
     set({
+      verrouille: false,
       utilisateur: u,
       ecran: u.role === 'gerant' ? 'accueil' : 'caisse',
       panier: [],
@@ -268,7 +313,7 @@ export const trancheSession = (set, get) => ({
   seDeconnecter() {
     oublierEspace('app');
     get().sauverPrefs({ session: null });
-    set({ utilisateur: null, feuille: null, etapeConnexion: 'connexion', panier: [], commandeActive: null });
+    set({ utilisateur: null, verrouille: false, feuille: null, etapeConnexion: 'connexion', panier: [], commandeActive: null });
   },
 
   // Fin de session imposée (session expirée, compte désactivé) : retour à l'écran de connexion

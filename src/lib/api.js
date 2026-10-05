@@ -25,22 +25,30 @@ export class ErreurApi extends Error {
  */
 export async function appelApi(methode, adresse, corps = null, jeton = null) {
   if (!API_ACTIVE) throw new ErreurApi(tr('Serveur non disponible dans cette version'), 0, true);
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new ErreurApi(tr('Pas de connexion internet'), 0, true);
+  // « navigator.onLine » se trompe parfois sur téléphone (application installée, changement de réseau) : on tente toujours la requête
   const controle = new AbortController();
   const minuterie = setTimeout(() => controle.abort(), DELAI_MS);
+  const requete = () => fetch(chemin('/api' + adresse), {
+    method: methode,
+    headers: {
+      'Content-Type': 'application/json',
+      // Les deux en-têtes : certains hébergements masquent « Authorization »
+      ...(jeton ? { Authorization: 'Bearer ' + jeton, 'X-Kaislo-Jeton': jeton } : {}),
+    },
+    body: corps ? JSON.stringify(corps) : undefined,
+    signal: controle.signal,
+    cache: 'no-store',
+  });
   let reponse;
   try {
-    reponse = await fetch(chemin('/api' + adresse), {
-      method: methode,
-      headers: {
-        'Content-Type': 'application/json',
-        // Les deux en-têtes : certains hébergements masquent « Authorization »
-        ...(jeton ? { Authorization: 'Bearer ' + jeton, 'X-Kaislo-Jeton': jeton } : {}),
-      },
-      body: corps ? JSON.stringify(corps) : undefined,
-      signal: controle.signal,
-      cache: 'no-store',
-    });
+    try {
+      reponse = await requete();
+    } catch (e) {
+      // Réseau qui se réveille (retour dans l'application, changement de Wi-Fi / 4G) : une seconde tentative, pour les lectures seulement
+      if (methode !== 'GET' || controle.signal.aborted) throw e;
+      await new Promise((r) => setTimeout(r, 1200));
+      reponse = await requete();
+    }
   } catch {
     throw new ErreurApi(tr('Pas de connexion internet'), 0, true);
   } finally {
