@@ -58,7 +58,7 @@ export default function Clients() {
           {!liste.length && (
             <div className="vide">
               <p><b>{tous.length ? 'Aucun client ne doit d’argent' : 'Aucun client dans le carnet'}</b></p>
-              <p className="petit">Pour vendre à crédit, choisissez « À crédit » au moment d’encaisser.</p>
+              <p className="petit">Pour vendre à crédit, choisissez « À crédit » au moment de valider la vente.</p>
             </div>
           )}
         </div>

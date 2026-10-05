@@ -8,7 +8,7 @@ import { EnTeteSite, PiedSite, SectionVideos, AppelFinal, LIEN_DEMO_RESTO, VIDEO
 
 export const metadata = {
   title: 'Tutoriels vidéo',
-  description: 'Kaislo en vidéo : présentation, caisse restaurant, caisse épicerie, ajout des articles et gestion des vendeurs. Avec voix, en une minute chacun.',
+  description: 'Kaislo en vidéo : présentation, restaurant, épicerie, ajout des articles et gestion des vendeurs. Avec voix, en une minute chacun.',
   alternates: { canonical: '/tutoriels/' },
 };
 

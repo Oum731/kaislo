@@ -64,10 +64,10 @@ export function chargerCommerce(commerceId) {
       ecrire('commerce:' + commerceId, donnees);
     }
   } else if (donnees && (!donnees.commerce.code || !donnees.commerce.abonnement || !donnees.sessionsCaisse || donnees.utilisateurs.some((u) => u.role === 'gerant' && !u.telephone && donnees.commerce.telephone))) {
-    // Commerces créés avant le code, les abonnements et l'ouverture de caisse : on les complète
+    // Commerces créés avant le code, les abonnements et l'ouverture de la journée : on les complète
     donnees.commerce.code ||= nouveauCode();
     donnees.commerce.abonnement ||= nouvelAbonnement(new Date(donnees.commerce.creeLe || Date.now()));
-    migrerClotures(donnees); // anciennes clôtures -> journées de caisse
+    migrerClotures(donnees); // anciennes clôtures -> journées de vente
     const gerant = donnees.utilisateurs.find((u) => u.role === 'gerant');
     if (gerant && !gerant.telephone && donnees.commerce.telephone) gerant.telephone = donnees.commerce.telephone;
     ecrire('commerce:' + commerceId, donnees);
@@ -152,7 +152,7 @@ export function creerCommerce(infos, serveur = null) {
     produits: [],
     ventes: [],
     depenses: [],
-    sessionsCaisse: [], // journées de caisse (ouverture / fermeture)
+    sessionsCaisse: [], // journées de vente (ouverture / fermeture)
     clients: [],
     remboursements: [],
     mouvements: [],

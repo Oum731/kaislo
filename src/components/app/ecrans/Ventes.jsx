@@ -3,7 +3,7 @@
 // ÉCRAN VENTES :
 //  - état de la caisse du jour : ouverture / fermeture
 //  - tickets (le vendeur ne voit que ses ventes, le gérant voit tout)
-//  - journées de caisse : historique des ouvertures et fermetures (gérant)
+//  - journées de vente : historique des ouvertures et fermetures (gérant)
 // ------------------------------------------------------------
 import { useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
@@ -25,7 +25,7 @@ export default function Ventes() {
         <EtatCaisse />
         {gerant && (
           <div style={{ maxWidth: 420, margin: '16px 0 4px' }}>
-            <Segment options={[['tickets', 'Tickets'], ['journees', 'Journées de caisse']]} valeur={onglet} surChanger={setOnglet} />
+            <Segment options={[['tickets', 'Tickets'], ['journees', 'Journées de vente']]} valeur={onglet} surChanger={setOnglet} />
           </div>
         )}
         {onglet === 'tickets' ? <ListeTickets /> : <JourneesCaisse />}
@@ -43,24 +43,24 @@ export function EtatCaisse({ compact = false }) {
       <div className="carte etat-caisse fermee" style={{ marginTop: compact ? 0 : 4 }}>
         <span className="pastille"><Icone nom="caisse" /></span>
         <div className="grandit">
-          <b>La caisse est fermée</b>
+          <b>La journée est fermée</b>
           <p className="tres-petit muet">Ouvrez-la avant la première vente : comptez la monnaie du matin.</p>
         </div>
-        <button className="btn" onClick={() => s.ouvrir('ouverture')}><Icone nom="ok" taille="sm" /> Ouvrir la caisse</button>
+        <button className="btn" onClick={() => s.ouvrir('ouverture')}><Icone nom="ok" taille="sm" /> Ouvrir la journée</button>
       </div>
     );
   }
-  if (compact) return null; // à la caisse, on n'affiche le bandeau que si elle est fermée
+  if (compact) return null; // à l'écran de vente, on n'affiche le bandeau que si elle est fermée
   return (
     <div className="carte etat-caisse ouverte" style={{ marginTop: 4 }}>
       <span className="pastille"><Icone nom="caisse" /></span>
       <div className="grandit">
-        <b>Caisse ouverte depuis {formatHeure(session.ouverteLe)}</b>
+        <b>Journée ouverte depuis {formatHeure(session.ouverteLe)}</b>
         <p className="tres-petit muet">
-          {formatJourLong(new Date(session.ouverteLe))} · par {session.ouvertePar} · fond de caisse {s.prix(session.fondDeCaisse)}
+          {formatJourLong(new Date(session.ouverteLe))} · par {session.ouvertePar} · fond de départ {s.prix(session.fondDeCaisse)}
         </p>
       </div>
-      <button className="btn safran" onClick={() => s.ouvrir('cloture')}><Icone nom="caisse" taille="sm" /> Fermer la caisse</button>
+      <button className="btn safran" onClick={() => s.ouvrir('cloture')}><Icone nom="caisse" taille="sm" /> Fermer la journée</button>
     </div>
   );
 }
@@ -130,7 +130,7 @@ function ListeTickets() {
   );
 }
 
-// Historique des journées de caisse (gérant) : toucher une journée affiche son résumé
+// Historique des journées de vente (gérant) : toucher une journée affiche son résumé
 function JourneesCaisse() {
   const s = useKaislo();
   const journees = historiqueCaisse(s.d).slice(0, 60);
@@ -156,7 +156,7 @@ function JourneesCaisse() {
           </button>
         );
       })}
-      {!journees.length && <p className="muet petit" style={{ padding: 16 }}>Aucune journée de caisse pour l’instant.</p>}
+      {!journees.length && <p className="muet petit" style={{ padding: 16 }}>Aucune journée de vente pour l’instant.</p>}
     </div>
   );
 }

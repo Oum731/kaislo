@@ -47,7 +47,7 @@ function Equipe() {
   return (
     <>
       <div className="entete-section">
-        <p className="section-titre" style={{ marginTop: 0 }}>Personnes autorisées sur la caisse</p>
+        <p className="section-titre" style={{ marginTop: 0 }}>Personnes autorisées à vendre</p>
         <button className="btn petit cache-mobile" onClick={() => s.ouvrir('utilisateur')}><Icone nom="plus" taille="sm" /> Vendeur</button>
       </div>
       <div className="liste">
@@ -159,9 +159,9 @@ function InfosCommerce() {
       <p className="section-titre">Localisation sur la carte</p>
       <Localisation b={b} setB={setB} />
 
-      <p className="section-titre">Caisse</p>
+      <p className="section-titre">Ventes</p>
       <div className="carte pile">
-        <label className="champ"><span>Fond de caisse habituel (monnaie du matin)</span>
+        <label className="champ"><span>Fond de départ habituel (monnaie du matin)</span>
           <ChampMontant valeur={b.fondDeCaisse} surChanger={(v) => setB({ ...b, fondDeCaisse: v })} />
         </label>
         <Reglage
@@ -198,7 +198,7 @@ function InfosCommerce() {
           <button className="btn secondaire" onClick={() => exporterVentesCsv(d)}>Ventes (Excel, CSV)</button>
           <button className="btn secondaire" onClick={() => exporterTout(d)}>Sauvegarde complète</button>
         </div>
-        <p className="tres-petit muet">La sauvegarde complète contient articles, ventes, clients, dépenses et journées de caisse. Les codes PIN n’y figurent pas.</p>
+        <p className="tres-petit muet">La sauvegarde complète contient articles, ventes, clients, dépenses et journées de vente. Les codes PIN n’y figurent pas.</p>
       </div>
 
       <p className="section-titre">Cet appareil</p>

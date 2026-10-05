@@ -1,7 +1,7 @@
 {
-  "name": "Kaislo — Caisse et stock",
+  "name": "Kaislo — Ventes et stock",
   "short_name": "Kaislo",
-  "description": "La caisse et la gestion de stock simples, pour tous les commerces.",
+  "description": "La gestion des ventes et du stock, simple, pour tous les commerces.",
   "lang": "fr",
   "start_url": "./app/",
   "scope": "./",

@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // Fenêtres liées à la vente : options d'un produit, panier (téléphone),
 // ticket, annulation, ticket cuisine, remise, choix du client / de la
-// table, scan de code-barres, clôture de caisse.
+// table, scan de code-barres, clôture de la journée.
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
@@ -382,11 +382,11 @@ export function FeuilleOuverture() {
     if (s.ouvrirCaisse(fond, note)) s.fermer();
   };
   return (
-    <Feuille titre="Ouverture de la caisse" sousTitre={formatJourLong(new Date()) + ' · ' + s.utilisateur.nom} surFermer={s.fermer}
-      pied={<button className="btn grand bloc" onClick={ouvrir}><Icone nom="ok" /> Ouvrir la caisse</button>}>
+    <Feuille titre="Ouverture de la journée" sousTitre={formatJourLong(new Date()) + ' · ' + s.utilisateur.nom} surFermer={s.fermer}
+      pied={<button className="btn grand bloc" onClick={ouvrir}><Icone nom="ok" /> Ouvrir la journée</button>}>
       <div className="pile">
-        <p className="petit">Comptez la monnaie présente dans la caisse avant la première vente.</p>
-        <label className="champ"><span>Fond de caisse compté</span><ChampMontant valeur={fond} surChanger={(v) => setFond(v || 0)} grand autoFocus /></label>
+        <p className="petit">Comptez l’argent liquide dont vous disposez avant la première vente.</p>
+        <label className="champ"><span>Fond de départ compté</span><ChampMontant valeur={fond} surChanger={(v) => setFond(v || 0)} grand autoFocus /></label>
         {derniere && (
           <p className="tres-petit muet">
             Dernière fermeture : {formatDate(derniere.fermeLe)} à {formatHeure(derniere.fermeLe)} par {derniere.fermePar} · espèces comptées {s.prix(derniere.cloture?.compte ?? 0)}
@@ -398,7 +398,7 @@ export function FeuilleOuverture() {
   );
 }
 
-// ---------- Fermeture de la caisse (avec le total vendu par article) ----------
+// ---------- Fermeture de la journée (avec le total vendu par article) ----------
 export function FeuilleCloture() {
   const s = useKaislo();
   const [compte, setCompte] = useState(null);
@@ -407,18 +407,18 @@ export function FeuilleCloture() {
   const c = s.calculClotureEnCours();
   if (!session || !c) {
     return (
-      <Feuille titre="Fermeture de la caisse" surFermer={s.fermer}>
-        <p className="astuce">La caisse n’est pas ouverte.</p>
+      <Feuille titre="Fermeture de la journée" surFermer={s.fermer}>
+        <p className="astuce">La journée n’est pas ouverte.</p>
       </Feuille>
     );
   }
   const ecart = compte === null ? null : Math.round((compte - c.attendu) * 100) / 100;
 
   return (
-    <Feuille titre="Fermeture de la caisse" sousTitre={'Ouverte à ' + formatHeure(session.ouverteLe) + ' par ' + session.ouvertePar} surFermer={s.fermer} pleine large
+    <Feuille titre="Fermeture de la journée" sousTitre={'Ouverte à ' + formatHeure(session.ouverteLe) + ' par ' + session.ouvertePar} surFermer={s.fermer} pleine large
       pied={
         <button className="btn grand bloc" disabled={ecart === null} onClick={() => s.fermerCaisse(compte, note)}>
-          <Icone nom={s.imprimante.connectee ? 'imprimante' : 'ok'} /> {s.imprimante.connectee ? 'Fermer la caisse et imprimer' : 'Fermer la caisse'}
+          <Icone nom={s.imprimante.connectee ? 'imprimante' : 'ok'} /> {s.imprimante.connectee ? 'Fermer la journée et imprimer' : 'Fermer la journée'}
         </button>
       }>
       <div className="grille-ecran deux">
@@ -426,8 +426,12 @@ export function FeuilleCloture() {
           <div className="carte">
             <div className="ligne espace"><b>Ventes ({c.nbVentes} tickets)</b><b className="chiffre">{s.prix(c.totalVentes)}</b></div>
             {c.parPaiement.map((p) => (
-              <div key={p.mode} className="ligne espace petit" style={{ marginTop: 8 }}><span className="muet">{p.mode} ({p.nb})</span><span className="chiffre">{s.prix(p.total)}</span></div>
+              <div key={p.mode} className="ligne espace petit" style={{ marginTop: 8 }}>
+                <span className="muet">{p.mode} ({p.nb}){p.rembourse > 0 ? ' + crédits remboursés ' + s.prix(p.rembourse) : ''}</span>
+                <span className="chiffre">{s.prix(p.total + (p.rembourse || 0))}</span>
+              </div>
             ))}
+            {c.totalRecu !== undefined && <div className="ligne espace" style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--bordure)' }}><b>Total reçu (hors crédit)</b><b className="chiffre">{s.prix(c.totalRecu)}</b></div>}
             {c.totalRemises > 0 && <div className="ligne espace petit" style={{ marginTop: 8 }}><span className="muet">Remises accordées</span><span className="chiffre">{s.prix(c.totalRemises)}</span></div>}
             {c.nbAnnulees > 0 && <p className="tres-petit muet" style={{ marginTop: 8 }}>{c.nbAnnulees} vente(s) annulée(s), non comptée(s)</p>}
           </div>
@@ -435,12 +439,12 @@ export function FeuilleCloture() {
         </div>
         <div className="pile">
           <div className="carte pile">
-            <h3>Espèces dans la caisse</h3>
-            <div className="ligne espace petit"><span className="muet">Fond de caisse (ouverture)</span><span className="chiffre">{s.prix(c.fondDeCaisse)}</span></div>
+            <h3>Espèces en main</h3>
+            <div className="ligne espace petit"><span className="muet">Fond de départ (ouverture)</span><span className="chiffre">{s.prix(c.fondDeCaisse)}</span></div>
             <div className="ligne espace petit"><span className="muet">+ Ventes en espèces</span><span className="chiffre">{s.prix(c.ventesEspeces)}</span></div>
             {c.remboursementsEspeces > 0 && <div className="ligne espace petit"><span className="muet">+ Crédits remboursés en espèces</span><span className="chiffre">{s.prix(c.remboursementsEspeces)}</span></div>}
-            <div className="ligne espace petit"><span className="muet">− Dépenses payées par la caisse</span><span className="chiffre">{s.prix(c.depensesCaisse)}</span></div>
-            {c.attendu < 0 && <p className="astuce">Les dépenses payées par la caisse dépassent les espèces encaissées. Vérifiez les dépenses du jour.</p>}
+            <div className="ligne espace petit"><span className="muet">− Dépenses payées avec les espèces</span><span className="chiffre">{s.prix(c.depensesCaisse)}</span></div>
+            {c.attendu < 0 && <p className="astuce">Les dépenses payées avec les espèces dépassent les espèces reçues. Vérifiez les dépenses du jour.</p>}
             <div className="ligne espace" style={{ paddingTop: 10, borderTop: '1px solid var(--bordure)' }}><b>Espèces attendues</b><span className="kpi-valeur" style={{ margin: 0 }}>{s.prix(c.attendu)}</span></div>
           </div>
           <div className="carte pile">
@@ -449,7 +453,7 @@ export function FeuilleCloture() {
             {ecart !== null && (
               <div className={`ecart ${ecart === 0 ? 'juste' : ecart < 0 ? 'rouge' : 'safran'}`} style={{ marginTop: 0 }}>
                 <Icone nom={ecart === 0 ? 'ok' : 'alerte'} />
-                {ecart === 0 ? 'Caisse juste' : ecart < 0 ? 'Manque ' + s.prix(-ecart) : 'Excédent ' + s.prix(ecart)}
+                {ecart === 0 ? 'Comptes justes' : ecart < 0 ? 'Manque ' + s.prix(-ecart) : 'Excédent ' + s.prix(ecart)}
               </div>
             )}
             <label className="champ"><span>Note (facultatif)</span><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex : 2 billets abîmés mis de côté" /></label>
@@ -480,11 +484,11 @@ function ArticlesVendus({ c }) {
   );
 }
 
-// ---------- Résumé d'une journée de caisse (après fermeture ou depuis l'historique) ----------
+// ---------- Résumé d'une journée de vente (après fermeture ou depuis l'historique) ----------
 export function FeuilleTicketCloture({ cloture }) {
   const s = useKaislo();
   return (
-    <Feuille titre="Résumé de la journée de caisse" sousTitre={'Fermée le ' + formatDate(cloture.date) + ' à ' + formatHeure(cloture.date) + ' · ' + cloture.utilisateurNom} surFermer={s.fermer} pleine large
+    <Feuille titre="Résumé de la journée de vente" sousTitre={'Fermée le ' + formatDate(cloture.date) + ' à ' + formatHeure(cloture.date) + ' · ' + cloture.utilisateurNom} surFermer={s.fermer} pleine large
       pied={
         <div className="grille-2">
           <button className="btn secondaire" onClick={() => s.imprimerCloture(cloture)} disabled={s.impressionEnCours}><Icone nom="imprimante" /> Imprimer</button>
@@ -495,7 +499,7 @@ export function FeuilleTicketCloture({ cloture }) {
         <div className="pile">
           <div className="kpis" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
             <div className="carte kpi"><p className="petit muet">Ventes</p><p className="kpi-valeur">{s.prix(cloture.totalVentes)}</p><p className="sous">{cloture.nbVentes} tickets</p></div>
-            <div className="carte kpi"><p className="petit muet">Écart de caisse</p><p className="kpi-valeur" style={{ color: cloture.ecart === 0 ? 'var(--vert)' : cloture.ecart < 0 ? 'var(--rouge)' : 'var(--safran-fonce)' }}>{cloture.ecart === 0 ? 'Juste' : (cloture.ecart > 0 ? '+' : '') + s.prix(cloture.ecart)}</p><p className="sous">compté {s.prix(cloture.compte)}</p></div>
+            <div className="carte kpi"><p className="petit muet">Écart du jour</p><p className="kpi-valeur" style={{ color: cloture.ecart === 0 ? 'var(--vert)' : cloture.ecart < 0 ? 'var(--rouge)' : 'var(--safran-fonce)' }}>{cloture.ecart === 0 ? 'Juste' : (cloture.ecart > 0 ? '+' : '') + s.prix(cloture.ecart)}</p><p className="sous">compté {s.prix(cloture.compte)}</p></div>
           </div>
           <div className="carte petit pile">
             <p><b>Ouverture :</b> {formatDate(cloture.debut)} à {formatHeure(cloture.debut)}{cloture.ouvertePar ? ' par ' + cloture.ouvertePar : ''}</p>

@@ -1,6 +1,6 @@
 // ------------------------------------------------------------
-// Modèle commun des pages "Caisse pour restaurant" et
-// "Caisse pour épicerie" (même structure, contenus différents)
+// Modèle commun des pages "Gestion pour restaurant" et
+// "Gestion pour épicerie" (même structure, contenus différents)
 // ------------------------------------------------------------
 import { EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos } from './Site';
 

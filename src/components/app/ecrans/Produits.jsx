@@ -65,7 +65,7 @@ export default function Produits() {
                             </span>
                           </span>
                           <span onClick={(e) => e.stopPropagation()}>
-                            <Interrupteur actif={p.actif} surChanger={() => s.basculerProduit(p.id)} label={p.actif ? 'Masquer de la caisse' : 'Afficher à la caisse'} />
+                            <Interrupteur actif={p.actif} surChanger={() => s.basculerProduit(p.id)} label={p.actif ? 'Masquer de la vente' : 'Afficher à la vente'} />
                           </span>
                         </div>
                       );
@@ -75,7 +75,7 @@ export default function Produits() {
                 </div>
               );
             })}
-            <p className="tres-petit muet centre" style={{ marginTop: 18 }}>L’interrupteur masque un article de la caisse sans le supprimer.</p>
+            <p className="tres-petit muet centre" style={{ marginTop: 18 }}>L’interrupteur masque un article de l’écran de vente sans le supprimer.</p>
             <button className="bouton-flottant seulement-mobile" onClick={() => s.ouvrir('produit')}><Icone nom="plus" /> Article</button>
           </>
         )}
@@ -95,7 +95,7 @@ export default function Produits() {
                 </div>
               ))}
             </div>
-            <p className="tres-petit muet centre" style={{ marginTop: 18 }}>L’ordre des catégories est celui de la caisse.{!s.estGerant() && ' Seul le gérant peut supprimer une catégorie.'}</p>
+            <p className="tres-petit muet centre" style={{ marginTop: 18 }}>L’ordre des catégories est celui de l’écran de vente.{!s.estGerant() && ' Seul le gérant peut supprimer une catégorie.'}</p>
             <button className="bouton-flottant seulement-mobile" onClick={() => s.ouvrir('categorie')}><Icone nom="plus" /> Catégorie</button>
           </>
         )}

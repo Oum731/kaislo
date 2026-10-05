@@ -111,7 +111,7 @@ export const trancheSession = (set, get) => ({
     const aJour = { ...d, utilisateurs, commerce: { ...d.commerce, abonnement: { ...d.commerce.abonnement, ...rep.commerce.abonnement } } };
     enregistrerCommerce(aJour);
     set({ d: aJour, utilisateur: rep.utilisateur });
-    // Nouvel appareil : on récupère les données du commerce avant d'ouvrir la caisse
+    // Nouvel appareil : on récupère les données du commerce avant d'ouvrir la journée
     if (nouveau) await get().synchroniser();
     get().demarrerSynchro();
     if (get().commerceSuspendu()) return set({ etapeConnexion: 'suspendu', utilisateur: null });

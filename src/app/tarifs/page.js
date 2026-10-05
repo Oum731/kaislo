@@ -9,7 +9,7 @@ import { FORMULES, REGLES_TARIFS, VENDEURS_PAR_POSTE } from '@/lib/donnees/tarif
 import { typeCommerce } from '@/lib/donnees/modeles';
 
 export const metadata = {
-  title: 'Tarifs — caisse et gestion de stock par métier',
+  title: 'Tarifs — gestion des ventes et du stock par métier',
   description: 'Tarifs Kaislo par métier, au Maroc (DH) et en Afrique de l’Ouest (FCFA) : épicerie, boutique, maquis, restaurant, bar, quincaillerie, pharmacie, grossiste. 1 poste et 5 vendeurs inclus, premier mois gratuit, 2 mois offerts à l’année.',
   alternates: { canonical: '/tarifs/' },
 };
@@ -21,7 +21,7 @@ const EXEMPLES = [
   ['Maquis', '4 serveurs, 1 imprimante au comptoir', 1],
   ['Restaurant', '8 serveurs : 5 en salle (poste « Salle »), 3 en terrasse (poste « Terrasse »)', 2],
   ['Épicerie', 'Le gérant + 2 vendeurs par roulement', 1],
-  ['Grossiste', '2 caisses au dépôt, 3 vendeurs chacune', 2],
+  ['Grossiste', '2 postes au dépôt, 3 vendeurs chacune', 2],
 ];
 
 const QUESTIONS = [
@@ -87,7 +87,7 @@ export default function PageTarifs() {
             <span className="etiquette">Postes et vendeurs</span>
             <h2>Au-delà de {VENDEURS_PAR_POSTE} vendeurs, un poste de plus.</h2>
             <div className="grille-pour-qui">
-              <div className="pour-qui"><h3>Le gérant</h3><ul><li>Crée ses postes : « Comptoir », « Terrasse », « Caisse 2 »…</li><li>Relie chaque poste à son imprimante</li><li>Crée ses vendeurs et les affecte à un poste</li><li>Vend depuis n’importe quel poste, sans compter dans la limite</li></ul></div>
+              <div className="pour-qui"><h3>Le gérant</h3><ul><li>Crée ses postes : « Comptoir », « Terrasse », « Comptoir 2 »…</li><li>Relie chaque poste à son imprimante</li><li>Crée ses vendeurs et les affecte à un poste</li><li>Vend depuis n’importe quel poste, sans compter dans la limite</li></ul></div>
               <div className="pour-qui"><h3>Le poste</h3><ul><li>Le téléphone ou la tablette relié(e) à l’imprimante</li><li>{VENDEURS_PAR_POSTE} vendeurs au maximum</li><li>En même temps ou par roulement</li><li>Toutes leurs commandes s’impriment sur son imprimante</li></ul></div>
               <div className="pour-qui"><h3>Le vendeur</h3><ul><li>Affecté à un seul poste à la fois</li><li>Le gérant le change de poste quand il veut</li><li>Travaille sur son propre téléphone, avec ses identifiants</li></ul></div>
             </div>

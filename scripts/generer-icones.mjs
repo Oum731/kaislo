@@ -69,7 +69,7 @@ const capture = fs.existsSync('public/captures/tableau-ordi.webp') ? `data:image
 await rendre(`<div style="width:1200px;height:630px;background:#F6F5F1;display:flex;align-items:center;gap:40px;padding:0 0 0 72px;box-sizing:border-box;font-family:'DM Sans',sans-serif;overflow:hidden">
   <div style="flex:0 0 520px">
     <div style="display:flex;align-items:center;gap:16px">${img(marque(), 76)}<span style="font:800 64px 'Bricolage Grotesque';letter-spacing:-0.035em;color:${ENCRE}">Kaislo</span></div>
-    <p style="font:800 46px/1.12 'Bricolage Grotesque';letter-spacing:-0.02em;color:${ENCRE};margin:34px 0 18px">La caisse et la gestion de stock de votre commerce.</p>
+    <p style="font:800 46px/1.12 'Bricolage Grotesque';letter-spacing:-0.02em;color:${ENCRE};margin:34px 0 18px">La gestion des ventes et du stock de votre commerce.</p>
     <p style="font:500 24px/1.4 'DM Sans';color:#4A5650;margin:0">Téléphone, tablette, ordinateur · toutes les devises · essai gratuit 30 jours</p>
   </div>
   ${capture ? `<img src="${capture}" style="height:520px;border-radius:14px;border:1px solid #CFCBC0;box-shadow:0 24px 60px rgba(20,33,28,.18)">` : ''}

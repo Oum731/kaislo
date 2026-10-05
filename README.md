@@ -92,6 +92,19 @@ Avant le lancement commercial :
 - changer `DATE_PAGES_LEGALES` à chaque modification ;
 - faire relire les textes par un juriste du pays du siège d'Amorac.
 
+## Captures d'écran du site
+
+Les 9 images de `public/captures/` (vente, épicerie, fermeture de la journée, crédit, stock, tableau de bord, tables)
+sont prises automatiquement dans la vraie démo (ordinateur 1440 × 900, téléphone 390 × 844 en double définition).
+
+```
+npm run build
+npm run captures            # toutes les captures (environ 1 minute)
+npm run captures -- stock   # une seule capture
+```
+
+Les scènes sont décrites dans `scripts/captures.mjs`.
+
 ## Vidéos de démonstration
 
 Les 5 vidéos de `public/videos/` (présentation, restaurant, épicerie, ajout d'articles, vendeurs)
@@ -102,7 +115,12 @@ pip install edge-tts      # une seule fois : la voix
 npm run build
 npm run videos            # toutes les vidéos (environ 15 min la première fois)
 npm run videos -- produits   # une seule vidéo
+npm run videos -- --essai    # essai sans voix : vérifie la mise en scène, écrit dans outils/videos-essai/
 ```
+
+Chrome est cherché automatiquement (Windows, Mac, Linux) ; sinon indiquer son chemin dans la variable `CHROME_PATH`.
+Python : `python` sous Windows, `python3` ailleurs (ou variable `PYTHON`).
+Après un changement de vocabulaire ou d'écran : refaire `npm run build`, puis `npm run captures` et `npm run videos`.
 
 Textes dits et sous-titres : `scripts/videos-demo.mjs` (fonction `titre(p, sous-titre, phrase dite)`).
 Les phrases déjà fabriquées sont gardées dans `outils/voix-cache/`.

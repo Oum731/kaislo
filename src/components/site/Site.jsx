@@ -22,8 +22,8 @@ export function Logo() {
 
 // Liens du menu du site (en-tête et menu sur petit écran)
 const LIENS_SITE = [
-  ['/caisse-restaurant/', 'Restaurants'],
-  ['/caisse-epicerie/', 'Épiceries'],
+  ['/gestion-restaurant/', 'Restaurants'],
+  ['/gestion-epicerie/', 'Épiceries'],
   ['/gestion-stock/', 'Stock'],
   ['/#fonctions', 'Fonctions'],
   ['/tarifs/', 'Tarifs'],
@@ -66,12 +66,12 @@ export function PiedSite() {
         <div className="colonnes">
           <div>
             <span className="logo"><Marque /> Kaislo</span>
-            <p style={{ marginTop: 12, maxWidth: 360 }}>Caisse et gestion de stock pour tous les commerces. Développé par Amorac.</p>
+            <p style={{ marginTop: 12, maxWidth: 360 }}>Gestion des ventes et du stock pour tous les commerces. Développé par Amorac.</p>
           </div>
           <div>
             <h4>Kaislo</h4>
-            <Link href="/caisse-restaurant/">Caisse pour restaurant</Link>
-            <Link href="/caisse-epicerie/">Caisse pour épicerie</Link>
+            <Link href="/gestion-restaurant/">Gestion pour restaurant</Link>
+            <Link href="/gestion-epicerie/">Gestion pour épicerie</Link>
             <Link href="/gestion-stock/">Gestion de stock et inventaire</Link>
             <Link href="/tarifs/">Tarifs</Link>
             <Link href="/devenir-commercial/">Devenir commercial Kaislo</Link>
@@ -145,7 +145,7 @@ export const VIDEOS = {
   presentation: {
     src: '/videos/presentation-kaislo.mp4', poster: '/videos/presentation-kaislo.webp', duree: '1 min 20',
     titre: 'Présentation de Kaislo',
-    texte: 'Le tour complet : tableau de bord, caisse, tables, ventes et journées de caisse, crédit, articles, équipe.',
+    texte: 'Le tour complet : tableau de bord, vente, tables, ventes et journées de vente, crédit, articles, équipe.',
     lienDemo: LIEN_DEMO_RESTO,
   },
   restaurant: {
@@ -156,8 +156,8 @@ export const VIDEOS = {
   },
   epicerie: {
     src: '/videos/demo-epicerie.mp4', poster: '/videos/demo-epicerie.webp', duree: '1 min', vertical: true,
-    titre: 'Épicerie : vente, crédit et caisse du soir',
-    texte: 'Recherche d’article, vente à crédit notée dans le carnet, fermeture de caisse juste.',
+    titre: 'Épicerie : vente, crédit et comptes du soir',
+    texte: 'Recherche d’article, vente à crédit notée dans le carnet, fermeture de la journée juste.',
     lienDemo: LIEN_DEMO_EPICERIE,
   },
   produits: {

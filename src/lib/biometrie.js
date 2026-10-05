@@ -79,7 +79,7 @@ export async function connexionBiometrie(credentialId) {
     o = await appelApi('POST', '/biometrie/defi', { type: 'connexion' });
   } catch (e) {
     if (!e.horsLigne) throw e;
-    // Sans internet : le téléphone vérifie quand même l'empreinte avant d'ouvrir la caisse
+    // Sans internet : le téléphone vérifie quand même l'empreinte avant d'ouvrir la journée
     await signer(credentialId, crypto.getRandomValues(new Uint8Array(32)));
     return { horsLigne: true };
   }
