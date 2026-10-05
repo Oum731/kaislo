@@ -257,7 +257,7 @@ export const trancheGestion = (set, get) => ({
 
   // Ouverture : on compte la monnaie du matin (fond de départ)
   ouvrirCaisse(fondDeCaisse, note = '') {
-    if (caisseOuverte(get().d)) return get().message('La caisse est déjà ouverte', 'erreur');
+    if (caisseOuverte(get().d)) return get().message('La journée est déjà ouverte', 'erreur');
     const session = {
       id: genId('s'),
       ouverteLe: new Date().toISOString(),
