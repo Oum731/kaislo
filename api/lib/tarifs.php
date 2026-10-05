@@ -34,7 +34,14 @@ const FORMULES_DEFAUT = [
         'prixPoste' => ['MAD' => 89, 'FCFA' => 5000, 'EUR' => 8, 'CAD' => 12, 'USD' => 9, 'GNF' => 75000]],
 ];
 
-const REGLES_DEFAUT = ['moisOffertsAnnuel' => 2, 'remiseFondateur' => 20, 'placesFondateur' => 20];
+// Prix catalogue et code parrain : les prix saisis dans la grille (FORMULES) sont ceux des clients qui s'inscrivent AVEC un code parrain
+// (donc les tarifs actuels, inchangés). Les nouveaux clients SANS code paient le prix catalogue = prix de la grille ÷ (1 − remise),
+// arrondi au pas supérieur : le code donne alors une vraie remise sans jamais baisser les tarifs actuels.
+// Les commerces inscrits avant « catalogueDepuis » gardent leur prix actuel.
+const REGLES_DEFAUT = [
+    'moisOffertsAnnuel' => 2, 'remiseFondateur' => 20, 'placesFondateur' => 20,
+    'remiseParrain' => 10, 'catalogueActif' => true, 'catalogueDepuis' => '2026-10-06',
+];
 
 // Valeur JSON gardée dans reglages_amorac (ou la valeur par défaut)
 function reglageAmorac(string $cle, array $defaut): array
@@ -66,12 +73,32 @@ function formuleDuType(string $type): array
     return formuleParId('proximite') ?? $liste[0];
 }
 
-// Même calcul que prixAbonnement() de tarifs.js
-function prixAbonnement(array $formule, string $devise, int $postes, int $mois, bool $fondateur): array
+// Prix catalogue d'un montant de la grille : montant ÷ (1 − remise parrain), arrondi au pas supérieur
+function prixCatalogue(float $montant, string $devise, float $remise): float
+{
+    if ($montant <= 0 || $remise <= 0) return $montant;
+    $pas = ['GNF' => 5000, 'FCFA' => 500, 'MAD' => 5][$devise] ?? 1;
+    return ceil(($montant / (1 - $remise / 100)) / $pas - 1e-9) * $pas;
+}
+
+// « catalogue » (nouveau client sans code parrain) ou « base » (avec code, ou inscrit avant la date de début)
+function modeTarif(array $commerce): string
 {
     $r = reglesTarifs();
+    if (empty($r['catalogueActif']) || !empty($commerce['commercial_id'])) return 'base';
+    return substr((string) ($commerce['cree_le'] ?? ''), 0, 10) >= (string) $r['catalogueDepuis'] ? 'catalogue' : 'base';
+}
+
+// Même calcul que prixAbonnement() de tarifs.js
+function prixAbonnement(array $formule, string $devise, int $postes, int $mois, bool $fondateur, string $mode = 'base'): array
+{
+    $r = reglesTarifs();
+    $remiseParrain = (float) $r['remiseParrain'];
+    $catalogue = $mode === 'catalogue';
     $base = (float) ($formule['prix'][$devise] ?? 0);
-    $supplement = max(0, $postes - 1) * (float) ($formule['prixPoste'][$devise] ?? 0);
+    $prixPoste = (float) ($formule['prixPoste'][$devise] ?? 0);
+    if ($catalogue) { $base = prixCatalogue($base, $devise, $remiseParrain); $prixPoste = prixCatalogue($prixPoste, $devise, $remiseParrain); }
+    $supplement = max(0, $postes - 1) * $prixPoste;
     $coef = $fondateur ? 1 - ((float) $r['remiseFondateur']) / 100 : 1;
     $pas = $devise === 'GNF' ? 1000 : ($devise === 'FCFA' ? 100 : 1);
     $parMois = round(($base + $supplement) * $coef / $pas) * $pas;
@@ -91,10 +118,14 @@ function tarifCommerce(array $c): array
 {
     $formule = $c['offre'] && formuleParId((string) $c['offre']) ? formuleParId((string) $c['offre']) : formuleDuType((string) $c['type']);
     $postes = nombrePostes($c['id']);
-    $prix = prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0));
+    $mode = modeTarif($c);
+    $prix = prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), $mode);
+    $prixPoste = (float) ($formule['prixPoste'][$c['devise']] ?? 0);
     return ['formule' => $formule['id'], 'nom' => $formule['nom'], 'postes' => $postes, 'fondateur' => (bool) ($c['fondateur'] ?? 0),
-        'parMois' => $prix['parMois'], 'annuel' => prixAbonnement($formule, $c['devise'], $postes, 12, (bool) ($c['fondateur'] ?? 0))['total'],
-        'prixPoste' => (float) ($formule['prixPoste'][$c['devise']] ?? 0), 'devise' => $c['devise']];
+        'mode' => $mode, 'parrain' => !empty($c['commercial_id']),
+        'parMoisCatalogue' => prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), 'catalogue')['parMois'],
+        'parMois' => $prix['parMois'], 'annuel' => prixAbonnement($formule, $c['devise'], $postes, 12, (bool) ($c['fondateur'] ?? 0), $mode)['total'],
+        'prixPoste' => $mode === 'catalogue' ? prixCatalogue($prixPoste, $c['devise'], (float) reglesTarifs()['remiseParrain']) : $prixPoste, 'devise' => $c['devise']];
 }
 
 function routeTarifs(): never
@@ -125,6 +156,9 @@ function routeAdminTarifs(): never
         'moisOffertsAnnuel' => max(0, min(6, (int) ($r['moisOffertsAnnuel'] ?? 2))),
         'remiseFondateur' => max(0, min(90, (float) ($r['remiseFondateur'] ?? 20))),
         'placesFondateur' => max(0, min(1000, (int) ($r['placesFondateur'] ?? 20))),
+        'remiseParrain' => max(0, min(40, (float) ($r['remiseParrain'] ?? 10))),
+        'catalogueActif' => !empty($r['catalogueActif']),
+        'catalogueDepuis' => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($r['catalogueDepuis'] ?? '')) ? (string) $r['catalogueDepuis'] : REGLES_DEFAUT['catalogueDepuis'],
     ];
     enregistrerReglageAmorac('formules', $propres);
     enregistrerReglageAmorac('regles', $regles);
