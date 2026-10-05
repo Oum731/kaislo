@@ -28,7 +28,7 @@ npm run dev        # puis ouvrir http://localhost:3000
    (les deux commandes utilisent le même dossier `.next` et se gênent)
 3. hPanel → domaine ou sous-domaine → activer le **SSL** (gratuit, obligatoire pour le Bluetooth)
 4. Gestionnaire de fichiers → `public_html` → envoyer **tout le contenu** de `out/` (y compris `.htaccess`)
-5. À chaque mise à jour : changer `VERSION` dans `public/sw.js`, refaire `npm run build`, renvoyer `out/`
+5. À chaque mise à jour : refaire `npm run build`, renvoyer `out/` (la version du service worker change toute seule : `scripts/version-sw.mjs`)
 
 ## Ce que fait l'application
 
@@ -143,7 +143,13 @@ jamais sur les appareils des vendeurs : le serveur les garde chiffrés. La versi
 n'a pas de serveur : les comptes y restent dans le navigateur.
 Les tables MySQL sont créées automatiquement au premier appel.
 
-**Publier :** `npm run publier-hostinger` (site + API envoyés sur la branche `hostinger` de GitHub).
+**Publier :** automatique à chaque fusion dans `main` (GitHub Actions → « Publication sur Hostinger » : tests, construction, envoi sur la branche `hostinger`).
+À la main, si besoin : `npm run publier-hostinger`, ou onglet Actions → « Publication sur Hostinger » → Run workflow.
+Hostinger doit déployer la branche **`hostinger`** (pas `main`, qui ne contient que le code source). Pour que le déploiement soit aussi automatique :
+hPanel → Avancé → GIT → activer le déploiement automatique et coller l'adresse du webhook dans GitHub → Settings → Webhooks.
+
+**Surveillance :** le workflow « Surveillance du site » vérifie toutes les 30 minutes la page d'accueil et `/api/sante` (base de données comprise) ;
+en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/sante` affiche une erreur de base, le champ `diagnostic` dit quoi corriger.
 
 **Réglages à faire une seule fois dans hPanel :**
 1. Avancé → Configuration PHP : PHP 8.1 ou plus récent.

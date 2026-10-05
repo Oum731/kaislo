@@ -17,8 +17,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-// Dépôt lu dans git (« origin ») : marche avant et après le renommage du dépôt sur GitHub
-const DEPOT = execSync('git remote get-url origin').toString().trim();
+// Dépôt lu dans git (« origin ») : marche avant et après le renommage du dépôt sur GitHub.
+// Dans GitHub Actions (publication automatique), le jeton DEPLOY_TOKEN donne le droit d'écrire sur la branche.
+let DEPOT = execSync('git remote get-url origin').toString().trim();
+if (process.env.DEPLOY_TOKEN) DEPOT = DEPOT.replace(/^https:\/\/(?:[^@/]+@)?/, `https://x-access-token:${process.env.DEPLOY_TOKEN}@`);
 const BRANCHE = 'hostinger';
 const lancer = (cmd, options = {}) => execSync(cmd, { stdio: 'inherit', ...options });
 const essayer = (cmd, options = {}) => { try { execSync(cmd, { stdio: 'ignore', ...options }); return true; } catch { return false; } };
@@ -27,6 +29,7 @@ const essayer = (cmd, options = {}) => { try { execSync(cmd, { stdio: 'ignore', 
 const env = { ...process.env };
 delete env.NEXT_PUBLIC_BASE_PATH;
 lancer('npx next build', { env });
+lancer('node scripts/version-sw.mjs'); // version unique du service worker (mise à jour chez les utilisateurs)
 
 // 2. Copie de travail de la branche « hostinger » (créée si elle n'existe pas encore)
 const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-hostinger-'));
@@ -49,7 +52,7 @@ lancer('git add -A', { cwd: dossier });
 if (essayer('git diff --cached --quiet', { cwd: dossier })) {
   console.log('\nRien de nouveau à publier.');
 } else {
-  lancer(`git commit -q -m "Publication du ${new Date().toISOString().slice(0, 16).replace('T', ' ')}"`, { cwd: dossier });
+  lancer(`git -c user.name="Kaislo" -c user.email="publication@kaislo.com" commit -q -m "Publication du ${new Date().toISOString().slice(0, 16).replace('T', ' ')}"`, { cwd: dossier });
   lancer(`git push -q ${DEPOT} HEAD:${BRANCHE}`, { cwd: dossier });
   console.log(`\nPublié sur la branche « ${BRANCHE} ». Sur Hostinger : hPanel → GIT → Déployer (ou automatique si le webhook est réglé).`);
 }

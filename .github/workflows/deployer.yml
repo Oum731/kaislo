@@ -1,0 +1,39 @@
+name: Publication sur Hostinger
+
+# À chaque fusion dans main : tests, construction du site, puis envoi sur la branche « hostinger »
+# (la branche que Hostinger déploie). Hostinger récupère ensuite la nouvelle version tout seul si le
+# déploiement automatique est activé (hPanel → Avancé → GIT → Déploiement automatique, webhook GitHub).
+# Lancement à la main possible : onglet Actions → « Publication sur Hostinger » → Run workflow.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publication-hostinger
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - run: npm ci
+      - name: Tests des calculs d'argent
+        run: npm test
+      - name: Syntaxe PHP de l'API
+        run: find api -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Construction et envoi sur la branche hostinger
+        env:
+          DEPLOY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run publier-hostinger

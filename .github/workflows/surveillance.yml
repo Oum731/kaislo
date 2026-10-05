@@ -1,0 +1,21 @@
+name: Surveillance du site
+
+# Toutes les 30 minutes : le site et l'API répondent-ils, et la base de données aussi ?
+# En cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt (Settings → Notifications).
+# Lancement à la main possible : onglet Actions → « Surveillance du site » → Run workflow.
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Page d'accueil
+        run: curl --fail --silent --show-error --location --max-time 30 --retry 2 --retry-delay 10 -o /dev/null https://kaislo.com/
+      - name: API et base de données (/api/sante)
+        run: |
+          reponse=$(curl --silent --show-error --max-time 30 --retry 2 --retry-delay 10 https://kaislo.com/api/sante || true)
+          echo "$reponse"
+          echo "$reponse" | grep -q '"ok":true'
