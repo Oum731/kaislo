@@ -37,12 +37,6 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-quincaillerie/" />
 </url>
 <url>
-<loc>https://kaislo.com/gestion-pharmacie/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-pharmacie/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pharmacy-management/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-pharmacie/" />
-</url>
-<url>
 <loc>https://kaislo.com/gestion-boulangerie/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-boulangerie/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/bakery-management/" />
@@ -151,12 +145,6 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/tenir-la-comptabilite-simple-de-son-commerce/" />
 </url>
 <url>
-<loc>https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-pharmacy-stock-and-expiry-dates/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
-</url>
-<url>
 <loc>https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-hardware-store-items-and-units/" />
@@ -185,6 +173,42 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/customer-loyalty-ideas-for-a-small-shop/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-une-boutique-de-vetements-tailles-et-saisons/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-boutique-de-vetements-tailles-et-saisons/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-clothing-shop-sizes-and-seasons/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-boutique-de-vetements-tailles-et-saisons/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-une-boutique-de-telephonie-et-electronique/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-boutique-de-telephonie-et-electronique/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-phone-and-electronics-shop/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-boutique-de-telephonie-et-electronique/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-un-salon-de-beaute-et-une-boutique-cosmetiques/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-salon-de-beaute-et-une-boutique-cosmetiques/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-beauty-salon-and-cosmetics-shop/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-salon-de-beaute-et-une-boutique-cosmetiques/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-une-librairie-papeterie-rentree-scolaire/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-librairie-papeterie-rentree-scolaire/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-bookshop-and-stationery-back-to-school/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-librairie-papeterie-rentree-scolaire/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-un-maquis-snack-fast-food-heures-de-pointe/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-maquis-snack-fast-food-heures-de-pointe/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-casual-eatery-peak-hours-and-stock/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-maquis-snack-fast-food-heures-de-pointe/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-les-tables-et-commandes-dun-restaurant/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-les-tables-et-commandes-dun-restaurant/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-restaurant-tables-orders-and-waiters/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-les-tables-et-commandes-dun-restaurant/" />
 </url>
 <url>
 <loc>https://kaislo.com/guides/gerer-son-commerce-cote-d-ivoire/</loc>
@@ -388,12 +412,6 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-quincaillerie/" />
 </url>
 <url>
-<loc>https://kaislo.com/en/pharmacy-management/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-pharmacie/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pharmacy-management/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-pharmacie/" />
-</url>
-<url>
 <loc>https://kaislo.com/en/bakery-management/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-boulangerie/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/bakery-management/" />
@@ -490,12 +508,6 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/tenir-la-comptabilite-simple-de-son-commerce/" />
 </url>
 <url>
-<loc>https://kaislo.com/en/guides/managing-pharmacy-stock-and-expiry-dates/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-pharmacy-stock-and-expiry-dates/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
-</url>
-<url>
 <loc>https://kaislo.com/en/guides/managing-a-hardware-store-items-and-units/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-hardware-store-items-and-units/" />
@@ -524,6 +536,42 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/customer-loyalty-ideas-for-a-small-shop/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-clothing-shop-sizes-and-seasons/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-boutique-de-vetements-tailles-et-saisons/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-clothing-shop-sizes-and-seasons/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-boutique-de-vetements-tailles-et-saisons/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-phone-and-electronics-shop/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-boutique-de-telephonie-et-electronique/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-phone-and-electronics-shop/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-boutique-de-telephonie-et-electronique/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-beauty-salon-and-cosmetics-shop/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-salon-de-beaute-et-une-boutique-cosmetiques/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-beauty-salon-and-cosmetics-shop/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-salon-de-beaute-et-une-boutique-cosmetiques/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-bookshop-and-stationery-back-to-school/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-librairie-papeterie-rentree-scolaire/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-bookshop-and-stationery-back-to-school/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-librairie-papeterie-rentree-scolaire/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-casual-eatery-peak-hours-and-stock/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-maquis-snack-fast-food-heures-de-pointe/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-casual-eatery-peak-hours-and-stock/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-maquis-snack-fast-food-heures-de-pointe/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-restaurant-tables-orders-and-waiters/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-les-tables-et-commandes-dun-restaurant/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-restaurant-tables-orders-and-waiters/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-les-tables-et-commandes-dun-restaurant/" />
 </url>
 <url>
 <loc>https://kaislo.com/en/guides/running-a-business-in-cote-d-ivoire/</loc>
