@@ -499,7 +499,7 @@ function adapterAuPays(d, paysId) {
     ville: pays.ville || 'Centre-ville',
     adresse,
     telephone: (pays.indicatif ? '+' + pays.indicatif + ' ' : '') + telLocal,
-    email: 'contact@amorac.com',
+    email: 'contact@kaislo.com',
     localisation: lat !== null ? { lat, lng } : null,
     modesPaiement: pays.paiements,
     fondDeCaisse: c(200),
