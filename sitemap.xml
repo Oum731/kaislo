@@ -73,6 +73,48 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tutoriels/" />
 </url>
 <url>
+<loc>https://kaislo.com/guides/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/faire-un-inventaire-de-stock/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/faire-un-inventaire-de-stock/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/how-to-do-a-stock-inventory/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/faire-un-inventaire-de-stock/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/calculer-sa-marge-commerciale/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/calculer-sa-marge-commerciale/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/how-to-calculate-profit-margin/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/calculer-sa-marge-commerciale/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-le-credit-clients/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-le-credit-clients/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/manage-customer-credit/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-le-credit-clients/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/cloture-de-caisse-quotidienne/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/cloture-de-caisse-quotidienne/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/daily-cash-closing/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/cloture-de-caisse-quotidienne/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/reduire-les-pertes-de-stock/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/reduire-les-pertes-de-stock/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/reduce-stock-losses/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/reduire-les-pertes-de-stock/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/noter-les-paiements-mobile-money/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/noter-les-paiements-mobile-money/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/record-mobile-money-payments/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/noter-les-paiements-mobile-money/" />
+</url>
+<url>
 <loc>https://kaislo.com/pays/cote-d-ivoire/</loc>
 </url>
 <url>
@@ -206,5 +248,47 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/logiciel-grossiste/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/wholesale-management/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/logiciel-grossiste/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/how-to-do-a-stock-inventory/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/faire-un-inventaire-de-stock/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/how-to-do-a-stock-inventory/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/faire-un-inventaire-de-stock/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/how-to-calculate-profit-margin/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/calculer-sa-marge-commerciale/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/how-to-calculate-profit-margin/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/calculer-sa-marge-commerciale/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/manage-customer-credit/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-le-credit-clients/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/manage-customer-credit/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-le-credit-clients/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/daily-cash-closing/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/cloture-de-caisse-quotidienne/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/daily-cash-closing/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/cloture-de-caisse-quotidienne/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/reduce-stock-losses/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/reduire-les-pertes-de-stock/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/reduce-stock-losses/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/reduire-les-pertes-de-stock/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/record-mobile-money-payments/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/noter-les-paiements-mobile-money/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/record-mobile-money-payments/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/noter-les-paiements-mobile-money/" />
 </url>
 </urlset>
