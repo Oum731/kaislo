@@ -26,21 +26,39 @@
 </url>
 <url>
 <loc>https://kaislo.com/gestion-boutique/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-boutique/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/boutique-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-boutique/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-quincaillerie/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-quincaillerie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/hardware-store-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-quincaillerie/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-pharmacie/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-pharmacie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pharmacy-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-pharmacie/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-boulangerie/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-boulangerie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/bakery-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-boulangerie/" />
 </url>
 <url>
 <loc>https://kaislo.com/gestion-bar/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-bar/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/bar-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-bar/" />
 </url>
 <url>
 <loc>https://kaislo.com/logiciel-grossiste/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/logiciel-grossiste/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/wholesale-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/logiciel-grossiste/" />
 </url>
 <url>
 <loc>https://kaislo.com/tarifs/</loc>
@@ -152,5 +170,41 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/tutoriels/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/tutorials/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tutoriels/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/boutique-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-boutique/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/boutique-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-boutique/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/hardware-store-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-quincaillerie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/hardware-store-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-quincaillerie/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/pharmacy-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-pharmacie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pharmacy-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-pharmacie/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/bakery-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-boulangerie/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/bakery-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-boulangerie/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/bar-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-bar/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/bar-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-bar/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/wholesale-management/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/logiciel-grossiste/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/wholesale-management/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/logiciel-grossiste/" />
 </url>
 </urlset>
