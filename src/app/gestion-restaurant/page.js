@@ -3,17 +3,19 @@
 // ------------------------------------------------------------
 import PageMetier from '@/components/site/PageMetier';
 import { LIEN_DEMO_RESTO } from '@/components/site/Site';
+import { metaPage } from '@/lib/seo';
 
 const description =
   'Gestion pour restaurant, maquis, snack et café : tables, ticket cuisine, plats avec accompagnements, ticket imprimé en Bluetooth, clôture de la journée, marge par plat. Gratuit pour démarrer.';
 
-export const metadata = {
-  title: 'Logiciel de gestion des ventes pour restaurant et maquis — tables, cuisine, tickets',
+export const metadata = metaPage({
+  title: 'Logiciel de gestion pour restaurant et maquis',
   description,
   alternates: { canonical: '/gestion-restaurant/' },
-};
+});
 
 const contenu = {
+  lien: '/gestion-restaurant/', nomFil: 'Gestion pour restaurant',
   variante: 'resto',
   lienDemo: LIEN_DEMO_RESTO,
   videos: ['restaurant', 'vendeurs'],

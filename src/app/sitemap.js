@@ -1,21 +1,18 @@
 // Plan du site pour Google (généré au moment du build : /sitemap.xml)
+// Pas de date de modification : Google préfère aucune date à une fausse date (elle serait celle de la construction du site).
 import { SITE_URL } from '@/config';
 import { PAGES_LEGALES } from '@/components/site/Site';
 import { ACTIVITES } from '@/components/site/activites';
+import { PAYS_SEO, lienPays } from '@/lib/pays-seo';
 
 export const dynamic = 'force-static';
 
 export default function sitemap() {
-  const maintenant = new Date();
-  return [
-    { url: SITE_URL + '/', lastModified: maintenant, changeFrequency: 'weekly', priority: 1 },
-    { url: SITE_URL + '/gestion-restaurant/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
-    { url: SITE_URL + '/gestion-epicerie/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
-    { url: SITE_URL + '/gestion-stock/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
-    ...Object.values(ACTIVITES).map((a) => ({ url: SITE_URL + a.lien, lastModified: maintenant, changeFrequency: 'monthly', priority: 0.8 })),
-    { url: SITE_URL + '/tarifs/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
-    { url: SITE_URL + '/devenir-commercial/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.5 },
-    { url: SITE_URL + '/tutoriels/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.8 },
-    ...PAGES_LEGALES.map(([lien]) => ({ url: SITE_URL + lien, lastModified: maintenant, changeFrequency: 'yearly', priority: 0.3 })),
+  const pages = [
+    '/', '/gestion-restaurant/', '/gestion-epicerie/', '/gestion-stock/',
+    ...Object.values(ACTIVITES).map((a) => a.lien),
+    '/tarifs/', '/tutoriels/', ...PAYS_SEO.map(lienPays), '/devenir-commercial/',
+    ...PAGES_LEGALES.map(([lien]) => lien),
   ];
+  return pages.map((lien) => ({ url: SITE_URL + lien }));
 }

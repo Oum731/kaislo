@@ -4,12 +4,13 @@
 // chat…) : il faudrait alors demander le consentement du visiteur.
 // ------------------------------------------------------------
 import PageLegale from '@/components/site/PageLegale';
+import { metaPage } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = metaPage({
   title: 'Cookies et stockage',
   description: 'Kaislo n’utilise ni cookies publicitaires ni mesure d’audience. Liste des éléments enregistrés sur votre appareil et à quoi ils servent.',
   alternates: { canonical: '/cookies/' },
-};
+});
 
 const SECTIONS = [
   {

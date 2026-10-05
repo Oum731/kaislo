@@ -11,6 +11,9 @@ import { CONTACT_EMAIL, CONTACT_WHATSAPP, SITE_URL, chemin } from '@/config';
 import Marque from '@/components/Marque';
 import BulleChat from '@/components/BulleChat';
 import { ACTIVITES } from './activites';
+import { FORMULES } from '@/lib/donnees/tarifs';
+import { PAYS_SEO, lienPays } from '@/lib/pays-seo';
+import { PAYS } from '@/lib/donnees/modeles';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
 export const LIEN_DEMO_RESTO = '/app/?demo=resto-ivoire';
@@ -83,6 +86,12 @@ export function PiedSite() {
             {Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>{a.nom}</Link>)}
           </div>
           <div>
+            <h4>Par pays</h4>
+            <div className="liste-pays">
+              {PAYS_SEO.map((p) => <Link key={p.id} href={lienPays(p)}>{PAYS.find((x) => x.id === p.id).nom}</Link>)}
+            </div>
+          </div>
+          <div>
             <h4>Informations légales</h4>
             {PAGES_LEGALES.map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
           </div>
@@ -105,12 +114,12 @@ export function PiedSite() {
 }
 
 // Capture de l'application dans un cadre simple (ordinateur ou téléphone)
-export function Capture({ src, alt, telephone = false, largeur, hauteur }) {
+export function Capture({ src, alt, telephone = false, largeur, hauteur, priorite = false }) {
   return (
     <div className={`capture ${telephone ? 'telephone' : ''}`}>
       {!telephone && <div className="capture-barre" aria-hidden="true"><i /><i /><i /></div>}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={chemin(src)} alt={alt} width={largeur} height={hauteur} loading="lazy" decoding="async" />
+      <img src={chemin(src)} alt={alt} width={largeur} height={hauteur} loading={priorite ? 'eager' : 'lazy'} fetchPriority={priorite ? 'high' : undefined} decoding="async" />
     </div>
   );
 }
@@ -132,7 +141,7 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
           </div>
         </div>
         <div className="hero-capture hero-captures">
-          <Capture src={capture.src} alt={capture.alt} largeur={1440} hauteur={900} />
+          <Capture src={capture.src} alt={capture.alt} largeur={1440} hauteur={900} priorite />
           {captureMobile && <Capture src={captureMobile.src} alt={captureMobile.alt} telephone largeur={390} hauteur={844} />}
         </div>
       </div>
@@ -320,7 +329,11 @@ export function DonneesLogiciel({ description }) {
     inLanguage: 'fr',
     publisher: { '@type': 'Organization', name: 'Amorac', url: 'https://amorac.com' },
     // Essai gratuit de 30 jours (les prix de l'abonnement dépendent du pays)
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', description: 'Essai gratuit de 30 jours', url: SITE_URL + '/app/?inscription=1' },
+    featureList: ['Ventes et tickets (imprimés, WhatsApp ou sans ticket)', 'Gestion de stock et inventaire', 'Carnet de crédit des clients', 'Comptes du soir par mode de paiement (espèces, mobile money, carte)', 'Marges, dépenses et statistiques', 'Fonctionne sans internet', 'Vendeurs avec code PIN et droits'],
+    offers: [
+      { '@type': 'Offer', name: 'Essai gratuit', price: '0', priceCurrency: 'EUR', description: 'Essai gratuit de 30 jours, sans engagement', url: SITE_URL + '/app/?inscription=1' },
+      { '@type': 'AggregateOffer', name: 'Abonnement mensuel par métier', priceCurrency: 'EUR', lowPrice: String(Math.min(...FORMULES.map((f) => f.prix.EUR))), highPrice: String(Math.max(...FORMULES.map((f) => f.prix.EUR))), offerCount: FORMULES.length, url: SITE_URL + '/tarifs/' },
+    ],
     screenshot: SITE_URL + '/og-image.png',
   };
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(donnees) }} />;

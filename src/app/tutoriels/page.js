@@ -5,12 +5,26 @@
 // ------------------------------------------------------------
 import Link from 'next/link';
 import { EnTeteSite, PiedSite, SectionVideos, AppelFinal, LIEN_DEMO_RESTO, VIDEOS, TUTORIELS } from '@/components/site/Site';
+import { metaPage, JsonLd, filAriane } from '@/lib/seo';
+import { SITE_URL } from '@/config';
 
-export const metadata = {
-  title: 'Tutoriels vidéo',
+export const metadata = metaPage({
+  title: 'Tutoriels vidéo : apprenez Kaislo en 5 minutes',
   description: 'Kaislo en vidéo : présentation, restaurant, épicerie, ajout des articles et gestion des vendeurs. Avec voix, en une minute chacun.',
   alternates: { canonical: '/tutoriels/' },
-};
+});
+
+// « 1 min 20 » → « PT1M20S » (durée lue par Google pour les vidéos)
+const dureeIso = (d) => { const m = /(\d+)\s*min(?:\s*(\d+))?/.exec(d) || []; return 'PT' + (m[1] || 1) + 'M' + (m[2] ? m[2] + 'S' : ''); };
+const DONNEES_VIDEOS = [
+  filAriane([['Accueil', '/'], ['Tutoriels vidéo', '/tutoriels/']]),
+  ...TUTORIELS.map((cle) => ({
+    '@context': 'https://schema.org', '@type': 'VideoObject',
+    name: VIDEOS[cle].titre, description: VIDEOS[cle].texte, inLanguage: 'fr',
+    thumbnailUrl: SITE_URL + VIDEOS[cle].poster, contentUrl: SITE_URL + VIDEOS[cle].src, embedUrl: SITE_URL + '/tutoriels/#' + cle,
+    uploadDate: '2026-10-05', duration: dureeIso(VIDEOS[cle].duree),
+  })),
+];
 
 export default function PageTutoriels() {
   return (
@@ -42,6 +56,7 @@ export default function PageTutoriels() {
         />
       </main>
       <PiedSite />
+      <JsonLd donnees={DONNEES_VIDEOS} />
     </div>
   );
 }

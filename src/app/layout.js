@@ -13,7 +13,7 @@ const texte = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700',
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NOM} — Gestion des ventes et du stock pour restaurants, épiceries et tous les commerces`,
+    default: `${SITE_NOM} — Gestion des ventes et du stock pour commerces`,
     template: `%s | ${SITE_NOM}`,
   },
   description:

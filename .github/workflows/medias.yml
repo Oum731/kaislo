@@ -2,6 +2,7 @@ name: Captures et vidéos
 
 # Refait les captures d'écran et/ou les vidéos de démonstration du site, sans passer par un PC.
 # Lancement : onglet Actions → « Captures et vidéos » → Run workflow → choisir ce qu'il faut refaire.
+# « images de partage » refait l'image affichée quand on partage un lien (og-image.png) et les icônes.
 # Le résultat est envoyé sur la branche « medias-auto » (et disponible en téléchargement dans la page du lancement) :
 # regardez les images et les vidéos, puis ouvrez une pull request de « medias-auto » vers « main » (ou demandez-le à Claude).
 on:
@@ -10,7 +11,7 @@ on:
       quoi:
         description: Ce qu'il faut refaire
         type: choice
-        options: [captures, videos, captures et videos]
+        options: [captures, videos, captures et videos, images de partage]
         default: captures
 
 permissions:
@@ -33,18 +34,23 @@ jobs:
       - name: Construction du site
         run: npm run build
       - name: Captures d'écran
-        if: ${{ inputs.quoi != 'videos' }}
+        if: ${{ inputs.quoi == 'captures' || inputs.quoi == 'captures et videos' }}
         env:
           CHROME_PATH: /usr/bin/google-chrome
         run: npm run captures
       - name: Voix des vidéos (edge-tts)
-        if: ${{ inputs.quoi != 'captures' }}
+        if: ${{ inputs.quoi == 'videos' || inputs.quoi == 'captures et videos' }}
         run: pip install edge-tts
       - name: Vidéos de démonstration (environ 15 minutes)
-        if: ${{ inputs.quoi != 'captures' }}
+        if: ${{ inputs.quoi == 'videos' || inputs.quoi == 'captures et videos' }}
         env:
           CHROME_PATH: /usr/bin/google-chrome
         run: npm run videos
+      - name: Image de partage et icônes (polices Google)
+        if: ${{ inputs.quoi == 'images de partage' }}
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: npm run icones
       - name: Archive téléchargeable
         uses: actions/upload-artifact@v4
         with:
@@ -52,12 +58,15 @@ jobs:
           path: |
             public/captures
             public/videos
+            public/icons
+            public/logo
+            public/og-image.png
       - name: Envoi sur la branche medias-auto
         run: |
           git config user.name "Kaislo"
           git config user.email "publication@kaislo.com"
           git checkout -B medias-auto
-          git add public/captures public/videos
+          git add public/captures public/videos public/icons public/logo public/og-image.png public/favicon.ico
           if git diff --cached --quiet; then
             echo "Rien n'a changé."
           else

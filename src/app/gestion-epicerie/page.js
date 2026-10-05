@@ -3,17 +3,19 @@
 // ------------------------------------------------------------
 import PageMetier from '@/components/site/PageMetier';
 import { LIEN_DEMO_EPICERIE } from '@/components/site/Site';
+import { metaPage } from '@/lib/seo';
 
 const description =
   'Gestion pour épicerie et supérette : code-barres, gestion de stock, alertes de rupture, carnet de crédit avec rappel WhatsApp, marge par produit, ticket imprimé. Gratuit pour démarrer.';
 
-export const metadata = {
-  title: 'Gestion pour épicerie et supérette — stock, code-barres, carnet de crédit',
+export const metadata = metaPage({
+  title: 'Logiciel de gestion pour épicerie et supérette',
   description,
   alternates: { canonical: '/gestion-epicerie/' },
-};
+});
 
 const contenu = {
+  lien: '/gestion-epicerie/', nomFil: 'Gestion pour épicerie',
   variante: 'epicerie',
   lienDemo: LIEN_DEMO_EPICERIE,
   videos: ['epicerie'],

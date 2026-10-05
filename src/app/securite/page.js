@@ -4,12 +4,13 @@
 // ------------------------------------------------------------
 import PageLegale from '@/components/site/PageLegale';
 import { SOCIETE } from '@/config';
+import { metaPage } from '@/lib/seo';
 
-export const metadata = {
-  title: 'Sécurité',
+export const metadata = metaPage({
+  title: 'Sécurité : PIN, droits des vendeurs et données',
   description: 'Comment Kaislo protège votre commerce et vos données : codes PIN personnels, droits des vendeurs, chiffrement, sauvegardes, et comment signaler une faille.',
   alternates: { canonical: '/securite/' },
-};
+});
 
 const SECTIONS = [
   {

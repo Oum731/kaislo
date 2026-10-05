@@ -6,17 +6,18 @@ import Link from 'next/link';
 import { TYPES_COMMERCE } from '@/lib/donnees/modeles';
 import { ACTIVITES } from '@/components/site/activites';
 import ExempleJournee from '@/components/site/ExempleJournee';
+import { metaPage } from '@/lib/seo';
 import {
   EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos,
   LIEN_DEMO_RESTO, LIEN_DEMO_EPICERIE, LIEN_INSCRIPTION,
 } from '@/components/site/Site';
 
-export const metadata = {
-  title: 'Kaislo — Gestion des ventes, du stock et de l’inventaire pour tous les commerces',
+export const metadata = metaPage({
+  title: 'Kaislo — Gestion des ventes et du stock pour commerces',
   description:
-    'Outil de gestion des ventes sur téléphone, tablette et ordinateur : ventes, gestion de stock et d’inventaire, carnet de crédit, tables, marges, dépenses, ouverture et fermeture de la journée. Ticket imprimé, envoyé par WhatsApp ou sans impression. Toutes les devises. Essai gratuit.',
+    'Gérez vos ventes, votre stock, le crédit de vos clients et vos comptes du soir depuis votre téléphone. Restaurants, épiceries, boutiques. Essai gratuit 30 jours.',
   alternates: { canonical: '/' },
-};
+});
 
 const AUTRES_FONCTIONS = [
   ['Stock et inventaire', 'Prix d’achat, entrées de marchandise, inventaire, alertes de rupture, valeur du stock et export Excel.'],

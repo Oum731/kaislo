@@ -7,12 +7,13 @@ import Link from 'next/link';
 import { EnTeteSite, PiedSite, Faq, AppelFinal, LIEN_DEMO_RESTO, LIEN_INSCRIPTION } from '@/components/site/Site';
 import { FORMULES, REGLES_TARIFS, VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs';
 import { typeCommerce } from '@/lib/donnees/modeles';
+import { metaPage } from '@/lib/seo';
 
-export const metadata = {
-  title: 'Tarifs — gestion des ventes et du stock par métier',
+export const metadata = metaPage({
+  title: 'Tarifs par métier : à partir de 9 000 FCFA ou 149 DH',
   description: 'Tarifs Kaislo par métier, au Maroc (DH) et en Afrique de l’Ouest (FCFA) : épicerie, boutique, maquis, restaurant, bar, quincaillerie, pharmacie, grossiste. 1 poste et 5 vendeurs inclus, premier mois gratuit, 2 mois offerts à l’année.',
   alternates: { canonical: '/tarifs/' },
-};
+});
 
 const nombre = (n) => Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
 const FAMILLES = [...new Set(FORMULES.map((f) => f.famille))];

@@ -6,12 +6,13 @@ import Link from 'next/link';
 import { EnTeteSite, PiedSite, Faq } from '@/components/site/Site';
 import { FORMULES } from '@/lib/donnees/tarifs';
 import { CONTACT_WHATSAPP } from '@/config';
+import { metaPage } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = metaPage({
   title: 'Devenir commercial Kaislo',
   description: 'Présentez Kaislo aux commerçants de votre ville et touchez 25 % de leurs abonnements pendant 12 mois. Code parrain, espace personnel, versements par mobile money.',
   alternates: { canonical: '/devenir-commercial/' },
-};
+});
 
 const nombre = (n) => Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
 const resto = FORMULES.find((f) => f.id === 'restaurant');
