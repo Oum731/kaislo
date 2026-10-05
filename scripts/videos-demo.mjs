@@ -45,7 +45,9 @@ const SORTIE = ESSAI ? 'outils/videos-essai' : 'public/videos';
 const PORT = 4310;
 
 // Voix et rythme
-const VOIX = 'fr-FR-VivienneMultilingualNeural';
+let LANGUE_TOURNAGE = 'fr'; // langue de l'application et de la voix pour la vidéo en cours
+const VOIX_FR = 'fr-FR-VivienneMultilingualNeural';
+const VOIX_EN = 'en-GB-SoniaNeural';
 const VOIX_VITESSE = '-6%'; // un peu plus lent que la normale : posé, agréable
 const VOIX_HAUTEUR = '-2Hz'; // légèrement plus grave : plus chaleureux
 const CACHE_VOIX = 'outils/voix-cache';
@@ -139,6 +141,7 @@ function dureeAudio(f) {
 // Fabrique (ou reprend du cache) le fichier audio d'une phrase
 async function voix(texte) {
   fs.mkdirSync(CACHE_VOIX, { recursive: true });
+  const VOIX = LANGUE_TOURNAGE === 'en' ? VOIX_EN : VOIX_FR;
   const cle = crypto.createHash('sha1').update(VOIX + VOIX_VITESSE + VOIX_HAUTEUR + texte).digest('hex').slice(0, 16);
   const f = path.join(ESSAI ? 'outils/voix-essai' : CACHE_VOIX, cle + '.mp3');
   if (ESSAI) {
@@ -298,7 +301,8 @@ async function connexion(p, demo, pays, mobile) {
 // Si la journée de vente n'est pas ouverte, on l'ouvre (évite un blocage pendant l'enregistrement)
 async function caisseOuverte(p) {
   const feuille = await p.$('.feuille');
-  if (feuille && (await feuille.evaluate((f) => f.textContent.includes('Ouvrir la journée')))) await toucher(p, 'Ouvrir la journée', '.feuille button', 900);
+  const ouvrir = LANGUE_TOURNAGE === 'en' ? 'Open the day' : 'Ouvrir la journée';
+  if (feuille && (await feuille.evaluate((f, t) => f.textContent.includes(t), ouvrir))) await toucher(p, ouvrir, '.feuille button', 900);
 }
 
 // ---------- 4. Musique de fond, composée ici (libre de droits) ----------
@@ -426,7 +430,8 @@ async function enregistrer(nom, options, scenario) {
   }
 }
 
-async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche }, scenario) {
+async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche, langue = 'fr' }, scenario) {
+  LANGUE_TOURNAGE = langue;
   // Si des phrases ont dû être fabriquées pendant le tournage (petits temps morts),
   // on refait la prise : elles sont alors dans le cache et tout est parfaitement calé.
   for (let prise = 1; prise <= 2; prise++) {
@@ -435,11 +440,12 @@ async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche }, sc
     const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars', '--lang=fr-FR', ...(process.getuid?.() === 0 ? ['--no-sandbox'] : [])] });
     const p = await navigateur.newPage();
     // L'application suit la langue du navigateur : on tourne toujours en français, quelle que soit la machine
-    await p.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, 'language', { get: () => 'fr-FR' });
-      Object.defineProperty(navigator, 'languages', { get: () => ['fr-FR', 'fr'] });
-    });
-    await p.setExtraHTTPHeaders({ 'Accept-Language': 'fr-FR,fr;q=0.9' });
+    const [locale, languesNav] = langue === 'en' ? ['en-GB', ['en-GB', 'en']] : ['fr-FR', ['fr-FR', 'fr']];
+    await p.evaluateOnNewDocument((loc, langs) => {
+      Object.defineProperty(navigator, 'language', { get: () => loc });
+      Object.defineProperty(navigator, 'languages', { get: () => langs });
+    }, locale, languesNav);
+    await p.setExtraHTTPHeaders({ 'Accept-Language': langue === 'en' ? 'en-GB,en;q=0.9' : 'fr-FR,fr;q=0.9' });
     await p.setViewport({ width: largeur, height: hauteur, deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile });
     const echelle = mobile ? 2 : 1; // téléphone : images en haute définition (écran « retina »)
     const liste = path.join(dossierTmp, 'images.txt');
@@ -708,23 +714,49 @@ await enregistrer('gestion-vendeurs', { largeur: 390, hauteur: 780, mobile: true
 
 // ============================================================
 // VIDÉOS MARKETING HUMORISTIQUES (TikTok, Facebook Reels, WhatsApp) : « le commerçant à l'ancienne » contre « le commerçant Kaislo »
-//   npm run videos -- promo           (toutes les vidéos « promo- »)
-//   npm run videos -- promo-carnet    (une seule)
-// Format vertical, 25 à 35 secondes. Un sketch animé (le cahier qui disparaît, la caisse comptée pendant 2 heures…),
-// puis la vraie application qui règle le problème en quelques touches, puis le message clé :
-// « Kaislo fait les calculs à votre place. Votre entreprise tient dans votre poche. »
-// On se moque de la méthode, jamais de la personne : l'humour reste bienveillant.
+// HUMOROUS MARKETING VIDEOS (TikTok, Facebook Reels, WhatsApp): "the old-school shopkeeper" versus "the Kaislo shopkeeper"
+//   npm run videos -- promo           (toutes les vidéos « promo- » : français et anglais)
+//   npm run videos -- promo-lost      (la version anglaise du carnet)
+// Format vertical, 25 à 50 secondes. Un sketch animé, puis la vraie application qui règle le problème en quelques touches,
+// puis le message clé. On se moque de la méthode, jamais de la personne : l'humour reste bienveillant.
+// Anglais : l'application est tournée en anglais (libellés tirés de src/lib/i18n/en.js), voix britannique.
 // ============================================================
-const MESSAGE_CLE = `<div class="k">K</div><div class="marque">Kaislo</div>
-  <h1>Kaislo fait les calculs<br>à votre place.</h1>
-  <p style="font-size:26px;opacity:1;color:#E8A317;font-weight:700">Votre entreprise tient<br>dans votre poche.</p>
-  <div class="bouton">Essai gratuit 30 jours</div>`;
-const MESSAGE_CLE_PAROLE = 'Kaislo fait les calculs à votre place. Votre entreprise tient dans votre poche.';
+const { EN: DICO_EN } = await import(path.resolve('src/lib/i18n/en.js'));
+const L = (fr) => (LANGUE_TOURNAGE === 'en' ? DICO_EN[fr] || fr : fr); // libellé de l'application dans la langue du tournage
 
-async function conclusionPromo(p, film) {
+const PROMO = {
+  fr: {
+    ancien: 'Le commerçant à l’ancienne', kaislo: 'Le commerçant Kaislo 😎',
+    cle: `<div class="k">K</div><div class="marque">Kaislo</div><h1>Kaislo fait les calculs<br>à votre place.</h1><p style="font-size:26px;opacity:1;color:#E8A317;font-weight:700">Votre entreprise tient<br>dans votre poche.</p><div class="bouton">Essai gratuit 30 jours</div>`,
+    cleParole: 'Kaislo fait les calculs à votre place. Votre entreprise tient dans votre poche.',
+    carnet: { nom: 'promo-carnet-credit', l1: 'Mon carnet de crédit ?<br>Il était là ce matin !', l2: 'Qui me doit combien ?!<br>😱', leg: 'Dettes des clients retrouvées : <b>???</b>', k1: 'Moi, tout est dans<br>mon téléphone.',
+      c1: 'Une vente à <b>crédit</b> ? Deux touches.', c1p: 'Une vente à crédit ? Deux touches.', c2: 'Noté. <b>Rien ne se perd.</b>', c2p: 'Noté. Rien ne se perd.', c3: 'Qui vous doit <b>combien</b>, d’un coup d’œil', c3p: 'Et je vois qui me doit combien, d’un coup d’œil.' },
+    caisse: { nom: 'promo-caisse-2h', l1: 'Il manque 500…<br>non, 1 000 !', l1p: 'Il manque cinq cents… non, mille !', l2: 'Je recompte tout…<br>depuis le début.', l2p: 'Je recompte tout, depuis le début.', k1: 'Moi, dix secondes.<br>Et je rentre dîner.', k1p: 'Moi, dix secondes. Et je rentre dîner.',
+      c1: 'Fermer la journée : <b>espèces attendues</b>', c1p: 'Je ferme la journée : Kaislo sait déjà combien il doit y avoir.', c2: 'Je compte : <b>la compte est juste</b> ✅', c2p: 'Je compte : la compte est juste.' },
+    comptable: { nom: 'promo-comptable', leg: 'Au comptable : « une photo du cahier »', l1: '« Patron, voici mes comptes<br>du mois. » 📒', l1p: 'Patron, voici mes comptes du mois.', l2: 'Le comptable : « …c’est flou. »<br>😑', l2p: 'Le comptable : c’est flou.', k1: 'Moi, un clic.<br>Excel et PDF.', k1p: 'Moi, un clic. Excel, et P D F.',
+      c1: 'Touchez <b>Exporter</b>', c1p: 'Je touche : exporter.', c2: 'Jour, semaine, <b>mois</b> ou année', c2p: 'Le jour, la semaine, le mois, ou l’année.', c3: 'Un vrai <b>tableau Excel</b>, sans erreur', c3p: 'Un vrai tableau Excel, sans erreur.', c4: 'Ou un <b>PDF</b> prêt à envoyer', c4p: 'Ou un P D F, prêt à envoyer.' },
+    face: { nom: 'promo-face-a-face', titre: 'À l’ancienne<br>ou Kaislo ?', parole: 'À l’ancienne, ou Kaislo ? Faites votre choix.', a: 'À l’ancienne', k: 'Kaislo 😎',
+      lignes: [['✍️ Noter chaque vente<br>à la main', '📱 Trois touches', 'Noter une vente, à la main ? Ou trois touches.'], ['😱 Carnet de crédit<br>perdu', '📒 Crédit toujours<br>à jour', 'Le carnet perdu, ou le crédit toujours à jour.'], ['🧮 Compter la caisse<br>2 heures', '⏱️ 10 secondes', 'Deux heures de calculs, ou dix secondes.'], ['📸 Photo floue<br>pour le comptable', '📊 Excel en un clic', 'Une photo floue, ou un Excel en un clic.']] },
+  },
+  en: {
+    ancien: 'The old-school shopkeeper', kaislo: 'The Kaislo shopkeeper 😎',
+    cle: `<div class="k">K</div><div class="marque">Kaislo</div><h1>Kaislo does the<br>maths for you.</h1><p style="font-size:26px;opacity:1;color:#E8A317;font-weight:700">Your business fits<br>in your pocket.</p><div class="bouton">30-day free trial</div>`,
+    cleParole: 'Kaislo does the maths for you. Your business fits in your pocket.',
+    carnet: { nom: 'promo-lost-notebook', l1: 'My credit notebook?<br>It was right here this morning!', l2: 'Who owes me what?!<br>😱', leg: 'Customer debts recovered: <b>???</b>', k1: 'Me? It’s all<br>in my phone.',
+      c1: 'A <b>credit</b> sale? Two taps.', c1p: 'A credit sale? Two taps.', c2: 'Saved. <b>Nothing gets lost.</b>', c2p: 'Saved. Nothing gets lost.', c3: 'See who owes <b>how much</b>, at a glance', c3p: 'And I see who owes me how much, at a glance.' },
+    caisse: { nom: 'promo-till-2h', l1: 'I’m 500 short…<br>no, 1,000!', l1p: 'I’m five hundred short… no, a thousand!', l2: 'I’ll recount everything…<br>from the start.', l2p: 'I’ll recount everything, from the start.', k1: 'Me? Ten seconds.<br>And I’m home for dinner.', k1p: 'Me? Ten seconds. And I’m home for dinner.',
+      c1: 'Close the day: <b>expected cash</b>', c1p: 'I close the day: Kaislo already knows how much cash there should be.', c2: 'I count: <b>the till balances</b> ✅', c2p: 'I count: the till balances.' },
+    comptable: { nom: 'promo-accountant', leg: 'To the accountant: “a photo of the notebook”', l1: '“Boss, here are this month’s<br>accounts.” 📒', l1p: 'Boss, here are this month’s accounts.', l2: 'The accountant: “…it’s blurry.”<br>😑', l2p: 'The accountant: it’s blurry.', k1: 'Me? One click.<br>Excel and PDF.', k1p: 'Me? One click. Excel, and P D F.',
+      c1: 'Tap <b>Export</b>', c1p: 'I tap: export.', c2: 'Day, week, <b>month</b> or year', c2p: 'The day, the week, the month, or the year.', c3: 'A real <b>Excel spreadsheet</b>, error-free', c3p: 'A real Excel spreadsheet, error-free.', c4: 'Or a <b>PDF</b> ready to send', c4p: 'Or a P D F, ready to send.' },
+    face: { nom: 'promo-head-to-head', titre: 'Old-school<br>or Kaislo?', parole: 'Old-school, or Kaislo? Take your pick.', a: 'Old-school', k: 'Kaislo 😎',
+      lignes: [['✍️ Writing every sale<br>by hand', '📱 Three taps', 'Writing every sale by hand? Or three taps.'], ['😱 Credit notebook<br>lost', '📒 Credit always<br>up to date', 'The lost notebook, or credit always up to date.'], ['🧮 Counting the till<br>for 2 hours', '⏱️ 10 seconds', 'Two hours of sums, or ten seconds.'], ['📸 Blurry photo<br>for the accountant', '📊 Excel in one click', 'A blurry photo, or Excel in one click.']] },
+  },
+};
+
+async function conclusionPromo(p, film, X) {
   await titre(p, '');
-  await carte(p, MESSAGE_CLE);
-  await dire(MESSAGE_CLE_PAROLE);
+  await carte(p, X.cle);
+  await dire(X.cleParole);
   await attendreVoix();
   await pause(1500);
   await film.stop();
@@ -741,124 +773,122 @@ async function sketch(p, classe, html, repliques) {
   await attendreVoix();
   await pause(500);
 }
-// Horloge qui s'emballe (heure de début, heure de fin, secondes réelles)
+// Horloge qui s'emballe (minutes de début et de fin, secondes réelles)
 const HORLOGE_JS = (de, a, secondes) => `(() => { const h = document.querySelector('#v-carte .sk-horloge'); const t0 = performance.now(); const d = ${de}, f = ${a};
   const tick = () => { const k = Math.min(1, (performance.now() - t0) / ${secondes * 1000}); const m = Math.round(d + (f - d) * k); h.textContent = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); if (k < 1) requestAnimationFrame(tick); }; tick(); })()`;
 
-// Le carnet de crédit qui disparaît
-await enregistrer('promo-carnet-credit', { largeur: 390, hauteur: 780, mobile: true, affiche: 6 }, async (p, demarrer) => {
-  await regler(p, 18, 40);
-  await connexion(p, 'chez-sentinelle', 'CI', true);
-  await carte(p, `<div class="sk ancien"><div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros sk-secoue">📒</div><div class="sk-bulle"></div><div class="sk-legende">Dettes des clients retrouvées : <b>???</b></div></div>`);
-  const film = await demarrer();
-  await pause(600);
-  await sketch(p, 'ancien', `<div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros sk-secoue" id="sk-carnet">📒</div><div class="sk-bulle"></div><div class="sk-legende">Dettes des clients retrouvées : <b>???</b></div>`, [
-    { texte: 'Mon carnet de crédit ?<br>Il était là ce matin !', parole: 'Mon carnet de crédit ? Il était là ce matin !' },
-    { texte: 'Qui me doit combien ?!<br>😱', parole: 'Qui me doit combien ?', js: "const c=document.getElementById('sk-carnet'); c.classList.remove('sk-secoue'); c.classList.add('sk-envol');" },
-  ]);
-  await sketch(p, 'kaislo', `<div class="sk-badge">Le commerçant Kaislo 😎</div><div class="sk-rangee sk-pop">📱</div><div class="sk-bulle"></div>`, [
-    { texte: 'Moi, tout est dans<br>mon téléphone.', parole: 'Moi, tout est dans mon téléphone.' },
-  ]);
-  await masquerCarte(p);
-  await seConnecter(p, '06 00 00 00 11');
-  await titre(p, 'Une vente à <b>crédit</b> ? Deux touches.', 'Une vente à crédit ? Deux touches.');
-  await toucher(p, 'Vendre', '.menu-lien', 900);
-  await caisseOuverte(p);
-  await toucher(p, 'Pain rond', '.tuile', 400);
-  await toucher(p, 'Pain rond', '.tuile', 400);
-  await toucher(p, 'Huile de table 1L', '.tuile', 900);
-  await toucher(p, 'Valider', '.barre-panier button', 900);
-  await toucher(p, 'À crédit', '.feuille .choix-grille button', 600);
-  await toucher(p, 'Choisir le client', '.feuille button', 800);
-  await toucher(p, null, '.feuille .liste-item', 800);
-  await toucher(p, 'Noter à crédit', '.feuille button.grand', 1400);
-  await titre(p, 'Noté. <b>Rien ne se perd.</b>', 'Noté. Rien ne se perd.');
-  await toucher(p, 'Nouvelle vente', '.feuille-pied button', 600);
-  await titre(p, 'Qui vous doit <b>combien</b>, d’un coup d’œil', 'Et je vois qui me doit combien, d’un coup d’œil.');
-  await toucher(p, 'Crédit', '.menu-lien', 2200);
-  await conclusionPromo(p, film);
-});
+for (const lang of ['fr', 'en']) {
+  const X = PROMO[lang];
+  const mobile = { largeur: 390, hauteur: 780, mobile: true, langue: lang };
 
-// La caisse comptée pendant 2 heures
-await enregistrer('promo-caisse-2h', { largeur: 390, hauteur: 780, mobile: true, affiche: 6 }, async (p, demarrer) => {
-  await regler(p, 21, 10);
-  await connexion(p, 'resto-ivoire', 'CI', true);
-  await carte(p, `<div class="sk ancien"><div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-horloge">18:00</div><div class="sk-rangee">🧮🪙🪙</div><div class="sk-bulle"></div></div>`);
-  const film = await demarrer();
-  await pause(600);
-  await sketch(p, 'ancien', `<div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-horloge">18:00</div><div class="sk-rangee"><span class="sk-secoue">🧮</span><span>🪙</span><span>🪙</span></div><div class="sk-bulle"></div>`, [
-    { texte: 'Il manque 500…<br>non, 1 000 !', parole: 'Il manque cinq cents… non, mille !', js: HORLOGE_JS(18 * 60, 19 * 60 + 15, 4) },
-    { texte: 'Je recompte tout…<br>depuis le début.', parole: 'Je recompte tout, depuis le début.', js: HORLOGE_JS(19 * 60 + 15, 20 * 60, 3) },
-  ]);
-  await sketch(p, 'kaislo', `<div class="sk-badge">Le commerçant Kaislo 😎</div><div class="sk-horloge" style="background:#1F5C45;color:#fff">0:10</div><div class="sk-bulle"></div>`, [
-    { texte: 'Moi, dix secondes.<br>Et je rentre dîner.', parole: 'Moi, dix secondes. Et je rentre dîner.' },
-  ]);
-  await masquerCarte(p);
-  await seConnecter(p, '06 00 00 00 01');
-  await titre(p, 'Fermer la journée : <b>espèces attendues</b>', 'Je ferme la journée : Kaislo sait déjà combien il doit y avoir.');
-  await toucher(p, 'Ventes', '.menu-lien', 900);
-  await toucher(p, 'Fermer la journée', 'button', 1400);
-  const attendu = await p.evaluate(() => { const l = [...document.querySelectorAll('.feuille .ligne, .feuille div')].find((e) => e.children.length === 2 && e.firstElementChild.textContent.trim() === 'Espèces attendues'); return l ? l.lastElementChild.textContent.replace(/[^\d,]/g, '') : '0'; });
-  await taper(p, '.feuille input[placeholder="Montant compté"]', attendu);
-  await p.evaluate(() => document.querySelector('.feuille .ecart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-  await titre(p, 'Je compte : <b>la compte est juste</b> ✅', 'Je compte : la compte est juste.');
-  await pause(1800);
-  await conclusionPromo(p, film);
-});
+  // Le carnet de crédit qui disparaît
+  await enregistrer(X.carnet.nom, { ...mobile, affiche: 6 }, async (p, demarrer) => {
+    const C = X.carnet;
+    await regler(p, 18, 40);
+    await connexion(p, 'chez-sentinelle', 'CI', true);
+    await carte(p, `<div class="sk ancien"><div class="sk-badge">${X.ancien}</div><div class="sk-gros sk-secoue">📒</div><div class="sk-bulle"></div><div class="sk-legende">${C.leg}</div></div>`);
+    const film = await demarrer();
+    await pause(600);
+    await sketch(p, 'ancien', `<div class="sk-badge">${X.ancien}</div><div class="sk-gros sk-secoue" id="sk-carnet">📒</div><div class="sk-bulle"></div><div class="sk-legende">${C.leg}</div>`, [
+      { texte: C.l1 },
+      { texte: C.l2, js: "const c=document.getElementById('sk-carnet'); c.classList.remove('sk-secoue'); c.classList.add('sk-envol');" },
+    ]);
+    await sketch(p, 'kaislo', `<div class="sk-badge">${X.kaislo}</div><div class="sk-rangee sk-pop">📱</div><div class="sk-bulle"></div>`, [{ texte: C.k1 }]);
+    await masquerCarte(p);
+    await seConnecter(p, '06 00 00 00 11');
+    await titre(p, C.c1, C.c1p);
+    await toucher(p, L('Vendre'), '.menu-lien', 900);
+    await caisseOuverte(p);
+    await toucher(p, 'Pain rond', '.tuile', 400);
+    await toucher(p, 'Pain rond', '.tuile', 400);
+    await toucher(p, 'Huile de table 1L', '.tuile', 900);
+    await toucher(p, L('Valider'), '.barre-panier button', 900);
+    await toucher(p, L('À crédit'), '.feuille .choix-grille button', 600);
+    await toucher(p, L('Choisir le client'), '.feuille button', 800);
+    await toucher(p, null, '.feuille .liste-item', 800);
+    await toucher(p, L('Noter à crédit'), '.feuille button.grand', 1400);
+    await titre(p, C.c2, C.c2p);
+    await toucher(p, L('Nouvelle vente'), '.feuille-pied button', 600);
+    await titre(p, C.c3, C.c3p);
+    await toucher(p, L('Crédit'), '.menu-lien', 2200);
+    await conclusionPromo(p, film, X);
+  });
 
-// Le comptable : photo floue du cahier contre rapport Excel
-await enregistrer('promo-comptable', { largeur: 390, hauteur: 780, mobile: true, affiche: 6 }, async (p, demarrer) => {
-  await regler(p, 19, 20);
-  await connexion(p, 'chez-sentinelle', 'CI', true);
-  await carte(p, `<div class="sk ancien"><div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros">📸</div><div class="sk-bulle"></div></div>`);
-  const film = await demarrer();
-  await pause(600);
-  await sketch(p, 'ancien', `<div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros sk-secoue">📸</div><div class="sk-bulle"></div><div class="sk-legende">Au comptable : « une photo du cahier »</div>`, [
-    { texte: '« Patron, voici mes comptes<br>du mois. » 📒', parole: 'Patron, voici mes comptes du mois.' },
-    { texte: 'Le comptable : « …c’est flou. »<br>😑', parole: 'Le comptable : c’est flou.' },
-  ]);
-  await sketch(p, 'kaislo', `<div class="sk-badge">Le commerçant Kaislo 😎</div><div class="sk-rangee sk-pop">📊📄</div><div class="sk-bulle"></div>`, [
-    { texte: 'Moi, un clic.<br>Excel et PDF.', parole: 'Moi, un clic. Excel, et P D F.' },
-  ]);
-  await masquerCarte(p);
-  await seConnecter(p, '06 00 00 00 11');
-  await titre(p, 'Touchez <b>Exporter</b>', 'Je touche : exporter.');
-  await toucher(p, 'Exporter', 'button', 1200);
-  await titre(p, 'Jour, semaine, <b>mois</b> ou année', 'Le jour, la semaine, le mois, ou l’année.');
-  await toucher(p, 'Semaine', '.feuille .segment button', 1000);
-  await toucher(p, 'Mois', '.feuille .segment button', 1500);
-  await titre(p, 'Un vrai <b>tableau Excel</b>, sans erreur', 'Un vrai tableau Excel, sans erreur.');
-  await toucher(p, 'Excel', '.feuille-pied button', 2200);
-  await titre(p, 'Ou un <b>PDF</b> prêt à envoyer', 'Ou un P D F, prêt à envoyer.');
-  await toucher(p, 'PDF', '.feuille-pied button', 2200);
-  await conclusionPromo(p, film);
-});
+  // La caisse comptée pendant 2 heures
+  await enregistrer(X.caisse.nom, { ...mobile, affiche: 6 }, async (p, demarrer) => {
+    const C = X.caisse;
+    await regler(p, 21, 10);
+    await connexion(p, 'resto-ivoire', 'CI', true);
+    await carte(p, `<div class="sk ancien"><div class="sk-badge">${X.ancien}</div><div class="sk-horloge">18:00</div><div class="sk-rangee">🧮🪙🪙</div><div class="sk-bulle"></div></div>`);
+    const film = await demarrer();
+    await pause(600);
+    await sketch(p, 'ancien', `<div class="sk-badge">${X.ancien}</div><div class="sk-horloge">18:00</div><div class="sk-rangee"><span class="sk-secoue">🧮</span><span>🪙</span><span>🪙</span></div><div class="sk-bulle"></div>`, [
+      { texte: C.l1, parole: C.l1p, js: HORLOGE_JS(18 * 60, 19 * 60 + 15, 4) },
+      { texte: C.l2, parole: C.l2p, js: HORLOGE_JS(19 * 60 + 15, 20 * 60, 3) },
+    ]);
+    await sketch(p, 'kaislo', `<div class="sk-badge">${X.kaislo}</div><div class="sk-horloge" style="background:#1F5C45;color:#fff">0:10</div><div class="sk-bulle"></div>`, [{ texte: C.k1, parole: C.k1p }]);
+    await masquerCarte(p);
+    await seConnecter(p, '06 00 00 00 01');
+    await titre(p, C.c1, C.c1p);
+    await toucher(p, L('Ventes'), '.menu-lien', 900);
+    await toucher(p, L('Fermer la journée'), 'button', 1400);
+    const libelleAttendu = L('Espèces attendues');
+    // Français : « 70 110 » (la virgule est décimale) ; anglais : « 70,110 » (la virgule sépare les milliers)
+    const attendu = await p.evaluate((lib, en) => { const l = [...document.querySelectorAll('.feuille .ligne, .feuille div')].find((e) => e.children.length === 2 && e.firstElementChild.textContent.trim() === lib); return l ? l.lastElementChild.textContent.replace(en ? /[^\d.]/g : /[^\d,]/g, '') : '0'; }, libelleAttendu, LANGUE_TOURNAGE === 'en');
+    await taper(p, `.feuille input[placeholder="${L('Montant compté')}"]`, attendu);
+    await p.evaluate(() => document.querySelector('.feuille .ecart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    await titre(p, C.c2, C.c2p);
+    await pause(1800);
+    await conclusionPromo(p, film, X);
+  });
 
-// Face à face : l'ancienne méthode contre Kaislo (animation seule)
-await enregistrer('promo-face-a-face', { largeur: 390, hauteur: 780, mobile: true, affiche: 14 }, async (p, demarrer) => {
-  await regler(p, 19, 0);
-  await connexion(p, 'chez-sentinelle', 'CI', true);
-  await carte(p, `<div class="sk kaislo" style="background:#14211C;color:#fff"><div class="k" style="width:72px;height:72px;border-radius:16px;background:#1F5C45;display:grid;place-items:center;font:800 42px/1 system-ui">K</div><h1 style="font-size:34px;line-height:1.15;margin:0">À l’ancienne<br>ou Kaislo ?</h1></div>`);
-  const film = await demarrer();
-  await pause(600);
-  await dire('À l’ancienne, ou Kaislo ? Faites votre choix.');
-  await attendreVoix();
-  const lignes = [
-    ['✍️ Noter chaque vente<br>à la main', '📱 Trois touches', 'Noter une vente, à la main ? Ou trois touches.'],
-    ['😱 Carnet de crédit<br>perdu', '📒 Crédit toujours<br>à jour', 'Le carnet perdu, ou le crédit toujours à jour.'],
-    ['🧮 Compter la caisse<br>2 heures', '⏱️ 10 secondes', 'Deux heures de calculs, ou dix secondes.'],
-    ['📸 Photo floue<br>pour le comptable', '📊 Excel en un clic', 'Une photo floue, ou un Excel en un clic.'],
-  ];
-  await carte(p, `<div class="sk kaislo" style="background:#f6f5f1;gap:18px"><div class="sk-entete" style="width:100%;font-size:16px"><div style="color:#8a6a1e">À l’ancienne</div><div style="color:#1F5C45">Kaislo 😎</div></div><div class="sk-versus" id="sk-vs"></div></div>`);
-  for (const [a, k, parole] of lignes) {
+  // Le comptable : photo floue du cahier contre rapport Excel
+  await enregistrer(X.comptable.nom, { ...mobile, affiche: 6 }, async (p, demarrer) => {
+    const C = X.comptable;
+    await regler(p, 19, 20);
+    await connexion(p, 'chez-sentinelle', 'CI', true);
+    await carte(p, `<div class="sk ancien"><div class="sk-badge">${X.ancien}</div><div class="sk-gros">📸</div><div class="sk-bulle"></div></div>`);
+    const film = await demarrer();
+    await pause(600);
+    await sketch(p, 'ancien', `<div class="sk-badge">${X.ancien}</div><div class="sk-gros sk-secoue">📸</div><div class="sk-bulle"></div><div class="sk-legende">${C.leg}</div>`, [
+      { texte: C.l1, parole: C.l1p }, { texte: C.l2, parole: C.l2p },
+    ]);
+    await sketch(p, 'kaislo', `<div class="sk-badge">${X.kaislo}</div><div class="sk-rangee sk-pop">📊📄</div><div class="sk-bulle"></div>`, [{ texte: C.k1, parole: C.k1p }]);
+    await masquerCarte(p);
+    await seConnecter(p, '06 00 00 00 11');
+    await titre(p, C.c1, C.c1p);
+    await toucher(p, L('Exporter'), 'button', 1200);
+    await titre(p, C.c2, C.c2p);
+    await toucher(p, L('Semaine'), '.feuille .segment button', 1000);
+    await toucher(p, L('Mois'), '.feuille .segment button', 1500);
+    await titre(p, C.c3, C.c3p);
+    await toucher(p, 'Excel', '.feuille-pied button', 2200);
+    await titre(p, C.c4, C.c4p);
+    await toucher(p, 'PDF', '.feuille-pied button', 2200);
+    await conclusionPromo(p, film, X);
+  });
+
+  // Face à face : l'ancienne méthode contre Kaislo (animation seule)
+  await enregistrer(X.face.nom, { ...mobile, affiche: 14 }, async (p, demarrer) => {
+    const C = X.face;
+    await regler(p, 19, 0);
+    await connexion(p, 'chez-sentinelle', 'CI', true);
+    await carte(p, `<div class="sk kaislo" style="background:#14211C;color:#fff"><div class="k" style="width:72px;height:72px;border-radius:16px;background:#1F5C45;display:grid;place-items:center;font:800 42px/1 system-ui">K</div><h1 style="font-size:34px;line-height:1.15;margin:0">${C.titre}</h1></div>`);
+    const film = await demarrer();
+    await pause(600);
+    await dire(C.parole);
     await attendreVoix();
-    await p.evaluate((a, k) => { const v = document.getElementById('sk-vs'); const l = document.createElement('div'); l.className = 'sk-ligne'; l.innerHTML = '<div class="ancien-c">' + a + '</div><div class="kaislo-c">' + k + '</div>'; v.appendChild(l); }, a, k);
-    await dire(parole);
-  }
-  await attendreVoix();
-  await pause(900);
-  await conclusionPromo(p, film);
-});
+    await carte(p, `<div class="sk kaislo" style="background:#f6f5f1;gap:18px"><div class="sk-entete" style="width:100%;font-size:16px"><div style="color:#8a6a1e">${C.a}</div><div style="color:#1F5C45">${C.k}</div></div><div class="sk-versus" id="sk-vs"></div></div>`);
+    for (const [a, k, parole] of C.lignes) {
+      await attendreVoix();
+      await p.evaluate((a, k) => { const v = document.getElementById('sk-vs'); const l = document.createElement('div'); l.className = 'sk-ligne'; l.innerHTML = '<div class="ancien-c">' + a + '</div><div class="kaislo-c">' + k + '</div>'; v.appendChild(l); }, a, k);
+      await dire(parole);
+    }
+    await attendreVoix();
+    await pause(900);
+    await conclusionPromo(p, film, X);
+  });
+}
 
 serveur.close();
 console.log('Vidéos prêtes dans ' + SORTIE);
