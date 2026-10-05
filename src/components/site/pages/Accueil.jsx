@@ -144,7 +144,7 @@ export default function Accueil({ lang }) {
             </div>
             {/* Toutes les activités proposées à l'inscription (catégories et unité de vente prêtes) */}
             <p className="muet" style={{ marginTop: 20 }}>{tr('Activités prêtes à l’emploi : {0}.', [TYPES_COMMERCE.map((t) => tt(t.nom)).join(' · ')])}</p>
-            {lang === 'fr' && <p className="liens-activites">{Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>{tr('Gestion pour {0} →', [a.nom.toLowerCase()])}</Link>)}</p>}
+            <p className="liens-activites">{Object.values(ACTIVITES()).map((a) => <Link key={a.lien} href={lien(a.lien)}>{tr('Gestion pour {0} →', [a.nom.toLowerCase()])}</Link>)}</p>
           </div>
         </section>
 

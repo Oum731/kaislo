@@ -1,9 +1,8 @@
-// Page « quincaillerie » pour Google : contenu dans src/components/site/activites.js
-import PageMetier from '@/components/site/PageMetier';
-import { ACTIVITES } from '@/components/site/activites';
+// Version française : contenu dans src/components/site/activites.js
+import Activite, { meta } from '@/components/site/pages/Activite';
 
-export const metadata = ACTIVITES.quincaillerie.metadata;
+export const metadata = meta('quincaillerie', 'fr');
 
 export default function Page() {
-  return <PageMetier c={ACTIVITES.quincaillerie.contenu} />;
+  return <Activite cle="quincaillerie" lang="fr" />;
 }

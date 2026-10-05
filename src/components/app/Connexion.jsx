@@ -82,7 +82,7 @@ function Accueil() {
       <p className="section-titre">{tr('Essayer avec un commerce d’exemple')}</p>
       <label className="champ" style={{ marginBottom: 12 }}>
         <span>{tr('Pays de la démonstration (devise, ville, moyens de paiement)')}</span>
-        <select value={pays.id} onChange={(e) => s.choisirPaysDemo(e.target.value)}>
+        <select value={pays.id} onChange={(e) => s.choisirPaysDemo(e.target.value, true)}>
           {PAYS.map((p) => <option key={p.id} value={p.id}>{tt(p.nom)} · {symbole(p.devise)}</option>)}
         </select>
       </label>

@@ -13,6 +13,12 @@ export const PAGES = [
   ['/gestion-epicerie/', '/en/grocery-store-management/'],
   ['/gestion-stock/', '/en/stock-management/'],
   ['/tutoriels/', '/en/tutorials/'],
+  ['/gestion-boutique/', '/en/boutique-management/'],
+  ['/gestion-quincaillerie/', '/en/hardware-store-management/'],
+  ['/gestion-pharmacie/', '/en/pharmacy-management/'],
+  ['/gestion-boulangerie/', '/en/bakery-management/'],
+  ['/gestion-bar/', '/en/bar-management/'],
+  ['/logiciel-grossiste/', '/en/wholesale-management/'],
 ];
 
 const VERS_EN = new Map(PAGES);
