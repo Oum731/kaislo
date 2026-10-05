@@ -10,6 +10,7 @@
 // Une modification locale pas encore envoyée n'est jamais écrasée.
 // ------------------------------------------------------------
 import { lireLocal, ecrireLocal } from './stockage.js';
+import { memeProduit, produitPourServeur } from './stock.js';
 import { enregistrerImage, lireImage } from './images.js';
 
 // Listes du commerce synchronisées élément par élément
@@ -47,7 +48,7 @@ export function noterChangements(ancien, nouveau) {
     if (ancien && avant.size === apres.length && ancien[col] === apres) continue; // liste inchangée
     for (const x of apres) {
       const vieux = avant.get(x.id);
-      if (vieux !== x) {
+      if (vieux !== x && !(col === 'produits' && memeProduit(vieux, x))) { // le stock calculé d'un produit ne compte pas comme une modification
         noter(col, x.id);
         noterImage(vieux?.image, x.image);
       }
@@ -81,6 +82,7 @@ export async function preparerEnvoi(d, file, max = 200) {
       contenu = donnees ? { dataUrl: donnees } : null;
     } else if (!e.supprime) {
       contenu = (d[e.type] || []).find((x) => x.id === e.id) || null;
+      if (contenu && e.type === 'produits') contenu = produitPourServeur(contenu); // sans le stock calculé
     }
     // Élément introuvable dans l'appareil (supprimé entre-temps) : envoyé comme supprimé
     const supprime = !!e.supprime || !contenu;

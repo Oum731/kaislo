@@ -2,6 +2,7 @@
 // CAISSE : panier, validation de la vente, remise, vente à crédit,
 // commandes par table (restaurant), envoi en cuisine, annulation.
 // ------------------------------------------------------------
+import { stockDe } from '@/lib/donnees/stock.js';
 import { creerLigne, cleLigne, sousTotal, montantRemise } from '@/lib/donnees/vente.js';
 import { soldeClient } from '@/lib/donnees/credit.js';
 import { CREDIT } from '@/lib/donnees/modeles.js';
@@ -38,7 +39,7 @@ export const trancheCaisse = (set, get) => ({
       panier.push(ligne);
     }
     set({ panier });
-    if (produit.suiviStock && produit.stock <= 0) {
+    if (produit.suiviStock && stockDe(produit) <= 0) {
       get().message('Stock de « ' + produit.nom + ' » à zéro : pensez à le mettre à jour', 'erreur');
     }
     if (typeof navigator !== 'undefined') navigator.vibrate?.(15);
@@ -122,12 +123,7 @@ export const trancheCaisse = (set, get) => ({
     get().majDonnees((d) => ({
       ventes: [...d.ventes, vente],
       prochainNumero: d.prochainNumero + 1,
-      // Le stock baisse
-      produits: d.produits.map((p) => {
-        if (!p.suiviStock) return p;
-        const q = vente.lignes.filter((l) => l.produitId === p.id).reduce((s, l) => s + l.quantite, 0);
-        return q ? { ...p, stock: Math.max(0, p.stock - q) } : p;
-      }),
+      // Le stock baisse tout seul : il se calcule à partir des ventes (voir lib/donnees/stock.js)
       // La table est libérée
       commandes: commande ? d.commandes.filter((c) => c.id !== commande.id) : d.commandes,
     }));
@@ -174,12 +170,7 @@ export const trancheCaisse = (set, get) => ({
     const annulee = { ...vente, annulee: { date: new Date().toISOString(), par: gerant.nom, motif: motif.trim() } };
     get().majDonnees((d) => ({
       ventes: d.ventes.map((v) => (v.id === vente.id ? annulee : v)),
-      // Les articles reviennent dans le stock
-      produits: d.produits.map((p) => {
-        if (!p.suiviStock) return p;
-        const q = vente.lignes.filter((l) => l.produitId === p.id).reduce((s, l) => s + l.quantite, 0);
-        return q ? { ...p, stock: p.stock + q } : p;
-      }),
+      // Les articles reviennent dans le stock tout seuls : une vente annulée ne compte plus dans le calcul du stock
     }));
     get().ouvrir('ticket', { vente: annulee });
     get().message('Vente n° ' + vente.numero + ' annulée');

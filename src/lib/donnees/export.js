@@ -6,6 +6,8 @@
 // par le partage de fichier du téléphone.
 // ------------------------------------------------------------
 
+import { stockDe } from './stock.js';
+
 // Date du jour pour le nom du fichier : 2026-10-03
 const jour = () => new Date().toISOString().slice(0, 10);
 
@@ -73,7 +75,7 @@ export function exporterInventaireCsv(d) {
     .filter((p) => p.suiviStock)
     .sort((a, b) => categorie(a.categorieId).localeCompare(categorie(b.categorieId)) || a.nom.localeCompare(b.nom))
     .map((p) => {
-      const stock = Number(p.stock) || 0;
+      const stock = Number(stockDe(p)) || 0;
       const etat = stock <= 0 ? 'Rupture' : stock <= (p.seuilAlerte ?? 5) ? 'Stock bas' : 'OK';
       return [p.nom, categorie(p.categorieId), p.codeBarre, p.unite || 'pièce', montant(stock), montant(p.seuilAlerte ?? 5), montant(p.prixAchat), montant(p.prix), montant(stock * (p.prixAchat || 0)), montant(stock * p.prix), d.commerce.devise, etat];
     });

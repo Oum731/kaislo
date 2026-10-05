@@ -3,6 +3,7 @@
 // TABLEAU DE BORD du gérant : chiffre d'affaires, marge, dépenses,
 // crédit en cours, graphique, alertes de stock, classements.
 // ------------------------------------------------------------
+import { stockDe } from '@/lib/donnees/stock.js';
 import { useMemo, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { calculerStats, LIBELLES_PERIODE } from '@/lib/donnees/statistiques';
@@ -27,7 +28,7 @@ export default function Accueil() {
   const st = useMemo(() => calculerStats(d.ventes, periode, new Date(), d.depenses || []), [d.ventes, d.depenses, periode]);
   const credit = useMemo(() => totalCreditEnCours(d), [d]);
   const journees = historiqueCaisse(d).slice(0, 5);
-  const stockBas = d.produits.filter((p) => p.actif && p.suiviStock && p.stock <= (p.seuilAlerte ?? 5)).sort((a, b) => a.stock - b.stock);
+  const stockBas = d.produits.filter((p) => p.actif && p.suiviStock && stockDe(p) <= (p.seuilAlerte ?? 5)).sort((a, b) => stockDe(a) - stockDe(b));
   const max = Math.max(1, ...st.barres.map((b) => b.valeur));
   const n = st.barres.length;
   const etiquette = (i) => (n > 20 ? i === 0 || (i + 1) % 5 === 0 : n > 12 ? i % 2 === 0 : true);
@@ -123,7 +124,7 @@ export default function Accueil() {
                 {stockBas.slice(0, 6).map((p) => (
                   <div key={p.id} className="ligne espace petit" style={{ marginTop: 10 }}>
                     <span className="tronque">{p.nom}</span>
-                    <span className={`badge ${p.stock === 0 ? 'rouge' : 'safran'}`}>{p.stock === 0 ? 'Rupture' : p.stock + ' restants'}</span>
+                    <span className={`badge ${stockDe(p) === 0 ? 'rouge' : 'safran'}`}>{stockDe(p) === 0 ? 'Rupture' : stockDe(p) + ' restants'}</span>
                   </div>
                 ))}
                 {s.gereStock() && <button className="btn secondaire petit bloc" style={{ marginTop: 14 }} onClick={() => s.allerA('stock')}>Gérer le stock</button>}

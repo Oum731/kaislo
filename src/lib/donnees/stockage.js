@@ -10,6 +10,7 @@ import { CATEGORIES_DEPART, TABLES_DEPART, paysParId, typeCommerce, cleTelephone
 import { genId } from '../utils/format.js';
 import { nouvelAbonnement } from './abonnement.js';
 import { migrerClotures } from './cloture.js';
+import { avecStocks } from './stock.js';
 import { lireMemoire, ecrireMemoire, effacerMemoire } from './memoire.js';
 
 // Lecture / écriture : en mémoire + IndexedDB (voir memoire.js). initialiserStockage() est appelé au démarrage de l'application.
@@ -54,7 +55,7 @@ export function chargerCommerce(commerceId) {
     ecrire('commerce:' + commerceId, donnees);
     majCompte(donnees.commerce);
   }
-  return donnees;
+  return donnees && avecStocks(donnees); // stock calculé à partir des ventes et des mouvements
 }
 
 export function enregistrerCommerce(donnees) {
@@ -65,7 +66,7 @@ export function enregistrerCommerce(donnees) {
 export function reinitialiserCommerce(commerceId) {
   const donnees = creerDonneesDemo(commerceId, paysDesDemos());
   ecrire('commerce:' + commerceId, donnees);
-  return donnees;
+  return avecStocks(donnees);
 }
 
 // ---------- Comptes créés par les commerçants ----------

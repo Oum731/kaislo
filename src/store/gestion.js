@@ -15,6 +15,8 @@ import { supprimerImage } from '@/lib/donnees/images.js';
 import { postesDe, postePlein, vendeursDuPoste } from '@/lib/donnees/postes.js';
 import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs.js';
 
+import { stockDe, departStock } from '@/lib/donnees/stock.js';
+
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
 
 export const trancheGestion = (set, get) => ({
@@ -39,11 +41,35 @@ export const trancheGestion = (set, get) => ({
       if (!g.options.length) return 'Le groupe « ' + g.nom + ' » n’a aucune option';
       for (const o of g.options) o.prix = Number(o.prix) || 0;
     }
-    get().majDonnees((d) =>
-      b.id
+    // Stock : voir lib/donnees/stock.js. La fiche ne garde que la quantité de départ ; une correction faite ici devient un mouvement.
+    const quantite = b.stock;
+    delete b.stockActuel;
+    const ancien = b.id ? get().d.produits.find((p) => p.id === b.id) : null;
+    let mouvement = null;
+    if (!b.suiviStock) {
+      delete b.stock; delete b.stockBase; delete b.stockDepuis;
+    } else if (ancien?.suiviStock) {
+      // Produit déjà suivi : départ inchangé ; une quantité modifiée à la main devient une correction d'inventaire
+      b.stock = ancien.stock; b.stockBase = ancien.stockBase; b.stockDepuis = ancien.stockDepuis;
+      for (const c of ['stock', 'stockBase', 'stockDepuis']) if (b[c] === undefined) delete b[c];
+      const ecart = quantite - stockDe(ancien);
+      if (ecart !== 0) {
+        mouvement = {
+          id: genId('m'), date: new Date().toISOString(), produitId: ancien.id, produitNom: b.nom, type: 'ajustement',
+          quantite: ecart, prixAchat: b.prixAchat, fournisseur: '', note: 'Correction à la fiche produit', utilisateurNom: get().utilisateur.nom,
+        };
+      }
+    } else {
+      // Nouveau produit, ou stock suivi pour la première fois : la quantité saisie est le départ
+      delete b.stock;
+      Object.assign(b, departStock(quantite));
+    }
+    get().majDonnees((d) => ({
+      ...(b.id
         ? { produits: d.produits.map((p) => (p.id === b.id ? b : p)) }
-        : { produits: [...d.produits, { ...b, id: genId('p') }] }
-    );
+        : { produits: [...d.produits, { ...b, id: genId('p') }] }),
+      ...(mouvement ? { mouvements: [...(d.mouvements || []), mouvement] } : {}),
+    }));
     get().message('Produit enregistré');
     return null;
   },
@@ -352,7 +378,13 @@ export const trancheGestion = (set, get) => ({
       utilisateurNom: get().utilisateur.nom,
     };
     get().majDonnees((d) => ({
-      produits: d.produits.map((x) => (x.id === produitId ? { ...x, suiviStock: true, stock: x.stock + q, prixAchat: pa ?? x.prixAchat } : x)),
+      // Le stock augmente tout seul (mouvement) ; la fiche ne change que si le prix d'achat ou le suivi du stock change
+      produits: d.produits.map((x) => {
+        if (x.id !== produitId) return x;
+        const prix = pa ?? x.prixAchat;
+        if (x.suiviStock && prix === x.prixAchat) return x;
+        return { ...x, suiviStock: true, prixAchat: prix, ...(x.suiviStock ? {} : departStock(0)) };
+      }),
       mouvements: [...(d.mouvements || []), mouvement],
     }));
     get().message('+' + q + ' ' + p.nom);
@@ -364,14 +396,14 @@ export const trancheGestion = (set, get) => ({
     const q = Number(quantiteReelle);
     if (!(q >= 0)) return 'Indiquez la quantité comptée';
     const p = get().d.produits.find((x) => x.id === produitId);
-    const ecart = q - p.stock;
+    const ecart = q - stockDe(p);
     const mouvement = {
       id: genId('m'), date: new Date().toISOString(), produitId, produitNom: p.nom, type: 'ajustement',
       quantite: ecart, prixAchat: p.prixAchat, fournisseur: '', note: (note || '').trim() || 'Inventaire',
       utilisateurNom: get().utilisateur.nom,
     };
     get().majDonnees((d) => ({
-      produits: d.produits.map((x) => (x.id === produitId ? { ...x, suiviStock: true, stock: q } : x)),
+      produits: d.produits.map((x) => (x.id === produitId && !x.suiviStock ? { ...x, suiviStock: true, ...departStock(0) } : x)),
       mouvements: [...(d.mouvements || []), mouvement],
     }));
     get().message('Stock corrigé : ' + p.nom + ' = ' + q);
