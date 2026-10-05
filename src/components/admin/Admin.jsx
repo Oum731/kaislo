@@ -124,6 +124,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [donnees, setDonnees] = useState(null); // { commerces, formules, regles, fondateurs }
   const [ouvert, setOuvert] = useState(null);
   const [nonLus, setNonLus] = useState(0);
+  const [plusOuvert, setPlusOuvert] = useState(false);
   const api = useCallback((m, c, corps) => appelApi(m, c, corps, jeton).catch((e) => { if (e.statut === 401) surDeconnexion(); throw e; }), [jeton, surDeconnexion]);
   const recharger = useCallback(async () => {
     const rep = await api('GET', '/admin/commerces');
@@ -145,13 +146,27 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
       <nav className="menu" aria-label="Menu Amorac">
         <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Amorac</span></span></div>
         <div className="menu-liens">
-          {liens.map(([e, l, i, pastille]) => (
-            <button key={e} className={`menu-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); window.scrollTo(0, 0); }}>
+          {/* Téléphone : 4 onglets + « Plus » (Commerciaux, Tarifs, Équipe, Sortir) ; tablette et ordinateur : tous les liens */}
+          {liens.map(([e, l, i, pastille], n) => (
+            <button key={e} className={`menu-lien ${n >= 4 ? 'cache-mobile' : ''} ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); setPlusOuvert(false); window.scrollTo(0, 0); }}>
               <Icone nom={i} /><span className="tronque">{l}</span>{pastille ? <span className="pastille-nb">{pastille}</span> : null}
             </button>
           ))}
-          <button className="menu-lien seulement-mobile" onClick={surDeconnexion}><Icone nom="sortie" /><span>Sortir</span></button>
+          <button className={`menu-lien seulement-mobile ${plusOuvert || liens.findIndex(([e]) => e === ecran) >= 4 ? 'actif' : ''}`} onClick={() => setPlusOuvert(!plusOuvert)} aria-expanded={plusOuvert} aria-controls="menu-plus">
+            <Icone nom="menu" /><span>Plus</span>
+          </button>
         </div>
+        {plusOuvert && (
+          <div className="seulement-mobile">
+            <div className="menu-plus-voile" onClick={() => setPlusOuvert(false)} aria-hidden="true" />
+            <div className="menu-plus" id="menu-plus">
+              {liens.slice(4).map(([e, l, i]) => (
+                <button key={e} className={`menu-plus-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); setPlusOuvert(false); window.scrollTo(0, 0); }}><Icone nom={i} /><span>{l}</span></button>
+              ))}
+              <button className="menu-plus-lien" onClick={surDeconnexion}><Icone nom="sortie" /><span>Sortir ({initiales(admin.nom)})</span></button>
+            </div>
+          </div>
+        )}
         <div className="menu-pied">
           <button className="carte-utilisateur" onClick={surDeconnexion}>
             <span className="avatar gerant">{initiales(admin.nom)}</span>
