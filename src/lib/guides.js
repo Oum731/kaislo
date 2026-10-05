@@ -6,7 +6,9 @@
 export const DATE_GUIDES = '2026-10-05';
 
 // modele : fichier Excel gratuit lié au guide (public/modeles/, voir scripts/modeles.mjs)
-export const GUIDES = [
+import { GUIDES_PAYS } from './guides-pays.js';
+
+const GUIDES_BASE = [
   {
     cle: 'inventaire',
     modele: 'inventaire',
@@ -520,6 +522,9 @@ export const GUIDES = [
     },
   },
 ];
+
+// Guides généraux, puis un guide par pays
+export const GUIDES = [...GUIDES_BASE, ...GUIDES_PAYS];
 
 export const MODELES = {
   inventaire: {
