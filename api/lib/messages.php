@@ -63,7 +63,7 @@ function routeMessagesEcrire(): never
     // Prévient l'équipe Amorac par e-mail
     $c = requete('SELECT nom, telephone, code FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
     envoyerEmail(
-        lireFichierEnvCle('EmailEquipe') ?? 'contact@amorac.com',
+        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
         'Kaislo — message de ' . $c['nom'],
         "Nouveau message dans l'espace Amorac.\n\nCommerce : {$c['nom']} (code {$c['code']}, {$c['telephone']})\nDe : {$u['nom']} ({$u['telephone']})\n\n$texte\n\nRépondre : https://" . (domaineSite() ?: 'kaislo.com') . "/admin/"
     );

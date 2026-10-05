@@ -136,7 +136,7 @@ function enregistrerElement(array $u, array $e): ?string
 }
 
 // Droits : le gérant peut tout faire. Un vendeur :
-//   - vend, encaisse, gère les tables, le crédit, les dépenses et sa journée de caisse
+//   - vend, encaisse, gère les tables, le crédit, les dépenses et sa journée de vente
 //   - ne touche aux articles et catégories que si le gérant l'y autorise
 //     (sinon il ne peut que faire baisser le stock en vendant)
 //   - ne supprime jamais une vente, un client… (seulement les commandes de table terminées)

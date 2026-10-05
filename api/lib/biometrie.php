@@ -33,7 +33,7 @@ function domaineSite(): string
 {
     // Le domaine officiel kaislo.com est reconnu directement (même si le .env indique encore l'adresse provisoire)
     $demande = strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
-    if ($demande === DOMAINE_OFFICIEL) return DOMAINE_OFFICIEL;
+    if ($demande === DOMAINE_OFFICIEL || $demande === 'www.' . DOMAINE_OFFICIEL) return DOMAINE_OFFICIEL;
     $hote = config()['domaine'] ?: $demande;
     return strtolower(preg_replace('/:\d+$/', '', $hote));
 }
