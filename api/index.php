@@ -138,7 +138,8 @@ function routeSante(): never
         diagnostiquerBase($c, $e);
     }
     $version = (int) requete('SELECT MAX(version) AS v FROM kaislo_version')->fetch()['v'];
-    repondre(['ok' => true, 'service' => 'Kaislo API', 'base' => $c['driver'], 'versionBase' => $version, 'heure' => maintenant()]);
+    $repere = @json_decode((string) @file_get_contents(dirname(__DIR__) . '/version.json'), true); // écrit à chaque publication du site
+    repondre(['ok' => true, 'service' => 'Kaislo API', 'base' => $c['driver'], 'versionBase' => $version, 'versionSite' => $repere['version'] ?? null, 'heure' => maintenant()]);
 }
 
 // ---------- POST /api/inscription ----------
