@@ -465,7 +465,9 @@ async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche, lang
 
 // Assemble les images, la voix (chaque phrase à son heure) et la musique (baissée sous la voix)
 function monter(nom, dossierTmp, liste, film, affiche) {
-  fs.mkdirSync(SORTIE, { recursive: true });
+  // Les vidéos publicitaires (« promo- ») ne vont JAMAIS dans public/videos (dossier publié avec le site) : outils/videos-pub/
+  const sortie = nom.startsWith('promo-') ? (ESSAI ? 'outils/videos-essai' : 'outils/videos-pub') : SORTIE;
+  fs.mkdirSync(sortie, { recursive: true });
   const muet = path.join(dossierTmp, 'muet.mp4');
   execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', liste, '-c:v', 'libx264', '-preset', 'slow', '-crf', '26', '-pix_fmt', 'yuv420p', '-vf', 'fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2', '-an', muet]);
   const musique = path.join(dossierTmp, 'musique.wav');
@@ -485,11 +487,11 @@ function monter(nom, dossierTmp, liste, film, affiche) {
   filtres.push('[mus][voixB]sidechaincompress=threshold=0.02:ratio=8:attack=40:release=700[musBas]');
   filtres.push('[musBas][voixA]amix=inputs=2:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=44100[son]');
 
-  const mp4 = `${SORTIE}/${nom}.mp4`;
+  const mp4 = `${sortie}/${nom}.mp4`;
   execFileSync(ffmpeg, ['-y', '-loglevel', 'error', ...entrees, '-filter_complex', filtres.join(';'), '-map', '0:v', '-map', '[son]',
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-t', film.duree.toFixed(2), '-movflags', '+faststart', mp4]);
   // Image d'attente (affichée avant la lecture) : un moment parlant de la vidéo (« affiche », en secondes)
-  execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-ss', String(affiche), '-i', mp4, '-frames:v', '1', '-q:v', '80', `${SORTIE}/${nom}.webp`]);
+  execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-ss', String(affiche), '-i', mp4, '-frames:v', '1', '-q:v', '80', `${sortie}/${nom}.webp`]);
   console.log(`${mp4} : ${film.duree.toFixed(0)} s, ${n} phrases, ${(fs.statSync(mp4).size / 1e6).toFixed(1)} Mo`);
 }
 
@@ -891,4 +893,4 @@ for (const lang of ['fr', 'en']) {
 }
 
 serveur.close();
-console.log('Vidéos prêtes dans ' + SORTIE);
+console.log('Vidéos prêtes dans ' + SORTIE + ' (vidéos « promo- » : outils/videos-pub/)');
