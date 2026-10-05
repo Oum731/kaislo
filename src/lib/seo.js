@@ -13,16 +13,16 @@ export function coupe(texte, max = 155) {
 
 // À utiliser dans chaque page : export const metadata = metaPage({ title, description, alternates: { canonical: '/ma-page/' } })
 // Ajoute ce qui manquait : adresse propre à la page pour les partages (WhatsApp, Facebook, LinkedIn…) et description de longueur correcte.
-export function metaPage(m) {
+export function metaPage({ langue = 'fr', ...m }) {
   const adresse = m.alternates?.canonical || '/';
   const description = coupe(m.description);
-  const titre = typeof m.title === 'string' ? m.title : undefined;
+  const titre = typeof m.title === 'string' ? m.title : m.title?.absolute;
   const titrePartage = titre ? (adresse === '/' ? titre : `${titre} | ${SITE_NOM}`) : undefined;
-  const image = [{ url: cheminFichier('/og-image.png'), width: 1200, height: 630, alt: 'Kaislo, la gestion des ventes et du stock' }];
+  const image = [{ url: cheminFichier('/og-image.png'), width: 1200, height: 630, alt: langue === 'en' ? 'Kaislo, sales and stock management' : 'Kaislo, la gestion des ventes et du stock' }];
   return {
     ...m,
     description,
-    openGraph: { type: 'website', locale: 'fr_FR', siteName: SITE_NOM, url: SITE_URL + adresse, title: titrePartage, description, images: image },
+    openGraph: { type: 'website', locale: langue === 'en' ? 'en_GB' : 'fr_FR', siteName: SITE_NOM, url: SITE_URL + adresse, title: titrePartage, description, images: image },
     twitter: { card: 'summary_large_image', title: titrePartage, description, images: [cheminFichier('/og-image.png')] },
   };
 }

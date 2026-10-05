@@ -24,6 +24,15 @@ export function choisirLangue(l) {
   if (typeof document !== 'undefined') document.documentElement.lang = langue;
 }
 
+// Langue lue en dernier sur le site public (mémorisée dans l'appareil) : l'application s'ouvre dans la même
+const CLE_SITE = 'kaislo-langue-site';
+export function memoriserLangueSite(l) {
+  try { localStorage.setItem(CLE_SITE, l); } catch { /* stockage bloqué */ }
+}
+export function langueDuSite() {
+  try { const l = localStorage.getItem(CLE_SITE); return DICTIONNAIRES[l] || l === 'fr' ? l : null; } catch { return null; }
+}
+
 // Langue du navigateur parmi celles proposées (français si aucune ne correspond)
 export function langueDuNavigateur() {
   const l = typeof navigator !== 'undefined' ? (navigator.language || 'fr').slice(0, 2).toLowerCase() : 'fr';

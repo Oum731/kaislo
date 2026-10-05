@@ -11,39 +11,48 @@ import { CONTACT_EMAIL, CONTACT_WHATSAPP, SITE_URL, chemin } from '@/config';
 import Marque from '@/components/Marque';
 import BulleChat from '@/components/BulleChat';
 import { ACTIVITES } from './activites';
+import LangueSite from './LangueSite';
+import SelecteurLangueSite from './SelecteurLangueSite';
+import { lien } from '@/lib/site-routes';
 import { FORMULES } from '@/lib/donnees/tarifs';
+import { tr, langueActive, choisirLangue } from '@/lib/i18n';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
 export const LIEN_DEMO_RESTO = '/app/?demo=resto-ivoire';
 export const LIEN_DEMO_EPICERIE = '/app/?demo=chez-sentinelle';
 
 export function Logo() {
-  return <Link href="/" className="logo"><Marque /> Kaislo</Link>;
+  return <Link href={lien('/')} className="logo"><Marque /> {tr('Kaislo')}</Link>;
 }
 
 // Liens du menu du site (en-tête et menu sur petit écran)
-const LIENS_SITE = [
-  ['/gestion-restaurant/', 'Restaurants'],
-  ['/gestion-epicerie/', 'Épiceries'],
-  ['/gestion-stock/', 'Stock'],
-  ['/#fonctions', 'Fonctions'],
-  ['/tarifs/', 'Tarifs'],
-  ['/tutoriels/', 'Tutoriels'],
-  ['/#questions', 'Questions'],
-];
+const LIENS_SITE = () => ([
+  [lien('/gestion-restaurant/'), tr('Restaurants')],
+  [lien('/gestion-epicerie/'), tr('Épiceries')],
+  [lien('/gestion-stock/'), tr('Stock')],
+  [lien('/#fonctions'), tr('Fonctions')],
+  [lien('/tarifs/'), tr('Tarifs')],
+  [lien('/tutoriels/'), tr('Tutoriels')],
+  [lien('/#questions'), tr('Questions')],
+]);
 
-export function EnTeteSite() {
+// Première pièce de chaque page : fixe la langue (français par défaut) pour tout ce qui suit
+export function EnTeteSite({ lang = 'fr' }) {
+  choisirLangue(lang);
+  const liens = LIENS_SITE();
   return (
     <header className="site-entete">
+      <LangueSite lang={lang} />
       <div className="site-largeur">
         <Logo />
-        <nav className="site-nav" aria-label="Navigation du site">
-          {LIENS_SITE.map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
+        <nav className="site-nav" aria-label={tr('Navigation du site')}>
+          {liens.map(([adresse, nom]) => <Link key={adresse} href={adresse}>{nom}</Link>)}
         </nav>
         <div className="actions">
-          <Link href="/app/" className="btn secondaire petit">Se connecter</Link>
-          <Link href={LIEN_INSCRIPTION} className="btn petit">Essai gratuit</Link>
-          <MenuMobile liens={LIENS_SITE} lienInscription={LIEN_INSCRIPTION} />
+          <SelecteurLangueSite lang={lang} />
+          <Link href="/app/" className="btn secondaire petit">{tr('Se connecter')}</Link>
+          <Link href={LIEN_INSCRIPTION} className="btn petit">{tr('Essai gratuit')}</Link>
+          <MenuMobile liens={liens} lienInscription={LIEN_INSCRIPTION} />
         </div>
       </div>
     </header>
@@ -51,13 +60,13 @@ export function EnTeteSite() {
 }
 
 // Liste des pages légales (reprise dans le pied de page et le sitemap)
-export const PAGES_LEGALES = [
-  ['/conditions-utilisation/', 'Conditions d’utilisation'],
-  ['/confidentialite/', 'Confidentialité'],
-  ['/cookies/', 'Cookies et stockage'],
-  ['/securite/', 'Sécurité'],
-  ['/mentions-legales/', 'Mentions légales'],
-];
+export const PAGES_LEGALES = () => ([
+  ['/conditions-utilisation/', tr('Conditions d’utilisation')],
+  ['/confidentialite/', tr('Confidentialité')],
+  ['/cookies/', tr('Cookies et stockage')],
+  ['/securite/', tr('Sécurité')],
+  ['/mentions-legales/', tr('Mentions légales')],
+]);
 
 export function PiedSite() {
   return (
@@ -66,37 +75,40 @@ export function PiedSite() {
       <div className="site-largeur">
         <div className="colonnes">
           <div>
-            <span className="logo"><Marque /> Kaislo</span>
-            <p style={{ marginTop: 12, maxWidth: 360 }}>Gestion des ventes et du stock pour tous les commerces. Développé par Amorac.</p>
+            <span className="logo"><Marque /> {tr('Kaislo')}</span>
+            <p style={{ marginTop: 12, maxWidth: 360 }}>{tr('Gestion des ventes et du stock pour tous les commerces. Développé par Amorac.')}</p>
           </div>
           <div>
-            <h4>Kaislo</h4>
-            <Link href="/gestion-restaurant/">Gestion pour restaurant</Link>
-            <Link href="/gestion-epicerie/">Gestion pour épicerie</Link>
-            <Link href="/gestion-stock/">Gestion de stock et inventaire</Link>
-            <Link href="/tarifs/">Tarifs</Link>
-            <Link href="/devenir-commercial/">Devenir commercial Kaislo</Link>
-            <Link href="/app/">Se connecter</Link>
-            <Link href={LIEN_INSCRIPTION}>Créer mon commerce</Link>
+            <h4>{tr('Kaislo')}</h4>
+            <Link href={lien('/gestion-restaurant/')}>{tr('Gestion pour restaurant')}</Link>
+            <Link href={lien('/gestion-epicerie/')}>{tr('Gestion pour épicerie')}</Link>
+            <Link href={lien('/gestion-stock/')}>{tr('Gestion de stock et inventaire')}</Link>
+            <Link href={lien('/tarifs/')}>{tr('Tarifs')}</Link>
+            <Link href="/devenir-commercial/">{tr('Devenir commercial Kaislo')}</Link>
+            <Link href="/app/">{tr('Se connecter')}</Link>
+            <Link href={LIEN_INSCRIPTION}>{tr('Créer mon commerce')}</Link>
+          </div>
+          {langueActive() === 'fr' && (
+            <div>
+              <h4>{tr('Par activité')}</h4>
+              {Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>{a.nom}</Link>)}
+            </div>
+          )}
+          <div>
+            <h4>{tr('Informations légales')}</h4>
+            {PAGES_LEGALES().map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
+            {langueActive() === 'en' && <p className="tres-petit" style={{ opacity: 0.7 }}>{tr('Pages juridiques en français')}</p>}
           </div>
           <div>
-            <h4>Par activité</h4>
-            {Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>{a.nom}</Link>)}
-          </div>
-          <div>
-            <h4>Informations légales</h4>
-            {PAGES_LEGALES.map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
-          </div>
-          <div>
-            <h4>Contact</h4>
-            <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noreferrer">WhatsApp</a>
+            <h4>{tr('Contact')}</h4>
+            <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noreferrer">{tr('WhatsApp')}</a>
             <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-            <a href="https://amorac.com" target="_blank" rel="noreferrer">amorac.com</a>
+            <a href="https://amorac.com" target="_blank" rel="noreferrer">{tr('amorac.com')}</a>
           </div>
         </div>
         <div className="bas">
-          <span>© {new Date().getFullYear()} Amorac · Kaislo</span>
-          <span>Disponible en Afrique, en Europe et ailleurs</span>
+          <span>{tr('© {0} Amorac · Kaislo', [new Date().getFullYear()])}</span>
+          <span>{tr('Disponible en Afrique, en Europe et ailleurs')}</span>
         </div>
       </div>
     </footer>
@@ -125,8 +137,8 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
           <h1>{titre}</h1>
           <p className="chapo">{chapo}</p>
           <div className="boutons">
-            <Link href={LIEN_INSCRIPTION} className="btn grand">Essayer gratuitement 30 jours</Link>
-            <Link href={lienDemo} className="btn secondaire grand">Voir la démo <Icone nom="droite" taille="sm" /></Link>
+            <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
+            <Link href={lienDemo} className="btn secondaire grand">{tr('Voir la démo')} <Icone nom="droite" taille="sm" /></Link>
           </div>
           <div className="garanties">
             {garanties.map((g) => <span key={g}><Icone nom="ok" taille="sm" /> {g}</span>)}
@@ -142,53 +154,53 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
 }
 
 // Les vidéos de démonstration (public/videos/, générées par "npm run videos")
-export const VIDEOS = {
+export const VIDEOS = () => ({
   presentation: {
     src: '/videos/presentation-kaislo.mp4', poster: '/videos/presentation-kaislo.webp', duree: '1 min 20',
-    titre: 'Présentation de Kaislo',
-    texte: 'Le tour complet : tableau de bord, vente, tables, ventes et journées de vente, crédit, articles, équipe.',
+    titre: tr('Présentation de Kaislo'),
+    texte: tr('Le tour complet : tableau de bord, vente, tables, ventes et journées de vente, crédit, articles, équipe.'),
     lienDemo: LIEN_DEMO_RESTO,
   },
   restaurant: {
     src: '/videos/demo-restaurant.mp4', poster: '/videos/demo-restaurant.webp', duree: '1 min',
-    titre: 'Restaurant : de la commande au ticket',
-    texte: 'Plats avec accompagnements, paiement Wave, ticket imprimé ou envoyé par WhatsApp, chiffre du jour.',
+    titre: tr('Restaurant : de la commande au ticket'),
+    texte: tr('Plats avec accompagnements, paiement Wave, ticket imprimé ou envoyé par WhatsApp, chiffre du jour.'),
     lienDemo: LIEN_DEMO_RESTO,
   },
   epicerie: {
     src: '/videos/demo-epicerie.mp4', poster: '/videos/demo-epicerie.webp', duree: '1 min', vertical: true,
-    titre: 'Épicerie : vente, crédit et comptes du soir',
-    texte: 'Recherche d’article, vente à crédit notée dans le carnet, fermeture de la journée juste.',
+    titre: tr('Épicerie : vente, crédit et comptes du soir'),
+    texte: tr('Recherche d’article, vente à crédit notée dans le carnet, fermeture de la journée juste.'),
     lienDemo: LIEN_DEMO_EPICERIE,
   },
   produits: {
     src: '/videos/ajout-produits.mp4', poster: '/videos/ajout-produits.webp', duree: '1 min 10',
-    titre: 'Ajouter un article',
-    texte: 'Nouveau plat, nouvelle catégorie, prix d’achat et marge calculée, accompagnements et suppléments : prêt à vendre tout de suite.',
+    titre: tr('Ajouter un article'),
+    texte: tr('Nouveau plat, nouvelle catégorie, prix d’achat et marge calculée, accompagnements et suppléments : prêt à vendre tout de suite.'),
     lienDemo: LIEN_DEMO_RESTO,
   },
   vendeurs: {
     src: '/videos/gestion-vendeurs.mp4', poster: '/videos/gestion-vendeurs.webp', duree: '1 min', vertical: true,
-    titre: 'Gérer ses vendeurs',
-    texte: 'Un compte et un code PIN par vendeur, des droits au choix, désactivation en un geste, ventes de chacun.',
+    titre: tr('Gérer ses vendeurs'),
+    texte: tr('Un compte et un code PIN par vendeur, des droits au choix, désactivation en un geste, ventes de chacun.'),
     lienDemo: LIEN_DEMO_RESTO,
   },
-};
+});
 
 // Une vidéo de démonstration avec son titre et un lien pour essayer la même démo.
 // preload="none" : rien n'est téléchargé avant que le visiteur appuie sur lecture.
 // Les vidéos ont une voix et une musique : pas de « muted ».
 export function VideoDemo({ video }) {
-  const v = VIDEOS[video];
+  const v = VIDEOS()[video];
   return (
     <figure id={video} className={`video-demo ${v.vertical ? 'vertical' : ''}`}>
       <div className="video-cadre">
         <video src={chemin(v.src)} poster={chemin(v.poster)} controls playsInline preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
       </div>
       <figcaption>
-        <h3>{v.titre} <span className="badge">{v.duree} · avec voix</span></h3>
+        <h3>{v.titre} <span className="badge">{tr('{0} · avec voix', [v.duree])}</span></h3>
         <p>{v.texte}</p>
-        <Link href={v.lienDemo} className="suite">Essayer la démo →</Link>
+        <Link href={v.lienDemo} className="suite">{tr('Essayer la démo →')}</Link>
       </figcaption>
     </figure>
   );
@@ -200,13 +212,13 @@ export function VideoDemo({ video }) {
  * (une vidéo paysage + une verticale par ligne, ou une seule) · vignettes : liens vers les autres tutoriels
  * toutes : bouton vers la page /tutoriels/
  */
-export function SectionVideos({ titre = 'Voyez Kaislo en action, en une minute.', vedette, lignes = [], vignettes = [], toutes = false, id = 'videos' }) {
+export function SectionVideos({ titre = tr('Voyez Kaislo en action, en une minute.'), vedette, lignes = [], vignettes = [], toutes = false, id = 'videos' }) {
   return (
     <section className="section claire" id={id}>
       <div className="site-largeur">
         {titre && (
           <>
-            <span className="etiquette">Démonstration en vidéo</span>
+            <span className="etiquette">{tr('Démonstration en vidéo')}</span>
             <h2>{titre}</h2>
           </>
         )}
@@ -218,8 +230,8 @@ export function SectionVideos({ titre = 'Voyez Kaislo en action, en une minute.'
         ))}
         {vignettes.length > 0 && <VignettesTutos videos={vignettes} />}
         <div className="boutons" style={{ marginTop: 28 }}>
-          <Link href={LIEN_INSCRIPTION} className="btn grand">Créer mon commerce gratuitement</Link>
-          {toutes && <Link href="/tutoriels/" className="btn secondaire grand">Tous les tutoriels <Icone nom="droite" taille="sm" /></Link>}
+          <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Créer mon commerce gratuitement')}</Link>
+          {toutes && <Link href={lien('/tutoriels/')} className="btn secondaire grand">{tr('Tous les tutoriels')} <Icone nom="droite" taille="sm" /></Link>}
         </div>
       </div>
     </section>
@@ -227,15 +239,15 @@ export function SectionVideos({ titre = 'Voyez Kaislo en action, en une minute.'
 }
 
 // Vignettes cliquables : image, titre et durée ; mènent à la vidéo sur la page Tutoriels
-export function VignettesTutos({ videos, titre = 'Les autres tutoriels' }) {
+export function VignettesTutos({ videos, titre = tr('Les autres tutoriels') }) {
   return (
     <div className="vignettes-tutos">
       <h3>{titre}</h3>
       <div className="grille-vignettes">
         {videos.map((cle) => {
-          const v = VIDEOS[cle];
+          const v = VIDEOS()[cle];
           return (
-            <Link key={cle} href={'/tutoriels/#' + cle} className="vignette-tuto">
+            <Link key={cle} href={lien('/tutoriels/#' + cle)} className="vignette-tuto">
               <span className="vignette-image">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={chemin(v.poster)} alt="" loading="lazy" decoding="async" />
@@ -314,17 +326,17 @@ export function DonneesLogiciel({ description }) {
     '@type': 'SoftwareApplication',
     name: 'Kaislo',
     applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Android, iOS, Windows, macOS (navigateur web)',
+    operatingSystem: tr('Android, iOS, Windows, macOS (navigateur web)'),
     areaServed: 'Worldwide',
     description,
     url: SITE_URL,
-    inLanguage: 'fr',
+    inLanguage: langueActive(),
     publisher: { '@type': 'Organization', name: 'Amorac', url: 'https://amorac.com' },
     // Essai gratuit de 30 jours (les prix de l'abonnement dépendent du pays)
-    featureList: ['Ventes et tickets (imprimés, WhatsApp ou sans ticket)', 'Gestion de stock et inventaire', 'Carnet de crédit des clients', 'Comptes du soir par mode de paiement (espèces, mobile money, carte)', 'Marges, dépenses et statistiques', 'Fonctionne sans internet', 'Vendeurs avec code PIN et droits'],
+    featureList: [tr('Ventes et tickets (imprimés, WhatsApp ou sans ticket)'), tr('Gestion de stock et inventaire'), tr('Carnet de crédit des clients'), tr('Comptes du soir par mode de paiement (espèces, mobile money, carte)'), tr('Marges, dépenses et statistiques'), tr('Fonctionne sans internet'), tr('Vendeurs avec code PIN et droits')],
     offers: [
-      { '@type': 'Offer', name: 'Essai gratuit', price: '0', priceCurrency: 'EUR', description: 'Essai gratuit de 30 jours, sans engagement', url: SITE_URL + '/app/?inscription=1' },
-      { '@type': 'AggregateOffer', name: 'Abonnement mensuel par métier', priceCurrency: 'EUR', lowPrice: String(Math.min(...FORMULES.map((f) => f.prix.EUR))), highPrice: String(Math.max(...FORMULES.map((f) => f.prix.EUR))), offerCount: FORMULES.length, url: SITE_URL + '/tarifs/' },
+      { '@type': 'Offer', name: tr('Essai gratuit'), price: '0', priceCurrency: 'EUR', description: tr('Essai gratuit de 30 jours, sans engagement'), url: SITE_URL + '/app/?inscription=1' },
+      { '@type': 'AggregateOffer', name: tr('Abonnement mensuel par métier'), priceCurrency: 'EUR', lowPrice: String(Math.min(...FORMULES.map((f) => f.prix.EUR))), highPrice: String(Math.max(...FORMULES.map((f) => f.prix.EUR))), offerCount: FORMULES.length, url: SITE_URL + '/tarifs/' },
     ],
     screenshot: SITE_URL + '/og-image.png',
   };
@@ -341,8 +353,8 @@ export function AppelFinal({ titre, texte, lienDemo }) {
             <p>{texte}</p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link href={LIEN_INSCRIPTION} className="btn grand">Créer mon commerce</Link>
-            <Link href={lienDemo} className="btn secondaire grand">Voir la démo</Link>
+            <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Créer mon commerce')}</Link>
+            <Link href={lienDemo} className="btn secondaire grand">{tr('Voir la démo')}</Link>
           </div>
         </div>
       </div>

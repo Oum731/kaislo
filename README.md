@@ -52,7 +52,7 @@ npm run dev        # puis ouvrir http://localhost:3000
 
 | Dossier | Rôle |
 |---|---|
-| `src/app/` | Les pages : accueil du site, pages restaurant / épicerie, `/app` |
+| `src/app/` | Les adresses du site : `(fr)/` pages françaises et `/app`, `(en)/en/` pages anglaises (le contenu est dans `src/components/site/pages/`) |
 | `src/components/site/` | Éléments du site public |
 | `src/components/app/` | L'application : `ecrans/` (un fichier par écran) et `feuilles/` (fenêtres) |
 | `src/store/` | L'état de l'application et toutes les actions (caisse, gestion, impression) |
