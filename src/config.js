@@ -19,7 +19,7 @@ export const chemin = (p) => BASE_PATH + p;
 export const SITE_NOM = 'Kaislo';
 export const SITE_SLOGAN = 'La gestion des ventes et du stock, simple, pour tous les commerces';
 export const CONTACT_WHATSAPP = '212600000000'; // numéro WhatsApp d'Amorac (sans +)
-export const CONTACT_EMAIL = 'contact@amorac.com';
+export const CONTACT_EMAIL = 'contact@kaislo.com';
 
 // Informations légales (pages Mentions légales, Confidentialité, Conditions…).
 // À COMPLÉTER avant le lancement commercial : un champ vide n'est pas affiché.
@@ -29,8 +29,8 @@ export const SOCIETE = {
   adresse: '', // adresse du siège
   immatriculation: '', // ex : RC Casablanca 123456 · ICE 000000000000000
   directeurPublication: '', // nom de la personne responsable du site
-  emailDonnees: 'contact@amorac.com', // demandes sur les données personnelles
-  emailSecurite: 'contact@amorac.com', // signalement de failles de sécurité
+  emailDonnees: 'contact@kaislo.com', // demandes sur les données personnelles
+  emailSecurite: 'contact@kaislo.com', // signalement de failles de sécurité
 };
 
 // Hébergeur du site et de la base de données
