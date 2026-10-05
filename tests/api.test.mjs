@@ -180,3 +180,12 @@ test('abonnement : essai terminé depuis peu → encore accepté ; expiré depui
   const repris = await envoyer(gerant, [element('clients', 'c2', { id: 'c2', nom: 'Client 2' })]);
   assert.deepEqual(repris.refuses, []);
 });
+
+test('pays du visiteur : en-tête du serveur reconnu, adresse locale sans résultat', async () => {
+  const avec = await fetch(U + '/pays', { headers: { 'CF-IPCountry': 'ma' } }).then((r) => r.json());
+  assert.deepEqual(avec, { ok: true, pays: 'MA' });
+  const sans = await fetch(U + '/pays').then((r) => r.json()); // 127.0.0.1 : aucune recherche
+  assert.deepEqual(sans, { ok: true, pays: null });
+  const faux = await fetch(U + '/pays', { headers: { 'CF-IPCountry': 'XX' } }).then((r) => r.json());
+  assert.equal(faux.pays, null);
+});

@@ -26,7 +26,7 @@ export default function PageLegale({ titre, intro, sections }) {
             <p className="petit muet">Sur cette page</p>
             {sections.map((s, i) => <a key={s.id} href={'#' + s.id}>{i + 1}. {s.titre}</a>)}
             <p className="petit muet" style={{ marginTop: 18 }}>Autres pages</p>
-            {PAGES_LEGALES.filter(([, nom]) => nom !== titre).map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
+            {PAGES_LEGALES().filter(([, nom]) => nom !== titre).map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
           </nav>
           <div className="legal-texte">
             {sections.map((s, i) => (

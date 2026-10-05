@@ -15,10 +15,10 @@ const { EN } = await import(path.resolve('src/lib/i18n/en.js'));
 
 const strict = process.argv.includes('--strict');
 const toutes = process.argv.includes('--tout');
-// Le site public (src/components/site, src/app) sera traduit à l'étape « site anglais »
+// Site public : les pages traduites sont dans src/components/site/pages ; les pages légales, par pays et par activité suivront
 const DOSSIERS = ['src/components', 'src/store', 'src/lib'];
 // Espace équipe (français seulement), données de démonstration, dictionnaires
-const IGNORES = [/src\/components\/admin\//, /src\/components\/site\//, /src\/lib\/donnees\/demo\.js/, /src\/lib\/i18n\//, /credits-photos/];
+const IGNORES = [/src\/components\/admin\//, /src\/components\/site\/(activites\.js|PageLegale\.jsx|SelecteurLangueSite\.jsx)/, /src\/lib\/donnees\/demo\.js/, /src\/lib\/i18n\//, /credits-photos/];
 
 function fichiers(dossier) {
   return fs.readdirSync(dossier, { withFileTypes: true }).flatMap((e) => {

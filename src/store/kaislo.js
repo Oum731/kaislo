@@ -23,7 +23,7 @@ import { trancheGestion } from './gestion.js';
 import { trancheImpression } from './impression.js';
 import { trancheSynchro } from './synchro.js';
 import { estServeur, noterChangements } from '@/lib/donnees/synchro.js';
-import { tr, choisirLangue, langueDuNavigateur } from '@/lib/i18n';
+import { tr, choisirLangue, langueDuNavigateur, langueDuSite } from '@/lib/i18n';
 
 // ---------- Bouton « retour » du téléphone ----------
 // Chaque écran et chaque fenêtre ajoutent une étape à l'historique du navigateur :
@@ -56,7 +56,7 @@ const trancheCommune = (set, get) => ({
     await initialiserStockage();
     set({ prefs: chargerPreferences() });
     // Langue : celle choisie par l'utilisateur, sinon celle du navigateur
-    const langue = get().prefs.langue || langueDuNavigateur();
+    const langue = get().prefs.langue || langueDuSite() || langueDuNavigateur();
     choisirLangue(langue);
     set({ langue });
     // Identifiant de cet appareil (sert à savoir quel appareil a fait une vente, pour l'impression au poste)

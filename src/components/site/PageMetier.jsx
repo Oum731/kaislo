@@ -4,11 +4,14 @@
 // ------------------------------------------------------------
 import { JsonLd, filAriane } from '@/lib/seo';
 import { EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos } from './Site';
+import { tr, choisirLangue } from '@/lib/i18n';
+import { lien } from '@/lib/site-routes';
 
-export default function PageMetier({ c }) {
+export default function PageMetier({ c, lang = 'fr' }) {
+  choisirLangue(lang);
   return (
     <div className="site">
-      <EnTeteSite />
+      <EnTeteSite lang={lang} />
       <main>
         <Hero titre={c.titre} chapo={c.chapo} lienDemo={c.lienDemo} garanties={c.garanties} capture={c.capture} captureMobile={c.captureMobile} />
         {c.videos && <SectionVideos titre={c.titreVideo} lignes={[c.videos]} vignettes={c.vignettes} toutes />}
@@ -23,7 +26,7 @@ export default function PageMetier({ c }) {
         </section>
         <section className="section claire">
           <div className="site-largeur">
-            <span className="etiquette">Questions fréquentes</span>
+            <span className="etiquette">{tr('Questions fréquentes')}</span>
             <h2>{c.titreFaq}</h2>
             <Faq questions={c.questions} />
           </div>
@@ -32,7 +35,7 @@ export default function PageMetier({ c }) {
       </main>
       <PiedSite />
       <DonneesLogiciel description={c.description} />
-      {c.lien && <JsonLd donnees={filAriane([['Accueil', '/'], [c.nomFil || (c.nom ? 'Gestion pour ' + c.nom.toLowerCase() : c.titre), c.lien]])} />}
+      {c.lien && <JsonLd donnees={filAriane([[tr('Accueil'), lien('/')], [c.nomFil || (c.nom ? tr('Gestion pour ') + c.nom.toLowerCase() : c.titre), lien(c.lien)]])} />}
     </div>
   );
 }

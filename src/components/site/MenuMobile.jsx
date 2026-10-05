@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icone } from '@/components/ui';
+import { tr } from '@/lib/i18n';
 
 export default function MenuMobile({ liens, lienInscription }) {
   const [ouvert, setOuvert] = useState(false);
@@ -24,17 +25,17 @@ export default function MenuMobile({ liens, lienInscription }) {
   const fermer = () => setOuvert(false);
   return (
     <>
-      <button className="bouton-menu-site" onClick={() => setOuvert(!ouvert)} aria-expanded={ouvert} aria-controls="menu-mobile-site" aria-label={ouvert ? 'Fermer le menu' : 'Ouvrir le menu'}>
+      <button className="bouton-menu-site" onClick={() => setOuvert(!ouvert)} aria-expanded={ouvert} aria-controls="menu-mobile-site" aria-label={ouvert ? tr('Fermer le menu') : tr('Ouvrir le menu')}>
         <Icone nom={ouvert ? 'fermer' : 'menu'} />
       </button>
       {ouvert && (
         <>
           <div className="menu-site-voile" onClick={fermer} aria-hidden="true" />
-          <nav id="menu-mobile-site" className="menu-site-panneau" aria-label="Menu du site">
+          <nav id="menu-mobile-site" className="menu-site-panneau" aria-label={tr('Menu du site')}>
             {liens.map(([lien, nom]) => <Link key={lien} href={lien} onClick={fermer}>{nom}</Link>)}
             <div className="menu-site-actions">
-              <Link href="/app/" className="btn secondaire bloc" onClick={fermer}>Se connecter</Link>
-              <Link href={lienInscription} className="btn bloc" onClick={fermer}>Essai gratuit 30 jours</Link>
+              <Link href="/app/" className="btn secondaire bloc" onClick={fermer}>{tr('Se connecter')}</Link>
+              <Link href={lienInscription} className="btn bloc" onClick={fermer}>{tr('Essai gratuit 30 jours')}</Link>
             </div>
           </nav>
         </>
