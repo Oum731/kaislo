@@ -5,12 +5,13 @@
 import Link from 'next/link';
 import PageLegale from '@/components/site/PageLegale';
 import { SOCIETE, CONTACT_EMAIL } from '@/config';
+import { metaPage } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = metaPage({
   title: 'Conditions d’utilisation et d’abonnement',
   description: 'Conditions générales d’utilisation et d’abonnement du logiciel de gestion des ventes Kaislo : compte, essai gratuit, paiement, résiliation, responsabilités.',
   alternates: { canonical: '/conditions-utilisation/' },
-};
+});
 
 const SECTIONS = [
   {

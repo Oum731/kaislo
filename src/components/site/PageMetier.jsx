@@ -2,6 +2,7 @@
 // Modèle commun des pages "Gestion pour restaurant" et
 // "Gestion pour épicerie" (même structure, contenus différents)
 // ------------------------------------------------------------
+import { JsonLd, filAriane } from '@/lib/seo';
 import { EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos } from './Site';
 
 export default function PageMetier({ c }) {
@@ -31,6 +32,7 @@ export default function PageMetier({ c }) {
       </main>
       <PiedSite />
       <DonneesLogiciel description={c.description} />
+      {c.lien && <JsonLd donnees={filAriane([['Accueil', '/'], [c.nomFil || (c.nom ? 'Gestion pour ' + c.nom.toLowerCase() : c.titre), c.lien]])} />}
     </div>
   );
 }

@@ -175,6 +175,16 @@ en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/s
    (10 caractères minimum, avec lettres et chiffres). Les autres membres de l'équipe sont ajoutés ensuite
    dans l'onglet « Équipe » (rôle « admin » ou « support » ; le support ne peut ni encaisser ni suspendre).
 
+## Référencement (Google)
+
+- Chaque page publique : titre (≤ 62 caractères), description (≤ 155), adresse canonique et aperçu de partage à son **propre** adresse (`src/lib/seo.js`, fonction `metaPage`).
+- Données structurées : logiciel (fonctions, essai gratuit, fourchette de prix), questions fréquentes, fil d'Ariane, vidéos (tutoriels).
+- Plan du site `/sitemap.xml` sans fausses dates ; `robots.txt` ferme `/app/`, `/admin/`, `/commercial/` et `/api/`.
+- **Pages par pays** (`/pays/cote-d-ivoire/`, `/pays/senegal/`… 15 pays) : devise, modes de paiement, numéros de téléphone et prix réels du pays (`src/lib/pays-seo.js`).
+- Contrôle automatique après chaque construction : `npm run build && npm run seo` (lancé par la CI).
+- À faire une fois : `GOOGLE_VERIFICATION` dans `src/config.js` (Search Console → Ajouter une propriété → balise HTML), puis envoyer `https://kaislo.com/sitemap.xml` dans Search Console ;
+  idem dans Bing Webmaster Tools. Image de partage et icônes : GitHub → Actions → « Captures et vidéos » → « images de partage ».
+
 ## Stock calculé à partir des mouvements
 
 Le stock n'est plus un nombre réécrit à chaque vente (deux appareils hors ligne s'écrasaient). Il se calcule :

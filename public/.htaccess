@@ -18,8 +18,8 @@ RewriteRule ^caisse-(restaurant|epicerie|boutique|quincaillerie|pharmacie|boulan
 RewriteCond %{HTTP_HOST} hostingersite\.com$ [NC]
 RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 
-# Toute autre adresse que kaislo.com (domaine provisoire…) : pas d'indexation par Google
-SetEnvIfNoCase Host ^kaislo\.com$ domaine_officiel
+# (Plus d'en-tête « noindex » : l'ancienne règle « sauf kaislo.com » était mal lue par le serveur (variable renommée
+#  après une redirection interne) et bloquait Google sur kaislo.com. L'adresse provisoire est de toute façon redirigée vers kaislo.com.)
 
 # Page d'erreur
 ErrorDocument 404 /404.html
@@ -59,7 +59,6 @@ Options -Indexes
 #  - caméra (scan), position (carte) et Bluetooth (imprimante) : seulement pour Kaislo
 # ------------------------------------------------------------
 <IfModule mod_headers.c>
-  Header always set X-Robots-Tag "noindex, nofollow" env=!domaine_officiel
   Header always set Strict-Transport-Security "max-age=31536000"
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"

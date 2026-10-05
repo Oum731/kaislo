@@ -24,3 +24,5 @@ jobs:
         run: find api -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Construction du site
         run: npm run build
+      - name: Contrôle du référencement (titres, descriptions, plan du site…)
+        run: npm run seo

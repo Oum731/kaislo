@@ -137,7 +137,7 @@ export default function Accueil() {
                 <button key={x.id} className="ligne" style={{ width: '100%', textAlign: 'left', marginTop: 12 }} onClick={() => s.ouvrir('depense', { depense: x })}>
                   <span className="grandit">
                     <b className="bloc-texte tronque petit">{x.note || x.categorie}</b>
-                    <span className="tres-petit muet">{formatDate(x.date).slice(0, 5)} · {x.categorie}{x.depuisCaisse ? ' · caisse' : ''}</span>
+                    <span className="tres-petit muet">{formatDate(x.date).slice(0, 5)} · {x.categorie}{x.depuisCaisse ? ' · espèces du jour' : ''}</span>
                   </span>
                   <b className="chiffre petit">−{s.prix(x.montant)}</b>
                 </button>
@@ -222,7 +222,7 @@ function PremiersPas() {
     { fait: !!(d.commerce.logo && d.commerce.adresse), titre: 'Complétez votre profil', texte: 'Logo, adresse et téléphone du commerce', action: () => s.allerA('reglages') },
     { fait: d.utilisateurs.some((u) => u.role === 'vendeur'), titre: 'Créez vos vendeurs', texte: 'Chacun aura son propre code PIN', action: () => s.allerA('reglages') },
     { fait: s.imprimante.connectee, titre: 'Connectez l’imprimante', texte: 'Imprimante thermique Bluetooth', action: () => s.allerA('reglages') },
-    { fait: d.ventes.length > 0, titre: 'Faites votre première vente', texte: 'Depuis l’écran Caisse', action: () => s.allerA('caisse') },
+    { fait: d.ventes.length > 0, titre: 'Faites votre première vente', texte: 'Depuis l’écran Vendre', action: () => s.allerA('caisse') },
   ];
   if (pas.every((p) => p.fait)) return null;
   return (

@@ -3,6 +3,7 @@
 // Chaque page utilise le modèle PageMetier. Pour ajouter une activité :
 // une entrée ici + un dossier src/app/<lien>/page.js de 3 lignes.
 // ------------------------------------------------------------
+import { metaPage } from '@/lib/seo';
 // Pas d'import de Site.jsx ici : Site.jsx importe ce fichier (pied de page)
 const LIEN_DEMO_EPICERIE = '/app/?demo=chez-sentinelle';
 
@@ -29,9 +30,9 @@ const QUESTIONS_COMMUNES = [
 function page({ lien, nom, titreSeo, description, titre, chapo, etiquette, titreFonctions, chapoFonctions, lignes, fonctions, questions, lienDemo = LIEN_DEMO_EPICERIE, capture = CAISSE }) {
   return {
     lien, nom,
-    metadata: { title: titreSeo, description, alternates: { canonical: lien } },
+    metadata: metaPage({ title: titreSeo, description, alternates: { canonical: lien } }),
     contenu: {
-      lienDemo, videos: ['produits'], vignettes: ['presentation', 'epicerie', 'vendeurs'],
+      lien, nom, lienDemo, videos: ['produits'], vignettes: ['presentation', 'epicerie', 'vendeurs'],
       titreVideo: 'Ajoutez vos articles en quelques secondes.',
       description, titre, chapo, capture, captureMobile: MOBILE,
       garanties: ['Essai gratuit de 30 jours', 'Téléphone, tablette ou ordinateur', 'Imprimante facultative'],
@@ -47,7 +48,7 @@ function page({ lien, nom, titreSeo, description, titre, chapo, etiquette, titre
 export const ACTIVITES = {
   boutique: page({
     lien: '/gestion-boutique/', nom: 'Boutique',
-    titreSeo: 'Gestion pour boutique — vêtements, cosmétiques, accessoires',
+    titreSeo: 'Logiciel de gestion pour boutique',
     description: 'Logiciel de gestion des ventes et de stock pour boutique de vêtements, chaussures, cosmétiques et accessoires : tailles et couleurs, stock par article, promotions, crédit client, tickets WhatsApp. Essai gratuit.',
     titre: 'La gestion des ventes et du stock de votre boutique.',
     chapo: 'Vêtements, chaussures, cosmétiques, accessoires : chaque taille et chaque couleur a son prix et son stock. Vous savez ce qui se vend et ce qu’il faut racheter.',
@@ -66,7 +67,7 @@ export const ACTIVITES = {
   }),
   quincaillerie: page({
     lien: '/gestion-quincaillerie/', nom: 'Quincaillerie',
-    titreSeo: 'Gestion pour quincaillerie — vente au mètre, au kg, au sac',
+    titreSeo: 'Logiciel de gestion pour quincaillerie',
     description: 'Logiciel de gestion des ventes et de gestion de stock pour quincaillerie et matériaux : vente à la pièce, au mètre, au kg, au sac ou au carton, inventaire, prix d’achat et marges, crédit client. Essai gratuit.',
     titre: 'La gestion des ventes et du stock de votre quincaillerie.',
     chapo: 'Vis à la pièce, câble au mètre, ciment au sac, peinture au litre : chaque article a son unité, son prix et son stock.',
@@ -85,7 +86,7 @@ export const ACTIVITES = {
   }),
   pharmacie: page({
     lien: '/gestion-pharmacie/', nom: 'Pharmacie',
-    titreSeo: 'Gestion et stock pour pharmacie et parapharmacie',
+    titreSeo: 'Gestion de stock pour pharmacie et parapharmacie',
     description: 'Logiciel de gestion des ventes et de gestion de stock pour pharmacie, parapharmacie et dépôt pharmaceutique : stock par boîte, alertes de rupture, inventaire, prix d’achat, vendeurs avec code PIN. Essai gratuit.',
     titre: 'La gestion des ventes et du stock de votre pharmacie.',
     chapo: 'Médicaments, parapharmacie, hygiène : suivez le stock boîte par boîte, soyez prévenu avant la rupture et contrôlez les comptes de chaque vendeur.',
@@ -124,7 +125,7 @@ export const ACTIVITES = {
   }),
   bar: page({
     lien: '/gestion-bar/', nom: 'Bar',
-    titreSeo: 'Gestion pour bar, café et lounge — tables et stock des boissons',
+    titreSeo: 'Logiciel de gestion pour bar et café',
     description: 'Logiciel de gestion des ventes pour bar, café, lounge et maquis : commandes par table, stock des bouteilles, alertes de rupture, vendeurs avec code PIN, clôture de la journée. Essai gratuit.',
     titre: 'La gestion des ventes et du stock de votre bar.',
     chapo: 'Commandes par table, stock des bouteilles et des casiers, et les comptes de chaque serveur contrôlés chaque soir.',
@@ -145,7 +146,7 @@ export const ACTIVITES = {
   }),
   grossiste: page({
     lien: '/logiciel-grossiste/', nom: 'Commerce de gros',
-    titreSeo: 'Logiciel de stock et de gestion pour grossiste et dépôt',
+    titreSeo: 'Logiciel de gestion pour grossiste et dépôt',
     description: 'Logiciel de gestion de stock et de gestion pour grossiste, demi-grossiste, dépôt de boissons et distributeur : vente au carton, au sac ou au lot, inventaire, crédit clients revendeurs, marges. Essai gratuit.',
     titre: 'Les ventes et le stock de votre dépôt.',
     chapo: 'Cartons, sacs, palettes, lots : suivez ce qui entre et ce qui sort, et le crédit de chaque revendeur.',

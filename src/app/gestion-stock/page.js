@@ -5,17 +5,19 @@
 // ------------------------------------------------------------
 import PageMetier from '@/components/site/PageMetier';
 import { LIEN_DEMO_EPICERIE } from '@/components/site/Site';
+import { metaPage } from '@/lib/seo';
 
 const description =
   'Logiciel de gestion de stock et d’inventaire pour commerces : stock en temps réel, entrées de marchandise, inventaire, alertes de rupture, valeur du stock, marges, dépenses et statistiques. Sur téléphone et ordinateur, imprimante facultative.';
 
-export const metadata = {
-  title: 'Gestion de stock et d’inventaire — logiciel simple pour commerces',
+export const metadata = metaPage({
+  title: 'Logiciel de gestion de stock et d’inventaire',
   description,
   alternates: { canonical: '/gestion-stock/' },
-};
+});
 
 const contenu = {
+  lien: '/gestion-stock/', nomFil: 'Gestion de stock et inventaire',
   variante: 'stock',
   lienDemo: LIEN_DEMO_EPICERIE,
   videos: ['produits'],

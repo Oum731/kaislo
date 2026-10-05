@@ -14,6 +14,11 @@ jobs:
     steps:
       - name: Page d'accueil
         run: curl --fail --silent --show-error --location --max-time 30 --retry 2 --retry-delay 10 -o /dev/null https://kaislo.com/
+      - name: Google peut indexer la page d'accueil (pas d'en-tête noindex)
+        run: |
+          entetes=$(curl --silent --show-error --max-time 30 --retry 2 --retry-delay 10 -I https://kaislo.com/)
+          echo "$entetes"
+          if echo "$entetes" | grep -qi '^x-robots-tag:.*noindex'; then echo "noindex détecté dans les en-têtes !"; exit 1; fi
       - name: API et base de données (/api/sante)
         run: |
           reponse=$(curl --silent --show-error --max-time 30 --retry 2 --retry-delay 10 https://kaislo.com/api/sante || true)

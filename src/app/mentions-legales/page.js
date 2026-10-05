@@ -5,6 +5,7 @@
 import PageLegale, { Info } from '@/components/site/PageLegale';
 import { SOCIETE, HEBERGEUR, CONTACT_EMAIL, CONTACT_WHATSAPP } from '@/config';
 import CREDITS_PHOTOS from '@/lib/donnees/credits-photos.json';
+import { metaPage } from '@/lib/seo';
 
 // Licences Creative Commons des photos (obligatoire : nom de l'auteur + lien vers la licence)
 const nomLicence = (c) => (c.licence === 'cc0' ? 'CC0 (domaine public)' : c.licence === 'pdm' ? 'Domaine public' : 'CC ' + c.licence.toUpperCase() + ' ' + c.version);
@@ -12,11 +13,11 @@ const lienLicence = (c) => (c.licence === 'cc0' ? 'https://creativecommons.org/p
   : c.licence === 'pdm' ? 'https://creativecommons.org/publicdomain/mark/1.0/deed.fr'
   : `https://creativecommons.org/licenses/${c.licence}/${c.version || '4.0'}/deed.fr`);
 
-export const metadata = {
+export const metadata = metaPage({
   title: 'Mentions légales',
   description: 'Éditeur et hébergeur du site Kaislo, propriété intellectuelle et contact.',
   alternates: { canonical: '/mentions-legales/' },
-};
+});
 
 const SECTIONS = [
   {

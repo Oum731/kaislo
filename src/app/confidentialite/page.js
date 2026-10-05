@@ -5,12 +5,13 @@
 import Link from 'next/link';
 import PageLegale from '@/components/site/PageLegale';
 import { SOCIETE } from '@/config';
+import { metaPage } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = metaPage({
   title: 'Politique de confidentialité',
   description: 'Quelles données Kaislo utilise, pourquoi, combien de temps, avec qui elles sont partagées et comment exercer vos droits.',
   alternates: { canonical: '/confidentialite/' },
-};
+});
 
 const mail = <a href={`mailto:${SOCIETE.emailDonnees}`}>{SOCIETE.emailDonnees}</a>;
 
