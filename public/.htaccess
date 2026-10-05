@@ -11,7 +11,12 @@ RewriteCond %{HTTP_HOST} ^www\.kaislo\.com$ [NC]
 RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 
 # Anciennes adresses des pages par activité (« caisse-… » devenues « gestion-… »)
-RewriteRule ^caisse-(restaurant|epicerie|boutique|quincaillerie|pharmacie|boulangerie|bar)/?$ /gestion-$1/ [R=301,L]
+RewriteRule ^caisse-(restaurant|epicerie|boutique|quincaillerie|boulangerie|bar)/?$ /gestion-$1/ [R=301,L]
+# Pages retirées (métier réglementé non proposé)
+RewriteRule ^(caisse|gestion)-pharmacie/?$ / [R=301,L]
+RewriteRule ^en/pharmacy-management/?$ /en/ [R=301,L]
+RewriteRule ^guides/gerer-le-stock-dune-pharmacie-peremptions/?$ /guides/ [R=301,L]
+RewriteRule ^en/guides/managing-pharmacy-stock-and-expiry-dates/?$ /en/guides/ [R=301,L]
 
 # L'adresse provisoire Hostinger est renvoyée vers kaislo.com (Google garde ainsi une seule adresse)
 # En cas de problème avec le domaine : remettre un # devant les 2 lignes suivantes

@@ -10,6 +10,9 @@ const PAYS = [
     'NE' => 'FCFA', 'GN' => 'GNF', 'CM' => 'FCFA', 'GA' => 'FCFA', 'CG' => 'FCFA', 'FR' => 'EUR', 'BE' => 'EUR',
     'CA' => 'CAD', 'XX' => 'USD',
 ];
+// Métiers proposés à l'inscription (les métiers réglementés comme la pharmacie ne sont plus proposés)
+const TYPES_COMMERCE_OFFERTS = ['restaurant', 'maquis', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'beaute', 'telephonie', 'librairie', 'autre'];
+// Tous les types connus : les anciens commerces « pharmacie » gardent leur formule de prix
 const TYPES_COMMERCE = ['restaurant', 'maquis', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'pharmacie', 'beaute', 'telephonie', 'librairie', 'autre'];
 const DUREE_ESSAI_JOURS = 30;
 const DUREE_JETON_JOURS = 90;   // un appareil reste connecté 90 jours sans utilisation

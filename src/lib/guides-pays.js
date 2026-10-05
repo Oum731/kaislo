@@ -19,12 +19,11 @@ const EN = {
 };
 // Commerces courants, en anglais (même ordre que pays-seo.js)
 const COMMERCES_EN = {
-  'maquis et restaurants': 'maquis and restaurants', 'alimentations et boutiques': 'grocery shops and boutiques', pharmacies: 'pharmacies',
-  'quincailleries et dépôts': 'hardware stores and depots', 'boutiques et alimentations': 'shops and grocery stores', 'restaurants et gargotes': 'restaurants and street kitchens',
+  'maquis et restaurants': 'maquis and restaurants', 'alimentations et boutiques': 'grocery shops and boutiques',   'quincailleries et dépôts': 'hardware stores and depots', 'boutiques et alimentations': 'shops and grocery stores', 'restaurants et gargotes': 'restaurants and street kitchens',
   boulangeries: 'bakeries', quincailleries: 'hardware stores', restaurants: 'restaurants', 'dépôts et grossistes': 'depots and wholesalers',
   'restaurants et maquis': 'restaurants and maquis', 'restaurants et bars': 'restaurants and bars', 'bars et restaurants': 'bars and restaurants',
   'épiceries et supérettes': 'grocery stores and convenience stores', 'restaurants et cafés': 'restaurants and cafes', boutiques: 'boutiques',
-  'pharmacies et parapharmacies': 'pharmacies and parapharmacies', 'commerces de proximité': 'neighbourhood shops', épiceries: 'grocery stores',
+  'cosmétiques et beauté': 'cosmetics and beauty shops', 'téléphonie et électronique': 'phone and electronics shops', 'commerces de proximité': 'neighbourhood shops', épiceries: 'grocery stores',
 };
 const ET_FR = (liste) => liste.join(', ').replace(/, ([^,]*)$/, ' et $1');
 const ET_EN = (liste) => liste.join(', ').replace(/, ([^,]*)$/, ' and $1');

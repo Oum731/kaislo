@@ -28,6 +28,7 @@ for (const f of pages) {
   if (PRIVEES.some((r) => r.test(lien + '/'))) continue;
   const adresse = lien ? `/${lien}/` : '/';
   const html = fs.readFileSync(f, 'utf8');
+  if (html.includes('http-equiv="refresh"')) continue; // petite page de redirection d'une ancienne adresse
   const dit = (m) => erreurs.push(`${adresse} : ${m}`);
   const titre = /<title>(.*?)<\/title>/.exec(html)?.[1];
   const description = /<meta name="description" content="(.*?)"/.exec(html)?.[1];

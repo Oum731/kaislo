@@ -75,7 +75,7 @@ function Accueil() {
     <div>
       <div className="intro">
         <h1>{tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}</h1>
-        <p>{tr('Restaurants, épiceries, boutiques, bars, pharmacies : enregistrez vos ventes en quelques touches, suivez votre stock et le crédit de vos clients, et sachez chaque soir ce que vous avez gagné. Toutes les devises. Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent.')}</p>
+        <p>{tr('Restaurants, épiceries, boutiques, bars, boulangeries : enregistrez vos ventes en quelques touches, suivez votre stock et le crédit de vos clients, et sachez chaque soir ce que vous avez gagné. Toutes les devises. Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent.')}</p>
       </div>
       <button className="btn grand bloc" onClick={() => useKaislo.setState({ etapeConnexion: 'connexion' })}>
         <Icone nom="sortie" /> {tr('Se connecter')}</button>

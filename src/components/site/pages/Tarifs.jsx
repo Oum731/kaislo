@@ -15,7 +15,7 @@ export function meta(lang) {
   choisirLangue(lang);
   return metaPage({
     title: tr('Tarifs par métier, dans la devise de votre pays'),
-    description: tr('Tarifs Kaislo par métier, affichés dans la devise de votre pays : épicerie, boutique, maquis, restaurant, bar, quincaillerie, pharmacie, grossiste. 1 poste et 5 vendeurs inclus, premier mois gratuit, 2 mois offerts à l’année.'),
+    description: tr('Tarifs Kaislo par métier, affichés dans la devise de votre pays : épicerie, boutique, maquis, restaurant, bar, quincaillerie, grossiste. 1 poste et 5 vendeurs inclus, premier mois gratuit, 2 mois offerts à l’année.'),
     alternates: alternates('/tarifs/', lang),
     langue: lang,
   });

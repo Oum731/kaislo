@@ -37,7 +37,7 @@ const contenu = () => ({
   captureMobile: { src: '/captures/epicerie-mobile.webp', alt: tr('Articles et stock sur téléphone') },
   etiquette: tr('Gestion de stock et d’inventaire'),
   titreFonctions: tr('Sachez à tout moment ce que vous avez, ce qui part et ce que ça vaut.'),
-  chapoFonctions: tr('Pour les épiceries, grossistes et dépôts, boutiques, quincailleries, pharmacies, téléphonie, librairies, bars, restaurants (boissons, ingrédients)… Chaque article a son unité : pièce, kg, litre, mètre, carton, sac, bouteille.'),
+  chapoFonctions: tr('Pour les épiceries, grossistes et dépôts, boutiques, quincailleries, téléphonie, librairies, bars, restaurants (boissons, ingrédients)… Chaque article a son unité : pièce, kg, litre, mètre, carton, sac, bouteille.'),
   lignes: [
     {
       titre: tr('Un inventaire toujours à jour'),

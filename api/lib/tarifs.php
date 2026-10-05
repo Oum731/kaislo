@@ -28,8 +28,8 @@ const FORMULES_DEFAUT = [
         'types' => ['quincaillerie'],
         'prix' => ['MAD' => 269, 'FCFA' => 16000, 'EUR' => 25, 'CAD' => 37, 'USD' => 27, 'GNF' => 240000],
         'prixPoste' => ['MAD' => 89, 'FCFA' => 5000, 'EUR' => 8, 'CAD' => 12, 'USD' => 9, 'GNF' => 75000]],
-    ['id' => 'pro', 'nom' => 'Pharmacie et commerce de gros', 'famille' => 'Commerces professionnels',
-        'types' => ['pharmacie', 'grossiste'],
+    ['id' => 'pro', 'nom' => 'Commerce de gros', 'famille' => 'Commerces professionnels',
+        'types' => ['grossiste', 'pharmacie'], // « pharmacie » : anciens commerces seulement
         'prix' => ['MAD' => 319, 'FCFA' => 19000, 'EUR' => 29, 'CAD' => 44, 'USD' => 32, 'GNF' => 285000],
         'prixPoste' => ['MAD' => 89, 'FCFA' => 5000, 'EUR' => 8, 'CAD' => 12, 'USD' => 9, 'GNF' => 75000]],
 ];
