@@ -2,7 +2,7 @@
 // VIDÉOS DE DÉMONSTRATION du site (public/videos/), avec voix et musique
 //   presentation-kaislo : le tour complet (paysage)
 //   demo-restaurant     : de la commande au ticket (paysage)
-//   demo-epicerie       : vente, crédit, caisse du soir (vertical, pour WhatsApp / réseaux)
+//   demo-epicerie       : vente, crédit, comptes du soir (vertical, pour WhatsApp / réseaux)
 //   ajout-produits      : ajouter un article (paysage)
 //   gestion-vendeurs    : créer un vendeur, ses droits (vertical)
 //
@@ -27,8 +27,21 @@ import ffmpeg from 'ffmpeg-static';
 
 // Adresse affichée sous « Essai gratuit 30 jours » à la fin des vidéos (vide = aucune adresse)
 const LIEN_FINAL = '';
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const SORTIE = 'public/videos';
+// Chrome : variable CHROME_PATH, sinon emplacements habituels (Windows, Mac, Linux)
+const CHROME = [
+  process.env.CHROME_PATH,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].filter(Boolean).find((c) => fs.existsSync(c));
+if (!CHROME) { console.error('Chrome introuvable : indiquez son chemin dans la variable CHROME_PATH.'); process.exit(1); }
+// Python (voix edge-tts) : variable PYTHON, sinon « python » (Windows) ou « python3 » (Mac, Linux)
+const PYTHON = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+// Essai (ESSAI=1 ou npm run videos -- --essai) : voix remplacée par du silence et vidéos écrites dans outils/videos-essai/,
+// pour vérifier que toute la mise en scène fonctionne sans toucher aux vraies vidéos ni utiliser la voix.
+const ESSAI = process.env.ESSAI === '1' || process.argv.includes('--essai');
+const SORTIE = ESSAI ? 'outils/videos-essai' : 'public/videos';
 const PORT = 4310;
 
 // Voix et rythme
@@ -104,10 +117,16 @@ function dureeAudio(f) {
 async function voix(texte) {
   fs.mkdirSync(CACHE_VOIX, { recursive: true });
   const cle = crypto.createHash('sha1').update(VOIX + VOIX_VITESSE + VOIX_HAUTEUR + texte).digest('hex').slice(0, 16);
-  const f = path.join(CACHE_VOIX, cle + '.mp3');
+  const f = path.join(ESSAI ? 'outils/voix-essai' : CACHE_VOIX, cle + '.mp3');
+  if (ESSAI) {
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    // silence d'une durée proche de celle d'une vraie voix (environ 14 caractères par seconde)
+    if (!fs.existsSync(f)) execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', String(Math.max(1.5, texte.length / 14)), '-q:a', '9', f]);
+    return { f, duree: dureeAudio(f) };
+  }
   if (!fs.existsSync(f)) {
     narration.manquantes++;
-    await execFileAsync('python', ['-m', 'edge_tts', '--voice', VOIX, `--rate=${VOIX_VITESSE}`, `--pitch=${VOIX_HAUTEUR}`, '--text', texte, '--write-media', f]);
+    await execFileAsync(PYTHON, ['-m', 'edge_tts', '--voice', VOIX, `--rate=${VOIX_VITESSE}`, `--pitch=${VOIX_HAUTEUR}`, '--text', texte, '--write-media', f]);
   }
   return { f, duree: dureeAudio(f) };
 }
@@ -225,10 +244,10 @@ async function seConnecter(p, telephone, pin = '1234') {
 }
 
 const INTRO = (titreVideo, sousTitre) => `<div class="k">K</div><div class="marque">Kaislo</div><h1>${titreVideo}</h1><p>${sousTitre}</p>`;
-const FIN = `<div class="k">K</div><div class="marque">Kaislo</div><h1>À vous d’encaisser.</h1>
+const FIN = `<div class="k">K</div><div class="marque">Kaislo</div><h1>À vous de vendre.</h1>
   <p>Restaurants, épiceries, boutiques. Sur le téléphone que vous avez déjà, dans la devise de votre pays.</p>
   <div class="bouton">Essai gratuit 30 jours</div>${LIEN_FINAL ? '<div class="v-adresse">' + LIEN_FINAL + '</div>' : ''}`;
-const FIN_PAROLE = 'Kaislo : la caisse simple, sur le téléphone que vous avez déjà. Essayez-la gratuitement pendant trente jours.';
+const FIN_PAROLE = 'Kaislo : la gestion simple de vos ventes, sur le téléphone que vous avez déjà. Essayez-la gratuitement pendant trente jours.';
 
 // Règle l'horloge de la page sur une heure de la journée (ex : 19 h 40),
 // pour que la démo ait une journée de ventes bien remplie quel que soit le moment du tournage.
@@ -253,10 +272,10 @@ async function connexion(p, demo, pays, mobile) {
   await preparer(p, mobile);
 }
 
-// Si la journée de caisse n'est pas ouverte, on l'ouvre (évite un blocage pendant l'enregistrement)
+// Si la journée de vente n'est pas ouverte, on l'ouvre (évite un blocage pendant l'enregistrement)
 async function caisseOuverte(p) {
   const feuille = await p.$('.feuille');
-  if (feuille && (await feuille.evaluate((f) => f.textContent.includes('Ouvrir la caisse')))) await toucher(p, 'Ouvrir la caisse', '.feuille button', 900);
+  if (feuille && (await feuille.evaluate((f) => f.textContent.includes('Ouvrir la journée')))) await toucher(p, 'Ouvrir la journée', '.feuille button', 900);
 }
 
 // ---------- 4. Musique de fond, composée ici (libre de droits) ----------
@@ -370,7 +389,7 @@ async function filmer(p, dossier, largeurPx, hauteurPx, liste, hauteDefinition) 
 }
 
 // npm run videos -- produits vendeurs : n'enregistre que les vidéos dont le nom contient ces mots
-const VOULUES = process.argv.slice(2);
+const VOULUES = process.argv.slice(2).filter((a) => a !== '--essai');
 const veut = (nom) => !VOULUES.length || VOULUES.some((v) => nom.includes(v));
 
 async function enregistrer(nom, options, scenario) {
@@ -390,7 +409,7 @@ async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche }, sc
   for (let prise = 1; prise <= 2; prise++) {
     narration = { pistes: [], finVoix: 0, manquantes: 0 };
     const dossierTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-video-'));
-    const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars'] });
+    const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars', ...(process.getuid?.() === 0 ? ['--no-sandbox'] : [])] });
     const p = await navigateur.newPage();
     await p.setViewport({ width: largeur, height: hauteur, deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile });
     const echelle = mobile ? 2 : 1; // téléphone : images en haute définition (écran « retina »)
@@ -445,9 +464,9 @@ function monter(nom, dossierTmp, liste, film, affiche) {
 await enregistrer('presentation-kaislo', { largeur: 1280, hauteur: 720, mobile: false, affiche: 30 }, async (p, demarrer) => {
   await regler(p, 19, 30);
   await connexion(p, 'resto-ivoire', 'CI', false);
-  await carte(p, INTRO('La caisse simple des restaurants, épiceries et boutiques.', 'Présentation de Kaislo'));
+  await carte(p, INTRO('La gestion simple des restaurants, épiceries et boutiques.', 'Présentation de Kaislo'));
   const film = await demarrer();
-  await introduction(p, 'Voici Kaislo : la caisse simple des restaurants, des épiceries et des boutiques.');
+  await introduction(p, 'Voici Kaislo : la gestion simple des restaurants, des épiceries et des boutiques.');
 
   await titre(p, 'Chacun se connecte avec <b>son numéro</b> et <b>son code PIN</b>', 'Chaque membre de l’équipe se connecte avec son numéro, et son code personnel.');
   await seConnecter(p, '06 00 00 00 01');
@@ -457,8 +476,8 @@ await enregistrer('presentation-kaislo', { largeur: 1280, hauteur: 720, mobile: 
   await defiler(p, 'Évolution des ventes', 'h2, h3, b, p', 2000);
   await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-  await titre(p, '<b>La caisse</b> : touchez, encaissez', 'À la caisse, il suffit de toucher les articles.');
-  await toucher(p, 'Caisse', '.menu-lien', 900);
+  await titre(p, '<b>La vente</b> : touchez, validez', 'Pour vendre, il suffit de toucher les articles.');
+  await toucher(p, 'Vendre', '.menu-lien', 900);
   await caisseOuverte(p);
   await toucher(p, 'Garba', '.tuile', 500);
   await toucher(p, 'Ajouter', '.feuille-pied button', 600);
@@ -468,15 +487,15 @@ await enregistrer('presentation-kaislo', { largeur: 1280, hauteur: 720, mobile: 
   await titre(p, 'Espèces : Kaislo calcule <b>la monnaie à rendre</b>', 'En espèces, Kaislo calcule la monnaie à rendre. Plus aucune erreur.');
   await toucher(p, 'Espèces', '.panneau-panier .choix-grille button', 500);
   await toucher(p, null, '.panneau-panier .puces .puce:nth-child(2)', 1400);
-  await toucher(p, 'Encaisser', '.panneau-panier button.grand', 1800);
+  await toucher(p, 'Valider', '.panneau-panier button.grand', 1800);
   await toucher(p, 'Nouvelle vente', '.feuille-pied button', 600);
 
   await titre(p, '<b>Les tables</b> : qui mange quoi, depuis quand', 'Les tables : qui mange quoi, et depuis combien de temps.');
   await toucher(p, 'Tables', '.menu-lien', 1800);
   await titre(p, '<b>Les ventes</b> : chaque ticket, chaque vendeur', 'Les ventes : chaque ticket, et chaque vendeur.');
   await toucher(p, 'Ventes', '.menu-lien', 1500);
-  await titre(p, 'Chaque journée de caisse <b>gardée en historique</b>', 'Chaque journée de caisse est gardée dans l’historique.');
-  await toucher(p, 'Journées de caisse', 'button', 1800);
+  await titre(p, 'Chaque journée de vente <b>gardée en historique</b>', 'Chaque journée de vente est gardée dans l’historique.');
+  await toucher(p, 'Journées de vente', 'button', 1800);
   await titre(p, '<b>Le carnet de crédit</b> : qui vous doit combien', 'Le carnet de crédit : qui vous doit combien.');
   await toucher(p, 'Crédit', '.menu-lien', 1800);
   await titre(p, '<b>Vos articles</b> : prix, photos, options, marges', 'Vos articles, avec leurs prix, leurs photos, et vos marges.');
@@ -500,7 +519,7 @@ await enregistrer('demo-restaurant', { largeur: 1280, hauteur: 720, mobile: fals
   await seConnecter(p, '06 00 00 00 01');
 
   await titre(p, 'Touchez un plat, choisissez <b>l’accompagnement</b>', 'Touchez un plat, puis choisissez l’accompagnement. C’est aussi simple que ça.');
-  await toucher(p, 'Caisse', '.menu-lien', 900);
+  await toucher(p, 'Vendre', '.menu-lien', 900);
   await caisseOuverte(p);
   await toucher(p, 'Attiéké', '.tuile');
   await toucher(p, 'Poisson grillé', '.option', 500);
@@ -515,7 +534,7 @@ await enregistrer('demo-restaurant', { largeur: 1280, hauteur: 720, mobile: fals
 
   await titre(p, 'Payé par <b>Wave</b>, <b>Orange Money</b>, espèces ou carte', 'Le client paie comme il veut : Wave, Orange Money, espèces, ou carte.');
   await toucher(p, 'Wave', '.panneau-panier .choix-grille button', 1000);
-  await toucher(p, 'Encaisser', '.panneau-panier button.grand', 1200);
+  await toucher(p, 'Valider', '.panneau-panier button.grand', 1200);
   await titre(p, 'Ticket <b>imprimé</b> ou envoyé par <b>WhatsApp</b>', 'Et voilà ! Le ticket s’imprime, ou part directement sur WhatsApp.');
   await pause(1500);
   await toucher(p, 'Nouvelle vente', '.feuille-pied button', 800);
@@ -529,7 +548,7 @@ await enregistrer('demo-restaurant', { largeur: 1280, hauteur: 720, mobile: fals
 await enregistrer('demo-epicerie', { largeur: 390, hauteur: 780, mobile: true, affiche: 45 }, async (p, demarrer) => {
   await regler(p, 20, 15);
   await connexion(p, 'chez-sentinelle', 'FR', true);
-  await carte(p, INTRO('Vente, crédit et caisse du soir, sur votre téléphone.', 'Démo épicerie'));
+  await carte(p, INTRO('Vente, crédit et comptes du soir, sur votre téléphone.', 'Démo épicerie'));
   const film = await demarrer();
   await introduction(p, 'Une journée d’épicerie avec Kaislo, directement sur votre téléphone.');
 
@@ -537,7 +556,7 @@ await enregistrer('demo-epicerie', { largeur: 390, hauteur: 780, mobile: true, a
   await seConnecter(p, '06 00 00 00 11');
 
   await titre(p, 'Cherchez ou <b>scannez</b> l’article', 'Cherchez un article, ou scannez son code-barres avec la caméra.');
-  await toucher(p, 'Caisse', '.menu-lien', 900);
+  await toucher(p, 'Vendre', '.menu-lien', 900);
   await caisseOuverte(p);
   await taper(p, '.recherche input', 'lait');
   await pause(500);
@@ -549,7 +568,7 @@ await enregistrer('demo-epicerie', { largeur: 390, hauteur: 780, mobile: true, a
   await toucher(p, 'Huile de table 1L', '.tuile', 900);
 
   await titre(p, 'Le client paiera plus tard ? <b>À crédit</b>', 'Votre client paiera plus tard ? Notez la vente à crédit, en deux touches.');
-  await toucher(p, 'Encaisser', '.barre-panier button', 1000);
+  await toucher(p, 'Valider', '.barre-panier button', 1000);
   await toucher(p, 'À crédit', '.feuille .choix-grille button', 700);
   await toucher(p, 'Choisir le client', '.feuille button', 900);
   await toucher(p, null, '.feuille .liste-item', 900);
@@ -560,14 +579,14 @@ await enregistrer('demo-epicerie', { largeur: 390, hauteur: 780, mobile: true, a
   await titre(p, 'Qui vous doit <b>combien</b>, en un coup d’œil', 'Et vous voyez, d’un coup d’œil, qui vous doit combien.');
   await toucher(p, 'Crédit', '.menu-lien', 1800);
 
-  await titre(p, 'Le soir : Kaislo calcule les <b>espèces attendues</b>', 'Le soir, Kaislo calcule les espèces qui doivent être dans la caisse.');
+  await titre(p, 'Le soir : Kaislo calcule les <b>espèces attendues</b>', 'Le soir, Kaislo calcule les espèces qui doivent être en main.');
   await toucher(p, 'Ventes', '.menu-lien', 900);
-  await toucher(p, 'Fermer la caisse', 'button', 1400);
-  // On tape exactement le montant attendu : la caisse est juste
+  await toucher(p, 'Fermer la journée', 'button', 1400);
+  // On tape exactement le montant attendu : la compte est juste
   const attendu = await p.evaluate(() => { const l = [...document.querySelectorAll('.feuille .ligne, .feuille div')].find((e) => e.children.length === 2 && e.firstElementChild.textContent.trim() === 'Espèces attendues'); return l ? l.lastElementChild.textContent.replace(/[^\d,]/g, '') : '0'; });
   await taper(p, '.feuille input[placeholder="Montant compté"]', attendu);
   await p.evaluate(() => document.querySelector('.feuille .ecart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-  await titre(p, 'Vous comptez, Kaislo vous dit si la <b>caisse est juste</b>', 'Vous comptez, et Kaislo vous dit si la caisse est juste.');
+  await titre(p, 'Vous comptez, Kaislo vous dit si la <b>compte est juste</b>', 'Vous comptez, et Kaislo vous dit si la compte est juste.');
   await pause(1500);
   await conclusion(p, film);
 });
@@ -613,8 +632,8 @@ await enregistrer('ajout-produits', { largeur: 1280, hauteur: 720, mobile: false
   await pause(900);
   await toucher(p, 'Enregistrer', '.feuille-pied button', 1000);
 
-  await titre(p, 'Le plat est <b>tout de suite</b> à la caisse', 'Et voilà : le plat est déjà disponible à la caisse !');
-  await toucher(p, 'Caisse', '.menu-lien', 900);
+  await titre(p, 'Le plat est <b>tout de suite</b> en vente', 'Et voilà : le plat est déjà disponible à la vente !');
+  await toucher(p, 'Vendre', '.menu-lien', 900);
   await caisseOuverte(p);
   await toucher(p, 'Spécialités', '.puces .puce', 900);
   await toucher(p, 'Poulet DG', '.tuile', 900);

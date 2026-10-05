@@ -108,7 +108,7 @@ export function FeuilleProduit({ produit, categorieId }) {
             Marge : {s.prix(marge)} par article ({Math.round((marge / prixVente) * 100)} %)
           </p>
         )}
-        <p className="tres-petit muet">Prix promo : affiché barré à la caisse tant qu’il est rempli. Prix d’achat : sert à calculer vos marges (jamais montré au client).</p>
+        <p className="tres-petit muet">Prix promo : affiché barré au moment de la vente tant qu’il est rempli. Prix d’achat : sert à calculer vos marges (jamais montré au client).</p>
 
         <div className="grille-2">
           <label className="champ"><span>Unité de vente et de stock</span>
@@ -125,7 +125,7 @@ export function FeuilleProduit({ produit, categorieId }) {
             <label className="champ"><span>Alerte à partir de</span><ChampMontant valeur={b.seuilAlerte} surChanger={(v) => maj({ seuilAlerte: v })} /></label>
           </div>
         )}
-        <Reglage titre="Visible à la caisse" actif={b.actif} surChanger={(v) => maj({ actif: v })} />
+        <Reglage titre="Visible à la vente" actif={b.actif} surChanger={(v) => maj({ actif: v })} />
       </div>
 
       <p className="section-titre">Options (accompagnements, tailles, suppléments…)</p>
@@ -216,7 +216,7 @@ export function FeuilleUtilisateur({ utilisateur }) {
             <p className="tres-petit muet">{VENDEURS_PAR_POSTE} vendeurs au maximum par poste. Pour en ajouter : Réglages → Postes → « + Poste ».</p>
             <p className="section-titre">Ce que ce vendeur peut faire</p>
             <div className="carte pile">
-              <p className="petit">✓ Encaisser, imprimer les tickets, vendre à crédit, clôturer sa caisse</p>
+              <p className="petit">✓ Enregistrer les ventes, imprimer les tickets, vendre à crédit, clôturer sa journée</p>
               <Reglage titre="Ajouter et modifier des produits" aide={b.peutGererProduits ? 'Il voit Produits et Stock : articles, prix, options, entrées de marchandise. Il ne peut rien supprimer.' : 'Il ne peut pas toucher aux produits ni aux prix.'} actif={!!b.peutGererProduits} surChanger={(v) => setB({ ...b, peutGererProduits: v })} />
               <Reglage titre="Faire des remises" aide="Remise en % ou en montant sur une vente." actif={!!b.peutFaireRemises} surChanger={(v) => setB({ ...b, peutFaireRemises: v })} />
               <p className="tres-petit muet">Annuler une vente demande toujours votre code PIN de gérant.</p>
@@ -243,7 +243,7 @@ export function FeuilleDepense({ depense }) {
           </div>
         </div>
         <label className="champ"><span>Note (facultatif)</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder="Ex : marché, poisson et légumes" /></label>
-        <Reglage titre="Payée avec l’argent de la caisse" aide="Elle sera déduite des espèces attendues à la clôture." actif={b.depuisCaisse} surChanger={(v) => setB({ ...b, depuisCaisse: v })} />
+        <Reglage titre="Payée avec les espèces du jour" aide="Elle sera déduite des espèces attendues à la clôture." actif={b.depuisCaisse} surChanger={(v) => setB({ ...b, depuisCaisse: v })} />
         {b.id && <button className="btn danger bloc" onClick={() => { if (confirm('Supprimer cette dépense ?')) { s.supprimerDepense(b.id); s.fermer(); } }}>Supprimer la dépense</button>}
       </div>
     </Feuille>
@@ -340,7 +340,7 @@ export function FeuilleRemboursement({ clientId }) {
             {s.d.commerce.modesPaiement.map((m) => <button key={m} className={mode === m ? 'actif' : ''} onClick={() => setMode(m)}>{m}</button>)}
           </div>
         </div>
-        <p className="tres-petit muet">Un reçu est imprimé. Les remboursements en espèces comptent dans la clôture de caisse.</p>
+        <p className="tres-petit muet">Un reçu est imprimé. Les remboursements en espèces comptent dans la clôture de la journée.</p>
       </div>
     </Feuille>
   );
@@ -434,6 +434,16 @@ export function FeuilleCompte() {
         <h2 style={{ marginTop: 12 }}>{s.utilisateur.nom}</h2>
         <p className="muet">{s.estGerant() ? 'Gérant' : 'Vendeur'} · {s.d.commerce.nom}</p>
       </div>
+      {!s.estGerant() && (
+        <div className="liste" style={{ marginTop: 18 }}>
+          <button className="liste-item" onClick={() => s.allerA('imprimante')}>
+            <span className="mini-emoji teinte-vert"><Icone nom="imprimante" /></span>
+            <b className="grandit">Imprimante</b>
+            <span className="petit muet">{s.imprimante.connectee ? 'Connectée' : 'Non connectée'}</span>
+            <Icone nom="droite" className="muet" />
+          </button>
+        </div>
+      )}
       {enLigne && (
         <div className="carte pile" style={{ marginTop: 18 }}>
           <EtatSynchroDetail />
@@ -484,7 +494,7 @@ export function FeuilleBiometrie() {
     }>
       <div className="centre pile" style={{ paddingTop: 8 }}>
         <span className="mini-emoji teinte-vert" style={{ margin: '0 auto', width: 56, height: 56 }}><Icone nom="bouclier" taille="lg" /></span>
-        <p>La prochaine fois, ouvrez votre caisse avec {nom}, sans taper votre code.</p>
+        <p>La prochaine fois, ouvrez votre session avec {nom}, sans taper votre code.</p>
         <p className="tres-petit muet">Votre empreinte ou votre visage ne quittent jamais votre téléphone. Le code PIN reste toujours possible.</p>
       </div>
     </Feuille>

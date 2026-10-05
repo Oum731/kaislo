@@ -13,15 +13,15 @@ const texte = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700',
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NOM} — Caisse et gestion de stock pour restaurants, épiceries et tous les commerces`,
+    default: `${SITE_NOM} — Gestion des ventes et du stock pour restaurants, épiceries et tous les commerces`,
     template: `%s | ${SITE_NOM}`,
   },
   description:
-    'Kaislo est la caisse et l’outil de gestion de stock simples, sur téléphone, tablette et ordinateur, pour les commerces d’Afrique et du monde entier : ventes, inventaire, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, marges et statistiques. Toutes les devises. Essai gratuit.',
+    'Kaislo est l’outil de gestion des ventes et du stock, simple, sur téléphone, tablette et ordinateur, pour les commerces d’Afrique et du monde entier : ventes, inventaire, tickets imprimés ou envoyés par WhatsApp, carnet de crédit, tables, marges et statistiques. Toutes les devises. Essai gratuit.',
   applicationName: SITE_NOM,
-  keywords: ['logiciel de caisse', 'caisse enregistreuse', 'caisse restaurant', 'caisse épicerie', 'caisse boutique', 'Afrique', 'Côte d’Ivoire', 'Sénégal', 'Maroc', 'Cameroun', 'France', 'carnet de crédit', 'ticket de caisse', 'gestion de stock', 'logiciel inventaire', 'gestion d’inventaire', 'outil de gestion commerce', 'mobile money'],
+  keywords: ['logiciel de gestion des ventes', 'gestion commerce', 'logiciel restaurant', 'logiciel épicerie', 'logiciel boutique', 'Afrique', 'Côte d’Ivoire', 'Sénégal', 'Maroc', 'Cameroun', 'France', 'carnet de crédit', 'ticket de vente', 'gestion de stock', 'logiciel inventaire', 'gestion d’inventaire', 'outil de gestion commerce', 'mobile money'],
   // Image affichée quand un lien est partagé (WhatsApp, Facebook, LinkedIn…) : npm run icones
-  openGraph: { type: 'website', locale: 'fr_FR', siteName: SITE_NOM, title: `${SITE_NOM} — ${SITE_SLOGAN}`, url: SITE_URL, images: [{ url: chemin('/og-image.png'), width: 1200, height: 630, alt: 'Kaislo, la caisse et la gestion de stock' }] },
+  openGraph: { type: 'website', locale: 'fr_FR', siteName: SITE_NOM, title: `${SITE_NOM} — ${SITE_SLOGAN}`, url: SITE_URL, images: [{ url: chemin('/og-image.png'), width: 1200, height: 630, alt: 'Kaislo, la gestion des ventes et du stock' }] },
   twitter: { card: 'summary_large_image', images: [chemin('/og-image.png')] },
   manifest: chemin('/manifest.webmanifest'),
   // favicon.ico (16-48 px) pour Google et les anciens navigateurs, SVG pour les récents, PNG pour iPhone

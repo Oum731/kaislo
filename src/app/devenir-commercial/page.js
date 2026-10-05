@@ -36,7 +36,7 @@ export default function PageDevenirCommercial() {
           <div className="site-largeur">
             <span className="etiquette">Programme commercial</span>
             <h1>Présentez Kaislo, touchez 25 % pendant 12 mois.</h1>
-            <p className="chapo">Vous connaissez les commerçants de votre quartier ? Faites-leur découvrir la caisse et la gestion de stock Kaislo, et touchez <b>25 % de tout ce qu’ils paient</b> pendant leurs 12 premiers mois.</p>
+            <p className="chapo">Vous connaissez les commerçants de votre quartier ? Faites-leur découvrir la journée et la gestion de stock Kaislo, et touchez <b>25 % de tout ce qu’ils paient</b> pendant leurs 12 premiers mois.</p>
             <div className="ligne" style={{ gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
               <a href={lienWhatsApp} className="btn grand" target="_blank" rel="noreferrer">Je veux devenir commercial</a>
               <Link href="/commercial/" className="btn secondaire grand">Espace commercial</Link>

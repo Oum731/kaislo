@@ -34,7 +34,7 @@ const SECTIONS = [
         <tbody>
           <tr><th>Commerce</th><td>Nom, type, pays, ville, adresse, position sur la carte, téléphone, e-mail, logo, message du ticket.</td></tr>
           <tr><th>Utilisateurs</th><td>Nom, numéro de téléphone, rôle et droits, code PIN (enregistré sous forme chiffrée dans la version en ligne), dates de connexion.</td></tr>
-          <tr><th>Activité</th><td>Articles, prix, ventes, tickets, remises, dépenses, stock, journées de caisse, vendeur ayant fait chaque opération.</td></tr>
+          <tr><th>Activité</th><td>Articles, prix, ventes, tickets, remises, dépenses, stock, journées de vente, vendeur ayant fait chaque opération.</td></tr>
           <tr><th>Clients du commerce</th><td>Nom, téléphone, note, achats à crédit et remboursements ; numéro du client pour l’envoi du ticket par WhatsApp.</td></tr>
           <tr><th>Visiteurs du site</th><td>Nom, numéro WhatsApp ou e-mail et message laissés avec la bulle « Discuter avec nous », pour vous répondre. Supprimés sur simple demande.</td></tr>
           <tr><th>Commerciaux Kaislo</th><td>Nom, téléphone, e-mail, code parrain et commissions des commerciaux. Un commercial voit seulement le nom, l’activité, la ville et l’état d’abonnement des commerces inscrits avec son code : jamais leurs ventes ni leurs clients.</td></tr>
@@ -50,7 +50,7 @@ const SECTIONS = [
     titre: 'Pourquoi ?',
     contenu: (
       <ul>
-        <li><b>Fournir le service</b> : caisse, tickets, statistiques, synchronisation entre vos appareils (exécution du contrat).</li>
+        <li><b>Fournir le service</b> : ventes, tickets, statistiques, synchronisation entre vos appareils (exécution du contrat).</li>
         <li><b>Gérer l’abonnement</b> : essai, paiements, reçus, relances (exécution du contrat, obligations comptables).</li>
         <li><b>Sécuriser les comptes</b> : vérification des connexions, détection des abus (intérêt légitime).</li>
         <li><b>Vous assister</b> : réponses au support, information sur les évolutions importantes du service (exécution du contrat).</li>

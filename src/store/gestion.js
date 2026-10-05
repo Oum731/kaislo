@@ -145,7 +145,7 @@ export const trancheGestion = (set, get) => ({
   // Renvoie un message d'erreur, ou null
   enregistrerPoste(b) {
     const nom = (b.nom || '').trim();
-    if (!nom) return 'Donnez un nom au poste (ex : Comptoir, Terrasse, Caisse 2)';
+    if (!nom) return 'Donnez un nom au poste (ex : Comptoir, Terrasse, Comptoir 2)';
     const actuels = postesDe(get().d);
     if (actuels.some((p) => p.id !== b.id && p.nom.toLowerCase() === nom.toLowerCase())) return 'Un poste porte déjà ce nom';
     get().majDonnees((d) => {
@@ -250,12 +250,12 @@ export const trancheGestion = (set, get) => ({
     get().majDonnees((d) => ({ depenses: d.depenses.filter((x) => x.id !== id) }));
   },
 
-  // ---------- Journée de caisse : ouverture et fermeture ----------
+  // ---------- Journée de vente : ouverture et fermeture ----------
   caisseOuverte() {
     return caisseOuverte(get().d);
   },
 
-  // Ouverture : on compte la monnaie du matin (fond de caisse)
+  // Ouverture : on compte la monnaie du matin (fond de départ)
   ouvrirCaisse(fondDeCaisse, note = '') {
     if (caisseOuverte(get().d)) return get().message('La caisse est déjà ouverte', 'erreur');
     const session = {
@@ -269,7 +269,7 @@ export const trancheGestion = (set, get) => ({
       cloture: null,
     };
     get().majDonnees((d) => ({ sessionsCaisse: [...(d.sessionsCaisse || []), session] }));
-    get().message('Caisse ouverte · fond de caisse ' + get().prix(session.fondDeCaisse));
+    get().message('Journée ouverte · fond de départ ' + get().prix(session.fondDeCaisse));
     return session;
   },
 

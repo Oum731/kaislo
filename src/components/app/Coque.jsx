@@ -28,13 +28,15 @@ export function liensMenu(s) {
   const gerant = s.estGerant();
   const liens = [];
   if (gerant) liens.push(['accueil', 'Accueil', 'accueil']);
-  liens.push(['caisse', 'Caisse', 'caisse']);
+  liens.push(['caisse', 'Vendre', 'caisse']);
   if (s.aTables()) liens.push(['tables', 'Tables', 'tables', (s.d.commandes || []).filter((c) => c.lignes.length).length || null]);
   liens.push(['ventes', gerant ? 'Ventes' : 'Mes ventes', 'ventes']);
   liens.push(['clients', 'Crédit', 'carnet']);
   if (s.peut('peutGererProduits')) liens.push(['produits', 'Produits', 'produits']);
   if (s.gereStock() && s.peut('peutGererProduits')) liens.push(['stock', 'Stock', 'stock']);
-  liens.push(gerant ? ['reglages', 'Réglages', 'reglages'] : ['imprimante', 'Imprimante', 'imprimante']);
+  // Vendeur : pas d'onglet « Imprimante » (bouton imprimante en haut de la caisse, et dans « Mon compte »),
+  // pour que son menu tienne en 5 liens maximum, sans « Plus »
+  if (gerant) liens.push(['reglages', 'Réglages', 'reglages']);
   // Aide et messagerie avec l'équipe Kaislo (pastille : réponses pas encore lues)
   liens.push(['aide', 'Aide', 'whatsapp', s.messagesNonLus || null]);
   return liens;
@@ -88,7 +90,7 @@ export default function Coque() {
       <main className="principal">
         <Ecran />
       </main>
-      {/* Bulle de discussion : pas sur la caisse ni les tables (boutons d'encaissement en bas), ni sur Aide (messagerie déjà affichée) */}
+      {/* Bulle de discussion : pas sur l'écran de vente ni les tables (boutons de validation en bas), ni sur Aide (messagerie déjà affichée) */}
       {!['aide', 'caisse', 'tables'].includes(s.ecran) && (
         <BulleChat position="app" nonLus={s.messagesNonLus} messagerie={estServeur(s.d) ? <Messagerie /> : null} />
       )}

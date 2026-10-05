@@ -9,8 +9,8 @@ export default function sitemap() {
   const maintenant = new Date();
   return [
     { url: SITE_URL + '/', lastModified: maintenant, changeFrequency: 'weekly', priority: 1 },
-    { url: SITE_URL + '/caisse-restaurant/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
-    { url: SITE_URL + '/caisse-epicerie/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
+    { url: SITE_URL + '/gestion-restaurant/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
+    { url: SITE_URL + '/gestion-epicerie/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
     { url: SITE_URL + '/gestion-stock/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },
     ...Object.values(ACTIVITES).map((a) => ({ url: SITE_URL + a.lien, lastModified: maintenant, changeFrequency: 'monthly', priority: 0.8 })),
     { url: SITE_URL + '/tarifs/', lastModified: maintenant, changeFrequency: 'monthly', priority: 0.9 },

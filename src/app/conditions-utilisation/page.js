@@ -8,7 +8,7 @@ import { SOCIETE, CONTACT_EMAIL } from '@/config';
 
 export const metadata = {
   title: 'Conditions d’utilisation et d’abonnement',
-  description: 'Conditions générales d’utilisation et d’abonnement du logiciel de caisse Kaislo : compte, essai gratuit, paiement, résiliation, responsabilités.',
+  description: 'Conditions générales d’utilisation et d’abonnement du logiciel de gestion des ventes Kaislo : compte, essai gratuit, paiement, résiliation, responsabilités.',
   alternates: { canonical: '/conditions-utilisation/' },
 };
 
@@ -18,7 +18,7 @@ const SECTIONS = [
     titre: 'Objet',
     contenu: (
       <>
-        <p>Les présentes conditions encadrent l’utilisation de <b>Kaislo</b>, logiciel de caisse en ligne édité par {SOCIETE.nom} (« Amorac », « nous »), accessible sur le site, sur téléphone, tablette et ordinateur.</p>
+        <p>Les présentes conditions encadrent l’utilisation de <b>Kaislo</b>, logiciel de gestion des ventes en ligne édité par {SOCIETE.nom} (« Amorac », « nous »), accessible sur le site, sur téléphone, tablette et ordinateur.</p>
         <p>Kaislo s’adresse aux professionnels : restaurants, épiceries, boutiques et autres commerces (« le Commerce », « vous »). En créant un compte, vous déclarez agir pour les besoins de votre activité professionnelle et accepter ces conditions.</p>
       </>
     ),
@@ -42,7 +42,7 @@ const SECTIONS = [
     titre: 'Description du service',
     contenu: (
       <>
-        <p>Kaislo permet notamment d’enregistrer les ventes, d’imprimer ou d’envoyer un ticket, de suivre le crédit des clients, le stock, les dépenses, les journées de caisse et les statistiques. Les fonctions disponibles dépendent de l’offre choisie.</p>
+        <p>Kaislo permet notamment d’enregistrer les ventes, d’imprimer ou d’envoyer un ticket, de suivre le crédit des clients, le stock, les dépenses, les journées de vente et les statistiques. Les fonctions disponibles dépendent de l’offre choisie.</p>
         <p>Nous faisons évoluer le service pour l’améliorer. Si une évolution retire une fonction importante de votre offre, nous vous prévenons au moins 30 jours à l’avance.</p>
         <p>Le service est accessible 24 h/24, sauf maintenance, panne du réseau ou cas de force majeure. Nous faisons nos meilleurs efforts pour limiter les interruptions et prévenir des maintenances programmées.</p>
       </>
@@ -53,6 +53,16 @@ const SECTIONS = [
     titre: 'Essai gratuit',
     contenu: (
       <p>Chaque nouveau Commerce bénéficie d’un <b>essai gratuit de 30 jours</b>, avec toutes les fonctions, sans moyen de paiement demandé et sans engagement. À la fin de l’essai, il suffit de payer la formule de votre métier pour continuer. Sans abonnement, l’accès peut être limité, mais vos données restent conservées selon l’article « Fin du contrat ».</p>
+    ),
+  },
+  {
+    id: 'role',
+    titre: 'Rôle de Kaislo : outil de gestion, pas un système de paiement',
+    contenu: (
+      <>
+        <p>Kaislo permet au Commerce de noter ses ventes, de suivre son stock et ses crédits et de préparer ses comptes de fin de journée. <b>Kaislo ne reçoit, ne détient et ne transmet aucun paiement entre le Commerce et ses clients</b> : ceux-ci paient directement le Commerce. Les modes de paiement indiqués dans l’application (espèces, mobile money, carte…) servent uniquement à répartir les totaux dans les comptes du Commerce.</p>
+        <p>Le Commerce reste responsable du respect des règles qui s’appliquent à son activité dans son pays (comptabilité, fiscalité, facturation, appareils ou logiciels de caisse certifiés lorsqu’ils sont exigés). Kaislo ne remplace pas ces obligations ; il peut être utilisé en complément d’un appareil ou d’un logiciel imposé par la loi.</p>
+      </>
     ),
   },
   {
@@ -118,7 +128,7 @@ const SECTIONS = [
     contenu: (
       <>
         <p>Amorac s’engage à fournir le service avec soin (obligation de moyens). Nous ne sommes pas responsables des dommages indirects (perte de chiffre d’affaires, de clientèle…), ni des problèmes liés à votre matériel, votre connexion Internet, votre imprimante ou une mauvaise utilisation des comptes et codes PIN.</p>
-        <p>Vérifiez les montants affichés et comptez votre caisse : les calculs de Kaislo reposent sur les informations saisies par vos équipes.</p>
+        <p>Vérifiez les montants affichés et vérifiez vos comptes : les calculs de Kaislo reposent sur les informations saisies par vos équipes.</p>
         <p>Dans tous les cas, notre responsabilité est limitée au montant payé pour l’abonnement au cours des 12 derniers mois.</p>
       </>
     ),

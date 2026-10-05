@@ -145,7 +145,7 @@ export default function Accueil() {
             </div>
 
             <div className="carte">
-              <div className="ligne espace"><h3>Journées de caisse</h3><button className="lien" onClick={() => s.allerA('ventes')}>Tout voir</button></div>
+              <div className="ligne espace"><h3>Journées de vente</h3><button className="lien" onClick={() => s.allerA('ventes')}>Tout voir</button></div>
               {journees.map((j) => (
                 <button key={j.id} className="ligne" style={{ width: '100%', textAlign: 'left', marginTop: 12 }} onClick={() => (j.fermeLe ? s.ouvrir('ticketCloture', { cloture: j.cloture }) : s.ouvrir('cloture'))}>
                   <span className="grandit">
@@ -155,7 +155,7 @@ export default function Accueil() {
                   {j.fermeLe ? <BadgeEcart ecart={j.cloture.ecart} /> : <span className="badge">Ouverte</span>}
                 </button>
               ))}
-              {!journees.length && <p className="muet petit" style={{ marginTop: 10 }}>Aucune journée de caisse pour l’instant.</p>}
+              {!journees.length && <p className="muet petit" style={{ marginTop: 10 }}>Aucune journée de vente pour l’instant.</p>}
             </div>
 
             <Classement titre="Par vendeur" liste={st.vendeurs} suffixe={(e) => e.quantite + ' ventes'} />
@@ -169,7 +169,7 @@ export default function Accueil() {
 
 export function BadgeEcart({ ecart }) {
   const s = useKaislo();
-  if (ecart === 0) return <span className="badge">Caisse juste</span>;
+  if (ecart === 0) return <span className="badge">Comptes justes</span>;
   return <span className={`badge ${ecart < 0 ? 'rouge' : 'safran'}`}>{ecart < 0 ? 'Manque ' + s.prix(-ecart) : 'Excédent ' + s.prix(ecart)}</span>;
 }
 
@@ -227,7 +227,7 @@ function PremiersPas() {
   return (
     <div className="carte premiers-pas" style={{ marginBottom: 16, maxWidth: 720 }}>
       <h3>Bienvenue sur Kaislo</h3>
-      <p className="petit muet" style={{ marginTop: 4 }}>{pas.length} étapes pour être prêt à encaisser :</p>
+      <p className="petit muet" style={{ marginTop: 4 }}>{pas.length} étapes pour être prêt à vendre :</p>
       {pas.map((p, i) => (
         <button key={i} className={`pas ${p.fait ? 'fait' : ''}`} onClick={p.action}>
           <span className="pas-num">{p.fait ? <Icone nom="ok" taille="sm" /> : i + 1}</span>

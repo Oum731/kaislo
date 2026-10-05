@@ -79,7 +79,7 @@ export const trancheCaisse = (set, get) => ({
     if (!panier.length) return null;
     // On n'encaisse que si la caisse du jour est ouverte
     if (!get().caisseOuverte()) {
-      get().message('Ouvrez d’abord la caisse du jour', 'erreur');
+      get().message('Ouvrez d’abord la journée', 'erreur');
       get().ouvrir('ouverture');
       return null;
     }
@@ -271,7 +271,7 @@ export const trancheCaisse = (set, get) => ({
     set({ panier: [], commandeActive: null, remise: null });
   },
 
-  // Libère une table sans encaisser (erreur, client parti) : gérant seulement
+  // Libère une table sans terminer la vente (erreur, client parti) : gérant seulement
   libererTable(commandeId) {
     get().majDonnees((d) => ({ commandes: d.commandes.filter((c) => c.id !== commandeId) }));
     if (get().commandeActive === commandeId) set({ panier: [], commandeActive: null });

@@ -19,7 +19,7 @@ export const OFFRES_DEFAUT = [
   {
     id: 'starter',
     nom: 'Starter',
-    description: 'Caisse, tickets, carnet de crédit, statistiques. 1 appareil, 3 vendeurs.',
+    description: 'Ventes, tickets, carnet de crédit, statistiques. 1 appareil, 3 vendeurs.',
     prix: { MAD: 99, FCFA: 5000, EUR: 9, CAD: 14, USD: 10, GNF: 90000 },
   },
   {

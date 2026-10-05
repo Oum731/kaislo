@@ -370,7 +370,7 @@ function genererRemboursements(d, graine) {
       const date = new Date();
       date.setDate(date.getDate() - jour);
       date.setHours(18, Math.floor(rnd() * 60), 0, 0);
-      remboursements.push({ id: 'r' + remboursements.length, date: date.toISOString(), clientId: c.id, montant, mode: 'Espèces', utilisateurNom: 'Caisse' });
+      remboursements.push({ id: 'r' + remboursements.length, date: date.toISOString(), clientId: c.id, montant, mode: 'Espèces', utilisateurNom: 'Comptoir' });
     }
   }
   return remboursements;
@@ -383,7 +383,7 @@ function genererAnnulationsEtClotures(d, graine) {
   for (const v of d.ventes) {
     if (rnd() < 0.008) v.annulee = { date: v.date, par: gerant.nom, motif: 'Erreur de saisie' };
   }
-  // Journées de caisse : ouverture le matin, fermeture le soir
+  // Journées de vente : ouverture le matin, fermeture le soir
   const sessions = [];
   const vendeurs = d.utilisateurs.filter((u) => u.role === 'vendeur');
   const [hOuv, mOuv] = d.commerce.type === 'restaurant' ? [11, 0] : [7, 30];
@@ -395,7 +395,7 @@ function genererAnnulationsEtClotures(d, graine) {
     const fin = new Date(debut);
     fin.setHours(23, 45, 0, 0);
     const calcul = calculerCloture(d, debut, fin, fond);
-    // La plupart du temps la caisse est juste, parfois il manque un peu
+    // La plupart du temps la compte est juste, parfois il manque un peu
     const r = rnd();
     const pas = convertirDepuisDirham(5, d.commerce.devise);
     const ecart = arrondir(r < 0.6 ? 0 : r < 0.85 ? -(1 + Math.floor(rnd() * 10)) * pas : (1 + Math.floor(rnd() * 3)) * pas, d.commerce.devise);
