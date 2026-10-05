@@ -22,23 +22,24 @@ import Reglages, { BlocImprimante } from './ecrans/Reglages';
 import Feuilles from './feuilles/Feuilles';
 import { EnTete } from './EnTete';
 import Marque from '@/components/Marque';
+import { tr } from '@/lib/i18n';
 
 // Liste des liens du menu : [écran, libellé, icône, pastille]
 export function liensMenu(s) {
   const gerant = s.estGerant();
   const liens = [];
-  if (gerant) liens.push(['accueil', 'Accueil', 'accueil']);
-  liens.push(['caisse', 'Vendre', 'caisse']);
-  if (s.aTables()) liens.push(['tables', 'Tables', 'tables', (s.d.commandes || []).filter((c) => c.lignes.length).length || null]);
-  liens.push(['ventes', gerant ? 'Ventes' : 'Mes ventes', 'ventes']);
-  liens.push(['clients', 'Crédit', 'carnet']);
-  if (s.peut('peutGererProduits')) liens.push(['produits', 'Produits', 'produits']);
-  if (s.gereStock() && s.peut('peutGererProduits')) liens.push(['stock', 'Stock', 'stock']);
+  if (gerant) liens.push(['accueil', tr('Accueil'), 'accueil']);
+  liens.push(['caisse', tr('Vendre'), 'caisse']);
+  if (s.aTables()) liens.push(['tables', tr('Tables'), 'tables', (s.d.commandes || []).filter((c) => c.lignes.length).length || null]);
+  liens.push(['ventes', gerant ? tr('Ventes') : tr('Mes ventes'), 'ventes']);
+  liens.push(['clients', tr('Crédit'), 'carnet']);
+  if (s.peut('peutGererProduits')) liens.push(['produits', tr('Produits'), 'produits']);
+  if (s.gereStock() && s.peut('peutGererProduits')) liens.push(['stock', tr('Stock'), 'stock']);
   // Vendeur : pas d'onglet « Imprimante » (bouton imprimante en haut de l'écran de vente, et dans « Mon compte »),
   // pour que son menu tienne en 5 liens maximum, sans « Plus »
-  if (gerant) liens.push(['reglages', 'Réglages', 'reglages']);
+  if (gerant) liens.push(['reglages', tr('Réglages'), 'reglages']);
   // Aide et messagerie avec l'équipe Kaislo (pastille : réponses pas encore lues)
-  liens.push(['aide', 'Aide', 'whatsapp', s.messagesNonLus || null]);
+  liens.push(['aide', tr('Aide'), 'whatsapp', s.messagesNonLus || null]);
   return liens;
 }
 
@@ -53,9 +54,9 @@ export default function Coque() {
 
   return (
     <div className="coque">
-      <nav className="menu" aria-label="Menu principal">
+      <nav className="menu" aria-label={tr('Menu principal')}>
         <div className="menu-marque">
-          <span className="logo"><Marque /><span className="logo-texte">Kaislo</span></span>
+          <span className="logo"><Marque /><span className="logo-texte">{tr('Kaislo')}</span></span>
         </div>
         <div className="menu-liens">
           {liens.map(([ecran, libelle, icone, pastille], i) => (
@@ -73,7 +74,7 @@ export default function Coque() {
           {tropDeLiens && (
             <button className={`menu-lien seulement-mobile ${liens.slice(4).some(([e]) => e === s.ecran) ? 'actif' : ''}`} onClick={() => s.ouvrir('menu')}>
               <Icone nom="menu" />
-              <span>Plus</span>
+              <span>{tr('Plus')}</span>
             </button>
           )}
         </div>
@@ -104,7 +105,7 @@ function EcranImprimante() {
   const d = useKaislo((s) => s.d);
   return (
     <>
-      <EnTete surTitre={d.commerce.nom} titre="Imprimante" />
+      <EnTete surTitre={d.commerce.nom} titre={tr('Imprimante')} />
       <div className="contenu" style={{ maxWidth: 760 }}>
         <BlocImprimante />
       </div>

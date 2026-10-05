@@ -12,6 +12,7 @@
 // ------------------------------------------------------------
 import { genId } from '../utils/format.js';
 import { chemin } from '../../config.js';
+import { tr } from '../i18n/index.js';
 
 const BASE = 'kaislo-images';
 const TABLE = 'images';
@@ -78,7 +79,7 @@ export async function supprimerImage(ref) {
  */
 export function reduireImage(fichier, cote = 600, qualite = 0.8) {
   return new Promise((ok, erreur) => {
-    if (!fichier || !fichier.type.startsWith('image/')) return erreur(new Error('Ce fichier n’est pas une image'));
+    if (!fichier || !fichier.type.startsWith('image/')) return erreur(new Error(tr('Ce fichier n’est pas une image')));
     const url = URL.createObjectURL(fichier);
     const img = new Image();
     img.onload = () => {
@@ -95,7 +96,7 @@ export function reduireImage(fichier, cote = 600, qualite = 0.8) {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      erreur(new Error('Image illisible'));
+      erreur(new Error(tr('Image illisible')));
     };
     img.src = url;
   });

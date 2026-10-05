@@ -19,6 +19,7 @@ import { imprimerSysteme } from '@/lib/impression/systeme.js';
 import { lireLocal, ecrireLocal } from '@/lib/donnees/stockage.js';
 import { estServeur } from '@/lib/donnees/synchro.js';
 import { posteParId } from '@/lib/donnees/postes.js';
+import { tr } from '@/lib/i18n';
 
 // Tickets venus d'autres appareils : imprimés s'ils datent de moins de 15 minutes
 const FRAICHEUR_MS = 15 * 60000;
@@ -35,7 +36,7 @@ export const trancheImpression = (set, get) => ({
   async connecterImprimante() {
     try {
       await connecterImprimante();
-      get().message('Imprimante connectée : ' + get().imprimante.nom);
+      get().message(tr('Imprimante connectée : {0}', [get().imprimante.nom]));
     } catch (e) {
       // "NotFoundError" = la personne a fermé la fenêtre sans choisir
       if (e.name !== 'NotFoundError') get().message(e.message, 'erreur');
@@ -44,13 +45,13 @@ export const trancheImpression = (set, get) => ({
 
   deconnecterImprimante() {
     deconnecterImprimante();
-    get().message('Imprimante déconnectée');
+    get().message(tr('Imprimante déconnectée'));
   },
 
   // Imprime une liste de lignes déjà mise en page.
   // Sans imprimante Bluetooth (iPhone, ordinateur…) : fenêtre d'impression du système
   // (imprimante AirPrint, imprimante de tickets USB ou réseau).
-  async imprimer(lignes, messageOk = 'Ticket imprimé') {
+  async imprimer(lignes, messageOk = tr('Ticket imprimé')) {
     const { imprimante } = get();
     if (!imprimante.connectee && !imprimante.nom) {
       await imprimerSysteme(lignes, get().prefs.largeurTicket);
@@ -61,7 +62,7 @@ export const trancheImpression = (set, get) => ({
       await imprimerLignes(lignes, get().prefs);
       get().message(messageOk);
     } catch (e) {
-      get().message('Impression impossible : ' + e.message, 'erreur');
+      get().message(tr('Impression impossible : {0}', [e.message]), 'erreur');
     } finally {
       set({ impressionEnCours: false });
     }
@@ -85,13 +86,13 @@ export const trancheImpression = (set, get) => ({
     return get().imprimer(get().lignesVente(vente));
   },
   imprimerCloture(cl) {
-    return get().imprimer(get().lignesCloture(cl), 'Ticket de clôture imprimé');
+    return get().imprimer(get().lignesCloture(cl), tr('Ticket de clôture imprimé'));
   },
   imprimerCuisine(commande, lignes) {
-    return get().imprimer(get().lignesCuisine(commande, lignes), 'Ticket cuisine imprimé');
+    return get().imprimer(get().lignesCuisine(commande, lignes), tr('Ticket cuisine imprimé'));
   },
   imprimerRemboursement(r, client, soldeApres) {
-    return get().imprimer(get().lignesRemboursement(r, client, soldeApres), 'Reçu imprimé');
+    return get().imprimer(get().lignesRemboursement(r, client, soldeApres), tr('Reçu imprimé'));
   },
   /**
    * Lien WhatsApp qui ouvre la conversation avec le client, reçu déjà écrit.
@@ -101,7 +102,7 @@ export const trancheImpression = (set, get) => ({
     const { d } = get();
     const numero = numeroWhatsApp(telephone, d.commerce.pays);
     if (numero.replace(/\D/g, '').length < 8) {
-      get().message('Numéro de téléphone incomplet', 'erreur');
+      get().message(tr('Numéro de téléphone incomplet'), 'erreur');
       return null;
     }
     if (telephone !== vente.telephoneClient) {
@@ -121,7 +122,7 @@ export const trancheImpression = (set, get) => ({
   },
   envoyerAuPoste(vente) {
     get().majDonnees((d) => ({ ventes: d.ventes.map((v) => (v.id === vente.id ? { ...v, impressionDemandee: new Date().toISOString() } : v)) }));
-    get().message('Ticket envoyé à l’imprimante du poste « ' + get().nomPoste(vente.posteId) + ' »');
+    get().message(tr('Ticket envoyé à l’imprimante du poste « {0} »', [get().nomPoste(vente.posteId)]));
   },
 
   /**
@@ -155,11 +156,11 @@ export const trancheImpression = (set, get) => ({
     for (const [id, lignes] of aFaire) {
       deja.add(id);
       ecrireLocal(cle, [...deja].slice(-500));
-      await get().imprimer(lignes(), 'Ticket du poste imprimé');
+      await get().imprimer(lignes(), tr('Ticket du poste imprimé'));
     }
   },
 
   imprimerTest() {
-    return get().imprimer(ticketTest(get().d.commerce, get().prefs.largeurTicket), 'Ticket test envoyé');
+    return get().imprimer(ticketTest(get().d.commerce, get().prefs.largeurTicket), tr('Ticket test envoyé'));
   },
 });

@@ -5,18 +5,15 @@
 // ------------------------------------------------------------
 import Link from 'next/link';
 import { EnTeteSite, PiedSite, Faq, AppelFinal, LIEN_DEMO_RESTO, LIEN_INSCRIPTION } from '@/components/site/Site';
-import { FORMULES, REGLES_TARIFS, VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs';
-import { typeCommerce } from '@/lib/donnees/modeles';
+import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs';
+import TarifsPays from '@/components/site/TarifsPays';
 import { metaPage } from '@/lib/seo';
 
 export const metadata = metaPage({
-  title: 'Tarifs par métier : à partir de 9 000 FCFA ou 149 DH',
-  description: 'Tarifs Kaislo par métier, au Maroc (DH) et en Afrique de l’Ouest (FCFA) : épicerie, boutique, maquis, restaurant, bar, quincaillerie, pharmacie, grossiste. 1 poste et 5 vendeurs inclus, premier mois gratuit, 2 mois offerts à l’année.',
+  title: 'Tarifs par métier, dans la devise de votre pays',
+  description: 'Tarifs Kaislo par métier, affichés dans la devise de votre pays : épicerie, boutique, maquis, restaurant, bar, quincaillerie, pharmacie, grossiste. 1 poste et 5 vendeurs inclus, premier mois gratuit, 2 mois offerts à l’année.',
   alternates: { canonical: '/tarifs/' },
 });
-
-const nombre = (n) => Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
-const FAMILLES = [...new Set(FORMULES.map((f) => f.famille))];
 
 const EXEMPLES = [
   ['Maquis', '4 serveurs, 1 imprimante au comptoir', 1],
@@ -30,7 +27,7 @@ const QUESTIONS = [
   ['Le gérant compte-t-il dans les vendeurs ?', 'Non. Le gérant peut vendre depuis n’importe quel poste et ne compte jamais dans la limite.'],
   ['Faut-il une imprimante ?', 'Non, l’impression est facultative : le ticket peut partir par WhatsApp ou rester dans l’historique. L’imprimante est vendue ou louée à part si vous en voulez une.'],
   ['Comment payer ?', 'Par mobile money (Wave, Orange Money, MTN MoMo…), virement, ou espèces auprès de l’équipe. Au mois, ou à l’année avec 2 mois offerts.'],
-  ['Et dans les autres pays ?', 'Les prix sont aussi disponibles en euros, en dollars et dans les autres devises : écrivez-nous avec la bulle « Discuter avec nous ».'],
+  ['Les prix sont-ils les mêmes partout ?', 'Non : les prix s’affichent dans la devise de votre pays, avec une grille adaptée à votre marché. Si le pays détecté n’est pas le vôtre, changez-le au-dessus du tableau.'],
 ];
 
 export default function PageTarifs() {
@@ -52,34 +49,7 @@ export default function PageTarifs() {
 
         <section className="section">
           <div className="site-largeur pile" style={{ gap: 28 }}>
-            {FAMILLES.map((famille) => {
-              const formules = FORMULES.filter((f) => f.famille === famille);
-              return (
-                <div key={famille}>
-                  <h2 style={{ fontSize: 24 }}>{famille}</h2>
-                  <div className="tableau-tarifs">
-                    <table>
-                      <thead><tr><th>Métier</th><th>Maroc / mois</th><th>Côte d’Ivoire, Sénégal / mois</th></tr></thead>
-                      <tbody>
-                        {formules.flatMap((f) => f.types.filter((t) => t !== 'autre').map((t) => (
-                          <tr key={t}><td>{typeCommerce(t).nom}</td><td><b>{nombre(f.prix.MAD)} DH</b></td><td><b>{nombre(f.prix.FCFA)} FCFA</b></td></tr>
-                        )))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="petit muet" style={{ marginTop: 8 }}>Poste supplémentaire : +{nombre(formules[0].prixPoste.MAD)} DH ou +{nombre(formules[0].prixPoste.FCFA)} FCFA par mois.</p>
-                </div>
-              );
-            })}
-            <div className="carte pile">
-              <h3>Pour toutes les formules</h3>
-              <ul className="liste-points">
-                <li><b>Paiement annuel : {REGLES_TARIFS.moisOffertsAnnuel} mois offerts.</b></li>
-                <li><b>Premier mois gratuit</b> et <b>installation offerte</b> pendant le lancement.</li>
-                <li><b>Tarif fondateur</b> : remise de {REGLES_TARIFS.remiseFondateur} % à vie pour les {REGLES_TARIFS.placesFondateur} premiers clients.</li>
-                <li>Matériel à part : imprimante vendue ou louée (facultative).</li>
-              </ul>
-            </div>
+            <TarifsPays />
           </div>
         </section>
 
@@ -98,7 +68,6 @@ export default function PageTarifs() {
                 <tbody>{EXEMPLES.map(([c, o, p]) => <tr key={c}><td><b>{c}</b></td><td>{o}</td><td><b>{p}</b></td></tr>)}</tbody>
               </table>
             </div>
-            <p className="petit muet" style={{ marginTop: 10 }}>Exemple : un restaurant à Abidjan avec 2 postes paie {nombre(FORMULES.find((f) => f.id === 'restaurant').prix.FCFA)} + {nombre(FORMULES.find((f) => f.id === 'restaurant').prixPoste.FCFA)} = {nombre(FORMULES.find((f) => f.id === 'restaurant').prix.FCFA + FORMULES.find((f) => f.id === 'restaurant').prixPoste.FCFA)} FCFA par mois.</p>
           </div>
         </section>
 

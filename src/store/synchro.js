@@ -5,6 +5,7 @@
 // L'état « synchro » est affiché dans l'en-tête (à jour, en attente, hors ligne).
 // ------------------------------------------------------------
 import { appelApi } from '@/lib/api.js';
+import { tr } from '@/lib/i18n';
 import { avecStocks } from '@/lib/donnees/stock.js';
 import { enregistrerCommerce } from '@/lib/donnees/stockage.js';
 import { estServeur, chargerFile, tailleFile, preparerEnvoi, retirerDeLaFile, appliquerElements, fusionServeur } from '@/lib/donnees/synchro.js';
@@ -120,13 +121,13 @@ export const trancheSynchro = (set, get) => ({
         set({ synchro: blocage && enAttente ? { etat: 'erreur', enAttente, derniere: new Date().toISOString(), message: blocage } : { etat: 'ok', enAttente, derniere: new Date().toISOString(), message: '' } });
         get().imprimerPourPoste(); // appareil poste : tickets des vendeurs à imprimer
         // Compte désactivé ou commerce suspendu depuis un autre appareil
-        if (u && moi && !moi.actif) get().finSession('Votre compte a été désactivé par le gérant');
+        if (u && moi && !moi.actif) get().finSession(tr('Votre compte a été désactivé par le gérant'));
         else if (get().commerceSuspendu()) set({ etapeConnexion: 'suspendu', utilisateur: null });
         // Commerce réactivé par l'équipe Amorac : retour à l'écran de connexion
         else if (get().etapeConnexion === 'suspendu' && !get().utilisateur) set({ etapeConnexion: 'connexion' });
         return true;
       } catch (e) {
-        if (e.statut === 401) get().finSession('Session expirée : reconnectez-vous');
+        if (e.statut === 401) get().finSession(tr('Session expirée : reconnectez-vous'));
         set({ synchro: { ...get().synchro, etat: e.horsLigne ? 'hors-ligne' : 'erreur', enAttente: tailleFile(id), message: e.message } });
         return false;
       }

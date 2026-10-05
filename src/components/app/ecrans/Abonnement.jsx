@@ -9,6 +9,7 @@ import { etatAbonnement, LIBELLES_STATUT } from '@/lib/donnees/abonnement';
 import { FORMULES, formuleDuType, prixAbonnement, REGLES_TARIFS } from '@/lib/donnees/tarifs';
 import { postesDe } from '@/lib/donnees/postes';
 import { formatDate } from '@/lib/utils/format';
+import { tr } from '@/lib/i18n';
 
 // Tarif du commerce : { nom, postes, parMois, annuel, prixPoste, fondateur }
 export function tarifDuCommerce(d) {
@@ -18,7 +19,7 @@ export function tarifDuCommerce(d) {
   const postes = postesDe(d).length;
   const devise = d.commerce.devise;
   return {
-    nom: formule.nom, postes, fondateur: false, devise,
+    nom: tr(formule.nom), postes, fondateur: false, devise,
     parMois: prixAbonnement({ formule, devise, postes }).parMois,
     annuel: prixAbonnement({ formule, devise, postes, mois: 12 }).total,
     prixPoste: formule.prixPoste[devise] ?? 0,
@@ -35,33 +36,33 @@ export default function AbonnementCommerce() {
     <div className="carte pile">
       <div className="ligne espace">
         <div>
-          <p className="petit muet">Abonnement</p>
+          <p className="petit muet">{tr('Abonnement')}</p>
           <b>{tarif?.nom || 'Kaislo'}</b>
           {etat.fin && (
             <p className="tres-petit muet">
-              {etat.statut === 'expire' ? 'Terminé le ' : etat.statut === 'essai' ? 'Essai gratuit jusqu’au ' : 'Prochaine échéance le '}
+              {etat.statut === 'expire' ? tr('Terminé le ') : etat.statut === 'essai' ? tr('Essai gratuit jusqu’au ') : tr('Prochaine échéance le ')}
               {formatDate(etat.fin)}{etat.joursRestants > 0 ? ' (' + etat.joursRestants + ' j)' : ''}
             </p>
           )}
         </div>
-        <span className={`badge ${classe}`}>{LIBELLES_STATUT[etat.statut]}</span>
+        <span className={`badge ${classe}`}>{tr(LIBELLES_STATUT[etat.statut])}</span>
       </div>
       {tarif && (
         <div className="grille-2">
           <div>
-            <p className="tres-petit muet">Par mois</p>
+            <p className="tres-petit muet">{tr('Par mois')}</p>
             <b>{s.prix(tarif.parMois)}</b>
-            <p className="tres-petit muet">{tarif.postes} poste{tarif.postes > 1 ? 's' : ''}{tarif.postes > 1 ? ' (1 inclus + ' + (tarif.postes - 1) + ' × ' + s.prix(tarif.prixPoste) + ')' : ' inclus, 5 vendeurs'}</p>
+            <p className="tres-petit muet">{tr('{0} poste{1}{2}', [tarif.postes, tarif.postes > 1 ? 's' : '', tarif.postes > 1 ? ' (1 inclus + ' + (tarif.postes - 1) + ' × ' + s.prix(tarif.prixPoste) + ')' : ' inclus, 5 vendeurs'])}</p>
           </div>
           <div>
-            <p className="tres-petit muet">À l’année</p>
+            <p className="tres-petit muet">{tr('À l’année')}</p>
             <b>{s.prix(tarif.annuel)}</b>
-            <p className="tres-petit muet">{REGLES_TARIFS.moisOffertsAnnuel} mois offerts</p>
+            <p className="tres-petit muet">{tr('{0} mois offerts', [REGLES_TARIFS.moisOffertsAnnuel])}</p>
           </div>
         </div>
       )}
-      {tarif?.fondateur && <p className="info-verte petit">Tarif fondateur : remise à vie déjà appliquée. Merci de faire partie des premiers !</p>}
-      <p className="tres-petit muet">Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.</p>
+      {tarif?.fondateur && <p className="info-verte petit">{tr('Tarif fondateur : remise à vie déjà appliquée. Merci de faire partie des premiers !')}</p>}
+      <p className="tres-petit muet">{tr('Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.')}</p>
     </div>
   );
 }

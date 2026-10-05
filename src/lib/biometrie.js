@@ -7,6 +7,7 @@
 // sur un site en HTTPS.
 // ------------------------------------------------------------
 import { appelApi, nomAppareil } from './api.js';
+import { tr } from './i18n/index.js';
 
 const versOctets = (b64url) => Uint8Array.from(atob(b64url.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((b64url.length + 3) % 4)), (c) => c.charCodeAt(0));
 const versTexte = (tampon) => btoa(String.fromCharCode(...new Uint8Array(tampon))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -23,7 +24,7 @@ export async function biometrieDisponible() {
 // Nom adapté au téléphone, pour les boutons
 export function nomBiometrie() {
   if (typeof navigator === 'undefined') return 'l’empreinte';
-  return /iPhone|iPad|Macintosh/.test(navigator.userAgent) ? 'Face ID / Touch ID' : 'l’empreinte digitale';
+  return /iPhone|iPad|Macintosh/.test(navigator.userAgent) ? tr('Face ID / Touch ID') : tr('l’empreinte digitale');
 }
 
 /**
@@ -44,7 +45,7 @@ export async function activerBiometrie(jeton) {
     },
   });
   const r = cle.response;
-  if (!r.getPublicKey || !r.getAuthenticatorData) throw new Error('Navigateur trop ancien pour l’empreinte : mettez-le à jour');
+  if (!r.getPublicKey || !r.getAuthenticatorData) throw new Error(tr('Navigateur trop ancien pour l’empreinte : mettez-le à jour'));
   await appelApi('POST', '/biometrie/enregistrer', {
     credentialId: cle.id,
     clientDataJSON: versTexte(r.clientDataJSON),

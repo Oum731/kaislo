@@ -26,3 +26,5 @@ jobs:
         run: npm run build
       - name: Contrôle du référencement (titres, descriptions, plan du site…)
         run: npm run seo
+      - name: Traductions (anglais)
+        run: npm run i18n

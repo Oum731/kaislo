@@ -15,6 +15,7 @@
     "publier-hostinger": "node scripts/publier-hostinger.mjs",
     "captures": "node scripts/captures.mjs",
     "seo": "node scripts/verifier-seo.mjs",
+    "i18n": "node scripts/i18n.mjs --strict",
     "videos": "node scripts/videos-demo.mjs"
   },
   "dependencies": {

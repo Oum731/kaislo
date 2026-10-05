@@ -1,11 +1,14 @@
 // ------------------------------------------------------------
 import { coutVente } from './vente.js';
+import { localeIntl, tr, tt } from '../i18n/index.js';
 // Calcul des statistiques de ventes pour une période donnée.
 // (Dans la vraie app, ce calcul sera fait par le serveur.)
 // ------------------------------------------------------------
 
-const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-const MOIS = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
+// Noms courts des jours (lundi en premier) et des mois, dans la langue de l'application (« Lun », « Janv »…)
+const court = (texte) => { const t = texte.replace(/\./g, ''); return t.charAt(0).toUpperCase() + t.slice(1); };
+const joursCourts = () => Array.from({ length: 7 }, (_, i) => court(new Intl.DateTimeFormat(localeIntl(), { weekday: 'short' }).format(new Date(2024, 0, 1 + i)))); // le 1er janvier 2024 est un lundi
+const moisCourts = () => Array.from({ length: 12 }, (_, i) => court(new Intl.DateTimeFormat(localeIntl(), { month: 'short' }).format(new Date(2024, i, 1))));
 
 // Début de la période contenant "ref"
 function debutPeriode(periode, ref) {
@@ -32,16 +35,16 @@ function barresVides(periode, debut) {
   if (periode === 'jour') {
     return Array.from({ length: 17 }, (_, i) => ({ label: i + 7 + 'h', long: `${i + 7}h – ${i + 8}h`, valeur: 0 }));
   }
-  if (periode === 'semaine') return JOURS.map((j) => ({ label: j, long: j, valeur: 0 }));
+  if (periode === 'semaine') return joursCourts().map((j) => ({ label: j, long: j, valeur: 0 }));
   if (periode === 'mois') {
     const nbJours = new Date(debut.getFullYear(), debut.getMonth() + 1, 0).getDate();
     return Array.from({ length: nbJours }, (_, i) => ({
       label: String(i + 1),
-      long: `${i + 1} ${MOIS[debut.getMonth()].toLowerCase()}`,
+      long: `${i + 1} ${moisCourts()[debut.getMonth()].toLowerCase()}`,
       valeur: 0,
     }));
   }
-  return MOIS.map((m) => ({ label: m.slice(0, 1), long: m, valeur: 0 }));
+  return moisCourts().map((m) => ({ label: m.slice(0, 1), long: m, valeur: 0 }));
 }
 
 function indexBarre(periode, d) {
@@ -94,7 +97,7 @@ export function calculerStats(ventes, periode, maintenant = new Date(), depenses
     nb++;
     barres[indexBarre(periode, d)].valeur += v.total;
     cumuler(vendeurs, v.vendeurId, v.vendeurNom, v.total);
-    cumuler(paiements, v.paiement, v.paiement, v.total);
+    cumuler(paiements, v.paiement, tt(v.paiement), v.total);
     remises += v.remise || 0;
     if (v.paiement === 'Crédit') aCredit += v.total;
     // Marge brute = prix de vente − prix d'achat (si le prix d'achat est connu)
@@ -139,8 +142,8 @@ export function calculerStats(ventes, periode, maintenant = new Date(), depenses
 }
 
 export const LIBELLES_PERIODE = {
-  jour: { titre: "Aujourd'hui", prec: 'hier à la même heure' },
-  semaine: { titre: 'Cette semaine', prec: 'la semaine dernière' },
-  mois: { titre: 'Ce mois-ci', prec: 'le mois dernier' },
-  annee: { titre: 'Cette année', prec: "l'an dernier" },
+  jour: { get titre() { return tr("Aujourd'hui"); }, get prec() { return tr('hier à la même heure'); } },
+  semaine: { get titre() { return tr('Cette semaine'); }, get prec() { return tr('la semaine dernière'); } },
+  mois: { get titre() { return tr('Ce mois-ci'); }, get prec() { return tr('le mois dernier'); } },
+  annee: { get titre() { return tr('Cette année'); }, get prec() { return tr("l'an dernier"); } },
 };

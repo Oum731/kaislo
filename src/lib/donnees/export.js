@@ -7,6 +7,7 @@
 // ------------------------------------------------------------
 
 import { stockDe } from './stock.js';
+import { tr, tt } from '../i18n/index.js';
 
 // Date du jour pour le nom du fichier : 2026-10-03
 const jour = () => new Date().toISOString().slice(0, 10);
@@ -42,7 +43,7 @@ const montant = (x) => (Number(x) || 0).toString().replace('.', ',');
 
 // Une ligne par ticket
 export function exporterVentesCsv(d) {
-  const entete = ['Numéro', 'Date', 'Heure', 'Vendeur', 'Paiement', 'Client', 'Table', 'Articles', 'Sous-total', 'Remise', 'Total', 'Devise', 'Annulée', 'Motif d’annulation'];
+  const entete = [tr('Numéro'), tr('Date'), tr('Heure'), tr('Vendeur'), tr('Paiement'), tr('Client'), tr('Table'), tr('Articles'), tr('Sous-total'), tr('Remise'), tr('Total'), tr('Devise'), tr('Annulée'), tr('Motif d’annulation')];
   const lignes = d.ventes.map((v) => {
     const date = new Date(v.date);
     return [
@@ -50,7 +51,7 @@ export function exporterVentesCsv(d) {
       date.toLocaleDateString('fr-FR'),
       date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
       v.vendeurNom,
-      v.paiement,
+      tt(v.paiement),
       v.clientNom,
       v.table,
       v.lignes.map((l) => l.quantite + ' × ' + l.nom).join(' | '),
@@ -58,7 +59,7 @@ export function exporterVentesCsv(d) {
       montant(v.remise),
       montant(v.total),
       d.commerce.devise,
-      v.annulee ? 'oui' : '',
+      v.annulee ? tr('oui') : '',
       v.annulee?.motif,
     ];
   });
@@ -70,14 +71,14 @@ export function exporterVentesCsv(d) {
 // Inventaire : un article par ligne, quantité, prix et valeur du stock (pour compter ou pour le comptable)
 export function exporterInventaireCsv(d) {
   const categorie = (id) => d.categories.find((c) => c.id === id)?.nom || '';
-  const entete = ['Article', 'Catégorie', 'Code-barres', 'Unité', 'Quantité en stock', 'Alerte à partir de', 'Prix d’achat', 'Prix de vente', 'Valeur au prix d’achat', 'Valeur à la vente', 'Devise', 'État'];
+  const entete = [tr('Article'), tr('Catégorie'), tr('Code-barres'), tr('Unité'), tr('Quantité en stock'), tr('Alerte à partir de'), tr('Prix d’achat'), tr('Prix de vente'), tr('Valeur au prix d’achat'), tr('Valeur à la vente'), tr('Devise'), tr('État')];
   const lignes = d.produits
     .filter((p) => p.suiviStock)
     .sort((a, b) => categorie(a.categorieId).localeCompare(categorie(b.categorieId)) || a.nom.localeCompare(b.nom))
     .map((p) => {
       const stock = Number(stockDe(p)) || 0;
-      const etat = stock <= 0 ? 'Rupture' : stock <= (p.seuilAlerte ?? 5) ? 'Stock bas' : 'OK';
-      return [p.nom, categorie(p.categorieId), p.codeBarre, p.unite || 'pièce', montant(stock), montant(p.seuilAlerte ?? 5), montant(p.prixAchat), montant(p.prix), montant(stock * (p.prixAchat || 0)), montant(stock * p.prix), d.commerce.devise, etat];
+      const etat = stock <= 0 ? tr('Rupture') : stock <= (p.seuilAlerte ?? 5) ? tr('Stock bas') : 'OK';
+      return [p.nom, categorie(p.categorieId), p.codeBarre, tt(p.unite || 'pièce'), montant(stock), montant(p.seuilAlerte ?? 5), montant(p.prixAchat), montant(p.prix), montant(stock * (p.prixAchat || 0)), montant(stock * p.prix), d.commerce.devise, etat];
     });
   const csv = '﻿' + [entete, ...lignes].map((l) => l.map(cellule).join(';')).join('\r\n');
   telecharger(`kaislo-inventaire-${nomFichier(d.commerce.nom)}-${jour()}.csv`, csv, 'text/csv;charset=utf-8');

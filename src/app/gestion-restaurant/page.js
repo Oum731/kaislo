@@ -61,7 +61,7 @@ const contenu = {
     ['Et pour la vente à emporter ?', 'Validez directement la vente depuis l’écran de vente, ou créez une table « À emporter » pour envoyer la commande en cuisine.'],
     ['Faut-il une imprimante ?', 'Non, c’est facultatif : l’aperçu du ticket s’affiche à l’écran. Pour imprimer, une imprimante thermique Bluetooth 58 ou 80 mm suffit.'],
     ['Puis-je envoyer l’addition par WhatsApp ?', 'Oui : pour une livraison ou une commande par téléphone, cochez « Client à distance » et le reçu s’ouvre dans WhatsApp, prêt à être envoyé.'],
-    ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement selon votre métier : à partir de 149 DH ou 9 000 FCFA par mois, 1 poste et 5 vendeurs inclus, 2 mois offerts à l’année. Détail sur la page Tarifs.'],
+    ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement selon votre métier : au prix de votre pays (voir la page Tarifs), 1 poste et 5 vendeurs inclus, 2 mois offerts à l’année. Détail sur la page Tarifs.'],
   ],
   titreFinal: 'Testez la démo restaurant de Kaislo.',
   texteFinal: 'Un restaurant de démonstration déjà rempli : tables occupées, plats, statistiques. Ou créez directement le vôtre.',

@@ -4,6 +4,7 @@
 // Solde d'un client = total de ses achats à crédit − ses remboursements.
 // ------------------------------------------------------------
 import { CREDIT, numeroWhatsApp } from './modeles.js';
+import { tr } from '../i18n/index.js';
 
 export const venteACredit = (v) => !v.annulee && v.paiement === CREDIT;
 
@@ -45,7 +46,7 @@ export function totalCreditEnCours(d) {
 export function lienRappelWhatsApp(client, solde, commerce, montantFormate) {
   const tel = numeroWhatsApp(client.telephone, commerce.pays); // format international
   const texte =
-    `Bonjour ${client.nom}, ici ${commerce.nom}. ` +
-    `Petit rappel : votre crédit chez nous est de ${montantFormate}. Merci et bonne journée !`;
+    tr('Bonjour {0}, ici {1}. ', [client.nom, commerce.nom]) +
+    tr('Petit rappel : votre crédit chez nous est de {0}. Merci et bonne journée !', [montantFormate]);
   return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(texte);
 }

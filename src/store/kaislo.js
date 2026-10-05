@@ -23,6 +23,7 @@ import { trancheGestion } from './gestion.js';
 import { trancheImpression } from './impression.js';
 import { trancheSynchro } from './synchro.js';
 import { estServeur, noterChangements } from '@/lib/donnees/synchro.js';
+import { tr, choisirLangue, langueDuNavigateur } from '@/lib/i18n';
 
 // ---------- Bouton « retour » du téléphone ----------
 // Chaque écran et chaque fenêtre ajoutent une étape à l'historique du navigateur :
@@ -44,15 +45,20 @@ const trancheCommune = (set, get) => ({
   feuille: null, // fenêtre ouverte : { type: 'ticket', ...infos }
   toast: null,
   prefs: { largeurTicket: 58, accents: true },
+  langue: 'fr',
 
   // Appelé une seule fois au démarrage, dans le navigateur
   async demarrer() {
     if (get().pret || get().demarrage) return;
     set({ demarrage: true });
     // Les données de l'appareil (IndexedDB) sont chargées d'abord ; les anciennes données (localStorage) sont reprises une fois
-    surErreurStockage(() => get().message('Mémoire de l’appareil pleine : libérez de la place, vos ventes ne sont plus enregistrées sur cet appareil', 'erreur'));
+    surErreurStockage(() => get().message(tr('Mémoire de l’appareil pleine : libérez de la place, vos ventes ne sont plus enregistrées sur cet appareil'), 'erreur'));
     await initialiserStockage();
     set({ prefs: chargerPreferences() });
+    // Langue : celle choisie par l'utilisateur, sinon celle du navigateur
+    const langue = get().prefs.langue || langueDuNavigateur();
+    choisirLangue(langue);
+    set({ langue });
     // Identifiant de cet appareil (sert à savoir quel appareil a fait une vente, pour l'impression au poste)
     if (!get().prefs.appareilId) get().sauverPrefs({ appareilId: 'app' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) });
     get().initImprimante();
@@ -87,6 +93,13 @@ const trancheCommune = (set, get) => ({
     const u = get().utilisateur;
     set({ d: nouvelles, utilisateur: u ? nouvelles.utilisateurs.find((x) => x.id === u.id) || u : u });
     return nouvelles;
+  },
+
+  // Change la langue de l'application (l'écran se redessine entièrement)
+  changerLangue(l) {
+    choisirLangue(l);
+    get().sauverPrefs({ langue: l });
+    set({ langue: l });
   },
 
   sauverPrefs(partiel) {

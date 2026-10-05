@@ -9,11 +9,13 @@ import Coque from './Coque';
 import { chemin } from '@/config';
 import Chargement from '@/components/Chargement';
 import BulleChat from '@/components/BulleChat';
+import { tr } from '@/lib/i18n';
 
 export default function Application() {
   const pret = useKaislo((s) => s.pret);
   const connecte = useKaislo((s) => !!s.utilisateur && !!s.d);
   const toast = useKaislo((s) => s.toast);
+  const langue = useKaislo((s) => s.langue);
 
   // Les données sont dans le téléphone : on les lit une fois la page affichée
   useEffect(() => {
@@ -38,10 +40,10 @@ export default function Application() {
   }, []);
 
   // Écran de lancement : visible dès l'ouverture, avant même le chargement du JavaScript
-  if (!pret) return <Chargement texte="Ouverture de votre commerce…" />;
+  if (!pret) return <Chargement texte={tr('Ouverture de votre commerce…')} />;
 
   return (
-    <div className="app">
+    <div className="app" key={langue}>
       {connecte ? <Coque /> : <><Connexion /><BulleChat /></>}
       {toast && (
         <div key={toast.id} className={`toast ${toast.type === 'erreur' ? 'erreur' : ''}`} role="status">
