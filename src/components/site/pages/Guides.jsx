@@ -46,7 +46,8 @@ export function Guide({ lang, slug }) {
   const g = guideParSlug(slug, lang);
   const c = g[lang];
   const adresse = adresseGuide(g, lang);
-  const autres = GUIDES.filter((x) => x !== g).slice(0, 3);
+  // À lire aussi : d'abord les guides du même métier, puis les autres
+  const autres = [...GUIDES.filter((x) => x !== g && x.metier === g.metier), ...GUIDES.filter((x) => x !== g && x.metier !== g.metier)].slice(0, 4);
   const donnees = {
     '@context': 'https://schema.org', '@type': 'Article',
     headline: c.titre, description: c.description, inLanguage: lang,
