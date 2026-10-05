@@ -196,6 +196,7 @@ function InfosCommerce() {
       <p className="section-titre">{tr('Vos données')}</p>
       <div className="carte pile">
         <p className="petit muet">{tr('Vos données vous appartiennent. Téléchargez-les à tout moment : pour votre comptable, ou pour garder une copie.')}</p>
+        <button className="btn bloc" onClick={() => s.ouvrir('rapport')}>{tr('Rapport d’activité (Excel et PDF)')}</button>
         <div className="grille-2">
           <button className="btn secondaire" onClick={() => exporterVentesCsv(d)}>{tr('Ventes (Excel, CSV)')}</button>
           <button className="btn secondaire" onClick={() => exporterTout(d)}>{tr('Sauvegarde complète')}</button>

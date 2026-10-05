@@ -12,7 +12,10 @@ import {
   FeuilleRemboursement, FeuilleRecuRemboursement, FeuilleEntreeStock, FeuilleAjustement, FeuilleCompte, FeuilleMenu, FeuilleBiometrie,
 } from './FeuillesGestion';
 
+import { FeuilleRapport } from './FeuilleRapport';
+
 const FEUILLES = {
+  rapport: FeuilleRapport,
   options: FeuilleOptions,
   panier: FeuillePanier,
   ticket: FeuilleTicket,

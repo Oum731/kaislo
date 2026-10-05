@@ -274,3 +274,10 @@ Chaque commerce et chaque utilisateur est identifié par son numéro, enregistr�
 
 **Tester l'API sur l'ordinateur :** PHP 8.1+ avec une base SQLite de test :
 `.env` de test avec `DbDriver=sqlite`, puis `php -S 127.0.0.1:4320 api/index.php`.
+
+## Rapport d'activité (Excel et PDF)
+
+Réglages → « Vos données » → « Rapport d'activité », ou le bouton « Exporter » du tableau de bord (gérant). Période au choix : jour, semaine (lundi → dimanche), mois, année, avec navigation vers les périodes passées.
+- **Excel (.xlsx)** : un vrai classeur (exceljs) avec un onglet Résumé (chiffre d'affaires, tickets, panier moyen, remises, reçu, crédit, dépenses, solde, marge, annulations, paiements) puis ventes, articles, évolution, vendeurs, dépenses, crédits remboursés et dus, journées de vente, stock. Montants et dates sont de vrais nombres/dates, en-tête figé, filtres, totaux, mise en page A4 paysage.
+- **PDF** (jsPDF) : synthèse, graphique, tableaux ; détail des tickets pour le jour et la semaine.
+- Les chiffres sont calculés par `src/lib/donnees/rapport.js`, avec les mêmes règles que le tableau de bord et la fermeture de la journée (ventes annulées exclues, crédit ≠ argent reçu) ; `tests/rapport.test.mjs` et `tests/export-rapport.test.mjs` le vérifient. Sur téléphone, le fichier passe par la feuille de partage (WhatsApp, e-mail, Fichiers).
