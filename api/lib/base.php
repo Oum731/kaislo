@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 4;
+const VERSION_BASE = 5;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -148,6 +148,11 @@ const STRUCTURE = [
             'paye_le' => 'DATE', 'paye_par' => 'TEXTE', 'moyen' => 'VARCHAR(30)',
         ],
         'cle' => ['id'], 'uniques' => [['commercial_id', 'palier']], 'index' => [],
+    ],
+    // Autorisations données par le gérant (code PIN saisi sur l'appareil d'un vendeur : annuler une vente)
+    'autorisations' => [
+        'colonnes' => ['utilisateur_id' => 'ID', 'commerce_id' => 'ID', 'expire_le' => 'DATE'],
+        'cle' => ['utilisateur_id'], 'uniques' => [], 'index' => [],
     ],
     // Journal des actions importantes (inscription, connexion, suspension…)
     'journal' => [

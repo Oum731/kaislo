@@ -68,8 +68,11 @@ function routeDonneesLire(): never
 function routeDonneesEcrire(): never
 {
     $u = utilisateurConnecte();
-    $commerce = requete('SELECT statut FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
+    $commerce = requete('SELECT statut, essai_fin, periode_fin FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
     if (($commerce['statut'] ?? '') === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Amorac.', 403);
+    // Abonnement non payé : la lecture reste possible, mais plus l'enregistrement de nouvelles données
+    // (elles restent dans la file d'attente de l'appareil et partent dès que l'abonnement est réglé)
+    if (abonnementExpire($commerce)) throw new ErreurApi('Abonnement expiré : réglez-le pour synchroniser de nouveau (vos données restent sur cet appareil). Contactez Amorac.', 403);
     $elements = entree()['elements'] ?? null;
     if (!is_array($elements)) throw new ErreurApi('Liste « elements » attendue');
     if (count($elements) > ELEMENTS_PAR_ENVOI) throw new ErreurApi('Trop d’éléments en une fois (' . ELEMENTS_PAR_ENVOI . ' au maximum)');
@@ -93,6 +96,15 @@ function routeDonneesEcrire(): never
     repondre(['ok' => true, 'acceptes' => $acceptes, 'refuses' => $refuses]);
 }
 
+// Abonnement expiré depuis plus de JOURS_DE_GRACE jours (essai terminé ou période payée terminée)
+const JOURS_DE_GRACE = 7;
+function abonnementExpire(array $commerce): bool
+{
+    $fin = ($commerce['statut'] ?? '') === 'actif' ? ($commerce['periode_fin'] ?? null) : ($commerce['essai_fin'] ?? null);
+    if (!$fin) return false;
+    return substr((string) $fin, 0, 10) < gmdate('Y-m-d', time() - JOURS_DE_GRACE * 86400);
+}
+
 // Enregistre un élément ; renvoie null si accepté, sinon la raison du refus
 function enregistrerElement(array $u, array $e): ?string
 {
@@ -112,6 +124,10 @@ function enregistrerElement(array $u, array $e): ?string
     $existant = requete('SELECT contenu, modifie_le FROM elements WHERE commerce_id = ? AND type = ? AND id = ?', [$u['commerce_id'], $type, $id])->fetch() ?: null;
     $raison = droitManquant($u, $type, $supprime, $existant, $contenu);
     if ($raison) return $raison;
+    if ($type === 'ventes' && !$supprime) {
+        $raison = controlerVente($u, $existant, $contenu);
+        if ($raison) return $raison;
+    }
     // Une modification plus ancienne que celle déjà enregistrée est ignorée (la plus récente gagne)
     if ($existant && $existant['modifie_le'] > $modifieLe) return null;
 
@@ -155,6 +171,57 @@ function droitManquant(array $u, string $type, bool $supprime, ?array $existant,
         $avant = json_decode($existant['contenu'], true) ?: [];
         unset($avant['stock'], $contenu['stock']);
         return $avant == $contenu ? null : 'réservé au gérant';
+    }
+    return null;
+}
+
+// ------------------------------------------------------------
+// CONTRÔLE DES VENTES (le serveur ne fait pas confiance à l'appareil)
+//   - une vente enregistrée ne change plus : seule son annulation est possible, avec le code du gérant
+//     saisi sur l'appareil (le gérant, lui, peut corriger)
+//   - un vendeur ne crée des ventes qu'à son nom
+//   - lignes, quantités et montants doivent être valides ; un total qui ne correspond pas aux lignes
+//     est accepté mais signalé dans le journal (vérification par l'équipe, sans perdre la vente)
+// ------------------------------------------------------------
+function controlerVente(array $u, ?array $existant, array $vente): ?string
+{
+    $nombre = fn ($v) => is_int($v) || is_float($v);
+    $lignes = $vente['lignes'] ?? null;
+    if (!is_array($lignes) || !$lignes || count($lignes) > 200) return 'vente invalide : lignes manquantes';
+    $somme = 0.0;
+    foreach ($lignes as $l) {
+        if (!is_array($l) || !$nombre($l['quantite'] ?? null) || !$nombre($l['prixUnitaire'] ?? null) || !$nombre($l['total'] ?? null)) return 'vente invalide : ligne incorrecte';
+        if ($l['quantite'] <= 0 || $l['prixUnitaire'] < 0 || $l['total'] < 0) return 'vente invalide : montant négatif';
+        $somme += $l['total'];
+    }
+    foreach (['total', 'sousTotal'] as $champ) {
+        if (!$nombre($vente[$champ] ?? null) || $vente[$champ] < 0) return 'vente invalide : ' . $champ;
+    }
+    $remise = $vente['remise'] ?? 0;
+    if (!$nombre($remise) || $remise < 0) return 'vente invalide : remise';
+
+    if ($u['role'] !== 'gerant') {
+        if (!$existant) {
+            if (($vente['vendeurId'] ?? null) !== $u['id']) return 'vente au nom d’un autre vendeur';
+        } else {
+            $avant = json_decode($existant['contenu'], true) ?: [];
+            if ($vente == $avant) return null; // même vente renvoyée : rien ne change
+            if (!empty($avant['annulee'])) return 'vente déjà annulée';
+            // Champs sans effet sur les comptes, modifiables par tous : demande d'impression, numéro du client
+            $libres = ['impressionDemandee', 'telephoneClient'];
+            $changes = [];
+            foreach (array_unique([...array_keys($avant), ...array_keys($vente)]) as $k) {
+                if (($avant[$k] ?? null) != ($vente[$k] ?? null)) $changes[] = $k;
+            }
+            if (!array_diff($changes, $libres)) return null;
+            if ($changes !== ['annulee'] || empty($vente['annulee'])) return 'une vente enregistrée ne peut pas être modifiée';
+            if (!autorisationValide($u)) return 'annulation : code du gérant requis';
+            journaliser($u['commerce_id'], $u['id'], 'vente-annulee', ['vente' => $vente['id'] ?? null, 'numero' => $vente['numero'] ?? null]);
+        }
+    }
+    // Total cohérent avec les lignes ? (écart toléré : arrondis)
+    if (!$existant && (abs($somme - $vente['sousTotal']) > 1 || abs($vente['sousTotal'] - $remise - $vente['total']) > 1)) {
+        journaliser($u['commerce_id'], $u['id'], 'vente-incoherente', ['vente' => $vente['id'] ?? null, 'lignes' => $somme, 'sousTotal' => $vente['sousTotal'], 'remise' => $remise, 'total' => $vente['total']]);
     }
     return null;
 }

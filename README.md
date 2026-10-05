@@ -105,6 +105,9 @@ npm run captures -- stock   # une seule capture
 
 Les scènes sont décrites dans `scripts/captures.mjs`.
 
+**Sans PC :** GitHub → onglet Actions → « Captures et vidéos » → Run workflow (captures, vidéos, ou les deux). Le résultat est envoyé sur la branche `medias-auto` :
+regardez les images et les vidéos, puis ouvrez une pull request de `medias-auto` vers `main`.
+
 ## Vidéos de démonstration
 
 Les 5 vidéos de `public/videos/` (présentation, restaurant, épicerie, ajout d'articles, vendeurs)
@@ -167,6 +170,22 @@ en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/s
 6. Ouvrir `https://<domaine>/admin/` : saisir la clé `CleAdmin`, son nom, son e-mail et un mot de passe
    (10 caractères minimum, avec lettres et chiffres). Les autres membres de l'équipe sont ajoutés ensuite
    dans l'onglet « Équipe » (rôle « admin » ou « support » ; le support ne peut ni encaisser ni suspendre).
+
+## Stockage sur l'appareil
+
+Les données du commerce sont gardées dans l'appareil (IndexedDB, `src/lib/donnees/memoire.js`) : lecture instantanée, marche sans internet, et plus de limite de 5 Mo
+comme avec `localStorage` (testé avec 40 000 ventes). Au premier lancement après la mise à jour, les anciennes données de `localStorage` sont reprises automatiquement,
+puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un message d'erreur s'affiche.
+
+## Règles appliquées par le serveur
+
+- **Ventes** : une vente enregistrée ne change plus. Un vendeur ne peut que l'annuler, et seulement si le code du gérant a été saisi sur son appareil
+  (valable 6 heures, pour que l'annulation faite sans internet puisse partir ensuite) ; chaque annulation est notée dans le journal.
+  Un vendeur ne crée des ventes qu'à son nom. Lignes et montants doivent être valides ; un total qui ne correspond pas aux lignes est accepté
+  mais signalé dans le journal (`vente-incoherente`).
+- **Abonnement expiré** (essai ou période payée terminés depuis plus de 7 jours) : la lecture reste possible, l'envoi de nouvelles données est refusé.
+  Les ventes restent sur l'appareil et partent dès que l'équipe Amorac enregistre le paiement ou prolonge l'essai.
+- Ces règles sont testées avec une vraie base : `npm test` (tests/api.test.mjs).
 
 ## Espace Amorac (/admin)
 

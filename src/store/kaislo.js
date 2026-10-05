@@ -13,7 +13,7 @@
 //   synchro.js    : envoi / réception des données (commerces inscrits en ligne)
 // ------------------------------------------------------------
 import { create } from 'zustand';
-import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo } from '@/lib/donnees/stockage.js';
+import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo, initialiserStockage, surErreurStockage } from '@/lib/donnees/stockage.js';
 import { PAYS, paysDuNavigateur } from '@/lib/donnees/modeles.js';
 import { formatPrix, formatNombre } from '@/lib/utils/format.js';
 import { trancheSession } from './session.js';
@@ -45,8 +45,12 @@ const trancheCommune = (set, get) => ({
   prefs: { largeurTicket: 58, accents: true },
 
   // Appelé une seule fois au démarrage, dans le navigateur
-  demarrer() {
-    if (get().pret) return;
+  async demarrer() {
+    if (get().pret || get().demarrage) return;
+    set({ demarrage: true });
+    // Les données de l'appareil (IndexedDB) sont chargées d'abord ; les anciennes données (localStorage) sont reprises une fois
+    surErreurStockage(() => get().message('Mémoire de l’appareil pleine : libérez de la place, vos ventes ne sont plus enregistrées sur cet appareil', 'erreur'));
+    await initialiserStockage();
     set({ prefs: chargerPreferences() });
     // Identifiant de cet appareil (sert à savoir quel appareil a fait une vente, pour l'impression au poste)
     if (!get().prefs.appareilId) get().sauverPrefs({ appareilId: 'app' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) });
