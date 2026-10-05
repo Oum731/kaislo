@@ -260,6 +260,16 @@ button.liste-item:hover, .liste-item.cliquable:hover { background: var(--surface
   background: var(--safran); color: var(--encre); font-size: 10.5px; font-weight: 700; display: grid; place-items: center;
 }
 
+/* Menu admin sur téléphone : le bouton « Plus » ouvre les autres écrans au-dessus de la barre */
+.menu-plus-voile { position: fixed; inset: 0; z-index: 29; background: rgba(20, 33, 28, 0.35); }
+.menu-plus {
+  position: fixed; left: 10px; right: 10px; bottom: calc(64px + var(--bas-securise)); z-index: 31;
+  background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon); box-shadow: 0 8px 28px rgba(20, 33, 28, 0.22);
+  padding: 6px; display: grid; gap: 2px;
+}
+.menu-plus-lien { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 14px; border-radius: var(--rayon-petit); font-size: 15px; font-weight: 500; color: var(--encre); text-align: left; }
+.menu-plus-lien.actif { color: var(--vert); font-weight: 600; background: var(--fond-doux, rgba(0, 0, 0, 0.04)); }
+
 /* Tablette : menu compact à gauche */
 @media (min-width: 768px) {
   .coque { display: grid; grid-template-columns: 84px 1fr; }
