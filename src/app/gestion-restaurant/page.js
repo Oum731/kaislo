@@ -54,7 +54,7 @@ const contenu = {
   ],
   titreFaq: 'Questions des restaurateurs',
   questions: [
-    ['Comment fonctionne le ticket cuisine ?', 'Ouvrez une table, ajoutez les plats puis touchez « Envoyer en cuisine ». Seuls les nouveaux plats sont envoyés, sans les prix, avec le nom de la table. Vous pouvez ajouter des plats plus tard et encaisser à la fin du repas.'],
+    ['Comment fonctionne le ticket cuisine ?', 'Ouvrez une table, ajoutez les plats puis touchez « Envoyer en cuisine ». Seuls les nouveaux plats sont envoyés, sans les prix, avec le nom de la table. Vous pouvez ajouter des plats plus tard et valider la vente à la fin du repas.'],
     ['Puis-je gérer les accompagnements et les suppléments ?', 'Oui. Chaque plat peut avoir des groupes d’options : un choix obligatoire (accompagnement, portion) et des suppléments facultatifs, chacun avec son prix.'],
     ['Et pour la vente à emporter ?', 'Validez directement la vente depuis l’écran de vente, ou créez une table « À emporter » pour envoyer la commande en cuisine.'],
     ['Faut-il une imprimante ?', 'Non, c’est facultatif : l’aperçu du ticket s’affiche à l’écran. Pour imprimer, une imprimante thermique Bluetooth 58 ou 80 mm suffit.'],

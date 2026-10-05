@@ -11,7 +11,14 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = [
+  process.env.CHROME_PATH,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].filter(Boolean).find((c) => fs.existsSync(c));
+if (!CHROME) { console.error('Chrome introuvable : indiquez son chemin dans la variable CHROME_PATH.'); process.exit(1); }
 const VERT = '#1E5B43', CREME = '#F6F5F1', SAFRAN = '#E8A317', ENCRE = '#14211C';
 
 // La marque : un K dont la jambe se termine par une « boîte » (la caisse et le stock)

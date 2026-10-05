@@ -56,7 +56,7 @@ export default function PageAccueil() {
           lienDemo={LIEN_DEMO_RESTO}
           garanties={['Essai gratuit de 30 jours', 'Vos clients vous paient directement', 'Imprimante facultative']}
           capture={{ src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord Kaislo : chiffre d’affaires, marge, dépenses, crédit en cours' }}
-          captureMobile={{ src: '/captures/vente-mobile.webp', alt: 'Écran de caisse Kaislo sur téléphone' }}
+          captureMobile={{ src: '/captures/vente-mobile.webp', alt: 'Écran de vente Kaislo sur téléphone' }}
         />
 
         <SectionVideos vedette="presentation" vignettes={["restaurant", "epicerie", "produits", "vendeurs"]} toutes />

@@ -13,4 +13,7 @@ const source = fs.readFileSync(fichier, 'utf8');
 const nouveau = source.replace(/const VERSION = '[^']*';/, `const VERSION = '${version}';`);
 if (nouveau === source) { console.error('Ligne « const VERSION = … » introuvable dans out/sw.js'); process.exit(1); }
 fs.writeFileSync(fichier, nouveau);
+// Repère de version : https://kaislo.com/version.json et le champ « version » de /api/sante
+// permettent de vérifier d'un coup d'œil quelle publication est réellement en ligne.
+fs.writeFileSync('out/version.json', JSON.stringify({ version, publieLe: new Date().toISOString() }) + '\n');
 console.log('Service worker : version ' + version);

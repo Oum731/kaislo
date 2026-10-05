@@ -110,10 +110,10 @@ export const ACTIVITES = {
     chapo: 'Pains, viennoiseries, gâteaux : validez une vente en un geste aux heures de pointe, et sachez chaque soir ce qui s’est vendu.',
     etiquette: 'Pour les boulangeries et pâtisseries', titreFonctions: 'Le comptoir va vite, les comptes suivent.',
     chapoFonctions: 'Des grandes tuiles avec photo pour vendre vite, et des chiffres clairs le soir.',
-    capture: { src: '/captures/vente-ordi.webp', alt: 'Caisse rapide avec tuiles et photos' },
+    capture: { src: '/captures/vente-ordi.webp', alt: 'Écran de vente rapide avec tuiles et photos' },
     lignes: [{ titre: 'Ce qui se vend, heure par heure', texte: 'Voyez les ventes par heure et les meilleurs produits pour mieux préparer la fournée du lendemain.', capture: { src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord des ventes' } }],
     fonctions: [
-      ['caisse', 'Vente en un geste', 'Grandes tuiles avec photos : un pain, deux croissants, encaissé.', true],
+      ['caisse', 'Vente en un geste', 'Grandes tuiles avec photos : un pain, deux croissants, validé.', true],
       ['etoile', 'Commandes de gâteaux', 'Options de taille et de parfum, chacune avec son prix.'],
       ['carnet', 'Crédit des habitués', 'Les clients réguliers paient en fin de semaine.'],
       ['stock', 'Stock des ingrédients', 'Farine, sucre, beurre : suivez ce qui reste et ce que vous achetez.'],
