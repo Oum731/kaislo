@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // Service worker : garde une copie de l'application dans l'appareil
 // pour qu'elle s'ouvre vite, même avec une mauvaise connexion.
-// Changer VERSION à chaque mise en ligne force la mise à jour.
+// La version est remplacée automatiquement à chaque construction du site (scripts/version-sw.mjs).
 // ------------------------------------------------------------
 const VERSION = 'kaislo-v7'; // v7 : images, vidéos et icônes toujours à jour (seuls les fichiers /_next/static/ sont gardés tels quels)
 // Dossier du site ("/" sur Hostinger, "/kaislo/" sur GitHub Pages)

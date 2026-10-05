@@ -120,7 +120,7 @@ function diagnostiquerBase(array $c, PDOException $e): never
             1045 => 'Utilisateur ou mot de passe MySQL refusé : vérifiez User et Password du .env (noms exacts, avec le préfixe de Hostinger)',
             1044 => 'Cet utilisateur n’a pas accès à cette base : dans hPanel, rattachez l’utilisateur à la base',
             1049 => 'Base de données inconnue : vérifiez la clé Db du .env (nom exact, avec le préfixe de Hostinger)',
-            2002, 2006 => 'Serveur MySQL injoignable : supprimez la clé DbHost du .env (la valeur par défaut « localhost » convient à Hostinger)',
+            2002, 2006 => 'Serveur MySQL injoignable : essayez DbHost=127.0.0.1 dans le .env, ou l’hôte indiqué dans hPanel → Bases de données',
             default => 'Connexion à la base impossible : détail dans le journal d’erreurs PHP (ligne « [Kaislo API] »)',
         };
     }
