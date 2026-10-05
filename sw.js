@@ -3,7 +3,7 @@
 // pour qu'elle s'ouvre vite, même avec une mauvaise connexion.
 // La version est remplacée automatiquement à chaque construction du site (scripts/version-sw.mjs).
 // ------------------------------------------------------------
-const VERSION = 'kaislo-202610051442'; // v7 : images, vidéos et icônes toujours à jour (seuls les fichiers /_next/static/ sont gardés tels quels)
+const VERSION = 'kaislo-202610051447'; // v7 : images, vidéos et icônes toujours à jour (seuls les fichiers /_next/static/ sont gardés tels quels)
 // Dossier du site ("/" sur Hostinger, "/kaislo/" sur GitHub Pages)
 const RACINE = new URL(self.registration.scope).pathname;
 

@@ -151,6 +151,42 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/tenir-la-comptabilite-simple-de-son-commerce/" />
 </url>
 <url>
+<loc>https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-pharmacy-stock-and-expiry-dates/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-hardware-store-items-and-units/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-une-boulangerie-production-et-invendus/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-boulangerie-production-et-invendus/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-bakery-production-and-unsold-items/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-boulangerie-production-et-invendus/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-un-bar-stock-de-boissons-et-pertes/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-bar-stock-de-boissons-et-pertes/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-bar-drinks-stock-and-losses/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-bar-stock-de-boissons-et-pertes/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/gerer-un-grossiste-prix-par-palier-et-credit/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-grossiste-prix-par-palier-et-credit/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-wholesaler-tier-prices-and-credit/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-grossiste-prix-par-palier-et-credit/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/customer-loyalty-ideas-for-a-small-shop/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
+</url>
+<url>
 <loc>https://kaislo.com/guides/gerer-son-commerce-cote-d-ivoire/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-cote-d-ivoire/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-cote-d-ivoire/" />
@@ -452,6 +488,42 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/tenir-la-comptabilite-simple-de-son-commerce/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/simple-bookkeeping-for-a-small-business/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/tenir-la-comptabilite-simple-de-son-commerce/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-pharmacy-stock-and-expiry-dates/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-pharmacy-stock-and-expiry-dates/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-le-stock-dune-pharmacie-peremptions/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-hardware-store-items-and-units/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-hardware-store-items-and-units/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-quincaillerie-references-et-unites/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-bakery-production-and-unsold-items/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-une-boulangerie-production-et-invendus/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-bakery-production-and-unsold-items/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-une-boulangerie-production-et-invendus/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-bar-drinks-stock-and-losses/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-bar-stock-de-boissons-et-pertes/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-bar-drinks-stock-and-losses/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-bar-stock-de-boissons-et-pertes/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/managing-a-wholesaler-tier-prices-and-credit/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-un-grossiste-prix-par-palier-et-credit/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/managing-a-wholesaler-tier-prices-and-credit/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-un-grossiste-prix-par-palier-et-credit/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/customer-loyalty-ideas-for-a-small-shop/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/customer-loyalty-ideas-for-a-small-shop/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/fideliser-ses-clients-boutique-commerce/" />
 </url>
 <url>
 <loc>https://kaislo.com/en/guides/running-a-business-in-cote-d-ivoire/</loc>
