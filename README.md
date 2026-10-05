@@ -105,6 +105,9 @@ npm run captures -- stock   # une seule capture
 
 Les scènes sont décrites dans `scripts/captures.mjs`.
 
+**Sans PC :** GitHub → onglet Actions → « Captures et vidéos » → Run workflow (captures, vidéos, ou les deux). Le résultat est envoyé sur la branche `medias-auto` :
+regardez les images et les vidéos, puis ouvrez une pull request de `medias-auto` vers `main`.
+
 ## Vidéos de démonstration
 
 Les 5 vidéos de `public/videos/` (présentation, restaurant, épicerie, ajout d'articles, vendeurs)
