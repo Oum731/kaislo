@@ -27,7 +27,13 @@ export default function VueCommerciaux({ ctx, EnTeteAdmin }) {
   const charger = useCallback(async () => setDonnees(await ctx.api('GET', '/admin/commerciaux')), [ctx]);
   useEffect(() => { charger(); }, [charger]);
   if (!donnees) return <p className="muet petit" style={{ padding: 20 }}>Chargement…</p>;
-  const { commerciaux, programme } = donnees;
+  const { programme } = donnees;
+  const enAttente = donnees.commerciaux.filter((c) => c.enAttente);
+  const commerciaux = donnees.commerciaux.filter((c) => !c.enAttente);
+  const decider = async (c, action) => {
+    if (action === 'refuser' && !window.confirm('Refuser la demande de ' + c.nom + ' ? Elle sera supprimée.')) return;
+    try { await ctx.api('POST', '/admin/commercial-validation', { id: c.id, action }); await charger(); ctx.recharger(); } catch (e) { window.alert(e.message); }
+  };
   const total = (statut) => {
     const t = {};
     for (const c of commerciaux) for (const [dev, m] of Object.entries(c.totaux[statut] || {})) t[dev] = (t[dev] || 0) + m;
@@ -35,10 +41,10 @@ export default function VueCommerciaux({ ctx, EnTeteAdmin }) {
   };
   return (
     <>
-      <EnTeteAdmin surTitre={commerciaux.length + ' commerciaux · ' + programme.taux + ' % pendant ' + programme.dureeMois + ' mois'} titre="Commerciaux">
+      <EnTeteAdmin surTitre={commerciaux.length + ' commercial' + (commerciaux.length > 1 ? 'aux' : '') + ' · ' + programme.taux + ' % pendant ' + programme.dureeMois + ' mois'} titre="Commerciaux">
         <div className="ligne">
           <button className="btn secondaire" onClick={() => setRegles(true)}>Règles</button>
-          <button className="btn" onClick={() => setEdition({ nom: '', telephone: '', pays: 'CI', email: '', code: '', taux: programme.taux, actif: true, notes: '', pin: '' })}><Icone nom="plus" /> Commercial</button>
+          <button className="btn" onClick={() => setEdition({ nom: '', telephone: '', pays: 'CI', email: '', code: '', taux: programme.taux, actif: true, notes: '', pin: '' })}><Icone nom="plus" /><span className="cache-mobile"> Commercial</span></button>
         </div>
       </EnTeteAdmin>
       <div className="contenu" style={{ maxWidth: 1000 }}>
@@ -51,6 +57,24 @@ export default function VueCommerciaux({ ctx, EnTeteAdmin }) {
           Chaque commercial touche <b>{programme.taux} %</b> de ce que paient ses clients pendant <b>{programme.dureeMois} mois</b>. Rien n’est payable avant
           la validation : <b>{programme.moisValidation} mois payés</b> et des ventes chaque semaine. Ensuite, les mois 1 à {programme.moisValidation} sont versés d’un coup, puis chaque mois.
         </p>
+        {enAttente.length > 0 && (
+          <div className="carte pile" style={{ marginBottom: 14, borderColor: 'var(--safran)' }}>
+            <h3>{enAttente.length} inscription{enAttente.length > 1 ? 's' : ''} à valider</h3>
+            <p className="tres-petit muet">Ces personnes se sont inscrites elles-mêmes. Leur code parrain est déjà créé mais n’est accepté qu’après votre validation.</p>
+            {enAttente.map((c) => (
+              <div key={c.id} className="ligne espace" style={{ gap: 10, flexWrap: 'wrap', borderTop: '1px solid var(--bordure)', paddingTop: 10 }}>
+                <span>
+                  <b className="bloc-texte">{c.nom} <span className="badge">{c.code}</span></b>
+                  <span className="tres-petit muet bloc-texte">{c.telephone} · {c.pays}{c.email ? ' · ' + c.email : ''} · demandé le {formatDate(c.creeLe)}</span>
+                </span>
+                <span className="ligne" style={{ gap: 8 }}>
+                  <button className="btn petit" onClick={() => decider(c, 'valider')}>Valider</button>
+                  <button className="btn secondaire petit" onClick={() => decider(c, 'refuser')}>Refuser</button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="liste">
           {commerciaux.map((c) => (
             <button key={c.id} className={`liste-item ${c.actif ? '' : 'inactif'}`} onClick={() => setOuvert(c.id)}>
@@ -65,7 +89,7 @@ export default function VueCommerciaux({ ctx, EnTeteAdmin }) {
               </span>
             </button>
           ))}
-          {!commerciaux.length && <p className="muet petit" style={{ padding: 16 }}>Aucun commercial. Créez le premier avec « + Commercial » : il recevra un code parrain à donner aux commerçants.</p>}
+          {!commerciaux.length && <p className="muet petit" style={{ padding: 16 }}>Aucun commercial validé. Les commerciaux peuvent créer eux-mêmes leur compte sur /commercial/ (code parrain automatique) et vous le validez ici ; vous pouvez aussi en créer un avec « + Commercial ».</p>}
         </div>
       </div>
       {edition && <EditionCommercial b={edition} setB={setEdition} ctx={ctx} surFin={() => { setEdition(null); charger(); }} />}
@@ -88,7 +112,7 @@ function EditionCommercial({ b, setB, ctx, surFin }) {
         <label className="champ"><span>Pays</span><select value={b.pays} onChange={maj('pays')}>{PAYS.filter((p) => p.indicatif).map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}</select></label>
         <ChampTelephone libelle="Téléphone (pour se connecter à son espace)" pays={b.pays} valeur={b.telephone} surChanger={(v) => setB({ ...b, telephone: v })} />
         <div className="grille-2">
-          <label className="champ"><span>Code parrain</span><input value={b.code} onChange={(e) => setB({ ...b, code: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) })} placeholder="Ex : AWA25" /></label>
+          <label className="champ"><span>Code parrain</span><input value={b.code} onChange={(e) => setB({ ...b, code: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) })} placeholder={b.id ? 'Ex : AWA25' : 'Automatique si vide'} /></label>
           <label className="champ"><span>Commission (%)</span><input type="number" min="0" max="60" value={b.taux} onChange={maj('taux')} /></label>
         </div>
         <label className="champ"><span>E-mail (facultatif)</span><input type="email" value={b.email || ''} onChange={maj('email')} /></label>

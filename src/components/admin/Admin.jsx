@@ -17,7 +17,7 @@ import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnee
 import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
-import { prixAbonnement } from '@/lib/donnees/tarifs';
+import { prixAbonnement, prixCatalogue } from '@/lib/donnees/tarifs';
 import VueCommerciaux from './Commerciaux';
 
 const JOUR = 86400000;
@@ -125,6 +125,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [ouvert, setOuvert] = useState(null);
   const [nonLus, setNonLus] = useState(0);
   const [plusOuvert, setPlusOuvert] = useState(false);
+  const [commerciauxAttente, setCommerciauxAttente] = useState(0);
   const api = useCallback((m, c, corps) => appelApi(m, c, corps, jeton).catch((e) => { if (e.statut === 401) surDeconnexion(); throw e; }), [jeton, surDeconnexion]);
   const recharger = useCallback(async () => {
     const rep = await api('GET', '/admin/commerces');
@@ -132,12 +133,13 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
     setDonnees({ commerces, formules: rep.formules, regles: rep.regles, fondateurs: rep.fondateurs });
     // Pastille « Messages » : messages des commerces non lus + messages des visiteurs non traités
     setNonLus(commerces.reduce((n, c) => n + c.messagesNonLus, 0) + (rep.contactsNonTraites || 0));
+    setCommerciauxAttente(rep.commerciauxEnAttente || 0); // pastille « Commerciaux » : inscriptions à valider
   }, [api]);
   useEffect(() => { recharger(); const m = setInterval(recharger, 60000); return () => clearInterval(m); }, [recharger]);
 
   const estAdmin = admin.role === 'admin';
   const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'],
-    ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse'], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
+    ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
   const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin };
 
@@ -153,15 +155,15 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
             </button>
           ))}
           <button className={`menu-lien seulement-mobile ${plusOuvert || liens.findIndex(([e]) => e === ecran) >= 4 ? 'actif' : ''}`} onClick={() => setPlusOuvert(!plusOuvert)} aria-expanded={plusOuvert} aria-controls="menu-plus">
-            <Icone nom="menu" /><span>Plus</span>
+            <Icone nom="menu" /><span>Plus</span>{commerciauxAttente ? <span className="pastille-nb">{commerciauxAttente}</span> : null}
           </button>
         </div>
         {plusOuvert && (
           <div className="seulement-mobile">
             <div className="menu-plus-voile" onClick={() => setPlusOuvert(false)} aria-hidden="true" />
             <div className="menu-plus" id="menu-plus">
-              {liens.slice(4).map(([e, l, i]) => (
-                <button key={e} className={`menu-plus-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); setPlusOuvert(false); window.scrollTo(0, 0); }}><Icone nom={i} /><span>{l}</span></button>
+              {liens.slice(4).map(([e, l, i, p]) => (
+                <button key={e} className={`menu-plus-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); setPlusOuvert(false); window.scrollTo(0, 0); }}><Icone nom={i} /><span>{l}</span>{p ? <span className="badge safran" style={{ marginLeft: 'auto' }}>{p}</span> : null}</button>
               ))}
               <button className="menu-plus-lien" onClick={surDeconnexion}><Icone nom="sortie" /><span>Sortir ({initiales(admin.nom)})</span></button>
             </div>
@@ -488,6 +490,16 @@ function VueTarifs({ ctx }) {
             <label className="champ"><span>Places au tarif fondateur</span><input type="number" min="0" value={regles.placesFondateur} onChange={(e) => setRegles({ ...regles, placesFondateur: e.target.value })} /></label>
           </div>
           <p className="tres-petit muet">Tarif fondateur : {ctx.fondateurs}/{ctx.regles.placesFondateur} places attribuées (case à cocher dans la fiche de chaque commerce). Essai gratuit de {DUREE_ESSAI_JOURS} jours pour tous.</p>
+          <h3 style={{ marginTop: 6 }}>Code parrain et prix catalogue</h3>
+          <p className="petit muet">Les prix saisis ci-dessous sont ceux des clients inscrits <b>avec un code parrain</b> (vos tarifs actuels). Les nouveaux clients <b>sans code</b> paient le prix catalogue : prix ÷ (1 − remise), arrondi au pas supérieur. Le code donne ainsi une vraie remise sans baisser vos tarifs actuels.</p>
+          <div className="grille-3">
+            <label className="champ"><span>Remise du code parrain (%)</span><input type="number" min="0" max="40" value={regles.remiseParrain ?? 10} onChange={(e) => setRegles({ ...regles, remiseParrain: e.target.value })} /></label>
+            <label className="champ"><span>Prix catalogue pour les nouveaux clients sans code</span>
+              <select value={regles.catalogueActif === false ? 'non' : 'oui'} onChange={(e) => setRegles({ ...regles, catalogueActif: e.target.value === 'oui' })}><option value="oui">Oui</option><option value="non">Non (prix actuels pour tous)</option></select>
+            </label>
+            <label className="champ"><span>Catalogue pour les inscriptions à partir du</span><input type="date" value={regles.catalogueDepuis || ''} onChange={(e) => setRegles({ ...regles, catalogueDepuis: e.target.value })} /></label>
+          </div>
+          <p className="tres-petit muet">Les commerces déjà inscrits avant cette date gardent leur prix actuel. Si vous choisissez « Non », les clients avec code paient le même prix que les autres : le code ne donne alors aucune remise.</p>
         </div>
         {formules.map((f, i) => (
           <div key={f.id} className="carte pile" style={{ marginBottom: 14 }}>
@@ -503,6 +515,7 @@ function VueTarifs({ ctx }) {
                 </label>
               ))}
             </div>
+            <p className="tres-petit muet">Prix catalogue (sans code parrain) : {DEVISES.map((dev) => formatPrix(prixCatalogue(Number(f.prix?.[dev]) || 0, dev, Number(regles.remiseParrain) || 0), dev)).join(' · ')}</p>
             <p className="petit muet">Poste supplémentaire, par mois</p>
             <div className="grille-3">
               {DEVISES.map((dev) => (
@@ -583,13 +596,13 @@ function FicheCommerce({ c, ctx, fermer }) {
   const [postes, setPostes] = useState(c.tarif.postes);
   const [mois, setMois] = useState(1);
   // Montant proposé : formule + postes supplémentaires, 12 mois = mois offerts, remise fondateur
-  const calcul = (f = formule, p = postes, m = mois) => prixAbonnement({ formule: ctx.formules.find((x) => x.id === f), devise: dev, postes: p, mois: m, fondateur: c.commerce.fondateur, regles: ctx.regles });
+  const calcul = (f = formule, p = postes, m = mois) => prixAbonnement({ formule: ctx.formules.find((x) => x.id === f), devise: dev, postes: p, mois: m, fondateur: c.commerce.fondateur, regles: ctx.regles, mode: c.tarif.mode });
   const [montant, setMontant] = useState(calcul().total);
   const choisir = (x) => { const n = { formule, postes, mois, ...x }; if ('formule' in x) setFormule(x.formule); if ('postes' in x) setPostes(x.postes); if ('mois' in x) setMois(x.mois); setMontant(calcul(n.formule, n.postes, n.mois).total); };
   const [commerciaux, setCommerciaux] = useState(null);
   // Tarif fondateur coché ou décoché : le montant proposé est recalculé
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setMontant(calcul().total); }, [c.commerce.fondateur]);
+  useEffect(() => { setMontant(calcul().total); }, [c.commerce.fondateur, c.tarif.mode]);
   const [moyen, setMoyen] = useState(MOYENS[0]);
   const [notes, setNotes] = useState(c.commerce.notes || '');
   const [telephone, setTelephone] = useState(c.commerce.telephone || '');
@@ -705,7 +718,7 @@ function FicheCommerce({ c, ctx, fermer }) {
                   </select>
                 </label>
               </div>
-              <p className="tres-petit muet">Prix calculé : {formatPrix(calcul().parMois, dev)}/mois{c.commerce.fondateur ? ' avec la remise fondateur' : ''} → <b>{formatPrix(calcul().total, dev)}</b> pour {mois} mois. Saisissez le montant réellement reçu.</p>
+              <p className="tres-petit muet">Prix calculé : {formatPrix(calcul().parMois, dev)}/mois{c.commerce.fondateur ? ' avec la remise fondateur' : ''}{c.tarif.mode === 'catalogue' ? ' (prix catalogue, sans code parrain)' : c.commerce.commercialId ? ' (avec code parrain)' : ''} → <b>{formatPrix(calcul().total, dev)}</b> pour {mois} mois. Saisissez le montant réellement reçu.</p>
               <div className="grille-2">
                 <label className="champ"><span>Montant reçu ({symbole(dev)})</span><ChampMontant valeur={montant} surChanger={setMontant} /></label>
                 <label className="champ"><span>Moyen de paiement</span>

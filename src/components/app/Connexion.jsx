@@ -22,6 +22,7 @@ import InstallerApp from './InstallerApp';
 import Marque from '@/components/Marque';
 import { tr, tt, langueActive } from '@/lib/i18n';
 import { trouverPays } from '@/lib/pays-visiteur';
+import { REGLES_TARIFS } from '@/lib/donnees/tarifs';
 
 export default function Connexion() {
   const s = useKaislo();
@@ -338,6 +339,7 @@ function Inscription() {
           <label className="champ"><span>{tr('Code parrain (facultatif)')}</span>
             <input value={f.codeParrain} onChange={(e) => setF({ ...f, codeParrain: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) })} placeholder={tr('Ex : AWA25')} autoCapitalize="characters" />
           </label>
+          <p className="tres-petit muet">{tr('Avec un code parrain valide, vous bénéficiez d’environ {0} % de remise sur l’abonnement.', [REGLES_TARIFS.remiseParrain])}</p>
           <label className="case-accord">
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
             <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('et la')} <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">{tr('politique de confidentialité')}</a> {tr('de Kaislo.')}</span>

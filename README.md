@@ -231,10 +231,19 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   « Cet appareil imprime les tickets du poste… » + imprimante Bluetooth connectée, application ouverte
   (synchronisation toutes les 5 secondes).
 - Paiement annuel : 2 mois offerts. Tarif fondateur : −20 % à vie, 20 places (case dans la fiche du commerce).
+- **Code parrain et prix catalogue** : les prix de la grille sont ceux des clients inscrits **avec un code parrain** (les tarifs
+  actuels, inchangés). Les nouveaux clients **sans code** paient le **prix catalogue** = prix ÷ (1 − remise), arrondi au pas supérieur
+  (FCFA 500, MAD 5, GNF 5 000, EUR/CAD/USD 1) : par défaut remise de 10 %, catalogue pour les inscriptions à partir du 06/10/2026
+  (les commerces déjà inscrits gardent leur prix). Réglages dans `/admin` → Tarifs → « Code parrain et prix catalogue » ;
+  « Non » = prix actuels pour tous (le code ne donne alors aucune remise).
 
 ## Programme des commerciaux
 
-- Dans `/admin` → Commerciaux : créer un commercial (nom, téléphone, **code parrain**, taux, code PIN à 6 chiffres).
+- **Le commercial crée lui-même son compte** sur `https://kaislo.com/commercial/` (bouton « Créer mon compte » ; lien direct
+  `/commercial/?inscription=1`) : nom, numéro, e-mail facultatif, code PIN à 6 chiffres. Son **code parrain est généré
+  automatiquement** (ex. `AWA42`). La demande reste « en attente » : dans `/admin` → Commerciaux (pastille sur le menu), l'équipe
+  la **valide** ou la **refuse**. Tant qu'elle n'est pas validée, il ne peut pas se connecter et son code n'est pas accepté.
+  L'équipe peut aussi créer un commercial à la main (« + Commercial », code automatique si le champ est vide).
 - Le commerçant saisit le code à l'inscription, ou s'inscrit avec le lien `https://kaislo.com/app/?inscription=1&ref=CODE`.
 - Commission : 25 % de ce que paie le client pendant 12 mois (une ligne par mois payé). Rien n'est payable avant la
   **validation** (6 mois payés + des ventes chaque semaine, contrôlé par le système ; l'équipe peut passer outre).

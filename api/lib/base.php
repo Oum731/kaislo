@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 5;
+const VERSION_BASE = 6;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -123,6 +123,7 @@ const STRUCTURE = [
             'id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)', 'cle_telephone' => 'VARCHAR(20)', 'email' => 'TEXTE',
             'pays' => 'VARCHAR(4)', 'code' => 'VARCHAR(20)', 'pin_hash' => 'TEXTE', 'taux' => 'MONTANT', 'actif' => 'ENTIER',
             'notes' => 'LONG', 'cree_le' => 'DATE', 'vu_le' => 'DATE',
+            'valide_le' => 'DATE', // NULL + inactif = inscription en attente de validation par l'équipe Amorac
         ],
         'cle' => ['id'], 'uniques' => [['code'], ['cle_telephone']], 'index' => [],
     ],
@@ -235,6 +236,9 @@ function migrer(PDO $pdo, string $driver): void
         $essayer("ALTER TABLE paiements ADD COLUMN details $texteLong NULL");
     }
 
+    // Bases en version 4 ou 5 : validation des commerciaux (ceux qui existent déjà sont considérés comme validés)
+    if ($version >= 4 && $version < 6) $essayer('ALTER TABLE commerciaux ADD COLUMN valide_le VARCHAR(30) NULL');
+
     foreach (STRUCTURE as $table => $t) {
         $lignes = [];
         foreach ($t['colonnes'] as $nom => $type) {
@@ -252,6 +256,7 @@ function migrer(PDO $pdo, string $driver): void
             foreach ($t['index'] as $i => $cols) $pdo->exec("CREATE INDEX IF NOT EXISTS i_{$table}_$i ON $table (" . implode(', ', $cols) . ')');
         }
     }
+    if ($version >= 4 && $version < 6) $essayer('UPDATE commerciaux SET valide_le = cree_le WHERE valide_le IS NULL');
     // Numéros déjà enregistrés : mis au format international (pays du commerce)
     if ($version >= 1 && $version < 3) normaliserNumerosExistants($pdo);
     $pdo->prepare('INSERT INTO kaislo_version (version) VALUES (?)')->execute([VERSION_BASE]);

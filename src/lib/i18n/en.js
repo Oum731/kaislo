@@ -1490,5 +1490,12 @@ export const EN = {
   "Prix par quantité": "Prices by quantity",
   "Options par article : unité, carton, lot, chacune avec son prix.": "Options per item: unit, carton, batch, each with its own price.",
   "Puis-je vendre à l’unité et au carton ?": "Can I sell by the unit and by the carton?",
-  "Oui : ajoutez des options à l’article (unité, carton de 12, pack…), chacune avec son prix.": "Yes: add options to the item (unit, carton of 12, pack…), each with its own price."
+  "Oui : ajoutez des options à l’article (unité, carton de 12, pack…), chacune avec son prix.": "Yes: add options to the item (unit, carton of 12, pack…), each with its own price.",
+  "Avec un code parrain valide, vous bénéficiez d’environ {0} % de remise sur l’abonnement.": "With a valid referral code, you get about {0}% off the subscription.",
+  "Code parrain : remise de {0} % sur l’abonnement (prix catalogue : {1} par mois).": "Referral code: {0}% off the subscription (list price: {1} per month).",
+  "Avec un code parrain": "With a referral code",
+  "Code parrain": "Referral code",
+  ": un commercial Kaislo vous a présenté l’application ? Saisissez son code à la création de votre compte et payez le prix de la colonne « Avec un code parrain ».": ": did a Kaislo sales agent introduce you to the app? Enter their code when you create your account and pay the price in the “With a referral code” column.",
+  "Comment fonctionne le code parrain ?": "How does the referral code work?",
+  "Un commercial Kaislo vous a présenté l’application et vous a donné son code ? Saisissez-le à la création de votre compte : vous payez le prix de la colonne « Avec un code parrain », soit environ 10 % de moins que le prix catalogue. Le code se saisit une seule fois, à l’inscription.": "Did a Kaislo sales agent introduce you to the app and give you their code? Enter it when you create your account: you pay the price in the “With a referral code” column, about 10% less than the list price. The code is entered once, at sign-up."
 };
