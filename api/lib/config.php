@@ -13,7 +13,7 @@
 //   DbDriver            : « mysql » (par défaut) ou « sqlite » (tests sur ordinateur)
 //   DbFichier           : chemin du fichier SQLite (tests seulement)
 //   CleAdmin            : clé pour créer le premier compte de l'espace Amorac (12 caractères ou plus)
-//   EmailEquipe         : adresse qui reçoit les messages des commerces (par défaut contact@kaislo.com)
+//   EmailEquipe         : adresse qui reçoit les messages des commerces (par défaut contact@amorac.com)
 //   EmailExpediteur     : expéditeur des e-mails envoyés par Kaislo (ex : no-reply@kaislo.com)
 // ------------------------------------------------------------
 

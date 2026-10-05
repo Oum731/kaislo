@@ -34,7 +34,7 @@ function routeContact(): never
     $page = mb_substr((string) ($e['page'] ?? ''), 0, 120);
     requete('INSERT INTO contacts (id, nom, contact, texte, page, ip_hash, cree_le) VALUES (?, ?, ?, ?, ?, ?, ?)', [nouvelId('ct'), $nom, $contact, $texte, $page, $ip, maintenant()]);
     envoyerEmail(
-        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
+        lireFichierEnvCle('EmailEquipe') ?? 'contact@amorac.com',
         'Kaislo — question d’un visiteur : ' . $nom,
         "Un visiteur a écrit depuis le site ($page).\n\nNom : $nom\nContact : $contact\n\n$texte\n\nÀ traiter dans l'espace Amorac → Messages → Visiteurs : https://" . (domaineSite() ?: 'kaislo.com') . "/admin/"
     );
