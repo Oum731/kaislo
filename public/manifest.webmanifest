@@ -3,6 +3,7 @@
   "short_name": "Kaislo",
   "description": "La gestion des ventes et du stock, simple, pour tous les commerces.",
   "lang": "fr",
+  "id": "./app/",
   "start_url": "./app/",
   "scope": "./",
   "display": "standalone",

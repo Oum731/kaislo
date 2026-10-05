@@ -17,6 +17,7 @@ import { avecStocks } from '@/lib/donnees/stock.js';
 import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo, initialiserStockage, surErreurStockage } from '@/lib/donnees/stockage.js';
 import { PAYS, paysDuNavigateur } from '@/lib/donnees/modeles.js';
 import { lirePaysChoisi, devinerPays, paysParIp } from '@/lib/pays-visiteur';
+import { enModeApplication } from '@/lib/espace';
 import { formatPrix, formatNombre } from '@/lib/utils/format.js';
 import { trancheSession } from './session.js';
 import { trancheCaisse } from './caisse.js';
@@ -87,6 +88,9 @@ const trancheCommune = (set, get) => ({
     // Adresse d'inscription rouverte par un retour en arrière alors qu'un compte est déjà ouvert : on garde la session, pas le formulaire
     else if (params.get('inscription') && !get().prefs.session) set({ etapeConnexion: 'inscription' });
     else get().restaurerSession();
+    // Application installée sur le téléphone : une personne qui l'ouvre a déjà un compte (ou va le créer depuis l'écran de connexion),
+    // elle ne repasse pas par la page de présentation destinée aux visiteurs
+    if (!get().d && !get().utilisateur && get().etapeConnexion === 'accueil' && enModeApplication()) set({ etapeConnexion: 'connexion' });
     set({ pret: true });
   },
 
