@@ -19,6 +19,9 @@ const pages = [];
   }
 })('out');
 
+// Jamais d'en-tête « noindex » dans le .htaccess : il a déjà empêché Google d'indexer kaislo.com
+const htaccess = fs.existsSync('out/.htaccess') ? fs.readFileSync('out/.htaccess', 'utf8') : '';
+if (/^[^#\n]*X-Robots-Tag[^\n]*noindex/im.test(htaccess)) erreurs.push('.htaccess : en-tête X-Robots-Tag noindex interdit (bloque l\'indexation par Google)');
 const sitemap = fs.readFileSync('out/sitemap.xml', 'utf8');
 for (const f of pages) {
   const lien = path.relative('out', path.dirname(f)).replace(/\\/g, '/');
