@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // Exemple chiffré de la page d'accueil, dans la devise du pays du visiteur
 // ------------------------------------------------------------
-import { useSelectionPays } from '@/components/site/TarifsPays';
+import { useSelectionPays } from '@/lib/pays-visiteur';
 import { convertirDepuisDirham } from '@/lib/donnees/demo';
 import { formatPrix } from '@/lib/utils/format';
 

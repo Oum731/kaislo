@@ -42,6 +42,7 @@ const SECTIONS = [
           <tr><th>Messages</th><td>Messages échangés avec l’équipe Kaislo depuis l’écran Aide (nom de l’auteur, date, lecture). L’équipe est prévenue par e-mail de chaque nouveau message.</td></tr>
           <tr><th>Abonnement</th><td>Offre, dates, montants et références de paiement. Les numéros de carte sont saisis chez le prestataire de paiement et ne nous sont jamais transmis.</td></tr>
           <tr><th>Technique</th><td>Type d’appareil et de navigateur, journaux de connexion et d’erreurs, adresse IP (sécurité et lutte contre la fraude).</td></tr>
+          <tr><th>Pays du visiteur</th><td>Pour afficher les tarifs de votre pays : pays déduit de votre adresse IP (sans la conserver), de votre fuseau horaire ou, si vous le demandez, de votre position GPS ; pays choisi, mémorisé dans un cookie d’un an (« kaislo_pays »). Détails dans la page Cookies et stockage.</td></tr>
         </tbody>
       </table>
     ),

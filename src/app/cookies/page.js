@@ -18,7 +18,7 @@ const SECTIONS = [
     titre: 'En résumé',
     contenu: (
       <div className="encadre">
-        <p><b>Pas de publicité, pas de pistage, pas de mesure d’audience.</b> Kaislo enregistre seulement sur votre appareil ce qui est indispensable pour faire fonctionner Kaislo. C’est pourquoi aucun bandeau de consentement ne vous est demandé.</p>
+        <p><b>Pas de publicité, pas de pistage, pas de mesure d’audience.</b> Kaislo enregistre seulement sur votre appareil ce qui est utile pour faire fonctionner Kaislo et se souvenir de vos choix (comme votre pays). Aucun cookie ne sert à vous suivre d’un site à l’autre.</p>
       </div>
     ),
   },
@@ -36,6 +36,7 @@ const SECTIONS = [
           <tr><td>kaislo:comptes</td><td>Liste des commerces enregistrés sur cet appareil.</td><td>Jusqu’à suppression</td></tr>
           <tr><td>kaislo-images</td><td>Photos des articles et logo, pour un affichage rapide.</td><td>Jusqu’à suppression</td></tr>
           <tr><td>kaislo-v… (cache)</td><td>Copie de l’application pour qu’elle s’ouvre vite et hors connexion.</td><td>Remplacée à chaque mise à jour</td></tr>
+          <tr><td>kaislo_pays (cookie)</td><td>Se souvenir du pays que vous avez choisi, pour afficher les tarifs dans la monnaie de votre pays. Contient seulement un code de pays (par exemple « CI »).</td><td>1 an</td></tr>
           <tr><td>kaislo:admin-jeton</td><td>Session de l’espace Amorac (équipe Amorac uniquement).</td><td>Fermeture de l’onglet</td></tr>
           <tr><td>kaislo:commercial-jeton</td><td>Session de l’espace des commerciaux Kaislo.</td><td>30 jours, ou « Sortir »</td></tr>
         </tbody>
@@ -48,6 +49,7 @@ const SECTIONS = [
     contenu: (
       <ul>
         <li><b>Carte OpenStreetMap</b> : affichée seulement quand le gérant place son commerce sur la carte (Réglages → Profil). OpenStreetMap peut alors enregistrer ses propres éléments techniques.</li>
+        <li><b>Détection de votre pays</b> : pour afficher les prix de votre pays, notre serveur cherche le pays qui correspond à votre adresse IP auprès d’un service de géolocalisation gratuit (api.country.is, ou ipwho.is en secours). Seule l’adresse IP leur est transmise ; Kaislo ne la garde pas. Si vous touchez « Utiliser ma position », votre navigateur vous demande d’abord l’autorisation ; vos coordonnées sont alors envoyées à un service gratuit (BigDataCloud) qui renvoie seulement le nom du pays, et ne sont pas conservées par Kaislo. Vous pouvez toujours choisir votre pays vous-même dans la liste.</li>
         <li><b>WhatsApp et Google Maps</b> : ouverts uniquement quand vous touchez un bouton « Envoyer par WhatsApp » ou « Ouvrir dans Google Maps ». Leurs propres règles s’appliquent alors.</li>
         <li>Les polices de caractères sont servies par Kaislo lui-même : aucune requête vers Google Fonts.</li>
       </ul>

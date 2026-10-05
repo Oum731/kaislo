@@ -3,44 +3,40 @@
 // Tableaux de prix de la page « Tarifs » : uniquement ceux du pays du visiteur
 // (deviné par l'appareil, modifiable). Même grille que le serveur (tarifs.js).
 // ------------------------------------------------------------
-import { useEffect, useState } from 'react';
 import { FORMULES, REGLES_TARIFS } from '@/lib/donnees/tarifs';
 import { PAYS, typeCommerce } from '@/lib/donnees/modeles';
 import { symbole } from '@/lib/utils/format';
-import { PAYS_PAR_DEFAUT, paysDuVisiteur, choisirPays } from '@/lib/pays-visiteur';
+import { useSelectionPays } from '@/lib/pays-visiteur';
 
 // Prix d'abonnement en nombre entier : 149 DH, 9 000 FCFA
 const formatPrix = (x, d) => Math.round(x).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ') + ' ' + symbole(d);
 const FAMILLES = [...new Set(FORMULES.map((f) => f.famille))];
 
-export function useSelectionPays() {
-  const [id, setId] = useState(PAYS_PAR_DEFAUT);
-  useEffect(() => setId(paysDuVisiteur()), []);
-  const changer = (nouveau) => { choisirPays(nouveau); setId(nouveau); };
-  return [PAYS.find((p) => p.id === id) || PAYS.find((p) => p.id === PAYS_PAR_DEFAUT), changer];
-}
-
-export function ChoixPays({ pays, changer }) {
+export function ChoixPays({ pays, changer, gps, erreur }) {
   return (
-    <p className="petit" style={{ margin: '0 0 18px' }}>
-      Prix pour : <b>{pays.nom}</b> ·{' '}
-      <label className="lien" style={{ cursor: 'pointer' }}>
-        ce n’est pas votre pays ?{' '}
-        <select value={pays.id} onChange={(e) => changer(e.target.value)} aria-label="Changer de pays" style={{ maxWidth: 220 }}>
-          {PAYS.map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}
-        </select>
-      </label>
-    </p>
+    <div className="petit" style={{ margin: '0 0 18px' }}>
+      <p>
+        Prix pour : <b>{pays.nom}</b> ·{' '}
+        <label className="lien" style={{ cursor: 'pointer' }}>
+          ce n’est pas votre pays ?{' '}
+          <select value={pays.id} onChange={(e) => changer(e.target.value)} aria-label="Changer de pays" style={{ maxWidth: 220 }}>
+            {PAYS.map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}
+          </select>
+        </label>{' '}
+        <button type="button" className="lien" onClick={gps}>Utiliser ma position</button>
+      </p>
+      {erreur && <p className="muet" role="status">{erreur}</p>}
+    </div>
   );
 }
 
 export default function TarifsPays() {
-  const [pays, changer] = useSelectionPays();
+  const [pays, changer, { gps, erreur }] = useSelectionPays();
   const d = pays.devise;
   const resto = FORMULES.find((f) => f.id === 'restaurant');
   return (
     <>
-      <ChoixPays pays={pays} changer={changer} />
+      <ChoixPays pays={pays} changer={changer} gps={gps} erreur={erreur} />
       {FAMILLES.map((famille) => {
         const formules = FORMULES.filter((f) => f.famille === famille);
         return (

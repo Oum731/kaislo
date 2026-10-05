@@ -1,13 +1,23 @@
 // ------------------------------------------------------------
 // PAYS DU VISITEUR (pour n'afficher que les tarifs et la devise de son pays)
-// Devine par le fuseau horaire puis la langue du navigateur : pas de GPS, pas d'adresse IP, pas de cookie.
-// Le visiteur peut corriger son pays (voyage, VPN) : son choix est gardé dans cet appareil.
+//
+// Ordre de priorité :
+//  1. le pays choisi par le visiteur (cookie « kaislo_pays », aussi gardé dans l'appareil)
+//  2. sa position GPS, seulement s'il appuie sur « Utiliser ma position » (le navigateur demande son accord)
+//  3. son adresse IP, via notre serveur (/api/pays) : instantané, sans demande
+//  4. le fuseau horaire, puis la langue du navigateur (rapide, hors connexion)
+// Le cookie ne sert qu'à se souvenir de ce choix : aucun suivi, rien n'est envoyé à un tiers,
+// sauf l'adresse IP (service de géolocalisation côté serveur) et les coordonnées GPS (service de
+// recherche de pays), et seulement dans les cas 2 et 3 ci-dessus.
 // ------------------------------------------------------------
+import { useEffect, useState } from 'react';
 import { PAYS } from '@/lib/donnees/modeles';
+import { chemin } from '@/config';
 
 // Pays affiché dans la page générée à l'avance (avant que l'appareil du visiteur ne soit consulté)
 export const PAYS_PAR_DEFAUT = 'CI';
-const CLE = 'kaislo-pays-visiteur';
+const CLE = 'kaislo_pays';
+const AUTRE_PAYS = 'XX'; // pays hors de la liste : tarifs en dollars
 
 const FUSEAUX = {
   'Africa/Casablanca': 'MA', 'Africa/El_Aaiun': 'MA', 'Africa/Abidjan': 'CI', 'Africa/Dakar': 'SN', 'Africa/Bamako': 'ML',
@@ -18,16 +28,28 @@ const FUSEAUX = {
 };
 
 const existe = (id) => PAYS.some((p) => p.id === id);
+// Code de pays reconnu → pays de la liste, sinon « Autre pays »
+const versListe = (code) => (existe(code) ? code : AUTRE_PAYS);
+
+// ---------- Choix gardé (cookie + appareil) ----------
 
 export function lirePaysChoisi() {
-  try { const id = localStorage.getItem(CLE); return existe(id) ? id : null; } catch { return null; }
+  let id = null;
+  try { id = (document.cookie.match(new RegExp('(?:^|; )' + CLE + '=([A-Z]{2})')) || [])[1] || localStorage.getItem(CLE); } catch { /* stockage bloqué */ }
+  return existe(id) ? id : null;
 }
 
 export function choisirPays(id) {
-  try { localStorage.setItem(CLE, id); } catch { /* stockage bloqué : le choix vaut pour cette page seulement */ }
+  try {
+    const securise = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `${CLE}=${id}; Max-Age=31536000; Path=/; SameSite=Lax${securise}`;
+  } catch { /* cookies bloqués */ }
+  try { localStorage.setItem(CLE, id); } catch { /* stockage bloqué */ }
 }
 
-// Pays déduit de l'appareil, ou null si on ne sait pas
+// ---------- Détection ----------
+
+// Fuseau horaire puis langue du navigateur : instantané. null si on ne sait pas.
 export function devinerPays() {
   try {
     const fuseau = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -37,5 +59,63 @@ export function devinerPays() {
   return existe(region) ? region : null;
 }
 
-// Pays inconnu (hors liste) : tarifs en dollars (« Autre pays »)
-export const paysDuVisiteur = () => lirePaysChoisi() || devinerPays() || 'XX';
+// Adresse IP : notre serveur interroge un service de géolocalisation (/api/pays). null si indisponible.
+export async function paysParIp() {
+  const controle = new AbortController();
+  const minuterie = setTimeout(() => controle.abort(), 3500);
+  try {
+    const r = await fetch(chemin('/api/pays'), { signal: controle.signal, cache: 'no-store' });
+    const j = await r.json();
+    return j?.ok && j.pays ? versListe(j.pays) : null;
+  } catch { return null; } finally { clearTimeout(minuterie); }
+}
+
+// Position GPS : le navigateur demande l'accord du visiteur, puis un service gratuit transforme les
+// coordonnées en pays. Renvoie { pays } ou { erreur }.
+export function paysParGps() {
+  return new Promise((resolve) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return resolve({ erreur: 'Position indisponible sur cet appareil.' });
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.latitude}&longitude=${coords.longitude}&localityLanguage=fr`;
+          const j = await fetch(url).then((r) => r.json());
+          const code = String(j.countryCode || '').toUpperCase();
+          resolve(code ? { pays: versListe(code) } : { erreur: 'Pays introuvable pour cette position.' });
+        } catch { resolve({ erreur: 'Recherche impossible (pas de connexion ?).' }); }
+      },
+      () => resolve({ erreur: 'Position refusée : choisissez votre pays dans la liste.' }),
+      { timeout: 10000, maximumAge: 600000 },
+    );
+  });
+}
+
+// Pays à utiliser, par ordre de priorité, sans GPS (voir l'en-tête). `surResultat` est rappelé une 2e fois quand l'IP répond.
+export async function trouverPays(surResultat) {
+  const choisi = lirePaysChoisi();
+  if (choisi) return surResultat(choisi);
+  const appareil = devinerPays();
+  if (appareil) surResultat(appareil);
+  const ip = await paysParIp();
+  if (ip) surResultat(ip);
+  else if (!appareil) surResultat(AUTRE_PAYS);
+}
+
+// Pour les composants du site : [pays, changer, { gps, erreur }]
+export function useSelectionPays() {
+  const [id, setId] = useState(PAYS_PAR_DEFAUT);
+  const [erreur, setErreur] = useState('');
+  useEffect(() => {
+    let actif = true;
+    trouverPays((p) => { if (actif) setId(p); });
+    return () => { actif = false; };
+  }, []);
+  const changer = (nouveau) => { choisirPays(nouveau); setId(nouveau); setErreur(''); };
+  const gps = async () => {
+    setErreur('');
+    const r = await paysParGps();
+    if (r.pays) changer(r.pays); else setErreur(r.erreur);
+  };
+  const pays = PAYS.find((p) => p.id === id) || PAYS.find((p) => p.id === AUTRE_PAYS);
+  return [pays, changer, { gps, erreur }];
+}

@@ -7,7 +7,7 @@
 // Tous les champs fonctionnent au clavier (ordinateur ou téléphone) :
 // Entrée valide, Tab passe au champ suivant.
 // ------------------------------------------------------------
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useKaislo } from '@/store/kaislo';
 import { COMMERCES_DEMO } from '@/lib/donnees/demo';
@@ -21,6 +21,7 @@ import { nomBiometrie } from '@/lib/biometrie';
 import InstallerApp from './InstallerApp';
 import Marque from '@/components/Marque';
 import { tr, tt, langueActive } from '@/lib/i18n';
+import { trouverPays } from '@/lib/pays-visiteur';
 
 export default function Connexion() {
   const s = useKaislo();
@@ -246,7 +247,12 @@ function Inscription() {
   const s = useKaislo();
   const [etape, setEtape] = useState(1);
   const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false, codeParrain: s.prefs.codeParrain || '' });
-  const maj = (champ) => (e) => setF({ ...f, [champ]: e.target.value });
+  const paysTouche = useRef(false);
+  const maj = (champ) => (e) => { if (champ === 'pays') paysTouche.current = true; setF({ ...f, [champ]: e.target.value }); };
+  // Pays pré-rempli : choix déjà fait, sinon adresse IP / fuseau horaire (sauf si la personne a déjà choisi elle-même)
+  useEffect(() => {
+    trouverPays((p) => { if (!paysTouche.current) setF((cur) => ({ ...cur, pays: p })); });
+  }, []);
 
   const continuer = () => {
     if (!f.nom.trim()) return s.message(tr('Indiquez le nom de votre commerce'), 'erreur');
