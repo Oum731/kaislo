@@ -1435,7 +1435,6 @@ const GUIDES_BASE = [
     fr: {
       slug: 'former-un-nouveau-vendeur-et-organiser-ouverture-fermeture',
       seo: 'Former un vendeur : ouverture, fermeture, habitudes',
-      seo: 'Former un vendeur : ouverture, fermeture et bonnes pratiques',
       titre: 'Former un nouveau vendeur : procédures d’ouverture, de fermeture et bonnes pratiques',
       court: 'Former un nouveau vendeur',
       description: 'Comment former un nouveau vendeur : accueil des clients, enregistrement des ventes, ouverture et fermeture de la journée, règles de caisse et premières semaines.',
@@ -1565,7 +1564,6 @@ const GUIDES_BASE = [
     fr: {
       slug: 'gerer-les-retours-et-echanges-clients',
       seo: 'Retours et échanges : une règle simple et claire',
-      seo: 'Retours et échanges : une règle simple pour votre commerce',
       titre: 'Retours, échanges et réclamations : une règle simple pour votre commerce',
       court: 'Gérer retours et échanges',
       description: 'Comment gérer les retours, échanges et réclamations dans votre commerce : définir une règle claire, la communiquer, enregistrer les cas et garder la confiance des clients.',
