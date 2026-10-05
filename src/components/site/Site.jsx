@@ -13,6 +13,7 @@ import BulleChat from '@/components/BulleChat';
 import { ACTIVITES } from './activites';
 import LangueSite from './LangueSite';
 import SelecteurLangueSite from './SelecteurLangueSite';
+import BoutonsEspace from './BoutonsEspace';
 import { lien } from '@/lib/site-routes';
 import { FORMULES } from '@/lib/donnees/tarifs';
 import { tr, langueActive, choisirLangue } from '@/lib/i18n';
@@ -50,8 +51,7 @@ export function EnTeteSite({ lang = 'fr' }) {
         </nav>
         <div className="actions">
           <SelecteurLangueSite lang={lang} />
-          <Link href="/app/" className="btn secondaire petit">{tr('Se connecter')}</Link>
-          <Link href={LIEN_INSCRIPTION} className="btn petit">{tr('Essai gratuit')}</Link>
+          <BoutonsEspace libelleConnexion={tr('Se connecter')} libelleEssai={tr('Essai gratuit')} libelleEspace={tr('Mon espace')} lienInscription={LIEN_INSCRIPTION} />
           <MenuMobile liens={liens} lienInscription={LIEN_INSCRIPTION} />
         </div>
       </div>

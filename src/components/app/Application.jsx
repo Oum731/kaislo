@@ -10,12 +10,14 @@ import { chemin } from '@/config';
 import Chargement from '@/components/Chargement';
 import BulleChat from '@/components/BulleChat';
 import { tr } from '@/lib/i18n';
+import { memoriserEspace } from '@/lib/espace';
 
 export default function Application() {
   const pret = useKaislo((s) => s.pret);
   const connecte = useKaislo((s) => !!s.utilisateur && !!s.d);
   const toast = useKaislo((s) => s.toast);
   const langue = useKaislo((s) => s.langue);
+  const estUneDemo = useKaislo((s) => !!s.d && s.estDemoActuel());
 
   // Les données sont dans le téléphone : on les lit une fois la page affichée
   useEffect(() => {
@@ -38,6 +40,9 @@ export default function Application() {
       desabonner();
     };
   }, []);
+
+  // Connecté avec un vrai compte : se souvenir que son espace est l'application (arrivée directe, voir lib/espace.js)
+  useEffect(() => { if (connecte && !estUneDemo) memoriserEspace('app'); }, [connecte, estUneDemo]);
 
   // Écran de lancement : visible dès l'ouverture, avant même le chargement du JavaScript
   if (!pret) return <Chargement texte={tr('Ouverture de votre commerce…')} />;

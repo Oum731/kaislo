@@ -952,3 +952,15 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .tableau-tarifs th { font-size: 13px; color: var(--encre-3); font-weight: 600; background: var(--surface-2); }
 .tableau-tarifs tr:last-child td { border-bottom: 0; }
 .liste-points { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--encre-2); }
+
+/* Choix de langue discret (site et accueil de l'application) : petit globe + texte, sans cadre */
+.lien-langue, .lien-langue-app button {
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 8px; border-radius: 6px;
+  font-size: 13px; font-weight: 600; color: var(--encre-3); text-decoration: none;
+}
+.lien-langue:hover, .lien-langue-app button:hover { background: var(--surface-2); color: var(--encre); }
+.lien-langue-app { display: inline-flex; align-items: center; gap: 2px; }
+.lien-langue-app button.actif { color: var(--vert); }
+.lien-langue-app svg { color: var(--encre-3); margin-right: 2px; }
+.site-entete .actions { align-items: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

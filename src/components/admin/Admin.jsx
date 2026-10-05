@@ -18,6 +18,7 @@ import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
 import { prixAbonnement, prixCatalogue } from '@/lib/donnees/tarifs';
+import { memoriserEspace, oublierEspace } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
 
 const JOUR = 86400000;
@@ -39,6 +40,7 @@ export default function Admin() {
       if (jeton) {
         try {
           const rep = await appelApi('GET', '/admin/moi', null, jeton);
+          memoriserEspace('admin');
           return setEtat({ pret: true, admin: rep.admin, installe: true, jeton });
         } catch { garderJeton(null); }
       }
@@ -46,10 +48,11 @@ export default function Admin() {
       setEtat({ pret: true, admin: null, installe: rep.installe, jeton: null });
     })();
   }, []);
-  const connecte = (rep) => { garderJeton(rep.jeton); setEtat({ pret: true, admin: rep.admin, installe: true, jeton: rep.jeton }); };
+  const connecte = (rep) => { garderJeton(rep.jeton); memoriserEspace('admin'); setEtat({ pret: true, admin: rep.admin, installe: true, jeton: rep.jeton }); };
   const deconnexion = () => {
     appelApi('POST', '/admin/deconnexion', null, etat.jeton).catch(() => {});
     garderJeton(null);
+    oublierEspace('admin');
     setEtat({ pret: true, admin: null, installe: true, jeton: null });
   };
 

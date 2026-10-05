@@ -15,7 +15,7 @@ import { telephoneDejaUtilise } from '@/lib/donnees/stockage';
 import { TYPES_COMMERCE, PAYS, paysParId, paysDuNavigateur, cleTelephone } from '@/lib/donnees/modeles';
 import { symbole, NOMS_DEVISES } from '@/lib/utils/format';
 import { CONTACT_WHATSAPP, chemin } from '@/config';
-import { Icone, Avatar, ImageStockee, ChampTelephone, SelecteurLangue } from '@/components/ui';
+import { Icone, Avatar, ImageStockee, ChampTelephone, SelecteurLangueDiscret } from '@/components/ui';
 import { normaliserTelephone } from '@/lib/donnees/telephone';
 import { nomBiometrie } from '@/lib/biometrie';
 import InstallerApp from './InstallerApp';
@@ -33,11 +33,15 @@ export default function Connexion() {
       <div className="connexion-panneau">
         <div className="ligne espace">
           <Link href="/" className="logo"><Marque /> {tr('Kaislo')}</Link>
-          {e !== 'accueil' && (e === 'inscription' || !s.d || s.estDemoActuel()) && (
-            <button className="bouton-rond" onClick={s.retourConnexion} aria-label={tr('Retour')}>
-              <Icone nom="gauche" />
-            </button>
-          )}
+          <span className="ligne" style={{ gap: 6 }}>
+            {/* Choix de la langue : discret, visible dès l'accueil */}
+            <SelecteurLangueDiscret langue={langueActive()} surChanger={s.changerLangue} />
+            {e !== 'accueil' && (e === 'inscription' || !s.d || s.estDemoActuel()) && (
+              <button className="bouton-rond" onClick={s.retourConnexion} aria-label={tr('Retour')}>
+                <Icone nom="gauche" />
+              </button>
+            )}
+          </span>
         </div>
         {e === 'accueil' && <Accueil />}
         {e === 'inscription' && <Inscription />}
@@ -70,8 +74,8 @@ function Accueil() {
   return (
     <div>
       <div className="intro">
-        <h1>{tr('La gestion simple de votre commerce.')}</h1>
-        <p>{tr('Restaurants, épiceries, boutiques, partout dans le monde : enregistrez vos ventes en quelques touches, imprimez le ticket, suivez vos ventes.')}</p>
+        <h1>{tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}</h1>
+        <p>{tr('Restaurants, épiceries, boutiques, bars, pharmacies : enregistrez vos ventes en quelques touches, suivez votre stock et le crédit de vos clients, et sachez chaque soir ce que vous avez gagné. Toutes les devises. Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent.')}</p>
       </div>
       <button className="btn grand bloc" onClick={() => useKaislo.setState({ etapeConnexion: 'connexion' })}>
         <Icone nom="sortie" /> {tr('Se connecter')}</button>
@@ -97,7 +101,6 @@ function Accueil() {
           <span className="badge safran">{tr('Démo')}</span>
         </button>
       ))}
-      <div className="centre" style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}><SelecteurLangue langue={langueActive()} surChanger={(l) => useKaislo.getState().changerLangue(l)} /></div>
       <p className="tres-petit muet centre" style={{ marginTop: 24 }}>{tr('Version de démonstration · les données restent sur cet appareil')}</p>
     </div>
   );

@@ -16,6 +16,7 @@ import { SITE_URL, CONTACT_WHATSAPP } from '@/config';
 import { Icone, ChampTelephone } from '@/components/ui';
 import { CarteClient, totalDevises } from './Commerciaux';
 import BulleChat from '@/components/BulleChat';
+import { memoriserEspace, oublierEspace } from '@/lib/espace';
 
 const CLE = 'kaislo:commercial-jeton';
 const lireJeton = () => { try { return localStorage.getItem(CLE); } catch { return null; } };
@@ -26,6 +27,7 @@ export default function EspaceCommercial() {
   const charger = useCallback(async (jeton) => {
     try {
       const infos = await appelApi('GET', '/commercial/moi', null, jeton);
+      memoriserEspace('commercial');
       setEtat({ pret: true, jeton, infos });
     } catch (e) {
       if (e.statut === 401 || e.statut === 403) garderJeton(null);
@@ -40,6 +42,7 @@ export default function EspaceCommercial() {
   const sortir = () => {
     appelApi('POST', '/commercial/deconnexion', null, etat.jeton).catch(() => {});
     garderJeton(null);
+    oublierEspace('commercial');
     setEtat({ pret: true, jeton: null, infos: null });
   };
 
