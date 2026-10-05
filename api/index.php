@@ -102,12 +102,41 @@ try {
     repondre(['ok' => false, 'erreur' => $message], 500);
 }
 
+// Explique pourquoi la base ne répond (sans jamais montrer d'identifiant ni de mot de passe) : aide à la mise en route
+function diagnostiquerBase(array $c, PDOException $e): never
+{
+    error_log('[Kaislo API] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    $code = (int) ($e->errorInfo[1] ?? 0);
+    $manquantes = [];
+    if ($c['driver'] === 'mysql') {
+        foreach (['base' => 'Db', 'utilisateur' => 'User', 'motDePasse' => 'Password'] as $cle => $nom) if ($c[$cle] === '') $manquantes[] = $nom;
+    }
+    if ($manquantes) {
+        $diagnostic = 'Clé(s) vide(s) ou absente(s) dans le .env : ' . implode(', ', $manquantes);
+    } elseif (str_contains($e->getMessage(), 'could not find driver')) {
+        $diagnostic = 'L’extension PHP MySQL (pdo_mysql) n’est pas activée : hPanel → Avancé → Configuration PHP → Extensions';
+    } else {
+        $diagnostic = match ($code) {
+            1045 => 'Utilisateur ou mot de passe MySQL refusé : vérifiez User et Password du .env (noms exacts, avec le préfixe de Hostinger)',
+            1044 => 'Cet utilisateur n’a pas accès à cette base : dans hPanel, rattachez l’utilisateur à la base',
+            1049 => 'Base de données inconnue : vérifiez la clé Db du .env (nom exact, avec le préfixe de Hostinger)',
+            2002, 2006 => 'Serveur MySQL injoignable : supprimez la clé DbHost du .env (la valeur par défaut « localhost » convient à Hostinger)',
+            default => 'Connexion à la base impossible : détail dans le journal d’erreurs PHP (ligne « [Kaislo API] »)',
+        };
+    }
+    repondre(['ok' => false, 'erreur' => 'Base de données indisponible', 'diagnostic' => $diagnostic, 'codeMysql' => $code ?: null], 500);
+}
+
 // ---------- GET /api/sante ----------
 function routeSante(): never
 {
     $c = config();
     if (!$c['trouve']) throw new ErreurApi('Fichier .env introuvable sur le serveur', 500);
-    base(); // connexion + création des tables si besoin
+    try {
+        base(); // connexion + création des tables si besoin
+    } catch (PDOException $e) {
+        diagnostiquerBase($c, $e);
+    }
     $version = (int) requete('SELECT MAX(version) AS v FROM kaislo_version')->fetch()['v'];
     repondre(['ok' => true, 'service' => 'Kaislo API', 'base' => $c['driver'], 'versionBase' => $version, 'heure' => maintenant()]);
 }
