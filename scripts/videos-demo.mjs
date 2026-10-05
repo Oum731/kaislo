@@ -27,8 +27,21 @@ import ffmpeg from 'ffmpeg-static';
 
 // Adresse affichée sous « Essai gratuit 30 jours » à la fin des vidéos (vide = aucune adresse)
 const LIEN_FINAL = '';
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const SORTIE = 'public/videos';
+// Chrome : variable CHROME_PATH, sinon emplacements habituels (Windows, Mac, Linux)
+const CHROME = [
+  process.env.CHROME_PATH,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].filter(Boolean).find((c) => fs.existsSync(c));
+if (!CHROME) { console.error('Chrome introuvable : indiquez son chemin dans la variable CHROME_PATH.'); process.exit(1); }
+// Python (voix edge-tts) : variable PYTHON, sinon « python » (Windows) ou « python3 » (Mac, Linux)
+const PYTHON = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+// Essai (ESSAI=1 ou npm run videos -- --essai) : voix remplacée par du silence et vidéos écrites dans outils/videos-essai/,
+// pour vérifier que toute la mise en scène fonctionne sans toucher aux vraies vidéos ni utiliser la voix.
+const ESSAI = process.env.ESSAI === '1' || process.argv.includes('--essai');
+const SORTIE = ESSAI ? 'outils/videos-essai' : 'public/videos';
 const PORT = 4310;
 
 // Voix et rythme
@@ -104,10 +117,16 @@ function dureeAudio(f) {
 async function voix(texte) {
   fs.mkdirSync(CACHE_VOIX, { recursive: true });
   const cle = crypto.createHash('sha1').update(VOIX + VOIX_VITESSE + VOIX_HAUTEUR + texte).digest('hex').slice(0, 16);
-  const f = path.join(CACHE_VOIX, cle + '.mp3');
+  const f = path.join(ESSAI ? 'outils/voix-essai' : CACHE_VOIX, cle + '.mp3');
+  if (ESSAI) {
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    // silence d'une durée proche de celle d'une vraie voix (environ 14 caractères par seconde)
+    if (!fs.existsSync(f)) execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', String(Math.max(1.5, texte.length / 14)), '-q:a', '9', f]);
+    return { f, duree: dureeAudio(f) };
+  }
   if (!fs.existsSync(f)) {
     narration.manquantes++;
-    await execFileAsync('python', ['-m', 'edge_tts', '--voice', VOIX, `--rate=${VOIX_VITESSE}`, `--pitch=${VOIX_HAUTEUR}`, '--text', texte, '--write-media', f]);
+    await execFileAsync(PYTHON, ['-m', 'edge_tts', '--voice', VOIX, `--rate=${VOIX_VITESSE}`, `--pitch=${VOIX_HAUTEUR}`, '--text', texte, '--write-media', f]);
   }
   return { f, duree: dureeAudio(f) };
 }
@@ -370,7 +389,7 @@ async function filmer(p, dossier, largeurPx, hauteurPx, liste, hauteDefinition) 
 }
 
 // npm run videos -- produits vendeurs : n'enregistre que les vidéos dont le nom contient ces mots
-const VOULUES = process.argv.slice(2);
+const VOULUES = process.argv.slice(2).filter((a) => a !== '--essai');
 const veut = (nom) => !VOULUES.length || VOULUES.some((v) => nom.includes(v));
 
 async function enregistrer(nom, options, scenario) {
@@ -390,7 +409,7 @@ async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche }, sc
   for (let prise = 1; prise <= 2; prise++) {
     narration = { pistes: [], finVoix: 0, manquantes: 0 };
     const dossierTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-video-'));
-    const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars'] });
+    const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars', ...(process.getuid?.() === 0 ? ['--no-sandbox'] : [])] });
     const p = await navigateur.newPage();
     await p.setViewport({ width: largeur, height: hauteur, deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile });
     const echelle = mobile ? 2 : 1; // téléphone : images en haute définition (écran « retina »)

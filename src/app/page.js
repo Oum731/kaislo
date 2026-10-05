@@ -56,7 +56,7 @@ export default function PageAccueil() {
           lienDemo={LIEN_DEMO_RESTO}
           garanties={['Essai gratuit de 30 jours', 'Vos clients vous paient directement', 'Imprimante facultative']}
           capture={{ src: '/captures/tableau-ordi.webp', alt: 'Tableau de bord Kaislo : chiffre d’affaires, marge, dépenses, crédit en cours' }}
-          captureMobile={{ src: '/captures/caisse-mobile.webp', alt: 'Écran de caisse Kaislo sur téléphone' }}
+          captureMobile={{ src: '/captures/vente-mobile.webp', alt: 'Écran de caisse Kaislo sur téléphone' }}
         />
 
         <SectionVideos vedette="presentation" vignettes={["restaurant", "epicerie", "produits", "vendeurs"]} toutes />
@@ -69,7 +69,7 @@ export default function PageAccueil() {
               titre="Enregistrer une vente en quelques touches"
               texte="Touchez l’article, choisissez l’accompagnement ou la taille, validez. Le prix se calcule tout seul et le ticket part à l’imprimante."
               points={['Recherche et lecteur de code-barres', 'Remises et prix promotionnels', 'Client à distance : reçu envoyé par WhatsApp', 'Paiement en espèces avec calcul de la monnaie à rendre']}
-              capture={{ src: '/captures/caisse-ordi.webp', alt: 'Kaislo : articles et panier' }}
+              capture={{ src: '/captures/vente-ordi.webp', alt: 'Kaislo : articles et panier' }}
             />
             <FonctionLigne
               inverse

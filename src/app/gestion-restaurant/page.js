@@ -22,13 +22,13 @@ const contenu = {
   description,
   titre: 'Le logiciel de gestion des ventes pour restaurants, maquis et snacks.',
   capture: { src: '/captures/tables-ordi.webp', alt: 'Plan des tables du restaurant dans Kaislo' },
-  captureMobile: { src: '/captures/caisse-mobile.webp', alt: 'Écran de vente du restaurant sur téléphone' },
+  captureMobile: { src: '/captures/vente-mobile.webp', alt: 'Écran de vente du restaurant sur téléphone' },
   lignes: [
     {
       titre: 'Prendre la commande, envoyer en cuisine',
       texte: 'Ouvrez la table, ajoutez les plats avec leurs accompagnements : le ticket cuisine part sans les prix. Ajoutez des plats pendant le repas et validez la vente à la fin.',
       points: ['Plan des tables, libres et occupées', 'Accompagnements et suppléments au bon prix', 'Vente à emporter ou client à distance'],
-      capture: { src: '/captures/caisse-ordi.webp', alt: 'Écran de vente du restaurant avec accompagnements' },
+      capture: { src: '/captures/vente-ordi.webp', alt: 'Écran de vente du restaurant avec accompagnements' },
     },
     {
       titre: 'Fermer la journée sans recompter à la main',

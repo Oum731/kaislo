@@ -12,6 +12,7 @@
     "arreter-partage": "node scripts/arreter-partage.mjs",
     "publier-github": "node scripts/publier-github.mjs",
     "publier-hostinger": "node scripts/publier-hostinger.mjs",
+    "captures": "node scripts/captures.mjs",
     "videos": "node scripts/videos-demo.mjs"
   },
   "dependencies": {
