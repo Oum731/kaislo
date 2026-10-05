@@ -17,6 +17,19 @@ export function oublierEspace(espace) {
   try { if (!espace || localStorage.getItem(CLE) === espace) localStorage.removeItem(CLE); } catch { /* stockage bloqué */ }
 }
 
+// « Voir le site » : une personne connectée qui veut voir la page d'accueil publique (depuis son tableau de bord) n'est pas renvoyée
+// aussitôt dans son espace. On le retient pour l'onglet en cours seulement ; « Mon espace » remet le comportement normal.
+const CLE_SITE = 'kaislo-site';
+export const ADRESSE_SITE = '/?site=1';
+export const voirLeSite = () => { try { sessionStorage.setItem(CLE_SITE, '1'); } catch { /* stockage bloqué */ } };
+export const quitterLeSite = () => { try { sessionStorage.removeItem(CLE_SITE); } catch { /* stockage bloqué */ } };
+export const siteVoulu = () => {
+  try {
+    if (/[?&]site\b/.test(window.location.search)) { sessionStorage.setItem(CLE_SITE, '1'); return true; }
+    return sessionStorage.getItem(CLE_SITE) === '1';
+  } catch { return /[?&]site\b/.test(window.location.search); }
+};
+
 export function espaceMemorise() {
   try { const e = localStorage.getItem(CLE); return ADRESSES_ESPACES[e] ? e : null; } catch { return null; }
 }
@@ -29,7 +42,7 @@ export const enModeApplication = () => typeof window !== 'undefined' && (!!windo
 //  - quelqu'un de connecté : dans son espace
 // Ajouter ?site=1 à l'adresse pour voir quand même la page publique.
 export const SCRIPT_REDIRECTION_ESPACE =
-  `try{var s=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true,e=localStorage.getItem('${CLE}'),a=${JSON.stringify(ADRESSES_ESPACES)};if(s)location.replace('${BASE_PATH}'+a[e&&a[e]?e:'app']);else if(e&&a[e]&&!/[?&]site\\b/.test(location.search))location.replace('${BASE_PATH}'+a[e])}catch(_){}`;
+  `try{var s=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true,e=localStorage.getItem('${CLE}'),a=${JSON.stringify(ADRESSES_ESPACES)},v=/[?&]site\\b/.test(location.search);if(v)sessionStorage.setItem('kaislo-site','1');v=v||sessionStorage.getItem('kaislo-site')==='1';if(!v){if(s)location.replace('${BASE_PATH}'+a[e&&a[e]?e:'app']);else if(e&&a[e])location.replace('${BASE_PATH}'+a[e])}}catch(_){}`;
 
 // Service worker du site : nécessaire à l'installation sur l'écran d'accueil et à l'ouverture rapide (espaces Amorac et commercial)
 export function enregistrerServiceWorker() {
