@@ -5,6 +5,7 @@
 // ------------------------------------------------------------
 import { SITE_URL } from '@/config';
 import { langueActive } from '@/lib/i18n';
+import { GUIDES } from '@/lib/guides';
 
 export const PAGES = [
   ['/', '/en/'],
@@ -19,6 +20,8 @@ export const PAGES = [
   ['/gestion-boulangerie/', '/en/bakery-management/'],
   ['/gestion-bar/', '/en/bar-management/'],
   ['/logiciel-grossiste/', '/en/wholesale-management/'],
+  ['/guides/', '/en/guides/'],
+  ...GUIDES.map((g) => [`/guides/${g.fr.slug}/`, `/en/guides/${g.en.slug}/`]),
 ];
 
 const VERS_EN = new Map(PAGES);

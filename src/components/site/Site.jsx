@@ -34,6 +34,7 @@ const LIENS_SITE = () => ([
   [lien('/#fonctions'), tr('Fonctions')],
   [lien('/tarifs/'), tr('Tarifs')],
   [lien('/tutoriels/'), tr('Tutoriels')],
+  [lien('/guides/'), tr('Guides')],
   [lien('/#questions'), tr('Questions')],
 ]);
 
@@ -84,6 +85,8 @@ export function PiedSite() {
             <Link href={lien('/gestion-epicerie/')}>{tr('Gestion pour épicerie')}</Link>
             <Link href={lien('/gestion-stock/')}>{tr('Gestion de stock et inventaire')}</Link>
             <Link href={lien('/tarifs/')}>{tr('Tarifs')}</Link>
+            <Link href={lien('/guides/')}>{tr('Guides pratiques')}</Link>
+            <Link href={lien('/guides/#modeles')}>{tr('Modèles Excel gratuits')}</Link>
             <Link href="/devenir-commercial/">{tr('Devenir commercial Kaislo')}</Link>
             <Link href="/app/">{tr('Se connecter')}</Link>
             <Link href={LIEN_INSCRIPTION}>{tr('Créer mon commerce')}</Link>

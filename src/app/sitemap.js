@@ -5,6 +5,7 @@ import { PAGES_LEGALES } from '@/components/site/Site';
 import { ACTIVITES } from '@/components/site/activites';
 import { PAYS_SEO, lienPays } from '@/lib/pays-seo';
 import { PAGES } from '@/lib/site-routes';
+import { GUIDES } from '@/lib/guides';
 
 export const dynamic = 'force-static';
 
@@ -12,7 +13,7 @@ export default function sitemap() {
   const pages = [
     '/', '/gestion-restaurant/', '/gestion-epicerie/', '/gestion-stock/',
     ...Object.values(ACTIVITES()).map((a) => a.lien),
-    '/tarifs/', '/tutoriels/', ...PAYS_SEO.map(lienPays), '/devenir-commercial/',
+    '/tarifs/', '/tutoriels/', '/guides/', ...GUIDES.map((g) => `/guides/${g.fr.slug}/`), ...PAYS_SEO.map(lienPays), '/devenir-commercial/',
     ...PAGES_LEGALES().map(([lien]) => lien),
   ];
   // Pages avec version anglaise : chacune indique son équivalent (hreflang) pour Google

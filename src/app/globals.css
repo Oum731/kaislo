@@ -964,3 +964,32 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .lien-langue-app svg { color: var(--encre-3); margin-right: 2px; }
 .site-entete .actions { align-items: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* ---- Guides pratiques ---- */
+.guide-colonne { max-width: 780px; }
+.fil { font-size: 13.5px; color: var(--encre-3); margin-bottom: 12px; }
+.fil a { text-decoration: none; }
+.fil a:hover { text-decoration: underline; }
+.guide h2 { margin: 0 0 10px; font-size: clamp(21px, 3vw, 26px); }
+.guide p, .guide li { font-size: 17px; line-height: 1.65; color: var(--encre-2); }
+.guide p { margin: 0 0 12px; }
+.guide ul { margin: 0 0 12px; padding-left: 22px; }
+.guide li { margin-bottom: 6px; }
+.guide-etape { margin-bottom: 34px; scroll-margin-top: 78px; }
+.guide-sommaire { background: var(--creme-fonce); border: 1px solid var(--bordure); border-radius: var(--rayon-petit); padding: 14px 18px; margin-bottom: 30px; }
+.guide-sommaire ol { margin: 8px 0 0; padding-left: 20px; }
+.guide-sommaire li { font-size: 15px; margin-bottom: 3px; }
+.guide-modele { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: var(--vert-clair); border: 1px solid var(--bordure); border-radius: var(--rayon-petit); padding: 14px 18px; margin: 18px 0; }
+.guide-modele p { margin: 4px 0 0; font-size: 14px; }
+.guide-cta { background: var(--encre); color: var(--creme); border-radius: var(--rayon); padding: 22px; margin-top: 10px; }
+.guide-cta p { color: rgba(246, 245, 241, 0.8); margin: 6px 0 14px; }
+.guide-cta b { font-size: 19px; }
+.guide-liens { padding-left: 20px; }
+.guide-liens li { margin-bottom: 8px; font-size: 16px; }
+.guide-grille { display: grid; gap: 16px; }
+@media (min-width: 760px) { .guide-grille { grid-template-columns: 1fr 1fr 1fr; } }
+.guide-carte { display: flex; flex-direction: column; gap: 8px; background: #fff; border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 18px; text-decoration: none; color: inherit; }
+.guide-carte:hover { border-color: var(--vert); }
+.guide-carte b { font-size: 17px; line-height: 1.3; }
+.guide-carte .muet { font-size: 14px; line-height: 1.5; }
+.guide-lire { margin-top: auto; font-weight: 600; color: var(--vert); font-size: 14px; }
