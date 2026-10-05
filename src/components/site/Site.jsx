@@ -12,8 +12,6 @@ import Marque from '@/components/Marque';
 import BulleChat from '@/components/BulleChat';
 import { ACTIVITES } from './activites';
 import { FORMULES } from '@/lib/donnees/tarifs';
-import { PAYS_SEO, lienPays } from '@/lib/pays-seo';
-import { PAYS } from '@/lib/donnees/modeles';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
 export const LIEN_DEMO_RESTO = '/app/?demo=resto-ivoire';
@@ -84,12 +82,6 @@ export function PiedSite() {
           <div>
             <h4>Par activité</h4>
             {Object.values(ACTIVITES).map((a) => <Link key={a.lien} href={a.lien}>{a.nom}</Link>)}
-          </div>
-          <div>
-            <h4>Par pays</h4>
-            <div className="liste-pays">
-              {PAYS_SEO.map((p) => <Link key={p.id} href={lienPays(p)}>{PAYS.find((x) => x.id === p.id).nom}</Link>)}
-            </div>
           </div>
           <div>
             <h4>Informations légales</h4>

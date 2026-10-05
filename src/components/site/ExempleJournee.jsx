@@ -1,17 +1,14 @@
 'use client';
 // ------------------------------------------------------------
-// Exemple chiffré de la page d'accueil, avec choix de la devise
-// (pour montrer que Kaislo fonctionne dans tous les pays)
+// Exemple chiffré de la page d'accueil, dans la devise du pays du visiteur
 // ------------------------------------------------------------
-import { useState } from 'react';
+import { useSelectionPays } from '@/components/site/TarifsPays';
 import { convertirDepuisDirham } from '@/lib/donnees/demo';
 import { formatPrix } from '@/lib/utils/format';
-import { Puces } from '@/components/ui';
-
-const DEVISES = [['FCFA', 'FCFA'], ['MAD', 'DH'], ['EUR', '€'], ['USD', '$']];
 
 export default function ExempleJournee() {
-  const [devise, setDevise] = useState('FCFA');
+  const [pays] = useSelectionPays();
+  const devise = pays.devise;
   const c = (x) => convertirDepuisDirham(x, devise);
   const p = (x) => formatPrix(x, devise);
   const ca = 20 * c(60) + 15 * c(45) + 30 * c(12);
@@ -19,8 +16,7 @@ export default function ExempleJournee() {
   return (
     <div className="tableau-exemple">
       <div>
-        <Puces options={DEVISES} valeur={devise} surChanger={setDevise} />
-        <p className="chapo" style={{ marginTop: 16 }}>
+        <p className="chapo">
           Imaginons une journée avec 20 poulets braisés à {p(c(60))}, 15 riz sauce graine à {p(c(45))} et 30 boissons à {p(c(12))}.
           À chaque vente, Kaislo met à jour le tableau de bord. Le soir, le gérant voit immédiatement ce qu’il a gagné.
         </p>

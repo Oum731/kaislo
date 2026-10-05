@@ -60,7 +60,7 @@ const contenu = {
     ['Puis-je scanner les codes-barres ?', 'Oui, avec la caméra du téléphone (Chrome sur Android) ou avec un lecteur de code-barres USB ou Bluetooth, qui fonctionne sur tous les appareils.'],
     ['Comment suivre mon stock ?', 'Activez « Suivre le stock » sur vos articles. Le stock baisse à chaque vente ; ajoutez la marchandise reçue avec le prix d’achat et le fournisseur, et corrigez après inventaire.'],
     ['Et les produits vendus au poids ou en pack ?', 'Utilisez les options : par exemple « 500 g / 1 kg / 2 kg » pour les tomates, ou « Bouteille / Pack de 6 » pour l’eau, chacun avec son prix.'],
-    ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement selon votre métier : à partir de 149 DH ou 9 000 FCFA par mois, 1 poste et 5 vendeurs inclus, 2 mois offerts à l’année. Détail sur la page Tarifs.'],
+    ['Combien ça coûte ?', 'Essai gratuit de 30 jours, puis un abonnement selon votre métier : au prix de votre pays (voir la page Tarifs), 1 poste et 5 vendeurs inclus, 2 mois offerts à l’année. Détail sur la page Tarifs.'],
   ],
   titreFinal: 'Testez la démo épicerie de Kaislo.',
   texteFinal: 'Une épicerie de démonstration avec stock, clients à crédit et statistiques. Ou créez directement la vôtre.',
