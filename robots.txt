@@ -3,5 +3,7 @@ Allow: /
 Disallow: /app/
 Disallow: /admin/
 Disallow: /commercial/
+Disallow: /api/
+Disallow: /purge-cache.txt
 
 Sitemap: https://kaislo.com/sitemap.xml
