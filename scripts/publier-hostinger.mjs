@@ -30,6 +30,7 @@ const env = { ...process.env };
 delete env.NEXT_PUBLIC_BASE_PATH;
 lancer('npx next build', { env });
 lancer('node scripts/version-sw.mjs'); // version unique du service worker (mise à jour chez les utilisateurs)
+lancer('node scripts/anciennes-adresses.mjs'); // pages de redirection à la place des anciennes adresses
 
 // 2. Copie de travail de la branche « hostinger » (créée si elle n'existe pas encore)
 const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-hostinger-'));
