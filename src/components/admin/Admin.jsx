@@ -18,7 +18,7 @@ import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
 import { prixAbonnement, prixCatalogue } from '@/lib/donnees/tarifs';
-import { memoriserEspace, oublierEspace, enregistrerServiceWorker } from '@/lib/espace';
+import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
 
 const JOUR = 86400000;
@@ -169,11 +169,13 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
               {liens.slice(4).map(([e, l, i, p]) => (
                 <button key={e} className={`menu-plus-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); setPlusOuvert(false); window.scrollTo(0, 0); }}><Icone nom={i} /><span>{l}</span>{p ? <span className="badge safran" style={{ marginLeft: 'auto' }}>{p}</span> : null}</button>
               ))}
+              <a className="menu-plus-lien" href={ADRESSE_SITE} onClick={voirLeSite}><Icone nom="lienExterne" /><span>Voir le site</span></a>
               <button className="menu-plus-lien" onClick={surDeconnexion}><Icone nom="sortie" /><span>Sortir ({initiales(admin.nom)})</span></button>
             </div>
           </div>
         )}
         <div className="menu-pied">
+          <a className="menu-lien cache-mobile" href={ADRESSE_SITE} onClick={voirLeSite} style={{ textDecoration: 'none' }}><Icone nom="lienExterne" /><span className="tronque">Voir le site</span></a>
           <button className="carte-utilisateur" onClick={surDeconnexion}>
             <span className="avatar gerant">{initiales(admin.nom)}</span>
             <span className="infos"><b className="bloc-texte tronque">{admin.nom}</b><span className="tres-petit" style={{ opacity: 0.65 }}>{admin.role === 'admin' ? 'Administrateur' : 'Support'} · se déconnecter</span></span>

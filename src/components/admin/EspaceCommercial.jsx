@@ -16,7 +16,7 @@ import { SITE_URL, CONTACT_WHATSAPP } from '@/config';
 import { Icone, ChampTelephone } from '@/components/ui';
 import { CarteClient, totalDevises } from './Commerciaux';
 import BulleChat from '@/components/BulleChat';
-import { memoriserEspace, oublierEspace, enregistrerServiceWorker } from '@/lib/espace';
+import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 
 const CLE = 'kaislo:commercial-jeton';
 const lireJeton = () => { try { return localStorage.getItem(CLE); } catch { return null; } };
@@ -178,6 +178,7 @@ function Tableau({ infos, sortir, actualiser }) {
       <header className="barre-haut" style={{ padding: '14px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--bordure)' }}>
         <div className="titres"><p className="sur-titre">Commercial Kaislo</p><h1>{c.nom}</h1></div>
         <div className="ligne">
+          <a className="btn secondaire petit" href={ADRESSE_SITE} onClick={voirLeSite}><Icone nom="lienExterne" taille="sm" /> Voir le site</a>
           <button className="btn secondaire petit" onClick={actualiser}>Actualiser</button>
           <button className="btn fantome petit" onClick={sortir}><Icone nom="sortie" taille="sm" /> Sortir</button>
         </div>
