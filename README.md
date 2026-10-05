@@ -151,6 +151,10 @@ Les tables MySQL sont créées automatiquement au premier appel.
 Hostinger doit déployer la branche **`hostinger`** (pas `main`, qui ne contient que le code source). Pour que le déploiement soit aussi automatique :
 hPanel → Avancé → GIT → activer le déploiement automatique et coller l'adresse du webhook dans GitHub → Settings → Webhooks.
 
+**Anciennes adresses et caches :** `/caisse-restaurant/` (et les autres `/caisse-…/`) renvoient vers `/gestion-…/` par le `.htaccess` (301) et par une petite page de
+redirection écrite à chaque publication (`scripts/anciennes-adresses.mjs`), qui remplace l'ancien fichier resté sur le serveur. Les pages ne sont plus gardées par le cache LiteSpeed de Hostinger ;
+si une ancienne page s'affiche malgré tout : ouvrir `https://kaislo.com/purge-cache.txt` (vide le cache du serveur), ou hPanel → Gestionnaire de cache → tout purger.
+
 **Surveillance :** le workflow « Surveillance du site » vérifie toutes les 30 minutes la page d'accueil et `/api/sante` (base de données comprise) ;
 en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/sante` affiche une erreur de base, le champ `diagnostic` dit quoi corriger.
 

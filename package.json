@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node scripts/version-sw.mjs",
+    "postbuild": "node scripts/version-sw.mjs && node scripts/anciennes-adresses.mjs",
     "start": "npx serve out",
     "test": "node --no-warnings --test tests/*.test.mjs",
     "icones": "node scripts/generer-icones.mjs",

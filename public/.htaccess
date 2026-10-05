@@ -33,8 +33,15 @@ ErrorDocument 404 /404.html
   <FilesMatch "\.(png|svg|webp|jpg|ico|mp4|webmanifest)$">
     Header set Cache-Control "public, max-age=3600" env=!fichier_fixe
   </FilesMatch>
-  <FilesMatch "(sw\.js|\.html)$">
+  <FilesMatch "(sw\.js|version\.json|\.html)$">
     Header set Cache-Control "no-cache"
+    # Cache du serveur LiteSpeed (Hostinger) : jamais de copie périmée des pages
+    Header set X-LiteSpeed-Cache-Control "no-cache"
+  </FilesMatch>
+  # Ouvrir https://kaislo.com/purge-cache.txt vide tout le cache du serveur (à faire après une publication si une ancienne page s'affiche)
+  <FilesMatch "^purge-cache\.txt$">
+    Header set X-LiteSpeed-Purge "*"
+    Header set Cache-Control "no-store"
   </FilesMatch>
 </IfModule>
 
