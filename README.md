@@ -168,6 +168,16 @@ en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/s
    (10 caractères minimum, avec lettres et chiffres). Les autres membres de l'équipe sont ajoutés ensuite
    dans l'onglet « Équipe » (rôle « admin » ou « support » ; le support ne peut ni encaisser ni suspendre).
 
+## Règles appliquées par le serveur
+
+- **Ventes** : une vente enregistrée ne change plus. Un vendeur ne peut que l'annuler, et seulement si le code du gérant a été saisi sur son appareil
+  (valable 6 heures, pour que l'annulation faite sans internet puisse partir ensuite) ; chaque annulation est notée dans le journal.
+  Un vendeur ne crée des ventes qu'à son nom. Lignes et montants doivent être valides ; un total qui ne correspond pas aux lignes est accepté
+  mais signalé dans le journal (`vente-incoherente`).
+- **Abonnement expiré** (essai ou période payée terminés depuis plus de 7 jours) : la lecture reste possible, l'envoi de nouvelles données est refusé.
+  Les ventes restent sur l'appareil et partent dès que l'équipe Amorac enregistre le paiement ou prolonge l'essai.
+- Ces règles sont testées avec une vraie base : `npm test` (tests/api.test.mjs).
+
 ## Espace Amorac (/admin)
 
 - **Tableau de bord** : commerces inscrits, en essai, abonnés, suspendus, chiffre d'affaires de l'abonnement.

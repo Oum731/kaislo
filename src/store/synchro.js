@@ -68,6 +68,7 @@ export const trancheSynchro = (set, get) => ({
       try {
         // 1. Envoi, par paquets de 200
         let file = chargerFile(id);
+        let blocage = ''; // envoi refusé par le serveur (abonnement expiré, commerce suspendu)
         while (Object.keys(file).length) {
           const elements = await preparerEnvoi(get().d, file);
           let rep;
@@ -75,7 +76,7 @@ export const trancheSynchro = (set, get) => ({
             rep = await appelApi('POST', '/donnees', { elements }, jeton);
           } catch (e) {
             // Commerce suspendu (403) : on n'envoie plus, mais on récupère quand même son état
-            if (e.statut === 403) break;
+            if (e.statut === 403) { blocage = e.message; break; }
             throw e;
           }
           retirerDeLaFile(id, elements, rep.refuses);
@@ -112,7 +113,9 @@ export const trancheSynchro = (set, get) => ({
         set({ messagesNonLus: derniere.messagesNonLus || 0 });
         const u = get().utilisateur;
         const moi = u && get().d.utilisateurs.find((x) => x.id === u.id);
-        set({ synchro: { etat: 'ok', enAttente: tailleFile(id), derniere: new Date().toISOString(), message: '' } });
+        // Envoi refusé : les ventes restent sur l'appareil et partiront dès que le blocage est levé
+        const enAttente = tailleFile(id);
+        set({ synchro: blocage && enAttente ? { etat: 'erreur', enAttente, derniere: new Date().toISOString(), message: blocage } : { etat: 'ok', enAttente, derniere: new Date().toISOString(), message: '' } });
         get().imprimerPourPoste(); // appareil poste : tickets des vendeurs à imprimer
         // Compte désactivé ou commerce suspendu depuis un autre appareil
         if (u && moi && !moi.actif) get().finSession('Votre compte a été désactivé par le gérant');
