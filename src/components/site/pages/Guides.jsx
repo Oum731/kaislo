@@ -47,7 +47,11 @@ export function Guide({ lang, slug }) {
   const c = g[lang];
   const adresse = adresseGuide(g, lang);
   // À lire aussi : d'abord les guides du même métier, puis les autres
-  const autres = [...GUIDES.filter((x) => x !== g && x.metier === g.metier), ...GUIDES.filter((x) => x !== g && x.metier !== g.metier)].slice(0, 4);
+  // À lire aussi : d'abord les guides du même métier, puis les autres ; un guide de pays propose deux guides généraux et deux autres pays
+  const generaux = GUIDES.filter((x) => !x.groupe);
+  const autres = g.groupe === 'pays'
+    ? [...['mobile-money', 'cloture'].map((c) => GUIDES.find((x) => x.cle === c)), ...GUIDES.filter((x) => x.groupe === 'pays' && x !== g).slice(0, 2)]
+    : [...generaux.filter((x) => x !== g && x.metier === g.metier), ...generaux.filter((x) => x !== g && x.metier !== g.metier)].slice(0, 4);
   const donnees = {
     '@context': 'https://schema.org', '@type': 'Article',
     headline: c.titre, description: c.description, inLanguage: lang,
@@ -137,9 +141,20 @@ export default function Guides({ lang }) {
         <section className="section">
           <div className="site-largeur">
             <div className="guide-grille">
-              {GUIDES.map((g) => (
+              {GUIDES.filter((g) => !g.groupe).map((g) => (
                 <Link key={g.cle} href={adresseGuide(g, lang)} className="guide-carte">
                   <b>{g[lang].titre}</b>
+                  <span className="muet">{g[lang].description}</span>
+                  <span className="guide-lire">{tr('Lire le guide')} →</span>
+                </Link>
+              ))}
+            </div>
+            <h2 id="pays" style={{ margin: '48px 0 16px' }}>{tr('Guides par pays')}</h2>
+            <p className="chapo">{tr('Devise, moyens de paiement et suivi des ventes dans votre pays.')}</p>
+            <div className="guide-grille" style={{ marginTop: 20 }}>
+              {GUIDES.filter((g) => g.groupe === 'pays').map((g) => (
+                <Link key={g.cle} href={adresseGuide(g, lang)} className="guide-carte">
+                  <b>{g[lang].court}</b>
                   <span className="muet">{g[lang].description}</span>
                   <span className="guide-lire">{tr('Lire le guide')} →</span>
                 </Link>

@@ -1604,4 +1604,6 @@ export const EN = {
   "Non reconnu. Réessayez ou utilisez votre code PIN.": "Not recognised. Try again or use your PIN.",
   "Code PIN indisponible sur cet appareil : changez de compte pour vous reconnecter.": "PIN unavailable on this device: switch account to sign in again.",
   "Code PIN incorrect": "Incorrect PIN",
+  "Guides par pays": "Guides by country",
+  "Devise, moyens de paiement et suivi des ventes dans votre pays.": "Currency, payment methods and sales tracking in your country.",
 };
