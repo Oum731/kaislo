@@ -3,7 +3,7 @@
 // pour qu'elle arrive directement chez elle, et non sur la page d'accueil publique du site.
 // Seul le NOM de l'espace est gardé (jamais de code ni de jeton). Effacé à la déconnexion.
 // ------------------------------------------------------------
-import { BASE_PATH } from '@/config';
+import { BASE_PATH, chemin } from '@/config';
 
 const CLE = 'kaislo-espace';
 export const ADRESSES_ESPACES = { app: '/app/', admin: '/admin/', commercial: '/commercial/' };
@@ -25,8 +25,15 @@ export function espaceMemorise() {
 export const enModeApplication = () => typeof window !== 'undefined' && (!!window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true);
 
 // Petit script placé tout en haut de la page d'accueil du site : redirige avant l'affichage (pas de flash).
-//  - application installée : toujours dans l'application (sur iPhone, l'icône garde l'adresse de la page où on l'a ajoutée, souvent l'accueil du site)
+//  - application installée : directement dans son espace (le dernier où la personne s'est connectée, sinon l'application des commerces ; sur iPhone, l'icône garde l'adresse de la page où on l'a ajoutée, souvent l'accueil du site)
 //  - quelqu'un de connecté : dans son espace
 // Ajouter ?site=1 à l'adresse pour voir quand même la page publique.
 export const SCRIPT_REDIRECTION_ESPACE =
-  `try{var s=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true,e=localStorage.getItem('${CLE}'),a=${JSON.stringify(ADRESSES_ESPACES)};if(s)location.replace('${BASE_PATH}/app/');else if(e&&a[e]&&!/[?&]site\\b/.test(location.search))location.replace('${BASE_PATH}'+a[e])}catch(_){}`;
+  `try{var s=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true,e=localStorage.getItem('${CLE}'),a=${JSON.stringify(ADRESSES_ESPACES)};if(s)location.replace('${BASE_PATH}'+a[e&&a[e]?e:'app']);else if(e&&a[e]&&!/[?&]site\\b/.test(location.search))location.replace('${BASE_PATH}'+a[e])}catch(_){}`;
+
+// Service worker du site : nécessaire à l'installation sur l'écran d'accueil et à l'ouverture rapide (espaces Amorac et commercial)
+export function enregistrerServiceWorker() {
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    navigator.serviceWorker.register(chemin('/sw.js')).catch(() => {});
+  }
+}

@@ -293,3 +293,7 @@ Réglages → « Vos données » → « Rapport d'activité », ou le bouton « 
 - La session reste ouverte (jeton valable 90 jours, renouvelé à chaque utilisation) ; l'application demande le stockage persistant au navigateur pour que ses données ne soient pas effacées.
 - Après la première connexion par code PIN, Kaislo propose d'activer l'empreinte / Face ID (redemandé à chaque ouverture tant qu'il n'est pas activé). Une fois activé, l'application se verrouille à chaque réouverture et après 2 minutes en arrière-plan : empreinte / Face ID (vérifiés dans le téléphone, sans internet), ou code PIN en secours. Voir `src/components/app/VerrouApp.jsx` et `src/store/session.js`.
 - Les lectures (GET) de l'API sont retentées une fois en cas de coupure réseau brève.
+
+## Applications installées (PWA) : commerces, équipe Amorac, commerciaux
+
+Trois manifestes, un par espace : `public/manifest.webmanifest` (`/app/`), `manifest-admin.webmanifest` (`/admin/`) et `manifest-commercial.webmanifest` (`/commercial/`), chacun avec son `id`, son `start_url` et son `scope`. Installer depuis `/admin/` ou `/commercial/` ouvre donc cette page, et non l'application des commerces. L'accueil du site (`/`, `/en/`), ouvert en mode application, renvoie vers le dernier espace utilisé (sinon `/app/`). La session de l'espace Amorac reste limitée à l'onglet/à l'ouverture (sécurité) : l'application affiche alors la connexion de l'équipe ; l'espace commercial garde la connexion 30 jours.
