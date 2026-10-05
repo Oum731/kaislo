@@ -303,3 +303,7 @@ Trois manifestes, un par espace : `public/manifest.webmanifest` (`/app/`), `mani
 ## Métiers réglementés
 
 Les métiers soumis à une réglementation propre (pharmacie…) ne sont plus proposés : ni à l'inscription (`TYPES_COMMERCE` dans `src/lib/donnees/modeles.js`, `TYPES_COMMERCE_OFFERTS` dans `api/lib/outils.php`), ni sur le site (pages, guides, textes). Les commerces déjà inscrits sous ce type (`TYPES_ANCIENS`) continuent de fonctionner avec la même formule de prix. Les anciennes adresses du site sont redirigées vers l'accueil ou les guides (`scripts/anciennes-adresses.mjs`, `.htaccess`).
+
+## Vidéos marketing humoristiques (TikTok, Facebook Reels, WhatsApp)
+
+`npm run build`, puis `npm run videos -- promo` : quatre vidéos verticales « le commerçant à l'ancienne contre le commerçant Kaislo » (le carnet de crédit qui disparaît, la caisse comptée pendant 2 heures, la photo floue pour le comptable, le face à face) avec la vraie application et le message clé « Kaislo fait les calculs à votre place. Votre entreprise tient dans votre poche. ». Avec la voix (edge-tts, voir en-tête de `scripts/videos-demo.mjs`) elles vont dans `public/videos/` ; avec `--essai` (sans voix, musique et sous-titres seulement) dans `outils/videos-essai/`. Les répliques sont dans `scripts/videos-demo.mjs`, section « VIDÉOS MARKETING ». Le tournage se fait toujours en français.
