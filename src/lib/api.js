@@ -5,6 +5,7 @@
 // les comptes restent alors dans le navigateur, comme dans la démo.
 // ------------------------------------------------------------
 import { chemin } from '@/config';
+import { tr } from './i18n/index.js';
 
 export const API_ACTIVE = process.env.NEXT_PUBLIC_API !== 'non';
 const DELAI_MS = 20000;
@@ -23,8 +24,8 @@ export class ErreurApi extends Error {
  * Renvoie la réponse JSON ; lève ErreurApi avec le message du serveur en cas d'erreur.
  */
 export async function appelApi(methode, adresse, corps = null, jeton = null) {
-  if (!API_ACTIVE) throw new ErreurApi('Serveur non disponible dans cette version', 0, true);
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new ErreurApi('Pas de connexion internet', 0, true);
+  if (!API_ACTIVE) throw new ErreurApi(tr('Serveur non disponible dans cette version'), 0, true);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new ErreurApi(tr('Pas de connexion internet'), 0, true);
   const controle = new AbortController();
   const minuterie = setTimeout(() => controle.abort(), DELAI_MS);
   let reponse;
@@ -41,7 +42,7 @@ export async function appelApi(methode, adresse, corps = null, jeton = null) {
       cache: 'no-store',
     });
   } catch {
-    throw new ErreurApi('Pas de connexion internet', 0, true);
+    throw new ErreurApi(tr('Pas de connexion internet'), 0, true);
   } finally {
     clearTimeout(minuterie);
   }
@@ -49,7 +50,7 @@ export async function appelApi(methode, adresse, corps = null, jeton = null) {
   if (!reponse.ok || !json?.ok) {
     // Serveur en panne (502, 503…) : traité comme « hors ligne », on réessaiera
     const panne = !json && reponse.status >= 500;
-    throw new ErreurApi(json?.erreur || 'Le serveur ne répond pas correctement', reponse.status, panne);
+    throw new ErreurApi(json?.erreur || tr('Le serveur ne répond pas correctement'), reponse.status, panne);
   }
   return json;
 }

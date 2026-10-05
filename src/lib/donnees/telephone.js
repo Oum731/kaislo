@@ -11,6 +11,7 @@
 //                  en Côte d'Ivoire, au Bénin, au Congo ou au Gabon, il fait partie du numéro
 //   groupes      : découpage pour l'affichage
 // ------------------------------------------------------------
+import { tr } from '../i18n/index.js';
 export const REGLES_TELEPHONE = {
   MA: { indicatif: '212', longueurs: [9], zeroNational: true, groupes: [1, 2, 2, 2, 2], exemple: '06 12 34 56 78' },
   CI: { indicatif: '225', longueurs: [10], zeroNational: false, groupes: [2, 2, 2, 2, 2], exemple: '07 07 12 34 56' },
@@ -47,7 +48,7 @@ function grouper(national, groupes) {
 export function normaliserTelephone(saisie, paysId) {
   const brut = String(saisie || '').trim();
   let chiffres = brut.replace(/\D/g, '');
-  if (!chiffres) return { ok: false, erreur: 'Indiquez le numéro de téléphone' };
+  if (!chiffres) return { ok: false, erreur: tr('Indiquez le numéro de téléphone') };
   const international = brut.startsWith('+') || chiffres.startsWith('00');
   if (chiffres.startsWith('00')) chiffres = chiffres.slice(2);
 
@@ -60,14 +61,14 @@ export function normaliserTelephone(saisie, paysId) {
       .sort((a, b) => (b[0] === paysId) - (a[0] === paysId) || b[1].indicatif.length - a[1].indicatif.length);
     if (!trouves.length) {
       // Pays non répertorié : accepté si la longueur est plausible (8 à 15 chiffres)
-      if (chiffres.length < 8 || chiffres.length > 15) return { ok: false, erreur: 'Numéro international incomplet (ex : +225 07 07 12 34 56)' };
+      if (chiffres.length < 8 || chiffres.length > 15) return { ok: false, erreur: tr('Numéro international incomplet (ex : +225 07 07 12 34 56)') };
       return { ok: true, e164: '+' + chiffres, affichage: '+' + chiffres, pays: null };
     }
     pays = trouves[0][0];
     national = chiffres.slice(REGLES_TELEPHONE[pays].indicatif.length);
   } else {
     const r = REGLES_TELEPHONE[paysId];
-    if (!r) return { ok: false, erreur: 'Écrivez le numéro au format international : + indicatif du pays, puis le numéro' };
+    if (!r) return { ok: false, erreur: tr('Écrivez le numéro au format international : + indicatif du pays, puis le numéro') };
     // Numéro tapé avec l'indicatif mais sans le « + » (ex : 2250707123456)
     const longueur = (n) => (r.zeroNational ? n.replace(/^0/, '') : n).length;
     const reste = national.slice(r.indicatif.length);
@@ -76,7 +77,7 @@ export function normaliserTelephone(saisie, paysId) {
   const r = REGLES_TELEPHONE[pays];
   if (r.zeroNational && national.startsWith('0')) national = national.slice(1);
   if (!r.longueurs.includes(national.length)) {
-    return { ok: false, erreur: `Numéro incomplet ou trop long. Exemple : ${r.exemple}` };
+    return { ok: false, erreur: tr('Numéro incomplet ou trop long. Exemple : {0}', [r.exemple]) };
   }
   return { ok: true, e164: '+' + r.indicatif + national, affichage: '+' + r.indicatif + ' ' + grouper(national, r.groupes), pays };
 }
@@ -95,7 +96,7 @@ export function cleNumero(telephone, paysId) {
 
 // Exemple à afficher dans le champ, selon le pays
 export function exempleTelephone(paysId) {
-  return REGLES_TELEPHONE[paysId]?.exemple || '+indicatif numéro';
+  return REGLES_TELEPHONE[paysId]?.exemple || tr('+indicatif numéro');
 }
 export function indicatifPays(paysId) {
   return REGLES_TELEPHONE[paysId] ? '+' + REGLES_TELEPHONE[paysId].indicatif : '';

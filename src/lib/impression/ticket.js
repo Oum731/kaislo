@@ -8,6 +8,7 @@
 // Donc l'aperçu = exactement ce qui sort de l'imprimante.
 // ------------------------------------------------------------
 import { formatNombre, formatPrix, formatDate, formatHeure } from '../utils/format.js';
+import { tr, tt } from '../i18n/index.js';
 
 // Nombre de caractères par ligne selon la largeur du papier
 export const CARACTERES = { 58: 32, 80: 48 };
@@ -68,18 +69,18 @@ export function construireTicket(vente, commerce, largeurPapier = 58) {
 
   // Vente annulée : bien visible en haut du ticket
   if (vente.annulee) {
-    ajouter(centrer('*** VENTE ANNULÉE ***', L), { gras: true, grand: true });
-    for (const l of decouper('Le ' + formatDate(vente.annulee.date) + ' à ' + formatHeure(vente.annulee.date), L)) ajouter(centrer(l, L));
-    if (vente.annulee.motif) for (const l of decouper('Motif : ' + vente.annulee.motif, L)) ajouter(centrer(l, L));
+    ajouter(centrer(tr('*** VENTE ANNULÉE ***'), L), { gras: true, grand: true });
+    for (const l of decouper(tr('Le {0} à {1}', [formatDate(vente.annulee.date), formatHeure(vente.annulee.date)]), L)) ajouter(centrer(l, L));
+    if (vente.annulee.motif) for (const l of decouper(tr('Motif : {0}', [vente.annulee.motif]), L)) ajouter(centrer(l, L));
     separateur();
   }
 
   // Infos de la vente (le nom du vendeur n'est pas imprimé :
   // il reste visible pour le gérant dans l'historique des ventes)
   const date = formatDate(vente.date) + ' ' + formatHeure(vente.date);
-  for (const l of deuxColonnes('Ticket n° ' + vente.numero, date, L)) ajouter(l);
-  if (vente.table) ajouter('Table : ' + vente.table);
-  if (vente.aDistance) ajouter('Commande à distance');
+  for (const l of deuxColonnes(tr('Ticket n° {0}', [vente.numero]), date, L)) ajouter(l);
+  if (vente.table) ajouter(tr('Table : {0}', [vente.table]));
+  if (vente.aDistance) ajouter(tr('Commande à distance'));
   separateur();
 
   // Articles
@@ -87,30 +88,30 @@ export function construireTicket(vente, commerce, largeurPapier = 58) {
     const libelle = ligne.quantite + ' x ' + ligne.nom;
     for (const l of deuxColonnes(libelle, formatNombre(ligne.total, dev), L)) ajouter(l);
     for (const d of ligne.details) for (const l of decouper(d, L - 4)) ajouter('    ' + l);
-    if (ligne.quantite > 1) ajouter('    (' + formatNombre(ligne.prixUnitaire, dev) + ' l\'unité)');
-    if (ligne.prixNormal) ajouter('    Promo ! au lieu de ' + formatNombre(ligne.prixNormal, dev));
+    if (ligne.quantite > 1) ajouter('    (' + formatNombre(ligne.prixUnitaire, dev) + ' ' + tr('l\'unité') + ')');
+    if (ligne.prixNormal) ajouter(tr('    Promo ! au lieu de {0}', [formatNombre(ligne.prixNormal, dev)]));
   }
   separateur();
 
   // Totaux
   if (vente.remise > 0) {
-    for (const l of deuxColonnes('Sous-total', formatPrix(vente.sousTotal, dev), L)) ajouter(l);
+    for (const l of deuxColonnes(tr('Sous-total'), formatPrix(vente.sousTotal, dev), L)) ajouter(l);
     const detail = vente.remiseInfo?.type === 'pourcent' ? ' (' + vente.remiseInfo.valeur + ' %)' : '';
-    for (const l of deuxColonnes('Remise' + detail, '-' + formatPrix(vente.remise, dev), L)) ajouter(l);
+    for (const l of deuxColonnes(tr('Remise') + detail, '-' + formatPrix(vente.remise, dev), L)) ajouter(l);
   }
-  for (const l of deuxColonnes('TOTAL', formatPrix(vente.total, dev), L)) ajouter(l, { gras: true, grand: true });
+  for (const l of deuxColonnes(tr('TOTAL'), formatPrix(vente.total, dev), L)) ajouter(l, { gras: true, grand: true });
   if (vente.paiement === 'Crédit') {
-    ajouter('Paiement : À CRÉDIT', { gras: true });
-    for (const l of decouper('Client : ' + vente.clientNom, L)) ajouter(l);
+    ajouter(tr('Paiement : À CRÉDIT'), { gras: true });
+    for (const l of decouper(tr('Client : {0}', [vente.clientNom]), L)) ajouter(l);
     if (vente.soldeClientApres !== undefined) {
-      for (const l of deuxColonnes('Total dû', formatPrix(vente.soldeClientApres, dev), L)) ajouter(l, { gras: true });
+      for (const l of deuxColonnes(tr('Total dû'), formatPrix(vente.soldeClientApres, dev), L)) ajouter(l, { gras: true });
     }
   } else {
-    ajouter('Paiement : ' + vente.paiement);
+    ajouter(tr('Paiement : {0}', [tt(vente.paiement)]));
   }
   if (vente.recu > 0) {
-    for (const l of deuxColonnes('Reçu', formatPrix(vente.recu, dev), L)) ajouter(l);
-    for (const l of deuxColonnes('Rendu', formatPrix(vente.recu - vente.total, dev), L)) ajouter(l);
+    for (const l of deuxColonnes(tr('Reçu'), formatPrix(vente.recu, dev), L)) ajouter(l);
+    for (const l of deuxColonnes(tr('Rendu'), formatPrix(vente.recu - vente.total, dev), L)) ajouter(l);
   }
   separateur();
 
@@ -133,48 +134,48 @@ export function construireTicketCloture(cl, commerce, largeurPapier = 58) {
   const signe = (m) => (m > 0 ? '+' : '') + formatPrix(m, dev);
 
   for (const l of decouper(commerce.nom.toUpperCase(), L)) ajouter(centrer(l, L), { gras: true, grand: true });
-  ajouter(centrer('FERMETURE DE LA JOURNÉE', L), { gras: true });
+  ajouter(centrer(tr('FERMETURE DE LA JOURNÉE'), L), { gras: true });
   separateur();
-  colonnes('Ouverture', formatDate(cl.debut) + ' ' + formatHeure(cl.debut));
-  if (cl.ouvertePar) ajouter('  par ' + cl.ouvertePar);
-  colonnes('Fermeture', formatDate(cl.fin) + ' ' + formatHeure(cl.fin));
-  ajouter('  par ' + cl.utilisateurNom);
+  colonnes(tr('Ouverture'), formatDate(cl.debut) + ' ' + formatHeure(cl.debut));
+  if (cl.ouvertePar) ajouter(tr('  par {0}', [cl.ouvertePar]));
+  colonnes(tr('Fermeture'), formatDate(cl.fin) + ' ' + formatHeure(cl.fin));
+  ajouter(tr('  par {0}', [cl.utilisateurNom]));
   separateur();
 
-  colonnes('Ventes (' + cl.nbVentes + ' tickets)', formatPrix(cl.totalVentes, dev), { gras: true });
-  if (cl.nbAnnulees) colonnes('Ventes annulées', String(cl.nbAnnulees));
-  if (cl.totalRemises) colonnes('Remises accordées', formatNombre(cl.totalRemises, dev));
+  colonnes(tr('Ventes ({0} tickets)', [cl.nbVentes]), formatPrix(cl.totalVentes, dev), { gras: true });
+  if (cl.nbAnnulees) colonnes(tr('Ventes annulées'), String(cl.nbAnnulees));
+  if (cl.totalRemises) colonnes(tr('Remises accordées'), formatNombre(cl.totalRemises, dev));
   separateur();
-  ajouter('PAR MODE DE PAIEMENT', { gras: true });
+  ajouter(tr('PAR MODE DE PAIEMENT'), { gras: true });
   for (const p of cl.parPaiement) {
     if (!(p.nb || p.rembourse || p.mode === 'Espèces')) continue;
-    colonnes(p.mode + ' (' + p.nb + ')', formatNombre(p.total, dev));
-    if (p.rembourse) colonnes('  + crédits remboursés', formatNombre(p.rembourse, dev));
+    colonnes(tt(p.mode) + ' (' + p.nb + ')', formatNombre(p.total, dev));
+    if (p.rembourse) colonnes(tr('  + crédits remboursés'), formatNombre(p.rembourse, dev));
   }
-  if (cl.totalRecu !== undefined) colonnes('TOTAL REÇU', formatPrix(cl.totalRecu, dev), { gras: true });
+  if (cl.totalRecu !== undefined) colonnes(tr('TOTAL REÇU'), formatPrix(cl.totalRecu, dev), { gras: true });
   separateur();
 
   // Total vendu par article (pour les comptes de fin de journée)
   if (cl.parArticle?.length) {
-    ajouter('ARTICLES VENDUS (' + (cl.nbArticles ?? '') + ')', { gras: true });
+    ajouter(tr('ARTICLES VENDUS ({0})', [cl.nbArticles ?? '']), { gras: true });
     for (const a of cl.parArticle) colonnes(a.quantite + ' x ' + a.nom, formatNombre(a.total, dev));
     separateur();
   }
 
-  ajouter('ESPÈCES EN MAIN', { gras: true });
-  colonnes('Fond de départ', formatNombre(cl.fondDeCaisse, dev));
-  colonnes('+ Ventes en espèces', formatNombre(cl.ventesEspeces, dev));
-  if (cl.remboursementsEspeces) colonnes('+ Crédits remboursés', formatNombre(cl.remboursementsEspeces, dev));
-  colonnes('- Dépenses payées', formatNombre(cl.depensesCaisse, dev));
-  colonnes('Attendu', formatPrix(cl.attendu, dev), { gras: true });
-  colonnes('Compté', formatPrix(cl.compte, dev), { gras: true });
+  ajouter(tr('ESPÈCES EN MAIN'), { gras: true });
+  colonnes(tr('Fond de départ'), formatNombre(cl.fondDeCaisse, dev));
+  colonnes(tr('+ Ventes en espèces'), formatNombre(cl.ventesEspeces, dev));
+  if (cl.remboursementsEspeces) colonnes(tr('+ Crédits remboursés'), formatNombre(cl.remboursementsEspeces, dev));
+  colonnes(tr('- Dépenses payées'), formatNombre(cl.depensesCaisse, dev));
+  colonnes(tr('Attendu'), formatPrix(cl.attendu, dev), { gras: true });
+  colonnes(tr('Compté'), formatPrix(cl.compte, dev), { gras: true });
   separateur();
-  colonnes('ÉCART', signe(cl.ecart), { gras: true, grand: true });
-  ajouter(centrer(cl.ecart === 0 ? 'Comptes justes' : cl.ecart < 0 ? 'Il manque de l’argent' : 'Excédent dans les comptes', L));
+  colonnes(tr('ÉCART'), signe(cl.ecart), { gras: true, grand: true });
+  ajouter(centrer(cl.ecart === 0 ? tr('Comptes justes') : cl.ecart < 0 ? tr('Il manque de l’argent') : tr('Excédent dans les comptes'), L));
   separateur();
-  if (cl.note) for (const l of decouper('Note : ' + cl.note, L)) ajouter(l);
+  if (cl.note) for (const l of decouper(tr('Note : {0}', [cl.note]), L)) ajouter(l);
   ajouter('');
-  ajouter('Signature :');
+  ajouter(tr('Signature :'));
   ajouter('');
   ajouter(centrer('Kaislo', L));
   return out;
@@ -188,7 +189,7 @@ export function construireTicketCuisine(commande, lignes, commerce, largeurPapie
   const L = CARACTERES[largeurPapier] || 32;
   const out = [];
   const ajouter = (texte, opts = {}) => out.push({ texte, gras: !!opts.gras, grand: !!opts.grand });
-  ajouter(centrer('CUISINE', L), { gras: true, grand: true });
+  ajouter(centrer(tr('CUISINE'), L), { gras: true, grand: true });
   ajouter(centrer(commande.table.toUpperCase(), L), { gras: true, grand: true });
   ajouter(centrer(formatHeure(new Date().toISOString()) + ' · ' + commande.vendeurNom, L));
   ajouter('='.repeat(L));
@@ -211,16 +212,16 @@ export function construireTicketRemboursement(r, client, soldeApres, commerce, l
   const colonnes = (g, d, opts) => deuxColonnes(g, d, L).forEach((l) => ajouter(l, opts));
   if (commerce.logo && commerce.logoSurTicket === true) out.push({ logo: true, ref: commerce.logo, texte: '' });
   for (const l of decouper(commerce.nom.toUpperCase(), L)) ajouter(centrer(l, L), { gras: true, grand: true });
-  ajouter(centrer('REÇU DE REMBOURSEMENT', L), { gras: true });
+  ajouter(centrer(tr('REÇU DE REMBOURSEMENT'), L), { gras: true });
   ajouter('-'.repeat(L));
-  colonnes('Date', formatDate(r.date) + ' ' + formatHeure(r.date));
-  for (const l of decouper('Client : ' + client.nom, L)) ajouter(l);
+  colonnes(tr('Date'), formatDate(r.date) + ' ' + formatHeure(r.date));
+  for (const l of decouper(tr('Client : {0}', [client.nom]), L)) ajouter(l);
   ajouter('-'.repeat(L));
-  colonnes('MONTANT REÇU', formatPrix(r.montant, dev), { gras: true, grand: true });
-  colonnes('Mode', r.mode);
-  colonnes('Reste dû', formatPrix(soldeApres, dev), { gras: true });
+  colonnes(tr('MONTANT REÇU'), formatPrix(r.montant, dev), { gras: true, grand: true });
+  colonnes(tr('Mode'), tt(r.mode));
+  colonnes(tr('Reste dû'), formatPrix(soldeApres, dev), { gras: true });
   ajouter('-'.repeat(L));
-  ajouter(centrer(soldeApres > 0 ? 'Merci !' : 'Compte soldé. Merci !', L));
+  ajouter(centrer(soldeApres > 0 ? tr('Merci !') : tr('Compte soldé. Merci !'), L));
   ajouter(centrer('Kaislo', L));
   return out;
 }
@@ -230,13 +231,13 @@ export function ticketTest(commerce, largeurPapier = 58) {
   const L = CARACTERES[largeurPapier] || 32;
   return [
     { texte: centrer('KAISLO', L), gras: true, grand: true },
-    { texte: centrer('Test d\'impression', L) },
+    { texte: centrer(tr('Test d\'impression'), L) },
     { texte: '-'.repeat(L) },
     { texte: commerce.nom },
-    { texte: 'Papier : ' + largeurPapier + ' mm (' + L + ' car.)' },
-    { texte: 'Accents : é è à ç ô ù' },
+    { texte: tr('Papier : {0} mm ({1} car.)', [largeurPapier, L]) },
+    { texte: tr('Accents : é è à ç ô ù') },
     { texte: '-'.repeat(L) },
-    { texte: centrer('Tout fonctionne !', L), gras: true },
+    { texte: centrer(tr('Tout fonctionne !'), L), gras: true },
   ];
 }
 
@@ -246,5 +247,5 @@ export function ticketTest(commerce, largeurPapier = 58) {
  */
 export function ticketEnTexteWhatsApp(lignes, commerce) {
   const texte = lignes.filter((l) => !l.logo).map((l) => l.texte.replace(/\s+$/, '')).join('\n');
-  return 'Bonjour, voici votre reçu de *' + commerce.nom + '* :\n```\n' + texte + '\n```\nMerci pour votre confiance !';
+  return tr('Bonjour, voici votre reçu de *{0}* :', [commerce.nom]) + '\n```\n' + texte + '\n```\n' + tr('Merci pour votre confiance !');
 }

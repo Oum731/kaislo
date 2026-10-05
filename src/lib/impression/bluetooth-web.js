@@ -9,6 +9,7 @@
 // ------------------------------------------------------------
 
 // Services BLE utilisés par les imprimantes thermiques les plus courantes
+import { tr } from '../i18n/index.js';
 const SERVICES_CONNUS = [
   '000018f0-0000-1000-8000-00805f9b34fb',
   'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
@@ -50,7 +51,7 @@ async function trouverCaracteristique(serveur) {
       if (c.properties.write || c.properties.writeWithoutResponse) return c;
     }
   }
-  throw new Error('Cet appareil ne semble pas être une imprimante compatible.');
+  throw new Error(tr('Cet appareil ne semble pas être une imprimante compatible.'));
 }
 
 async function ouvrirConnexion() {
@@ -62,7 +63,7 @@ async function ouvrirConnexion() {
 // Ouvre la fenêtre de choix de l'appareil Bluetooth
 export async function connecter() {
   if (!navigator.bluetooth) {
-    throw new Error('Bluetooth indisponible : utilisez Chrome sur un téléphone Android.');
+    throw new Error(tr('Bluetooth indisponible : utilisez Chrome sur un téléphone Android.'));
   }
   appareil = await navigator.bluetooth.requestDevice({
     acceptAllDevices: true,
@@ -86,7 +87,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Envoie les octets ESC/POS à l'imprimante
 export async function envoyer(octets) {
-  if (!appareil) throw new Error('Aucune imprimante connectée.');
+  if (!appareil) throw new Error(tr('Aucune imprimante connectée.'));
   if (!appareil.gatt.connected || !caracteristique) await ouvrirConnexion(); // reconnexion auto
 
   const sansReponse = caracteristique.properties.writeWithoutResponse;

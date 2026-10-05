@@ -7,9 +7,10 @@
 // Chaque formule comprend 1 poste ; au-delà, un poste supplémentaire est facturé (voir tarifs.js).
 // ------------------------------------------------------------
 import { VENDEURS_PAR_POSTE } from './tarifs.js';
+import { tr } from '../i18n/index.js';
 
 // Poste créé avec chaque commerce (tant que le gérant n'en a pas créé d'autres)
-export const POSTE_PRINCIPAL = { id: 'principal', nom: 'Poste principal' };
+export const POSTE_PRINCIPAL = { id: 'principal', get nom() { return tr('Poste principal'); } };
 
 export const postesDe = (d) => (d?.postes?.length ? d.postes : [POSTE_PRINCIPAL]);
 

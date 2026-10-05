@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { lireImage, estImageLocale, adresseImage, reduireImage } from '@/lib/donnees/images';
 import { normaliserTelephone, exempleTelephone, indicatifPays } from '@/lib/donnees/telephone';
+import { tr, LANGUES } from '@/lib/i18n';
 
 // Dessins des icônes (style "Lucide", trait de 2 px)
 const DESSINS = {
@@ -88,7 +89,7 @@ export function Feuille({ titre, sousTitre, surFermer, children, pied, pleine = 
               {sousTitre && <p className="petit muet">{sousTitre}</p>}
             </div>
             {surFermer && (
-              <button className="bouton-rond" onClick={surFermer} aria-label="Fermer">
+              <button className="bouton-rond" onClick={surFermer} aria-label={tr('Fermer')}>
                 <Icone nom="fermer" />
               </button>
             )}
@@ -119,6 +120,17 @@ export function Reglage({ titre, aide, actif, surChanger }) {
 }
 
 // Onglets : options = [[valeur, libellé], …]
+// Choix de la langue de l'application (Français / English)
+export function SelecteurLangue({ langue, surChanger }) {
+  return (
+    <div className="segment" role="group" aria-label="Langue / Language" style={{ maxWidth: 260 }}>
+      {LANGUES.map(([id, nom]) => (
+        <button key={id} lang={id} aria-pressed={langue === id} className={langue === id ? 'actif' : ''} onClick={() => surChanger(id)}>{nom}</button>
+      ))}
+    </div>
+  );
+}
+
 export function Segment({ options, valeur, surChanger }) {
   return (
     <div className="segment" role="tablist">
@@ -150,7 +162,7 @@ export function initiales(nom) {
 export function Avatar({ nom, gerant, grand, onClick }) {
   const Balise = onClick ? 'button' : 'span';
   return (
-    <Balise className={`avatar ${gerant ? 'gerant' : ''} ${grand ? 'grand' : ''}`} onClick={onClick} aria-label={onClick ? 'Mon compte' : undefined}>
+    <Balise className={`avatar ${gerant ? 'gerant' : ''} ${grand ? 'grand' : ''}`} onClick={onClick} aria-label={onClick ? tr('Mon compte') : undefined}>
       {initiales(nom)}
     </Balise>
   );
@@ -162,7 +174,7 @@ export function ApercuTicket({ lignes, largeur }) {
     <div className={`ticket l${largeur}`}>
       {lignes.map((l, i) =>
         l.logo ? (
-          <ImageStockee key={i} reference={l.ref} className="ticket-logo" alt="Logo" />
+          <ImageStockee key={i} reference={l.ref} className="ticket-logo" alt={tr('Logo')} />
         ) : (
           <div key={i} className={`${l.gras ? 't-gras' : ''} ${l.grand ? 't-grand' : ''}`}>{l.texte || ' '}</div>
         )
@@ -197,7 +209,7 @@ export function ImageStockee({ reference, alt = '', className = '', secours = nu
  * Choix d'une photo : appareil photo ou galerie (le téléphone propose les deux).
  * reference : image déjà enregistrée · nouvelle : photo choisie mais pas encore enregistrée
  */
-export function ChoixImage({ reference, nouvelle, retiree, surChoisir, surRetirer, libelle = 'Ajouter une photo', forme = 'carree' }) {
+export function ChoixImage({ reference, nouvelle, retiree, surChoisir, surRetirer, libelle = tr('Ajouter une photo'), forme = 'carree' }) {
   const champ = useRef(null);
   const [erreur, setErreur] = useState('');
   const existante = useImage(retiree ? null : reference);
@@ -225,9 +237,9 @@ export function ChoixImage({ reference, nouvelle, retiree, surChoisir, surRetire
       </button>
       <div className="choix-image-actions">
         <button type="button" className="btn secondaire petit" onClick={() => champ.current.click()}>
-          <Icone nom="photo" taille="sm" /> {affichee ? 'Changer' : 'Choisir'}
+          <Icone nom="photo" taille="sm" /> {affichee ? tr('Changer') : tr('Choisir')}
         </button>
-        {affichee && <button type="button" className="btn fantome petit" onClick={surRetirer}>Retirer</button>}
+        {affichee && <button type="button" className="btn fantome petit" onClick={surRetirer}>{tr('Retirer')}</button>}
       </div>
       {erreur && <p className="alerte">{erreur}</p>}
       <input ref={champ} type="file" accept="image/*" hidden onChange={choisir} />

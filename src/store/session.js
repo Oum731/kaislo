@@ -15,6 +15,7 @@ import { etatAbonnement } from '@/lib/donnees/abonnement.js';
 import { estServeur, noterTout, tailleFile } from '@/lib/donnees/synchro.js';
 import { API_ACTIVE, appelApi, nomAppareil } from '@/lib/api.js';
 import { biometrieDisponible, activerBiometrie, connexionBiometrie, nomBiometrie } from '@/lib/biometrie.js';
+import { tr } from '@/lib/i18n';
 
 // Empreinte du code PIN gardée dans l'appareil : permet de se reconnecter SANS internet
 // (seulement sur un appareil où la personne s'est déjà connectée en ligne)
@@ -44,7 +45,7 @@ export const trancheSession = (set, get) => ({
   // Démos : on relie l'appareil et on affiche l'écran de connexion
   relierAppareil(id) {
     const d = chargerCommerce(id);
-    if (!d) return get().message('Ce commerce n’existe pas', 'erreur');
+    if (!d) return get().message(tr('Ce commerce n’existe pas'), 'erreur');
     get().sauverPrefs({ commerceAppareil: id, session: null });
     set({ d, utilisateur: null, etapeConnexion: get().commerceSuspendu() ? 'suspendu' : 'connexion' });
   },
@@ -55,15 +56,15 @@ export const trancheSession = (set, get) => ({
    */
   async connecterParTelephone(telephone, pin, pays) {
     const cle = cleTelephone(telephone);
-    if (!cle) return 'Entrez votre numéro de téléphone';
-    if (!/^\d{4}$/.test(String(pin))) return 'Le code PIN contient 4 chiffres';
+    if (!cle) return tr('Entrez votre numéro de téléphone');
+    if (!/^\d{4}$/.test(String(pin))) return tr('Le code PIN contient 4 chiffres');
 
     // 1. Démos et comptes gardés seulement dans l'appareil
     const trouve = trouverParTelephone(telephone);
     if (trouve && !estServeur(trouve.d)) {
       const u = trouve.utilisateur;
-      if (u.pin !== String(pin)) return 'Numéro ou code PIN incorrect';
-      if (!u.actif) return 'Ce compte est désactivé. Demandez à votre gérant de le réactiver.';
+      if (u.pin !== String(pin)) return tr('Numéro ou code PIN incorrect');
+      if (!u.actif) return tr('Ce compte est désactivé. Demandez à votre gérant de le réactiver.');
       const d = chargerCommerce(trouve.d.commerce.id);
       set({ d });
       get().sauverPrefs({ commerceAppareil: d.commerce.id });
@@ -74,7 +75,7 @@ export const trancheSession = (set, get) => ({
       get().ouvrirSession(d.utilisateurs.find((x) => x.id === u.id));
       return null;
     }
-    if (!API_ACTIVE) return 'Aucun compte Kaislo avec ce numéro';
+    if (!API_ACTIVE) return tr('Aucun compte Kaislo avec ce numéro');
     const numero = normaliserTelephone(telephone, pays);
     if (!numero.ok) return numero.erreur;
     get().sauverPrefs({ paysConnexion: pays });
@@ -93,8 +94,8 @@ export const trancheSession = (set, get) => ({
       if (!e.horsLigne) return e.message;
       // Pas d'internet : reconnexion possible si cette personne s'est déjà connectée ici
       const memo = get().prefs.pinsHors?.[cle];
-      if (!memo || !chargerCommerce(memo.commerceId)) return 'Pas de connexion internet. La première connexion sur cet appareil demande internet.';
-      if ((await empreintePin(memo.sel, pin)) !== memo.hash) return 'Numéro ou code PIN incorrect';
+      if (!memo || !chargerCommerce(memo.commerceId)) return tr('Pas de connexion internet. La première connexion sur cet appareil demande internet.');
+      if ((await empreintePin(memo.sel, pin)) !== memo.hash) return tr('Numéro ou code PIN incorrect');
       return get().ouvrirSessionHorsLigne(memo.commerceId, memo.utilisateurId);
     } finally {
       set({ connexionEnCours: false });
@@ -123,13 +124,13 @@ export const trancheSession = (set, get) => ({
   ouvrirSessionHorsLigne(commerceId, utilisateurId) {
     const d = chargerCommerce(commerceId);
     const u = d?.utilisateurs.find((x) => x.id === utilisateurId);
-    if (!u) return 'Compte introuvable sur cet appareil';
-    if (!u.actif) return 'Ce compte est désactivé. Demandez à votre gérant de le réactiver.';
+    if (!u) return tr('Compte introuvable sur cet appareil');
+    if (!u.actif) return tr('Ce compte est désactivé. Demandez à votre gérant de le réactiver.');
     set({ d });
     get().sauverPrefs({ commerceAppareil: commerceId });
     get().demarrerSynchro();
     get().ouvrirSession(u);
-    get().message('Hors ligne : les ventes seront envoyées dès le retour d’internet');
+    get().message(tr('Hors ligne : les ventes seront envoyées dès le retour d’internet'));
     return null;
   },
 
@@ -151,10 +152,10 @@ export const trancheSession = (set, get) => ({
       const entree = { credentialId, telephone: u.telephone, nom: u.nom, utilisateurId: u.id, commerceId: get().d.commerce.id };
       get().sauverPrefs({ biometrie: { ...(get().prefs.biometrie || {}), [cle]: entree } });
       get().fermer();
-      get().message(`${nomBiometrie()[0].toUpperCase() + nomBiometrie().slice(1)} activé pour vos prochaines connexions`);
+      get().message(tr('{0} activé pour vos prochaines connexions', [nomBiometrie()[0].toUpperCase() + nomBiometrie().slice(1)]));
     } catch (e) {
       // « NotAllowedError » : la personne a annulé
-      if (e.name !== 'NotAllowedError') get().message(e.message || 'Activation impossible', 'erreur');
+      if (e.name !== 'NotAllowedError') get().message(e.message || tr('Activation impossible'), 'erreur');
     }
   },
 
@@ -169,7 +170,7 @@ export const trancheSession = (set, get) => ({
     const biometrie = { ...(get().prefs.biometrie || {}) };
     delete biometrie[cle];
     get().sauverPrefs({ biometrie });
-    get().message('Connexion par empreinte désactivée sur cet appareil');
+    get().message(tr('Connexion par empreinte désactivée sur cet appareil'));
   },
 
   // Comptes de cet appareil avec l'empreinte activée (boutons de l'écran de connexion)
@@ -187,7 +188,7 @@ export const trancheSession = (set, get) => ({
       return null;
     } catch (e) {
       if (e.name === 'NotAllowedError') return null; // annulé par la personne
-      return e.message || 'Empreinte non reconnue : utilisez votre code PIN';
+      return e.message || tr('Empreinte non reconnue : utilisez votre code PIN');
     } finally {
       set({ connexionEnCours: false });
     }
@@ -210,7 +211,7 @@ export const trancheSession = (set, get) => ({
     if (estServeur(d)) {
       // Ventes pas encore envoyées : on ne les perd pas
       if (tailleFile(d.commerce.id) > 0) {
-        get().message('Des modifications ne sont pas encore envoyées : reconnectez-vous à internet d’abord', 'erreur');
+        get().message(tr('Des modifications ne sont pas encore envoyées : reconnectez-vous à internet d’abord'), 'erreur');
         get().synchroniser();
         return;
       }
@@ -288,7 +289,7 @@ export const trancheSession = (set, get) => ({
       const d = creerCommerce(infos);
       set({ d });
       get().ouvrirSession(d.utilisateurs[0]);
-      get().message('Bienvenue sur Kaislo ! Essai gratuit de 30 jours activé.');
+      get().message(tr('Bienvenue sur Kaislo ! Essai gratuit de 30 jours activé.'));
       return null;
     }
     set({ connexionEnCours: true });
@@ -313,11 +314,11 @@ export const trancheSession = (set, get) => ({
       set({ d });
       get().ouvrirSession(d.utilisateurs[0]);
       get().demarrerSynchro();
-      get().message('Bienvenue sur Kaislo ! Essai gratuit de 30 jours activé.');
+      get().message(tr('Bienvenue sur Kaislo ! Essai gratuit de 30 jours activé.'));
       get().proposerBiometrie(d.utilisateurs[0]);
       return null;
     } catch (e) {
-      return e.horsLigne ? 'Pas de connexion internet : l’inscription demande internet.' : e.message;
+      return e.horsLigne ? tr('Pas de connexion internet : l’inscription demande internet.') : e.message;
     } finally {
       set({ connexionEnCours: false });
     }

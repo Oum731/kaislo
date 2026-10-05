@@ -12,6 +12,7 @@ import { nouvelAbonnement } from './abonnement.js';
 import { migrerClotures } from './cloture.js';
 import { avecStocks } from './stock.js';
 import { lireMemoire, ecrireMemoire, effacerMemoire } from './memoire.js';
+import { tr } from '../i18n/index.js';
 
 // Lecture / écriture : en mémoire + IndexedDB (voir memoire.js). initialiserStockage() est appelé au démarrage de l'application.
 export { initialiserStockage, surErreurStockage } from './memoire.js';
@@ -117,7 +118,7 @@ export function creerCommerce(infos, serveur = null) {
       ville: infos.ville,
       adresse: '',
       telephone: infos.telephone || infos.gerantTelephone,
-      piedTicket: 'Merci et à bientôt !',
+      piedTicket: tr('Merci et à bientôt !'),
       modesPaiement: pays.paiements,
       fondDeCaisse: 0,
       tables: typeCommerce(infos.type).tables ? TABLES_DEPART : [],
@@ -159,7 +160,7 @@ export function commerceDepuisServeur(rep) {
     version: VERSION_DONNEES,
     commerce: {
       id: c.id, code: c.code, serveur: true, nom: c.nom, type: c.type, pays: c.pays, devise: c.devise, ville: c.ville,
-      adresse: '', telephone: c.telephone, piedTicket: 'Merci et à bientôt !', modesPaiement: pays.paiements, fondDeCaisse: 0,
+      adresse: '', telephone: c.telephone, piedTicket: tr('Merci et à bientôt !'), modesPaiement: pays.paiements, fondDeCaisse: 0,
       tables: [], creeLe: c.creeLe, conditionsAccepteesLe: c.conditionsAccepteesLe, abonnement: { ...nouvelAbonnement(), ...c.abonnement },
     },
     utilisateurs: [rep.utilisateur],

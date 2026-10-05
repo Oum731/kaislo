@@ -10,6 +10,7 @@ import { arrondir, genId } from '@/lib/utils/format.js';
 import { estServeur } from '@/lib/donnees/synchro.js';
 import { appelApi } from '@/lib/api.js';
 import { posteDuTicket } from '@/lib/donnees/postes.js';
+import { tr } from '@/lib/i18n';
 
 export const trancheCaisse = (set, get) => ({
   panier: [], // lignes en cours
@@ -40,7 +41,7 @@ export const trancheCaisse = (set, get) => ({
     }
     set({ panier });
     if (produit.suiviStock && stockDe(produit) <= 0) {
-      get().message('Stock de « ' + produit.nom + ' » à zéro : pensez à le mettre à jour', 'erreur');
+      get().message(tr('Stock de « {0} » à zéro : pensez à le mettre à jour', [produit.nom]), 'erreur');
     }
     if (typeof navigator !== 'undefined') navigator.vibrate?.(15);
   },
@@ -80,17 +81,17 @@ export const trancheCaisse = (set, get) => ({
     if (!panier.length) return null;
     // On n'encaisse que si la caisse du jour est ouverte
     if (!get().caisseOuverte()) {
-      get().message('Ouvrez d’abord la journée', 'erreur');
+      get().message(tr('Ouvrez d’abord la journée'), 'erreur');
       get().ouvrir('ouverture');
       return null;
     }
     if (paiement === CREDIT && !client) {
-      get().message('Choisissez le client pour une vente à crédit', 'erreur');
+      get().message(tr('Choisissez le client pour une vente à crédit'), 'erreur');
       return null;
     }
     const t = get().totaux();
     if (paiement === 'Espèces' && recu > 0 && recu < t.total) {
-      get().message('Le montant reçu est inférieur au total', 'erreur');
+      get().message(tr('Le montant reçu est inférieur au total'), 'erreur');
       return null;
     }
     const d0 = get().d;
@@ -155,7 +156,7 @@ export const trancheCaisse = (set, get) => ({
         const octets = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(memo.sel + ':' + pin));
         if (Array.from(new Uint8Array(octets), (b) => b.toString(16).padStart(2, '0')).join('') === memo.hash) return g;
       }
-      get().message('Pas de connexion internet : le code du gérant ne peut pas être vérifié ici', 'erreur');
+      get().message(tr('Pas de connexion internet : le code du gérant ne peut pas être vérifié ici'), 'erreur');
       return false;
     }
   },
@@ -164,7 +165,7 @@ export const trancheCaisse = (set, get) => ({
     const gerant = await get().verifierPinGerant(pin);
     if (gerant === false) return false; // message déjà affiché
     if (!gerant) {
-      get().message('Code PIN du gérant incorrect', 'erreur');
+      get().message(tr('Code PIN du gérant incorrect'), 'erreur');
       return false;
     }
     const annulee = { ...vente, annulee: { date: new Date().toISOString(), par: gerant.nom, motif: motif.trim() } };
@@ -173,7 +174,7 @@ export const trancheCaisse = (set, get) => ({
       // Les articles reviennent dans le stock tout seuls : une vente annulée ne compte plus dans le calcul du stock
     }));
     get().ouvrir('ticket', { vente: annulee });
-    get().message('Vente n° ' + vente.numero + ' annulée');
+    get().message(tr('Vente n° {0} annulée', [vente.numero]));
     return true;
   },
 
@@ -226,7 +227,7 @@ export const trancheCaisse = (set, get) => ({
       get().ouvrir('cuisine', { commande, lignes: nouvelles });
       if (get().imprimante.connectee) get().imprimerCuisine(commande, nouvelles);
     } else {
-      get().message(commande.table + ' enregistrée');
+      get().message(tr('{0} enregistrée', [commande.table]));
       get().allerA('tables');
     }
   },
@@ -266,6 +267,6 @@ export const trancheCaisse = (set, get) => ({
   libererTable(commandeId) {
     get().majDonnees((d) => ({ commandes: d.commandes.filter((c) => c.id !== commandeId) }));
     if (get().commandeActive === commandeId) set({ panier: [], commandeActive: null });
-    get().message('Table libérée');
+    get().message(tr('Table libérée'));
   },
 });

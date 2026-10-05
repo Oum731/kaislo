@@ -3,6 +3,7 @@
 // ------------------------------------------------------------
 
 // Nombre de décimales selon la devise : le FCFA n'a pas de centimes, le dirham et l'euro oui.
+import { localeIntl, tr } from '../i18n/index.js';
 const DECIMALES = { FCFA: 0, MAD: 2, EUR: 2, CAD: 2, USD: 2, GNF: 0 };
 
 // Libellé affiché après le montant.
@@ -21,7 +22,7 @@ export function symbole(devise) {
 // (sinon l'imprimante thermique affiche des caractères bizarres).
 export function formatNombre(montant, devise) {
   const dec = DECIMALES[devise] ?? 0;
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat(localeIntl(), {
     minimumFractionDigits: dec,
     maximumFractionDigits: dec,
   })
@@ -62,7 +63,7 @@ export function formatDate(dateIso) {
 
 // "Jeudi 2 octobre"
 export function formatJourLong(date) {
-  const s = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
+  const s = new Intl.DateTimeFormat(localeIntl(), { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
@@ -79,6 +80,6 @@ export function initiales(nom) {
 // Quantité avec son unité : « 12 kg », « 3 carton » ; la pièce reste implicite (« 12 »)
 export function quantiteUnite(quantite, unite) {
   const q = Number(quantite) || 0;
-  const texte = Number.isInteger(q) ? String(q) : q.toLocaleString('fr-FR', { maximumFractionDigits: 3 });
-  return !unite || unite === 'pièce' ? texte : texte + ' ' + unite;
+  const texte = Number.isInteger(q) ? String(q) : q.toLocaleString(localeIntl(), { maximumFractionDigits: 3 });
+  return !unite || unite === 'pièce' ? texte : texte + ' ' + tr(unite);
 }

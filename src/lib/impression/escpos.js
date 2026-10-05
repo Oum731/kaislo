@@ -2,6 +2,7 @@
 // Conversion des lignes du ticket en commandes ESC/POS
 // (le "langage" des imprimantes thermiques).
 // ------------------------------------------------------------
+import { tr } from '../i18n/index.js';
 
 const ESC = 0x1b;
 const GS = 0x1d;
@@ -59,7 +60,7 @@ function chargerImage(src) {
   return new Promise((ok, erreur) => {
     const img = new Image();
     img.onload = () => ok(img);
-    img.onerror = () => erreur(new Error('Logo illisible'));
+    img.onerror = () => erreur(new Error(tr('Logo illisible')));
     img.src = src;
   });
 }

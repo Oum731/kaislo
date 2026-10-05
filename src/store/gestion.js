@@ -16,6 +16,7 @@ import { postesDe, postePlein, vendeursDuPoste } from '@/lib/donnees/postes.js';
 import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs.js';
 
 import { stockDe, departStock } from '@/lib/donnees/stock.js';
+import { tr } from '@/lib/i18n';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
 
@@ -25,20 +26,20 @@ export const trancheGestion = (set, get) => ({
   enregistrerProduit(brouillon) {
     const b = JSON.parse(JSON.stringify(brouillon));
     b.nom = b.nom.trim();
-    if (!b.nom) return 'Donnez un nom au produit';
-    if (!get().d.categories.some((c) => c.id === b.categorieId)) return 'Choisissez ou créez une catégorie';
+    if (!b.nom) return tr('Donnez un nom au produit');
+    if (!get().d.categories.some((c) => c.id === b.categorieId)) return tr('Choisissez ou créez une catégorie');
     b.prix = nombre(b.prix);
-    if (b.prix === null || b.prix < 0) return 'Indiquez un prix';
+    if (b.prix === null || b.prix < 0) return tr('Indiquez un prix');
     b.promo = nombre(b.promo);
-    if (b.promo !== null && b.promo >= b.prix) return 'Le prix promo doit être plus petit que le prix normal';
+    if (b.promo !== null && b.promo >= b.prix) return tr('Le prix promo doit être plus petit que le prix normal');
     b.prixAchat = nombre(b.prixAchat);
     b.stock = nombre(b.stock) || 0;
     b.seuilAlerte = nombre(b.seuilAlerte) ?? 5;
     for (const g of b.groupes) {
       g.nom = g.nom.trim();
       g.options = g.options.filter((o) => o.nom.trim());
-      if (!g.nom) return 'Chaque groupe d’options doit avoir un nom';
-      if (!g.options.length) return 'Le groupe « ' + g.nom + ' » n’a aucune option';
+      if (!g.nom) return tr('Chaque groupe d’options doit avoir un nom');
+      if (!g.options.length) return tr('Le groupe « {0} » n’a aucune option', [g.nom]);
       for (const o of g.options) o.prix = Number(o.prix) || 0;
     }
     // Stock : voir lib/donnees/stock.js. La fiche ne garde que la quantité de départ ; une correction faite ici devient un mouvement.
@@ -70,14 +71,14 @@ export const trancheGestion = (set, get) => ({
         : { produits: [...d.produits, { ...b, id: genId('p') }] }),
       ...(mouvement ? { mouvements: [...(d.mouvements || []), mouvement] } : {}),
     }));
-    get().message('Produit enregistré');
+    get().message(tr('Produit enregistré'));
     return null;
   },
 
   supprimerProduit(id) {
     supprimerImage(get().d.produits.find((p) => p.id === id)?.image); // sa photo aussi
     get().majDonnees((d) => ({ produits: d.produits.filter((p) => p.id !== id) }));
-    get().message('Produit supprimé');
+    get().message(tr('Produit supprimé'));
   },
 
   basculerProduit(id) {
@@ -88,9 +89,9 @@ export const trancheGestion = (set, get) => ({
   // Gérant, et vendeurs qui ont le droit "produits". Renvoie { erreur } ou { categorie }
   enregistrerCategorie(b) {
     const nom = b.nom.trim();
-    if (!nom) return { erreur: 'Donnez un nom à la catégorie' };
+    if (!nom) return { erreur: tr('Donnez un nom à la catégorie') };
     if (get().d.categories.some((c) => c.nom.toLowerCase() === nom.toLowerCase() && c.id !== b.id)) {
-      return { erreur: 'Cette catégorie existe déjà' };
+      return { erreur: tr('Cette catégorie existe déjà') };
     }
     const categorie = { ...b, nom, id: b.id || genId('c') };
     get().majDonnees((d) =>
@@ -98,13 +99,13 @@ export const trancheGestion = (set, get) => ({
         ? { categories: d.categories.map((c) => (c.id === b.id ? categorie : c)) }
         : { categories: [...d.categories, categorie] }
     );
-    get().message('Catégorie « ' + nom + ' » enregistrée');
+    get().message(tr('Catégorie « {0} » enregistrée', [nom]));
     return { categorie };
   },
 
   supprimerCategorie(id) {
     if (get().d.produits.some((p) => p.categorieId === id)) {
-      return 'Déplacez ou supprimez d’abord les produits de cette catégorie';
+      return tr('Déplacez ou supprimez d’abord les produits de cette catégorie');
     }
     get().majDonnees((d) => ({ categories: d.categories.filter((c) => c.id !== id) }));
     return null;
@@ -127,43 +128,43 @@ export const trancheGestion = (set, get) => ({
     const pin = String(b.pin || '').trim();
     const telephone = String(b.telephone || '').trim();
     const { d } = get();
-    if (!nom) return 'Indiquez le nom';
+    if (!nom) return tr('Indiquez le nom');
     // Poste du vendeur : 5 vendeurs actifs au maximum par poste (le gérant ne compte pas)
     const posteId = b.role === 'gerant' ? undefined : b.posteId || postesDe(d)[0].id;
-    if (posteId && b.actif !== false && postePlein(d, posteId, b.id)) return 'Ce poste a déjà ' + VENDEURS_PAR_POSTE + ' vendeurs : créez un autre poste (Réglages → Postes) ou choisissez-en un autre';
+    if (posteId && b.actif !== false && postePlein(d, posteId, b.id)) return tr('Ce poste a déjà {0} vendeurs : créez un autre poste (Réglages → Postes) ou choisissez-en un autre', [VENDEURS_PAR_POSTE]);
     if (estServeur(d)) {
       // Numéro au format international du pays du commerce (le serveur vérifie qu'il est unique)
       const numero = normaliserTelephone(telephone, d.commerce.pays);
       if (!numero.ok) return numero.erreur;
       // Modification d'un vendeur : PIN vide = inchangé
-      if ((!b.id || pin) && !/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
-      return get().equipeServeur({ id: b.id || undefined, nom, telephone: numero.affichage, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises, posteId }, 'Vendeur enregistré');
+      if ((!b.id || pin) && !/^\d{4}$/.test(pin)) return tr('Le code PIN doit contenir 4 chiffres');
+      return get().equipeServeur({ id: b.id || undefined, nom, telephone: numero.affichage, pin: pin || undefined, actif: b.actif !== false, peutGererProduits: !!b.peutGererProduits, peutFaireRemises: !!b.peutFaireRemises, posteId }, tr('Vendeur enregistré'));
     }
     // Le numéro de téléphone sert d'identifiant de connexion : unique dans tout Kaislo
-    if (!cleTelephone(telephone)) return 'Indiquez le numéro de téléphone : il sert à se connecter';
-    if (telephoneDejaUtilise(telephone, (b.id || 'nouveau') + '@' + d.commerce.id)) return 'Ce numéro est déjà utilisé par un autre compte Kaislo';
-    if (!/^\d{4}$/.test(pin)) return 'Le code PIN doit contenir 4 chiffres';
+    if (!cleTelephone(telephone)) return tr('Indiquez le numéro de téléphone : il sert à se connecter');
+    if (telephoneDejaUtilise(telephone, (b.id || 'nouveau') + '@' + d.commerce.id)) return tr('Ce numéro est déjà utilisé par un autre compte Kaislo');
+    if (!/^\d{4}$/.test(pin)) return tr('Le code PIN doit contenir 4 chiffres');
     // Un vendeur ne doit pas avoir le PIN du gérant (qui valide les annulations)
-    if (b.role !== 'gerant' && d.utilisateurs.some((u) => u.role === 'gerant' && u.pin === pin)) return 'Choisissez un code PIN différent de celui du gérant';
+    if (b.role !== 'gerant' && d.utilisateurs.some((u) => u.role === 'gerant' && u.pin === pin)) return tr('Choisissez un code PIN différent de celui du gérant');
     const u = { ...b, nom, pin, telephone, ...(posteId ? { posteId } : {}) };
     get().majDonnees((d) =>
       b.id
         ? { utilisateurs: d.utilisateurs.map((x) => (x.id === b.id ? u : x)) }
         : { utilisateurs: [...d.utilisateurs, { ...u, id: genId('u') }] }
     );
-    get().message('Vendeur enregistré');
+    get().message(tr('Vendeur enregistré'));
     return null;
   },
 
   async basculerUtilisateur(id) {
-    if (id === get().utilisateur.id) return get().message('Vous ne pouvez pas désactiver votre propre compte', 'erreur');
+    if (id === get().utilisateur.id) return get().message(tr('Vous ne pouvez pas désactiver votre propre compte'), 'erreur');
     const u = get().d.utilisateurs.find((x) => x.id === id);
     if (estServeur(get().d)) {
-      const erreur = await get().equipeServeur({ id, nom: u.nom, telephone: u.telephone, actif: !u.actif, peutGererProduits: !!u.peutGererProduits, peutFaireRemises: !!u.peutFaireRemises, posteId: u.posteId }, u.actif ? 'Compte désactivé : ses appareils sont déconnectés' : 'Compte réactivé');
+      const erreur = await get().equipeServeur({ id, nom: u.nom, telephone: u.telephone, actif: !u.actif, peutGererProduits: !!u.peutGererProduits, peutFaireRemises: !!u.peutFaireRemises, posteId: u.posteId }, u.actif ? tr('Compte désactivé : ses appareils sont déconnectés') : tr('Compte réactivé'));
       if (erreur) get().message(erreur, 'erreur');
       return;
     }
-    if (!u.actif && u.role !== 'gerant' && postePlein(get().d, u.posteId || 'principal', u.id)) return get().message('Son poste a déjà ' + VENDEURS_PAR_POSTE + ' vendeurs : changez-le de poste avant de le réactiver', 'erreur');
+    if (!u.actif && u.role !== 'gerant' && postePlein(get().d, u.posteId || 'principal', u.id)) return get().message(tr('Son poste a déjà {0} vendeurs : changez-le de poste avant de le réactiver', [VENDEURS_PAR_POSTE]), 'erreur');
     get().majDonnees((d) => ({ utilisateurs: d.utilisateurs.map((x) => (x.id === id ? { ...x, actif: !x.actif } : x)) }));
   },
 
@@ -171,31 +172,31 @@ export const trancheGestion = (set, get) => ({
   // Renvoie un message d'erreur, ou null
   enregistrerPoste(b) {
     const nom = (b.nom || '').trim();
-    if (!nom) return 'Donnez un nom au poste (ex : Comptoir, Terrasse, Comptoir 2)';
+    if (!nom) return tr('Donnez un nom au poste (ex : Comptoir, Terrasse, Comptoir 2)');
     const actuels = postesDe(get().d);
-    if (actuels.some((p) => p.id !== b.id && p.nom.toLowerCase() === nom.toLowerCase())) return 'Un poste porte déjà ce nom';
+    if (actuels.some((p) => p.id !== b.id && p.nom.toLowerCase() === nom.toLowerCase())) return tr('Un poste porte déjà ce nom');
     get().majDonnees((d) => {
       const liste = d.postes?.length ? d.postes : actuels; // le poste principal devient un vrai poste au premier changement
       return { postes: b.id ? liste.map((p) => (p.id === b.id ? { ...p, nom } : p)) : [...liste, { id: genId('poste'), nom }] };
     });
-    get().message(b.id ? 'Poste renommé' : 'Poste « ' + nom + ' » créé');
+    get().message(b.id ? tr('Poste renommé') : tr('Poste « {0} » créé', [nom]));
     return null;
   },
 
   supprimerPoste(id) {
     const { d } = get();
-    if (postesDe(d).length <= 1) return 'Il faut au moins un poste';
-    if (vendeursDuPoste(d, id).length) return 'Des vendeurs sont affectés à ce poste : changez-les de poste d’abord';
+    if (postesDe(d).length <= 1) return tr('Il faut au moins un poste');
+    if (vendeursDuPoste(d, id).length) return tr('Des vendeurs sont affectés à ce poste : changez-les de poste d’abord');
     get().majDonnees((x) => ({ postes: postesDe(x).filter((p) => p.id !== id) }));
     if (get().prefs.posteAppareil === id) get().sauverPrefs({ posteAppareil: null });
-    get().message('Poste supprimé');
+    get().message(tr('Poste supprimé'));
     return null;
   },
 
   // Cet appareil (relié à l'imprimante) devient le poste choisi : il imprimera les tickets de ses vendeurs
   definirPosteAppareil(posteId) {
     get().sauverPrefs({ posteAppareil: posteId || null });
-    get().message(posteId ? 'Cet appareil imprime les tickets du poste' : 'Cet appareil n’est plus un poste d’impression');
+    get().message(posteId ? tr('Cet appareil imprime les tickets du poste') : tr('Cet appareil n’est plus un poste d’impression'));
     if (posteId) get().synchroniser?.();
   },
 
@@ -210,13 +211,13 @@ export const trancheGestion = (set, get) => ({
       get().message(messageOk);
       return null;
     } catch (e) {
-      return e.horsLigne ? 'Connexion internet nécessaire pour gérer l’équipe' : e.message;
+      return e.horsLigne ? tr('Connexion internet nécessaire pour gérer l’équipe') : e.message;
     }
   },
 
   // ---------- Commerce ----------
   enregistrerInfosCommerce(b) {
-    if (!b.nom.trim()) return 'Le nom du commerce est obligatoire';
+    if (!b.nom.trim()) return tr('Le nom du commerce est obligatoire');
     const d = get().majDonnees((d) => ({
       commerce: {
         ...d.commerce,
@@ -234,41 +235,41 @@ export const trancheGestion = (set, get) => ({
       },
     }));
     majCompte(d.commerce);
-    get().message('Informations enregistrées');
+    get().message(tr('Informations enregistrées'));
     return null;
   },
 
   enregistrerTables(tables) {
     const propres = tables.map((t) => t.trim()).filter(Boolean);
-    if (new Set(propres).size !== propres.length) return 'Deux tables ont le même nom';
+    if (new Set(propres).size !== propres.length) return tr('Deux tables ont le même nom');
     get().majDonnees((d) => ({ commerce: { ...d.commerce, tables: propres } }));
-    get().message('Tables enregistrées');
+    get().message(tr('Tables enregistrées'));
     return null;
   },
 
   reinitialiserDemo() {
     const d = reinitialiserCommerce(get().d.commerce.id);
     set({ d, utilisateur: d.utilisateurs.find((u) => u.role === 'gerant'), panier: [], commandeActive: null });
-    get().message('Démo réinitialisée');
+    get().message(tr('Démo réinitialisée'));
   },
 
   supprimerCeCommerce() {
     supprimerCommerce(get().d.commerce.id);
     get().changerDeCommerce();
-    get().message('Commerce supprimé');
+    get().message(tr('Commerce supprimé'));
   },
 
   // ---------- Dépenses ----------
   enregistrerDepense(b) {
     const montant = Number(b.montant);
-    if (!(montant > 0)) return 'Indiquez le montant de la dépense';
+    if (!(montant > 0)) return tr('Indiquez le montant de la dépense');
     const x = { ...b, montant, note: (b.note || '').trim() };
     get().majDonnees((d) =>
       b.id
         ? { depenses: d.depenses.map((y) => (y.id === b.id ? x : y)) }
         : { depenses: [...d.depenses, { ...x, id: genId('d'), date: new Date().toISOString(), utilisateurNom: get().utilisateur.nom }] }
     );
-    get().message('Dépense enregistrée');
+    get().message(tr('Dépense enregistrée'));
     return null;
   },
 
@@ -283,7 +284,7 @@ export const trancheGestion = (set, get) => ({
 
   // Ouverture : on compte la monnaie du matin (fond de départ)
   ouvrirCaisse(fondDeCaisse, note = '') {
-    if (caisseOuverte(get().d)) return get().message('La journée est déjà ouverte', 'erreur');
+    if (caisseOuverte(get().d)) return get().message(tr('La journée est déjà ouverte'), 'erreur');
     const session = {
       id: genId('s'),
       ouverteLe: new Date().toISOString(),
@@ -295,7 +296,7 @@ export const trancheGestion = (set, get) => ({
       cloture: null,
     };
     get().majDonnees((d) => ({ sessionsCaisse: [...(d.sessionsCaisse || []), session] }));
-    get().message('Journée ouverte · fond de départ ' + get().prix(session.fondDeCaisse));
+    get().message(tr('Journée ouverte · fond de départ {0}', [get().prix(session.fondDeCaisse)]));
     return session;
   },
 
@@ -334,7 +335,7 @@ export const trancheGestion = (set, get) => ({
   // ---------- Clients à crédit ----------
   enregistrerClient(b) {
     const nom = b.nom.trim();
-    if (!nom) return { erreur: 'Indiquez le nom du client' };
+    if (!nom) return { erreur: tr('Indiquez le nom du client') };
     const client = { ...b, nom, telephone: (b.telephone || '').trim(), id: b.id || genId('k') };
     get().majDonnees((d) =>
       b.id
@@ -345,7 +346,7 @@ export const trancheGestion = (set, get) => ({
   },
 
   supprimerClient(id) {
-    if (soldeClient(get().d, id) > 0) return 'Ce client doit encore de l’argent';
+    if (soldeClient(get().d, id) > 0) return tr('Ce client doit encore de l’argent');
     get().majDonnees((d) => ({ clients: d.clients.filter((c) => c.id !== id) }));
     return null;
   },
@@ -354,8 +355,8 @@ export const trancheGestion = (set, get) => ({
   enregistrerRemboursement(client, montant, mode) {
     const m = Number(montant);
     const solde = soldeClient(get().d, client.id);
-    if (!(m > 0)) return { erreur: 'Indiquez le montant reçu' };
-    if (m > solde + 0.001) return { erreur: 'Le client ne doit que ' + get().prix(solde) };
+    if (!(m > 0)) return { erreur: tr('Indiquez le montant reçu') };
+    if (m > solde + 0.001) return { erreur: tr('Le client ne doit que {0}', [get().prix(solde)]) };
     const r = { id: genId('r'), date: new Date().toISOString(), clientId: client.id, montant: m, mode, utilisateurNom: get().utilisateur.nom };
     get().majDonnees((d) => ({ remboursements: [...(d.remboursements || []), r] }));
     const soldeApres = arrondir(solde - m, get().devise());
@@ -368,9 +369,9 @@ export const trancheGestion = (set, get) => ({
   // Arrivée de marchandise : le stock augmente, le prix d'achat peut être mis à jour
   entreeStock({ produitId, quantite, prixAchat, fournisseur, note }) {
     const q = Number(quantite);
-    if (!(q > 0)) return 'Indiquez la quantité reçue';
+    if (!(q > 0)) return tr('Indiquez la quantité reçue');
     const p = get().d.produits.find((x) => x.id === produitId);
-    if (!p) return 'Choisissez un produit';
+    if (!p) return tr('Choisissez un produit');
     const pa = nombre(prixAchat);
     const mouvement = {
       id: genId('m'), date: new Date().toISOString(), produitId, produitNom: p.nom, type: 'entree',
@@ -394,7 +395,7 @@ export const trancheGestion = (set, get) => ({
   // Inventaire : on compte et on corrige la quantité réelle
   ajusterStock(produitId, quantiteReelle, note) {
     const q = Number(quantiteReelle);
-    if (!(q >= 0)) return 'Indiquez la quantité comptée';
+    if (!(q >= 0)) return tr('Indiquez la quantité comptée');
     const p = get().d.produits.find((x) => x.id === produitId);
     const ecart = q - stockDe(p);
     const mouvement = {
@@ -406,7 +407,7 @@ export const trancheGestion = (set, get) => ({
       produits: d.produits.map((x) => (x.id === produitId && !x.suiviStock ? { ...x, suiviStock: true, ...departStock(0) } : x)),
       mouvements: [...(d.mouvements || []), mouvement],
     }));
-    get().message('Stock corrigé : ' + p.nom + ' = ' + q);
+    get().message(tr('Stock corrigé : {0} = {1}', [p.nom, q]));
     return null;
   },
 });

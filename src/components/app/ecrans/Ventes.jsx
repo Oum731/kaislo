@@ -12,6 +12,7 @@ import { historiqueCaisse, calculerCloture } from '@/lib/donnees/cloture';
 import { Icone, Puces, Segment } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { BadgeEcart } from './Accueil';
+import { tr, tt } from '@/lib/i18n';
 
 export default function Ventes() {
   const s = useKaislo();
@@ -20,12 +21,12 @@ export default function Ventes() {
 
   return (
     <>
-      <EnTete surTitre={gerant ? 'Toutes les ventes du commerce' : 'Mes ventes'} titre="Ventes" />
+      <EnTete surTitre={gerant ? tr('Toutes les ventes du commerce') : tr('Mes ventes')} titre={tr('Ventes')} />
       <div className="contenu" style={{ maxWidth: 900 }}>
         <EtatCaisse />
         {gerant && (
           <div style={{ maxWidth: 420, margin: '16px 0 4px' }}>
-            <Segment options={[['tickets', 'Tickets'], ['journees', 'Journées de vente']]} valeur={onglet} surChanger={setOnglet} />
+            <Segment options={[['tickets', tr('Tickets')], ['journees', tr('Journées de vente')]]} valeur={onglet} surChanger={setOnglet} />
           </div>
         )}
         {onglet === 'tickets' ? <ListeTickets /> : <JourneesCaisse />}
@@ -43,10 +44,10 @@ export function EtatCaisse({ compact = false }) {
       <div className="carte etat-caisse fermee" style={{ marginTop: compact ? 0 : 4 }}>
         <span className="pastille"><Icone nom="caisse" /></span>
         <div className="grandit">
-          <b>La journée est fermée</b>
-          <p className="tres-petit muet">Ouvrez-la avant la première vente : comptez la monnaie du matin.</p>
+          <b>{tr('La journée est fermée')}</b>
+          <p className="tres-petit muet">{tr('Ouvrez-la avant la première vente : comptez la monnaie du matin.')}</p>
         </div>
-        <button className="btn" onClick={() => s.ouvrir('ouverture')}><Icone nom="ok" taille="sm" /> Ouvrir la journée</button>
+        <button className="btn" onClick={() => s.ouvrir('ouverture')}><Icone nom="ok" taille="sm" /> {tr('Ouvrir la journée')}</button>
       </div>
     );
   }
@@ -55,12 +56,10 @@ export function EtatCaisse({ compact = false }) {
     <div className="carte etat-caisse ouverte" style={{ marginTop: 4 }}>
       <span className="pastille"><Icone nom="caisse" /></span>
       <div className="grandit">
-        <b>Journée ouverte depuis {formatHeure(session.ouverteLe)}</b>
-        <p className="tres-petit muet">
-          {formatJourLong(new Date(session.ouverteLe))} · par {session.ouvertePar} · fond de départ {s.prix(session.fondDeCaisse)}
-        </p>
+        <b>{tr('Journée ouverte depuis {0}', [formatHeure(session.ouverteLe)])}</b>
+        <p className="tres-petit muet">{tr('{0} · par {1} · fond de départ {2}', [formatJourLong(new Date(session.ouverteLe)), session.ouvertePar, s.prix(session.fondDeCaisse)])}</p>
       </div>
-      <button className="btn safran" onClick={() => s.ouvrir('cloture')}><Icone nom="caisse" taille="sm" /> Fermer la journée</button>
+      <button className="btn safran" onClick={() => s.ouvrir('cloture')}><Icone nom="caisse" taille="sm" /> {tr('Fermer la journée')}</button>
     </div>
   );
 }
@@ -95,15 +94,15 @@ function ListeTickets() {
   return (
     <>
       <div style={{ marginTop: 14 }}>
-        <Puces options={[['jour', 'Aujourd’hui'], ['hier', 'Hier'], ['semaine', '7 derniers jours']]} valeur={filtre} surChanger={setFiltre} />
+        <Puces options={[['jour', tr('Aujourd’hui')], ['hier', tr('Hier')], ['semaine', tr('7 derniers jours')]]} valeur={filtre} surChanger={setFiltre} />
       </div>
       <div className="grille-2" style={{ margin: '14px 0' }}>
-        <div className="carte kpi"><p className="petit muet">Total</p><p className="kpi-valeur">{s.prix(total)}</p></div>
-        <div className="carte kpi"><p className="petit muet">Tickets</p><p className="kpi-valeur">{valides.length}</p></div>
+        <div className="carte kpi"><p className="petit muet">{tr('Total')}</p><p className="kpi-valeur">{s.prix(total)}</p></div>
+        <div className="carte kpi"><p className="petit muet">{tr('Tickets')}</p><p className="kpi-valeur">{valides.length}</p></div>
       </div>
       <label className="recherche" style={{ marginBottom: 14 }}>
         <Icone nom="recherche" taille="sm" />
-        <input type="search" placeholder="N° de ticket, client ou table…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+        <input type="search" placeholder={tr('N° de ticket, client ou table…')} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
       </label>
       {liste.map((v) => (
         <button key={v.id} className={`vente-item ${v.annulee ? 'annulee' : ''}`} onClick={() => s.ouvrir('ticket', { vente: v })}>
@@ -114,9 +113,9 @@ function ListeTickets() {
           <span className="grandit" style={{ minWidth: 0 }}>
             <span className="ligne" style={{ gap: 6, flexWrap: 'wrap' }}>
               <b>N° {v.numero}</b>
-              <span className={`badge ${v.annulee ? 'rouge' : v.paiement === 'Crédit' ? 'safran' : 'gris'}`}>{v.annulee ? 'Annulée' : v.paiement}</span>
+              <span className={`badge ${v.annulee ? 'rouge' : v.paiement === 'Crédit' ? 'safran' : 'gris'}`}>{v.annulee ? tr('Annulée') : tt(v.paiement)}</span>
               {v.table && <span className="badge gris">{v.table}</span>}
-              {v.aDistance && <span className="badge">À distance</span>}
+              {v.aDistance && <span className="badge">{tr('À distance')}</span>}
             </span>
             <span className="tres-petit muet tronque bloc-texte" style={{ marginTop: 3 }}>
               {(gerant ? v.vendeurNom.split(' ')[0] + ' · ' : '') + (v.clientNom ? v.clientNom + ' · ' : '') + v.lignes.map((l) => l.produitNom || l.nom).join(', ')}
@@ -125,7 +124,7 @@ function ListeTickets() {
           <b className="chiffre prix-vente">{s.prix(v.total)}</b>
         </button>
       ))}
-      {!liste.length && <div className="vide"><p>Aucune vente sur cette période</p></div>}
+      {!liste.length && <div className="vide"><p>{tr('Aucune vente sur cette période')}</p></div>}
     </>
   );
 }
@@ -144,19 +143,17 @@ function JourneesCaisse() {
           <button key={j.id} className="liste-item" onClick={() => (enCours ? s.ouvrir('cloture') : s.ouvrir('ticketCloture', { cloture: j.cloture }))}>
             <span className="grandit">
               <b className="bloc-texte">{formatJourLong(new Date(j.ouverteLe))}</b>
-              <span className="tres-petit muet tronque bloc-texte">
-                {formatHeure(j.ouverteLe)} → {enCours ? 'en cours' : formatHeure(j.fermeLe)} · ouverte par {j.ouvertePar}{j.fermePar ? ' · fermée par ' + j.fermePar : ''}
-              </span>
-              <span className="tres-petit muet bloc-texte">{c.nbVentes} tickets · {c.nbArticles ?? '—'} articles</span>
+              <span className="tres-petit muet tronque bloc-texte">{tr('{0} → {1} · ouverte par {2}{3}', [formatHeure(j.ouverteLe), enCours ? 'en cours' : formatHeure(j.fermeLe), j.ouvertePar, j.fermePar ? tr(' · fermée par {0}', [j.fermePar]) : ''])}</span>
+              <span className="tres-petit muet bloc-texte">{tr('{0} tickets · {1} articles', [c.nbVentes, c.nbArticles ?? '—'])}</span>
             </span>
             <span style={{ textAlign: 'right' }}>
               <b className="chiffre bloc-texte">{s.prix(c.totalVentes)}</b>
-              {enCours ? <span className="badge">Ouverte</span> : <BadgeEcart ecart={j.cloture.ecart} />}
+              {enCours ? <span className="badge">{tr('Ouverte')}</span> : <BadgeEcart ecart={j.cloture.ecart} />}
             </span>
           </button>
         );
       })}
-      {!journees.length && <p className="muet petit" style={{ padding: 16 }}>Aucune journée de vente pour l’instant.</p>}
+      {!journees.length && <p className="muet petit" style={{ padding: 16 }}>{tr('Aucune journée de vente pour l’instant.')}</p>}
     </div>
   );
 }
