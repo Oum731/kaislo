@@ -494,7 +494,7 @@ export function FeuilleBiometrie() {
     }>
       <div className="centre pile" style={{ paddingTop: 8 }}>
         <span className="mini-emoji teinte-vert" style={{ margin: '0 auto', width: 56, height: 56 }}><Icone nom="bouclier" taille="lg" /></span>
-        <p>{tr('La prochaine fois, ouvrez votre session avec {0}, sans taper votre code.', [nom])}</p>
+        <p>{tr('Protégez votre commerce : à chaque ouverture de Kaislo, {0} sera demandé à la place du code PIN.', [nom])}</p>
         <p className="tres-petit muet">{tr('Votre empreinte ou votre visage ne quittent jamais votre téléphone. Le code PIN reste toujours possible.')}</p>
       </div>
     </Feuille>

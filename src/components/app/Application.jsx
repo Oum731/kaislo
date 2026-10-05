@@ -11,6 +11,10 @@ import Chargement from '@/components/Chargement';
 import BulleChat from '@/components/BulleChat';
 import { tr } from '@/lib/i18n';
 import { memoriserEspace } from '@/lib/espace';
+import VerrouApp from './VerrouApp';
+
+// Après ce temps en arrière-plan, l'application se verrouille (empreinte / Face ID demandés au retour)
+const DELAI_VERROU_MS = 2 * 60 * 1000;
 
 export default function Application() {
   const pret = useKaislo((s) => s.pret);
@@ -18,6 +22,7 @@ export default function Application() {
   const toast = useKaislo((s) => s.toast);
   const langue = useKaislo((s) => s.langue);
   const estUneDemo = useKaislo((s) => !!s.d && s.estDemoActuel());
+  const verrouille = useKaislo((s) => s.verrouille && !!s.utilisateur);
 
   // Les données sont dans le téléphone : on les lit une fois la page affichée
   useEffect(() => {
@@ -35,8 +40,19 @@ export default function Application() {
         ajouterEtape({ kaislo: 'etape' });
       }
     });
+    // Garde les données de l'appareil : sans cela, un navigateur à court de place peut les effacer et déconnecter la personne
+    navigator.storage?.persist?.().catch(() => {});
+    // Verrouillage au retour dans l'application après un moment en arrière-plan
+    let masqueLe = 0;
+    const surVisibilite = () => {
+      if (document.visibilityState === 'hidden') masqueLe = Date.now();
+      else if (masqueLe && Date.now() - masqueLe >= DELAI_VERROU_MS) { masqueLe = 0; useKaislo.getState().verrouiller(); }
+      else masqueLe = 0;
+    };
+    document.addEventListener('visibilitychange', surVisibilite);
     return () => {
       window.removeEventListener('popstate', surRetour);
+      document.removeEventListener('visibilitychange', surVisibilite);
       desabonner();
     };
   }, []);
@@ -50,6 +66,7 @@ export default function Application() {
   return (
     <div className="app" key={langue}>
       {connecte ? <Coque /> : <><Connexion /><BulleChat /></>}
+      {connecte && verrouille && <VerrouApp />}
       {toast && (
         <div key={toast.id} className={`toast ${toast.type === 'erreur' ? 'erreur' : ''}`} role="status">
           {toast.texte}

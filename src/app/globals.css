@@ -993,3 +993,9 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .guide-carte b { font-size: 17px; line-height: 1.3; }
 .guide-carte .muet { font-size: 14px; line-height: 1.5; }
 .guide-lire { margin-top: auto; font-weight: 600; color: var(--vert); font-size: 14px; }
+
+/* ---- Verrouillage de l'application (empreinte / Face ID) ---- */
+.verrou { position: fixed; inset: 0; z-index: 400; background: var(--creme); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.verrou-boite { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: stretch; }
+.verrou-boite > :first-child { align-self: center; }
+.verrou-boite .pin-saisie { text-align: center; font-size: 22px; padding: 12px; border: 1px solid var(--bordure); border-radius: var(--rayon-petit); }

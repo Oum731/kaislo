@@ -1595,4 +1595,13 @@ export const EN = {
   "Lire le guide": "Read the guide",
   "Modèles Excel": "Excel templates",
   "Deux fichiers prêts à remplir pour commencer aujourd’hui, sans inscription. Quand vous voudrez arrêter de tout recopier, Kaislo le fait pour vous.": "Two files ready to fill in so you can start today, no sign-up. When you want to stop copying everything, Kaislo does it for you.",
+  "Application verrouillée": "App locked",
+  "Déverrouiller avec {0}": "Unlock with {0}",
+  "Utiliser mon code PIN": "Use my PIN",
+  "Changer de compte ? Il faudra vous reconnecter.": "Switch account? You will need to sign in again.",
+  "Changer de compte": "Switch account",
+  "Protégez votre commerce : à chaque ouverture de Kaislo, {0} sera demandé à la place du code PIN.": "Protect your business: every time Kaislo is opened, {0} will be asked instead of the PIN.",
+  "Non reconnu. Réessayez ou utilisez votre code PIN.": "Not recognised. Try again or use your PIN.",
+  "Code PIN indisponible sur cet appareil : changez de compte pour vous reconnecter.": "PIN unavailable on this device: switch account to sign in again.",
+  "Code PIN incorrect": "Incorrect PIN",
 };

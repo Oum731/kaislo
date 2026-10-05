@@ -287,3 +287,9 @@ Réglages → « Vos données » → « Rapport d'activité », ou le bouton « 
 - `src/lib/guides.js` : les guides pratiques (FR + EN), un par entrée. Ajouter une entrée crée la page (`/guides/<slug>/`, `/en/guides/<slug>/`), le plan du site, les liens hreflang et les données structurées (Article, FAQ, fil d'Ariane).
 - `scripts/modeles.mjs` : régénère les modèles Excel gratuits de `public/modeles/` (inventaire, suivi des ventes), liés depuis les guides.
 - Après chaque changement : `npm run build && npm run seo` (titres ≤ 65 caractères avec « | Kaislo », descriptions 50–160, un seul h1, canonique, sitemap).
+
+## Session et verrouillage (téléphone)
+
+- La session reste ouverte (jeton valable 90 jours, renouvelé à chaque utilisation) ; l'application demande le stockage persistant au navigateur pour que ses données ne soient pas effacées.
+- Après la première connexion par code PIN, Kaislo propose d'activer l'empreinte / Face ID (redemandé à chaque ouverture tant qu'il n'est pas activé). Une fois activé, l'application se verrouille à chaque réouverture et après 2 minutes en arrière-plan : empreinte / Face ID (vérifiés dans le téléphone, sans internet), ou code PIN en secours. Voir `src/components/app/VerrouApp.jsx` et `src/store/session.js`.
+- Les lectures (GET) de l'API sont retentées une fois en cas de coupure réseau brève.

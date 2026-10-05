@@ -93,3 +93,12 @@ export async function connexionBiometrie(credentialId) {
     appareil: nomAppareil(),
   });
 }
+
+/**
+ * Verrouillage de l'application : vérifie l'empreinte / le visage SUR LE TÉLÉPHONE (sans internet, sans serveur).
+ * Renvoie true si la personne est reconnue ; lève l'erreur du navigateur sinon (NotAllowedError = annulé ou refusé).
+ */
+export async function verifierBiometrieLocale(credentialId) {
+  await signer(credentialId, crypto.getRandomValues(new Uint8Array(32)));
+  return true;
+}
