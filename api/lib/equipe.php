@@ -88,9 +88,29 @@ function routeVerifierGerant(): never
     foreach (requete("SELECT nom, pin_hash FROM utilisateurs WHERE commerce_id = ? AND role = 'gerant' AND actif = 1", [$moi['commerce_id']])->fetchAll() as $g) {
         if (preg_match('/^\d{4}$/', $pin) && password_verify($pin, $g['pin_hash'])) {
             effacerEchecs($cleBlocage);
+            accorderAutorisation($moi);
             repondre(['ok' => true, 'gerant' => ['nom' => $g['nom']]]);
         }
     }
     if (noterEchec($cleBlocage)) throw new ErreurApi('Trop d’essais : réessayez dans ' . MINUTES_BLOCAGE . ' minutes.', 429);
     throw new ErreurApi('Code PIN du gérant incorrect', 401);
+}
+
+// Le code du gérant vient d'être saisi sur l'appareil de cet utilisateur : il peut annuler des ventes pendant quelques heures
+// (assez long pour qu'une annulation faite sans internet puisse encore être envoyée au retour de la connexion)
+const HEURES_AUTORISATION = 6;
+function accorderAutorisation(array $u): void
+{
+    $expire = maintenant(HEURES_AUTORISATION * 3600);
+    if (requete('SELECT 1 FROM autorisations WHERE utilisateur_id = ?', [$u['id']])->fetch()) {
+        requete('UPDATE autorisations SET expire_le = ?, commerce_id = ? WHERE utilisateur_id = ?', [$expire, $u['commerce_id'], $u['id']]);
+    } else {
+        requete('INSERT INTO autorisations (utilisateur_id, commerce_id, expire_le) VALUES (?, ?, ?)', [$u['id'], $u['commerce_id'], $expire]);
+    }
+}
+
+function autorisationValide(array $u): bool
+{
+    $ligne = requete('SELECT expire_le FROM autorisations WHERE utilisateur_id = ? AND commerce_id = ?', [$u['id'], $u['commerce_id']])->fetch();
+    return $ligne && $ligne['expire_le'] > maintenant();
 }
