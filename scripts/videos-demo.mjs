@@ -89,6 +89,29 @@ const STYLE = `
 #v-carte p { font-size: 21px; opacity: .78; margin: 16px 0 0; max-width: 640px; }
 #v-carte .bouton { margin-top: 30px; background: #E8A317; color: #14211C; font-weight: 700; font-size: 22px; padding: 14px 28px; border-radius: 10px; }
 #v-carte .v-adresse { margin-top: 16px; font-size: 19px; color: #F6F5F1; opacity: .85; }
+.sk { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px 22px; gap: 14px; font-family: 'DM Sans', system-ui, sans-serif; }
+.sk.ancien { background: linear-gradient(#f3e3b8, #e7cf94); color: #3b2a12; }
+.sk.kaislo { background: linear-gradient(#e8f1ec, #cfe6da); color: #14211C; }
+.sk-badge { font: 800 17px/1 'DM Sans', system-ui; letter-spacing: .04em; text-transform: uppercase; background: #14211C; color: #E8A317; padding: 10px 16px; border-radius: 999px; }
+.sk.kaislo .sk-badge { background: #1F5C45; color: #fff; }
+.sk-gros { font-size: 110px; line-height: 1; display: inline-block; }
+.sk-rangee { display: flex; gap: 14px; align-items: center; justify-content: center; font-size: 64px; }
+.sk-bulle { background: #fff; color: #14211C; border-radius: 22px; padding: 14px 18px; font: 600 21px/1.3 'DM Sans', system-ui; box-shadow: 0 6px 18px rgba(0,0,0,.18); max-width: 330px; min-height: 28px; }
+.sk-bulle:empty { visibility: hidden; }
+.sk-horloge { font: 800 64px/1 'DM Sans', system-ui; font-variant-numeric: tabular-nums; background: #14211C; color: #E8A317; padding: 12px 22px; border-radius: 16px; }
+.sk-legende { font: 700 19px/1.3 'DM Sans', system-ui; opacity: .8; }
+.sk-secoue { animation: sk-secoue .35s infinite; }
+.sk-envol { animation: sk-envol 1.6s ease-in forwards; }
+.sk-pop { animation: sk-pop .5s ease-out both; }
+@keyframes sk-secoue { 0%,100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
+@keyframes sk-envol { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(220px,-420px) rotate(540deg) scale(.3); opacity: 0; } }
+@keyframes sk-pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.sk-versus { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.sk-ligne { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; animation: sk-pop .5s ease-out both; }
+.sk-ligne div { border-radius: 14px; padding: 10px 8px; font: 700 19px/1.25 'DM Sans', system-ui; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 92px; }
+.sk-ligne .ancien-c { background: #f3e3b8; color: #5a4217; }
+.sk-ligne .kaislo-c { background: #1F5C45; color: #fff; }
+.sk-entete { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font: 800 14px/1.2 'DM Sans', system-ui; text-transform: uppercase; letter-spacing: .04em; }
 .v-mobile #v-titre { font-size: 19px; top: 10px; padding: 11px 16px; }
 .v-mobile #v-carte h1 { font-size: 30px; }
 .v-mobile #v-carte p { font-size: 18px; }
@@ -409,8 +432,14 @@ async function enregistrerUneFois(nom, { largeur, hauteur, mobile, affiche }, sc
   for (let prise = 1; prise <= 2; prise++) {
     narration = { pistes: [], finVoix: 0, manquantes: 0 };
     const dossierTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-video-'));
-    const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars', ...(process.getuid?.() === 0 ? ['--no-sandbox'] : [])] });
+    const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', userDataDir: dossierTmp, args: ['--hide-scrollbars', '--lang=fr-FR', ...(process.getuid?.() === 0 ? ['--no-sandbox'] : [])] });
     const p = await navigateur.newPage();
+    // L'application suit la langue du navigateur : on tourne toujours en français, quelle que soit la machine
+    await p.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'language', { get: () => 'fr-FR' });
+      Object.defineProperty(navigator, 'languages', { get: () => ['fr-FR', 'fr'] });
+    });
+    await p.setExtraHTTPHeaders({ 'Accept-Language': 'fr-FR,fr;q=0.9' });
     await p.setViewport({ width: largeur, height: hauteur, deviceScaleFactor: mobile ? 2 : 1, isMobile: mobile, hasTouch: mobile });
     const echelle = mobile ? 2 : 1; // téléphone : images en haute définition (écran « retina »)
     const liste = path.join(dossierTmp, 'images.txt');
@@ -675,6 +704,160 @@ await enregistrer('gestion-vendeurs', { largeur: 390, hauteur: 780, mobile: true
   await toucher(p, 'Accueil', '.menu-lien', 900);
   await defiler(p, 'Par vendeur', 'h2, h3, b, p', 2000);
   await conclusion(p, film);
+});
+
+// ============================================================
+// VIDÉOS MARKETING HUMORISTIQUES (TikTok, Facebook Reels, WhatsApp) : « le commerçant à l'ancienne » contre « le commerçant Kaislo »
+//   npm run videos -- promo           (toutes les vidéos « promo- »)
+//   npm run videos -- promo-carnet    (une seule)
+// Format vertical, 25 à 35 secondes. Un sketch animé (le cahier qui disparaît, la caisse comptée pendant 2 heures…),
+// puis la vraie application qui règle le problème en quelques touches, puis le message clé :
+// « Kaislo fait les calculs à votre place. Votre entreprise tient dans votre poche. »
+// On se moque de la méthode, jamais de la personne : l'humour reste bienveillant.
+// ============================================================
+const MESSAGE_CLE = `<div class="k">K</div><div class="marque">Kaislo</div>
+  <h1>Kaislo fait les calculs<br>à votre place.</h1>
+  <p style="font-size:26px;opacity:1;color:#E8A317;font-weight:700">Votre entreprise tient<br>dans votre poche.</p>
+  <div class="bouton">Essai gratuit 30 jours</div>`;
+const MESSAGE_CLE_PAROLE = 'Kaislo fait les calculs à votre place. Votre entreprise tient dans votre poche.';
+
+async function conclusionPromo(p, film) {
+  await titre(p, '');
+  await carte(p, MESSAGE_CLE);
+  await dire(MESSAGE_CLE_PAROLE);
+  await attendreVoix();
+  await pause(1500);
+  await film.stop();
+}
+
+// Sketch : une carte plein écran, des répliques dites une à une dans la bulle
+async function sketch(p, classe, html, repliques) {
+  await carte(p, `<div class="sk ${classe}">${html}</div>`, 400);
+  for (const r of repliques) {
+    await attendreVoix();
+    await p.evaluate((h) => { const b = document.querySelector('#v-carte .sk-bulle'); if (b) { b.innerHTML = h.texte; b.classList.remove('sk-pop'); void b.offsetWidth; b.classList.add('sk-pop'); } if (h.js) new Function(h.js)(); }, { texte: r.texte, js: r.js || '' });
+    await dire(r.parole || r.texte.replace(/<[^>]+>/g, ''));
+  }
+  await attendreVoix();
+  await pause(500);
+}
+// Horloge qui s'emballe (heure de début, heure de fin, secondes réelles)
+const HORLOGE_JS = (de, a, secondes) => `(() => { const h = document.querySelector('#v-carte .sk-horloge'); const t0 = performance.now(); const d = ${de}, f = ${a};
+  const tick = () => { const k = Math.min(1, (performance.now() - t0) / ${secondes * 1000}); const m = Math.round(d + (f - d) * k); h.textContent = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); if (k < 1) requestAnimationFrame(tick); }; tick(); })()`;
+
+// Le carnet de crédit qui disparaît
+await enregistrer('promo-carnet-credit', { largeur: 390, hauteur: 780, mobile: true, affiche: 6 }, async (p, demarrer) => {
+  await regler(p, 18, 40);
+  await connexion(p, 'chez-sentinelle', 'CI', true);
+  await carte(p, `<div class="sk ancien"><div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros sk-secoue">📒</div><div class="sk-bulle"></div><div class="sk-legende">Dettes des clients retrouvées : <b>???</b></div></div>`);
+  const film = await demarrer();
+  await pause(600);
+  await sketch(p, 'ancien', `<div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros sk-secoue" id="sk-carnet">📒</div><div class="sk-bulle"></div><div class="sk-legende">Dettes des clients retrouvées : <b>???</b></div>`, [
+    { texte: 'Mon carnet de crédit ?<br>Il était là ce matin !', parole: 'Mon carnet de crédit ? Il était là ce matin !' },
+    { texte: 'Qui me doit combien ?!<br>😱', parole: 'Qui me doit combien ?', js: "const c=document.getElementById('sk-carnet'); c.classList.remove('sk-secoue'); c.classList.add('sk-envol');" },
+  ]);
+  await sketch(p, 'kaislo', `<div class="sk-badge">Le commerçant Kaislo 😎</div><div class="sk-rangee sk-pop">📱</div><div class="sk-bulle"></div>`, [
+    { texte: 'Moi, tout est dans<br>mon téléphone.', parole: 'Moi, tout est dans mon téléphone.' },
+  ]);
+  await masquerCarte(p);
+  await seConnecter(p, '06 00 00 00 11');
+  await titre(p, 'Une vente à <b>crédit</b> ? Deux touches.', 'Une vente à crédit ? Deux touches.');
+  await toucher(p, 'Vendre', '.menu-lien', 900);
+  await caisseOuverte(p);
+  await toucher(p, 'Pain rond', '.tuile', 400);
+  await toucher(p, 'Pain rond', '.tuile', 400);
+  await toucher(p, 'Huile de table 1L', '.tuile', 900);
+  await toucher(p, 'Valider', '.barre-panier button', 900);
+  await toucher(p, 'À crédit', '.feuille .choix-grille button', 600);
+  await toucher(p, 'Choisir le client', '.feuille button', 800);
+  await toucher(p, null, '.feuille .liste-item', 800);
+  await toucher(p, 'Noter à crédit', '.feuille button.grand', 1400);
+  await titre(p, 'Noté. <b>Rien ne se perd.</b>', 'Noté. Rien ne se perd.');
+  await toucher(p, 'Nouvelle vente', '.feuille-pied button', 600);
+  await titre(p, 'Qui vous doit <b>combien</b>, d’un coup d’œil', 'Et je vois qui me doit combien, d’un coup d’œil.');
+  await toucher(p, 'Crédit', '.menu-lien', 2200);
+  await conclusionPromo(p, film);
+});
+
+// La caisse comptée pendant 2 heures
+await enregistrer('promo-caisse-2h', { largeur: 390, hauteur: 780, mobile: true, affiche: 6 }, async (p, demarrer) => {
+  await regler(p, 21, 10);
+  await connexion(p, 'resto-ivoire', 'CI', true);
+  await carte(p, `<div class="sk ancien"><div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-horloge">18:00</div><div class="sk-rangee">🧮🪙🪙</div><div class="sk-bulle"></div></div>`);
+  const film = await demarrer();
+  await pause(600);
+  await sketch(p, 'ancien', `<div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-horloge">18:00</div><div class="sk-rangee"><span class="sk-secoue">🧮</span><span>🪙</span><span>🪙</span></div><div class="sk-bulle"></div>`, [
+    { texte: 'Il manque 500…<br>non, 1 000 !', parole: 'Il manque cinq cents… non, mille !', js: HORLOGE_JS(18 * 60, 19 * 60 + 15, 4) },
+    { texte: 'Je recompte tout…<br>depuis le début.', parole: 'Je recompte tout, depuis le début.', js: HORLOGE_JS(19 * 60 + 15, 20 * 60, 3) },
+  ]);
+  await sketch(p, 'kaislo', `<div class="sk-badge">Le commerçant Kaislo 😎</div><div class="sk-horloge" style="background:#1F5C45;color:#fff">0:10</div><div class="sk-bulle"></div>`, [
+    { texte: 'Moi, dix secondes.<br>Et je rentre dîner.', parole: 'Moi, dix secondes. Et je rentre dîner.' },
+  ]);
+  await masquerCarte(p);
+  await seConnecter(p, '06 00 00 00 01');
+  await titre(p, 'Fermer la journée : <b>espèces attendues</b>', 'Je ferme la journée : Kaislo sait déjà combien il doit y avoir.');
+  await toucher(p, 'Ventes', '.menu-lien', 900);
+  await toucher(p, 'Fermer la journée', 'button', 1400);
+  const attendu = await p.evaluate(() => { const l = [...document.querySelectorAll('.feuille .ligne, .feuille div')].find((e) => e.children.length === 2 && e.firstElementChild.textContent.trim() === 'Espèces attendues'); return l ? l.lastElementChild.textContent.replace(/[^\d,]/g, '') : '0'; });
+  await taper(p, '.feuille input[placeholder="Montant compté"]', attendu);
+  await p.evaluate(() => document.querySelector('.feuille .ecart')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  await titre(p, 'Je compte : <b>la compte est juste</b> ✅', 'Je compte : la compte est juste.');
+  await pause(1800);
+  await conclusionPromo(p, film);
+});
+
+// Le comptable : photo floue du cahier contre rapport Excel
+await enregistrer('promo-comptable', { largeur: 390, hauteur: 780, mobile: true, affiche: 6 }, async (p, demarrer) => {
+  await regler(p, 19, 20);
+  await connexion(p, 'chez-sentinelle', 'CI', true);
+  await carte(p, `<div class="sk ancien"><div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros">📸</div><div class="sk-bulle"></div></div>`);
+  const film = await demarrer();
+  await pause(600);
+  await sketch(p, 'ancien', `<div class="sk-badge">Le commerçant à l’ancienne</div><div class="sk-gros sk-secoue">📸</div><div class="sk-bulle"></div><div class="sk-legende">Au comptable : « une photo du cahier »</div>`, [
+    { texte: '« Patron, voici mes comptes<br>du mois. » 📒', parole: 'Patron, voici mes comptes du mois.' },
+    { texte: 'Le comptable : « …c’est flou. »<br>😑', parole: 'Le comptable : c’est flou.' },
+  ]);
+  await sketch(p, 'kaislo', `<div class="sk-badge">Le commerçant Kaislo 😎</div><div class="sk-rangee sk-pop">📊📄</div><div class="sk-bulle"></div>`, [
+    { texte: 'Moi, un clic.<br>Excel et PDF.', parole: 'Moi, un clic. Excel, et P D F.' },
+  ]);
+  await masquerCarte(p);
+  await seConnecter(p, '06 00 00 00 11');
+  await titre(p, 'Touchez <b>Exporter</b>', 'Je touche : exporter.');
+  await toucher(p, 'Exporter', 'button', 1200);
+  await titre(p, 'Jour, semaine, <b>mois</b> ou année', 'Le jour, la semaine, le mois, ou l’année.');
+  await toucher(p, 'Semaine', '.feuille .segment button', 1000);
+  await toucher(p, 'Mois', '.feuille .segment button', 1500);
+  await titre(p, 'Un vrai <b>tableau Excel</b>, sans erreur', 'Un vrai tableau Excel, sans erreur.');
+  await toucher(p, 'Excel', '.feuille-pied button', 2200);
+  await titre(p, 'Ou un <b>PDF</b> prêt à envoyer', 'Ou un P D F, prêt à envoyer.');
+  await toucher(p, 'PDF', '.feuille-pied button', 2200);
+  await conclusionPromo(p, film);
+});
+
+// Face à face : l'ancienne méthode contre Kaislo (animation seule)
+await enregistrer('promo-face-a-face', { largeur: 390, hauteur: 780, mobile: true, affiche: 14 }, async (p, demarrer) => {
+  await regler(p, 19, 0);
+  await connexion(p, 'chez-sentinelle', 'CI', true);
+  await carte(p, `<div class="sk kaislo" style="background:#14211C;color:#fff"><div class="k" style="width:72px;height:72px;border-radius:16px;background:#1F5C45;display:grid;place-items:center;font:800 42px/1 system-ui">K</div><h1 style="font-size:34px;line-height:1.15;margin:0">À l’ancienne<br>ou Kaislo ?</h1></div>`);
+  const film = await demarrer();
+  await pause(600);
+  await dire('À l’ancienne, ou Kaislo ? Faites votre choix.');
+  await attendreVoix();
+  const lignes = [
+    ['✍️ Noter chaque vente<br>à la main', '📱 Trois touches', 'Noter une vente, à la main ? Ou trois touches.'],
+    ['😱 Carnet de crédit<br>perdu', '📒 Crédit toujours<br>à jour', 'Le carnet perdu, ou le crédit toujours à jour.'],
+    ['🧮 Compter la caisse<br>2 heures', '⏱️ 10 secondes', 'Deux heures de calculs, ou dix secondes.'],
+    ['📸 Photo floue<br>pour le comptable', '📊 Excel en un clic', 'Une photo floue, ou un Excel en un clic.'],
+  ];
+  await carte(p, `<div class="sk kaislo" style="background:#f6f5f1;gap:18px"><div class="sk-entete" style="width:100%;font-size:16px"><div style="color:#8a6a1e">À l’ancienne</div><div style="color:#1F5C45">Kaislo 😎</div></div><div class="sk-versus" id="sk-vs"></div></div>`);
+  for (const [a, k, parole] of lignes) {
+    await attendreVoix();
+    await p.evaluate((a, k) => { const v = document.getElementById('sk-vs'); const l = document.createElement('div'); l.className = 'sk-ligne'; l.innerHTML = '<div class="ancien-c">' + a + '</div><div class="kaislo-c">' + k + '</div>'; v.appendChild(l); }, a, k);
+    await dire(parole);
+  }
+  await attendreVoix();
+  await pause(900);
+  await conclusionPromo(p, film);
 });
 
 serveur.close();
