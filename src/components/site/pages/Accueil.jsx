@@ -10,6 +10,7 @@ import { metaPage } from '@/lib/seo';
 import { tr, tt, choisirLangue } from '@/lib/i18n';
 import { alternates, lien } from '@/lib/site-routes';
 import { SCRIPT_REDIRECTION_ESPACE } from '@/lib/espace';
+import RedirectionEspace from '@/components/site/RedirectionEspace';
 import {
   EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos,
   LIEN_DEMO_RESTO, LIEN_DEMO_EPICERIE, LIEN_INSCRIPTION,
@@ -59,6 +60,7 @@ export default function Accueil({ lang }) {
     <div className="site">
       {/* Quelqu'un déjà connecté arrive directement dans son espace, pas sur cette page publique (?site=1 pour la voir) */}
       <script dangerouslySetInnerHTML={{ __html: SCRIPT_REDIRECTION_ESPACE }} />
+      <RedirectionEspace />
       <EnTeteSite lang={lang} />
       <main>
         <Hero

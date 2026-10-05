@@ -246,7 +246,14 @@ export const trancheSession = (set, get) => ({
     // Mémorise ce compte comme "récent" sur cet appareil (numéro + nom, jamais le PIN)
     const recents = [{ commerceId: id, telephone: u.telephone || '', nom: u.nom }, ...(get().prefs.recents || []).filter((r) => !(r.commerceId === id && r.telephone === u.telephone))].slice(0, 8);
     get().sauverPrefs({ commerceAppareil: id, session: { commerceId: id, utilisateurId: u.id }, recents });
-    if (!estDemo(id)) memoriserEspace('app'); // arrivera directement dans l'application, pas sur la page publique du site
+    if (!estDemo(id)) {
+      memoriserEspace('app'); // arrivera directement dans l'application, pas sur la page publique du site
+      // Compte ouvert depuis un lien d'inscription (?inscription=1&ref=…) : on retire ces paramètres de l'adresse,
+      // pour qu'un rechargement ou un retour en avant ne ramène pas à l'écran d'inscription
+      if (typeof window !== 'undefined' && /[?&](inscription|ref)=/.test(window.location.search)) {
+        window.history.replaceState(window.history.state, '', window.location.pathname);
+      }
+    }
     set({
       utilisateur: u,
       ecran: u.role === 'gerant' ? 'accueil' : 'caisse',
