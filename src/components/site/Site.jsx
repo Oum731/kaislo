@@ -15,8 +15,8 @@ import LangueSite from './LangueSite';
 import SelecteurLangueSite from './SelecteurLangueSite';
 import BoutonsEspace from './BoutonsEspace';
 import { lien } from '@/lib/site-routes';
-import { jeuDeTailles, afficheVideo } from '@/lib/images-site';
 import ImageCapture from './ImageCapture';
+import { LecteurVideo, AfficheVignette } from './MediasDevise';
 import { FORMULES } from '@/lib/donnees/tarifs';
 import { tr, langueActive, choisirLangue } from '@/lib/i18n';
 
@@ -198,7 +198,7 @@ export function VideoDemo({ video }) {
   return (
     <figure id={video} className={`video-demo ${v.vertical ? 'vertical' : ''}`}>
       <div className="video-cadre">
-        <video src={chemin(v.src)} poster={chemin(afficheVideo(v.poster, !!v.vertical))} controls playsInline preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
+        <LecteurVideo src={v.src} poster={v.poster} vertical={!!v.vertical} titre={v.titre} />
       </div>
       <figcaption>
         <h3>{v.titre} <span className="badge">{tr('{0} · avec voix', [v.duree])}</span></h3>
@@ -252,8 +252,7 @@ export function VignettesTutos({ videos, titre = tr('Les autres tutoriels') }) {
           return (
             <Link key={cle} href={lien('/tutoriels/#' + cle)} className="vignette-tuto">
               <span className="vignette-image">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={chemin(v.poster)} srcSet={jeuDeTailles(v.poster, { telephone: !!v.vertical })} sizes="(min-width: 900px) 240px, 45vw" alt="" loading="lazy" decoding="async" />
+                <AfficheVignette poster={v.poster} vertical={!!v.vertical} />
                 <span className="vignette-lecture" aria-hidden="true">▶</span>
                 <span className="vignette-duree">{v.duree}</span>
               </span>
