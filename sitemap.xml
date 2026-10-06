@@ -25,6 +25,12 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/gestion-stock/" />
 </url>
 <url>
+<loc>https://kaislo.com/logiciel-de-caisse/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/logiciel-de-caisse/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pos-software/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/logiciel-de-caisse/" />
+</url>
+<url>
 <loc>https://kaislo.com/gestion-boutique/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/gestion-boutique/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/boutique-management/" />
@@ -488,6 +494,12 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/tutoriels/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/tutorials/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tutoriels/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/pos-software/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/logiciel-de-caisse/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/pos-software/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/logiciel-de-caisse/" />
 </url>
 <url>
 <loc>https://kaislo.com/en/boutique-management/</loc>
