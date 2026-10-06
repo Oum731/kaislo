@@ -10,7 +10,7 @@
 // sauf l'adresse IP (service de géolocalisation côté serveur) et les coordonnées GPS (service de
 // recherche de pays), et seulement dans les cas 2 et 3 ci-dessus.
 // ------------------------------------------------------------
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PAYS } from '@/lib/donnees/modeles';
 import { chemin } from '@/config';
 
@@ -123,10 +123,14 @@ const gpsPays = async () => {
 // Pour les composants du site : [pays, changer, { gps, erreur }]
 export function useSelectionPays() {
   const [, redessiner] = useState(0);
+  const vu = useRef(paysCourant); // pays affiché à ce rendu
+  vu.current = paysCourant;
   useEffect(() => {
     const f = () => redessiner((n) => n + 1);
     abonnes.add(f);
-    lancerDetection();
+    const avant = vu.current;
+    lancerDetection(); // peut changer le pays tout de suite : les composants montés avant celui-ci ont déjà été prévenus
+    if (paysCourant !== avant) f();
     return () => { abonnes.delete(f); };
   }, []);
   const pays = PAYS.find((p) => p.id === paysCourant) || PAYS.find((p) => p.id === AUTRE_PAYS);
