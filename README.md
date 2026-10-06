@@ -323,3 +323,8 @@ Pour savoir quelles publicités amènent de vrais commerces. **Tant que `GOOGLE_
 5. Vérifiez avec Google Tag Assistant (tagassistant.google.com) : visitez le site, acceptez, créez un commerce de test, et contrôlez que la conversion apparaît.
 
 Fichiers : `src/lib/mesure.js` (logique), `src/components/site/BandeauMesure.jsx` (bandeau), `public/.htaccess` (la politique de sécurité autorise `googletagmanager.com` et les domaines de conversion Google), pages Cookies et Confidentialité (mises à jour automatiquement quand l'identifiant est rempli). Tests : `tests/mesure*.test.mjs`.
+
+## Vitesse : images et cache
+
+- **Images à la bonne taille** : `npm run images` (`scripts/images.mjs`) fabrique, pour chaque capture de `public/captures/` et chaque affiche de `public/videos/`, des versions réduites (`…-480`, `-800`, `-1200` ; `…-390`, `-600` pour les téléphones). Le site choisit la bonne selon l'écran (`srcset`, `src/lib/images-site.js`) : un téléphone télécharge environ 200 Ko d'images sur l'accueil au lieu d'environ 550 Ko. **À relancer après `npm run captures` ou `npm run videos`** (le test `tests/images-site.test.mjs` échoue s'il manque une version réduite).
+- **Cache long** : les images et vidéos de `captures/`, `videos/`, `icons/` et `logo/` portent le numéro de la publication dans leur adresse (`?v=…`, `src/config.js` et `next.config.mjs`) ; `public/.htaccess` les fait garder 1 an par le navigateur. Une nouvelle image s'affiche tout de suite après une publication, puisque son adresse change. Les autres images (photos de la démo, image de partage, icônes du manifeste) sont gardées 30 jours ; les pages restent toujours à jour (`no-cache`).

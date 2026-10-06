@@ -22,7 +22,12 @@ export const GOOGLE_ADS_INSCRIPTION = process.env.NEXT_PUBLIC_GOOGLE_ADS_INSCRIP
 // Les <Link> de Next l'ajoutent tout seuls ; pour les images et fichiers
 // de public/, utiliser chemin('/captures/…').
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
-export const chemin = (p) => BASE_PATH + p;
+// Images et vidéos du site : l'adresse porte le numéro de la publication (« ?v=… », voir next.config.mjs).
+// Elles peuvent alors être gardées 1 an par le navigateur (voir public/.htaccess) et une nouvelle image s'affiche
+// tout de suite après une publication, puisque son adresse change.
+const NUMERO_PUBLICATION = process.env.NEXT_PUBLIC_BUILD_ID || '';
+const FICHIER_VERSIONNE = /^\/(captures|videos|icons|logo)\/.+\.(webp|png|jpg|svg|mp4)$/;
+export const chemin = (p) => BASE_PATH + p + (NUMERO_PUBLICATION && FICHIER_VERSIONNE.test(p) ? '?v=' + NUMERO_PUBLICATION : '');
 
 export const SITE_NOM = 'Kaislo';
 export const SITE_SLOGAN = 'La gestion des ventes et du stock, simple, pour tous les commerces';

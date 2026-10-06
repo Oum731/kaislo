@@ -10,6 +10,8 @@ const nextConfig = {
   trailingSlash: true, // /gestion-epicerie/ -> /gestion-epicerie/index.html (Hostinger)
   images: { unoptimized: true },
   reactStrictMode: true,
+  // Numéro de cette publication : ajouté (« ?v=… ») aux adresses des images et vidéos du site pour pouvoir les garder 1 an en cache
+  env: { NEXT_PUBLIC_BUILD_ID: process.env.NEXT_PUBLIC_BUILD_ID || Date.now().toString(36) },
   // Version de test GitHub Pages : le site vit dans /kaislo (voir npm run publier-github)
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
 };
