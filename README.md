@@ -337,3 +337,8 @@ Fichiers : `src/lib/mesure.js` (logique), `src/components/site/BandeauMesure.jsx
 ## Logo pour Google Ads
 
 `npm run build` puis `npm run logos-ads` : crée dans `outils/logos-ads/` le logo carré 1200×1200 et paysage 1200×300 (PNG, fond blanc et transparent).
+
+## Captures dans la devise du visiteur
+
+Les captures du site existent en six devises : `nom.webp` (FCFA, par défaut), `nom-mad.webp`, `-gnf`, `-eur`, `-cad`, `-usd`. Le composant `ImageCapture` choisit la bonne version selon le pays du visiteur (même détection que les tarifs : pays choisi, puis adresse IP, fuseau horaire, langue). La page est écrite avec la version FCFA, remplacée sur l'appareil du visiteur.
+`npm run build` puis `npm run captures` refait les 54 captures (chaque devise via `?pays=`), puis `npm run images` fabrique les versions réduites. Les vidéos de démonstration du site restent en FCFA.

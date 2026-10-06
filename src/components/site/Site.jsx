@@ -16,6 +16,7 @@ import SelecteurLangueSite from './SelecteurLangueSite';
 import BoutonsEspace from './BoutonsEspace';
 import { lien } from '@/lib/site-routes';
 import { jeuDeTailles, afficheVideo } from '@/lib/images-site';
+import ImageCapture from './ImageCapture';
 import { FORMULES } from '@/lib/donnees/tarifs';
 import { tr, langueActive, choisirLangue } from '@/lib/i18n';
 
@@ -125,8 +126,7 @@ export function Capture({ src, alt, telephone = false, largeur, hauteur, priorit
   return (
     <div className={`capture ${telephone ? 'telephone' : ''}`}>
       {!telephone && <div className="capture-barre" aria-hidden="true"><i /><i /><i /></div>}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={chemin(src)} srcSet={jeuDeTailles(src, { telephone })} sizes={telephone ? '300px' : tailles || '(min-width: 900px) 600px, 100vw'} alt={alt} width={largeur} height={hauteur} loading={priorite ? 'eager' : 'lazy'} fetchPriority={priorite ? 'high' : undefined} decoding="async" />
+      <ImageCapture src={src} alt={alt} telephone={telephone} largeur={largeur} hauteur={hauteur} priorite={priorite} tailles={tailles} />
     </div>
   );
 }

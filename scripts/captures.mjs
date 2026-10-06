@@ -54,12 +54,17 @@ async function regler(p, heure, minute) {
 
 // Touche le premier élément visible qui contient ce texte
 async function toucher(p, texte, selecteur = 'button', attente = 500) {
-  const ok = await p.evaluate((texte, selecteur) => {
-    const el = [...document.querySelectorAll(selecteur)].find((e) => e.offsetParent !== null && e.textContent.replace(/\s+/g, ' ').includes(texte));
-    if (!el) return false;
-    el.click();
-    return true;
-  }, texte, selecteur);
+  // L'élément peut mettre un instant à apparaître : on réessaie pendant 8 secondes
+  let ok = false;
+  for (let essai = 0; essai < 32 && !ok; essai++) {
+    ok = await p.evaluate((texte, selecteur) => {
+      const el = [...document.querySelectorAll(selecteur)].find((e) => e.offsetParent !== null && e.textContent.replace(/\s+/g, ' ').includes(texte));
+      if (!el) return false;
+      el.click();
+      return true;
+    }, texte, selecteur);
+    if (!ok) await attendre(250);
+  }
   if (!ok) throw new Error(`« ${texte} » introuvable (${selecteur})`);
   await attendre(attente);
 }
@@ -125,25 +130,34 @@ const CAPTURES = [
   }],
 ];
 
+// Une série de captures par devise : FCFA (nom.webp, par défaut), puis nom-mad, -gnf, -eur, -cad, -usd.webp
+// (src/lib/captures-devise.js choisit la bonne selon le pays du visiteur)
+const DEVISES = [['', 'CI'], ['-mad', 'MA'], ['-gnf', 'GN'], ['-eur', 'FR'], ['-cad', 'CA'], ['-usd', 'XX']];
 const filtre = process.argv[2];
 const navigateur = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--no-sandbox', '--hide-scrollbars'] });
 let echecs = 0;
-for (const [nom, taille, demo, pays, [h, m], scene] of CAPTURES) {
+for (const [suffixe, paysDevise] of DEVISES) for (const [nom, taille, demo, , [h, m], scene] of CAPTURES) {
+  const pays = paysDevise;
   if (filtre && !nom.includes(filtre)) continue;
-  const p = await navigateur.newPage();
+  // Navigateur neuf pour chaque capture (sinon la session d'une capture précédente reste ouverte)
+  const contexte = await navigateur.createBrowserContext();
+  const p = await contexte.newPage();
   try {
     await p.setViewport({ width: taille.largeur, height: taille.hauteur, deviceScaleFactor: taille.mobile ? 2 : 1, isMobile: taille.mobile, hasTouch: taille.mobile });
+    // Les captures sont en français, quelle que soit la langue du navigateur qui les prend
+    await p.setExtraHTTPHeaders({ 'Accept-Language': 'fr-FR,fr' });
+    await p.evaluateOnNewDocument(() => Object.defineProperty(navigator, 'language', { get: () => 'fr-FR' }));
     await regler(p, h, m);
     await connexion(p, demo, pays);
     await scene(p);
     await attendre(600);
-    await p.screenshot({ path: `${SORTIE}/${nom}.webp`, type: 'webp', quality: 82 });
-    console.log('✓', nom);
+    await p.screenshot({ path: `${SORTIE}/${nom}${suffixe}.webp`, type: 'webp', quality: 82 });
+    console.log('✓', nom + suffixe);
   } catch (e) {
     echecs++;
-    console.error('✗', nom, '—', e.message);
+    console.error('✗', nom + suffixe, '—', e.message);
   }
-  await p.close();
+  await contexte.close();
 }
 await navigateur.close();
 serveur.close();
