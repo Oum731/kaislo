@@ -49,9 +49,12 @@ export function Guide({ lang, slug }) {
   // À lire aussi : d'abord les guides du même métier, puis les autres
   // À lire aussi : d'abord les guides du même métier, puis les autres ; un guide de pays propose deux guides généraux et deux autres pays
   const generaux = GUIDES.filter((x) => !x.groupe);
+  const pays = GUIDES.filter((x) => x.groupe === 'pays');
+  // Voisins dans la liste (en tournant) : chaque guide est ainsi proposé par quatre autres, au lieu de toujours les quatre premiers
+  const suivants = (liste) => { const i = liste.indexOf(g); return [...liste.slice(i + 1), ...liste.slice(0, Math.max(i, 0))].filter((x) => x !== g); };
   const autres = g.groupe === 'pays'
-    ? [...['mobile-money', 'cloture'].map((c) => GUIDES.find((x) => x.cle === c)), ...GUIDES.filter((x) => x.groupe === 'pays' && x !== g).slice(0, 2)]
-    : [...generaux.filter((x) => x !== g && x.metier === g.metier), ...generaux.filter((x) => x !== g && x.metier !== g.metier)].slice(0, 4);
+    ? [...['mobile-money', 'cloture'].map((c) => GUIDES.find((x) => x.cle === c)), ...suivants(pays).slice(0, 2)]
+    : (() => { const voisins = suivants(generaux); return [...voisins.filter((x) => x.metier === g.metier), ...voisins.filter((x) => x.metier !== g.metier)].slice(0, 4); })();
   const donnees = {
     '@context': 'https://schema.org', '@type': 'Article',
     headline: c.titre, description: c.description, inLanguage: lang,

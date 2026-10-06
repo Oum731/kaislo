@@ -16,7 +16,7 @@ export function metadataRacine(lang) {
   return {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: en ? `${SITE_NOM} — Sales and stock management for businesses` : `${SITE_NOM} — Gestion des ventes et du stock pour commerces`,
+    default: en ? `${SITE_NOM} — POS and inventory management software` : `${SITE_NOM} — Logiciel de caisse et de gestion de stock`,
     template: `%s | ${SITE_NOM}`,
   },
   description: en
@@ -25,7 +25,7 @@ export function metadataRacine(lang) {
   applicationName: SITE_NOM,
   keywords: ['logiciel de gestion des ventes', 'gestion commerce', 'logiciel restaurant', 'logiciel épicerie', 'logiciel boutique', 'Afrique', 'Côte d’Ivoire', 'Sénégal', 'Maroc', 'Cameroun', 'France', 'carnet de crédit', 'ticket de vente', 'gestion de stock', 'logiciel inventaire', 'gestion d’inventaire', 'outil de gestion commerce', 'mobile money'],
   // Image affichée quand un lien est partagé (WhatsApp, Facebook, LinkedIn…) : npm run icones
-  openGraph: { type: 'website', locale: en ? 'en_GB' : 'fr_FR', siteName: SITE_NOM, title: en ? `${SITE_NOM} — Sales and stock management` : `${SITE_NOM} — ${SITE_SLOGAN}`, url: SITE_URL + (en ? '/en/' : ''), images: [{ url: chemin('/og-image.png'), width: 1200, height: 630, alt: 'Kaislo, la gestion des ventes et du stock' }] },
+  openGraph: { type: 'website', locale: en ? 'en_GB' : 'fr_FR', siteName: SITE_NOM, title: en ? `${SITE_NOM} — POS and inventory management software` : `${SITE_NOM} — Logiciel de caisse et de gestion de stock`, url: SITE_URL + (en ? '/en/' : ''), images: [{ url: chemin('/og-image.png'), width: 1200, height: 630, alt: 'Kaislo, la gestion des ventes et du stock' }] },
   twitter: { card: 'summary_large_image', images: [chemin('/og-image.png')] },
   manifest: chemin('/manifest.webmanifest'),
   // favicon.ico (16-48 px) pour Google et les anciens navigateurs, SVG pour les récents, PNG pour iPhone

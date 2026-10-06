@@ -19,9 +19,9 @@ import {
 export function meta(lang) {
   choisirLangue(lang);
   return metaPage({
-    title: lang === 'en' ? { absolute: tr('Kaislo — Gestion des ventes et du stock pour commerces') } : tr('Kaislo — Gestion des ventes et du stock pour commerces'),
+    title: lang === 'en' ? { absolute: tr('Kaislo — Logiciel de caisse et de gestion de stock') } : tr('Kaislo — Logiciel de caisse et de gestion de stock'),
     description:
-      tr('Gérez vos ventes, votre stock, le crédit de vos clients et vos comptes du soir depuis votre téléphone. Restaurants, épiceries, boutiques. Essai gratuit 30 jours.'),
+      tr('Logiciel de caisse et de gestion de stock pour commerces : ventes, inventaire, crédit clients, ticket WhatsApp, mobile money. Sur téléphone. Essai gratuit 30 jours.'),
     alternates: alternates('/', lang),
     langue: lang,
   });
