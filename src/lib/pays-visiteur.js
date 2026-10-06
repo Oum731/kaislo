@@ -101,21 +101,34 @@ export async function trouverPays(surResultat) {
   else if (!appareil) surResultat(AUTRE_PAYS);
 }
 
+// Pays du visiteur partagé par tous les composants du site (une seule détection, même s'il y a dix captures sur la page)
+let paysCourant = PAYS_PAR_DEFAUT;
+let erreurCourante = '';
+let detectionLancee = false;
+const abonnes = new Set();
+const diffuser = () => abonnes.forEach((f) => f());
+function fixer(id) { if (id !== paysCourant) { paysCourant = id; diffuser(); } }
+function lancerDetection() {
+  if (detectionLancee) return;
+  detectionLancee = true;
+  trouverPays(fixer);
+}
+const changerPays = (nouveau) => { choisirPays(nouveau); erreurCourante = ''; paysCourant = nouveau; diffuser(); };
+const gpsPays = async () => {
+  erreurCourante = ''; diffuser();
+  const r = await paysParGps();
+  if (r.pays) changerPays(r.pays); else { erreurCourante = r.erreur; diffuser(); }
+};
+
 // Pour les composants du site : [pays, changer, { gps, erreur }]
 export function useSelectionPays() {
-  const [id, setId] = useState(PAYS_PAR_DEFAUT);
-  const [erreur, setErreur] = useState('');
+  const [, redessiner] = useState(0);
   useEffect(() => {
-    let actif = true;
-    trouverPays((p) => { if (actif) setId(p); });
-    return () => { actif = false; };
+    const f = () => redessiner((n) => n + 1);
+    abonnes.add(f);
+    lancerDetection();
+    return () => { abonnes.delete(f); };
   }, []);
-  const changer = (nouveau) => { choisirPays(nouveau); setId(nouveau); setErreur(''); };
-  const gps = async () => {
-    setErreur('');
-    const r = await paysParGps();
-    if (r.pays) changer(r.pays); else setErreur(r.erreur);
-  };
-  const pays = PAYS.find((p) => p.id === id) || PAYS.find((p) => p.id === AUTRE_PAYS);
-  return [pays, changer, { gps, erreur }];
+  const pays = PAYS.find((p) => p.id === paysCourant) || PAYS.find((p) => p.id === AUTRE_PAYS);
+  return [pays, changerPays, { gps: gpsPays, erreur: erreurCourante }];
 }
