@@ -311,3 +311,15 @@ Les métiers soumis à une réglementation propre (pharmacie…) ne sont plus pr
 ## Va-et-vient entre le site et les tableaux de bord
 
 Les espaces Amorac (`/admin/`) et commercial (`/commercial/`) ont un bouton « Voir le site » (menu « Plus » sur téléphone, bas du menu sur ordinateur, en-tête de l'espace commercial) qui ouvre l'accueil public (`/?site=1`) sans être renvoyé aussitôt dans son espace ; le souvenir dure le temps de l'onglet. Sur le site, « Mon espace » (en-tête) ramène au tableau de bord et remet la redirection automatique. Fonctionne aussi dans l'application installée. Logique : `src/lib/espace.js`.
+
+## Suivi des inscriptions Google Ads
+
+Pour savoir quelles publicités amènent de vrais commerces. **Tant que `GOOGLE_ADS_ID` est vide (`src/config.js`), rien n'est chargé et aucun bandeau n'apparaît.**
+
+1. Google Ads → Outils → Mesure → Conversions → Nouvelle action de conversion → Site web. Catégorie « Inscription » ; saisissez une valeur de 0 ou une valeur estimée. Google affiche un identifiant `AW-1234567890` et une **étiquette de conversion** (par exemple `AbC-D_efG-h12345`).
+2. Copiez-les dans `src/config.js` : `GOOGLE_ADS_ID` et `GOOGLE_ADS_INSCRIPTION` (ou donnez-les au build : `NEXT_PUBLIC_GOOGLE_ADS_ID`, `NEXT_PUBLIC_GOOGLE_ADS_INSCRIPTION`). Rebâtissez et déployez.
+3. Un bandeau « Accepter / Refuser » apparaît alors aux visiteurs (jamais dans `/admin/` ni `/commercial/`). La balise Google (`gtag.js`) ne se charge **qu'après l'accord**, au repos, après le chargement de la page (pas d'effet sur la vitesse). Un refus est gardé (`kaislo-mesure`).
+4. Quand quelqu'un crée son commerce (`inscrire()` dans `src/store/session.js`), `suivreInscription()` envoie la conversion et un événement `sign_up`. Aucune donnée de vente, de client ou de commerce n'est envoyée.
+5. Vérifiez avec Google Tag Assistant (tagassistant.google.com) : visitez le site, acceptez, créez un commerce de test, et contrôlez que la conversion apparaît.
+
+Fichiers : `src/lib/mesure.js` (logique), `src/components/site/BandeauMesure.jsx` (bandeau), `public/.htaccess` (la politique de sécurité autorise `googletagmanager.com` et les domaines de conversion Google), pages Cookies et Confidentialité (mises à jour automatiquement quand l'identifiant est rempli). Tests : `tests/mesure*.test.mjs`.

@@ -18,6 +18,7 @@ import { biometrieDisponible, activerBiometrie, connexionBiometrie, nomBiometrie
 import { tr } from '@/lib/i18n';
 import { choisirPays } from '@/lib/pays-visiteur';
 import { memoriserEspace, oublierEspace } from '@/lib/espace';
+import { suivreInscription } from '@/lib/mesure';
 
 // Empreinte du code PIN gardée dans l'appareil : permet de se reconnecter SANS internet
 // (seulement sur un appareil où la personne s'est déjà connectée en ligne)
@@ -374,6 +375,7 @@ export const trancheSession = (set, get) => ({
       get().ouvrirSession(d.utilisateurs[0]);
       get().demarrerSynchro();
       get().message(tr('Bienvenue sur Kaislo ! Essai gratuit de 30 jours activé.'));
+      suivreInscription(); // compte l'inscription dans Google Ads (seulement si le visiteur a accepté la mesure)
       get().proposerBiometrie(d.utilisateurs[0]);
       return null;
     } catch (e) {
