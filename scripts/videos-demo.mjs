@@ -44,6 +44,18 @@ const ESSAI = process.env.ESSAI === '1' || process.argv.includes('--essai');
 const SORTIE = ESSAI ? 'outils/videos-essai' : 'public/videos';
 const PORT = 4310;
 
+// Une série par devise : npm run videos -- --devise=EUR  (MAD, GNF, EUR, CAD ou USD) écrit nom-eur.mp4 et nom-eur.webp
+// à côté des originaux en FCFA ; le site choisit la bonne selon le pays du visiteur (src/lib/captures-devise.js).
+const DEVISE = (process.argv.find((a) => a.startsWith('--devise=')) || '').slice(9).toUpperCase();
+const PAYS_DE_LA_DEVISE = { MAD: 'MA', GNF: 'GN', EUR: 'FR', CAD: 'CA', USD: 'XX' };
+const PAYS_FORCE = PAYS_DE_LA_DEVISE[DEVISE] || '';
+const SUFFIXE = PAYS_FORCE ? '-' + DEVISE.toLowerCase() : '';
+// Montants tapés dans « ajout-produits » (prix de vente, prix d'achat, supplément) : l'équivalent de 4 500, 2 600 et 300 FCFA
+const MONTANTS = { FCFA: [4500, 2600, 300], MAD: [75, 45, 5], GNF: [65000, 37500, 4500], EUR: [15, 9, 1], CAD: [21, 12, 1.5], USD: [15, 9, 1] };
+const [MONTANT_VENTE, MONTANT_ACHAT, MONTANT_OPTION] = MONTANTS[DEVISE] || MONTANTS.FCFA;
+const AU_PRES = { MAD: 'au dirham près', EUR: 'au centime près', CAD: 'au centime près', USD: 'au centime près' }[DEVISE] || 'au franc près';
+const MOBILE_MONEY = !PAYS_FORCE; // hors FCFA, la démo n'a pas Wave : on paie en espèces ou par carte
+
 // Voix et rythme
 let LANGUE_TOURNAGE = 'fr'; // langue de l'application et de la voix pour la vidéo en cours
 const VOIX_FR = 'fr-FR-VivienneMultilingualNeural';
@@ -51,6 +63,7 @@ const VOIX_EN = 'en-GB-SoniaNeural';
 const VOIX_VITESSE = '-6%'; // un peu plus lent que la normale : posé, agréable
 const VOIX_HAUTEUR = '-2Hz'; // légèrement plus grave : plus chaleureux
 const CACHE_VOIX = 'outils/voix-cache';
+const VOIX_PIPER = process.env.VOIX_MOTEUR === 'piper' ? process.env.PIPER_MODELE || '' : '';
 const RALENTI = 1.3; // toutes les attentes de la mise en scène sont multipliées par ce nombre
 const VOLUME_MUSIQUE = 0.3;
 
@@ -142,13 +155,21 @@ function dureeAudio(f) {
 async function voix(texte) {
   fs.mkdirSync(CACHE_VOIX, { recursive: true });
   const VOIX = LANGUE_TOURNAGE === 'en' ? VOIX_EN : VOIX_FR;
-  const cle = crypto.createHash('sha1').update(VOIX + VOIX_VITESSE + VOIX_HAUTEUR + texte).digest('hex').slice(0, 16);
+  const cle = crypto.createHash('sha1').update((VOIX_PIPER && LANGUE_TOURNAGE === 'fr' ? 'piper' + VOIX_PIPER : VOIX) + VOIX_VITESSE + VOIX_HAUTEUR + texte).digest('hex').slice(0, 16);
   const f = path.join(ESSAI ? 'outils/voix-essai' : CACHE_VOIX, cle + '.mp3');
   if (ESSAI) {
     fs.mkdirSync(path.dirname(f), { recursive: true });
     // silence d'une durée proche de celle d'une vraie voix (environ 14 caractères par seconde)
     if (!fs.existsSync(f)) execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', String(Math.max(1.5, texte.length / 14)), '-q:a', '9', f]);
     return { f, duree: dureeAudio(f) };
+  }
+  if (!fs.existsSync(f) && VOIX_PIPER && LANGUE_TOURNAGE === 'fr') {
+    // Voix de secours (Piper, hors connexion) : VOIX_MOTEUR=piper PIPER_MODELE=/chemin/fr_FR-siwis-medium.onnx
+    narration.manquantes++;
+    const wav = f.replace(/\.mp3$/, '.wav');
+    execFileSync(PYTHON, ['-m', 'piper', '-m', VOIX_PIPER, '--length-scale', '1.08', '-f', wav], { input: texte, stdio: ['pipe', 'ignore', 'ignore'] });
+    execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-i', wav, '-ar', '24000', '-ac', '1', '-q:a', '3', f]);
+    fs.rmSync(wav, { force: true });
   }
   if (!fs.existsSync(f)) {
     narration.manquantes++;
@@ -293,6 +314,7 @@ async function regler(p, heure, minute) {
 
 // Ouvre la démo (données neuves), prête à filmer
 async function connexion(p, demo, pays, mobile) {
+  pays = PAYS_FORCE || pays;
   await p.goto(`${U}/app/?demo=${demo}&pays=${pays}`, { waitUntil: 'networkidle0' });
   await p.evaluate(() => localStorage.clear());
   await p.goto(`${U}/app/?demo=${demo}&pays=${pays}`, { waitUntil: 'networkidle0' });
@@ -418,8 +440,8 @@ async function filmer(p, dossier, largeurPx, hauteurPx, liste, hauteDefinition) 
 }
 
 // npm run videos -- produits vendeurs : n'enregistre que les vidéos dont le nom contient ces mots
-const VOULUES = process.argv.slice(2).filter((a) => a !== '--essai');
-const veut = (nom) => !VOULUES.length || VOULUES.some((v) => nom.includes(v));
+const VOULUES = process.argv.slice(2).filter((a) => a !== '--essai' && !a.startsWith('--devise='));
+const veut = (nom) => !(PAYS_FORCE && nom.startsWith('promo-')) && (!VOULUES.length || VOULUES.some((v) => nom.includes(v)));
 
 async function enregistrer(nom, options, scenario) {
   if (!veut(nom)) return;
@@ -489,11 +511,11 @@ function monter(nom, dossierTmp, liste, film, affiche) {
   filtres.push('[mus][voixB]sidechaincompress=threshold=0.02:ratio=8:attack=40:release=700[musBas]');
   filtres.push('[musBas][voixA]amix=inputs=2:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=44100[son]');
 
-  const mp4 = `${sortie}/${nom}.mp4`;
+  const mp4 = `${sortie}/${nom}${SUFFIXE}.mp4`;
   execFileSync(ffmpeg, ['-y', '-loglevel', 'error', ...entrees, '-filter_complex', filtres.join(';'), '-map', '0:v', '-map', '[son]',
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-t', film.duree.toFixed(2), '-movflags', '+faststart', mp4]);
   // Image d'attente (affichée avant la lecture) : un moment parlant de la vidéo (« affiche », en secondes)
-  execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-ss', String(affiche), '-i', mp4, '-frames:v', '1', '-q:v', '80', `${sortie}/${nom}.webp`]);
+  execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-ss', String(affiche), '-i', mp4, '-frames:v', '1', '-q:v', '80', `${sortie}/${nom}${SUFFIXE}.webp`]);
   console.log(`${mp4} : ${film.duree.toFixed(0)} s, ${n} phrases, ${(fs.statSync(mp4).size / 1e6).toFixed(1)} Mo`);
 }
 
@@ -525,7 +547,8 @@ await enregistrer('presentation-kaislo', { largeur: 1280, hauteur: 720, mobile: 
   await toucher(p, 'Ajouter', '.feuille-pied button', 700);
   await titre(p, 'Espèces : Kaislo calcule <b>la monnaie à rendre</b>', 'En espèces, Kaislo calcule la monnaie à rendre. Plus aucune erreur.');
   await toucher(p, 'Espèces', '.panneau-panier .choix-grille button', 500);
-  await toucher(p, null, '.panneau-panier .puces .puce:nth-child(2)', 1400);
+  // Montant donné par le client : un des billets proposés (leur nombre dépend du total, donc de la devise)
+  await toucher(p, null, '.panneau-panier .puces .puce:nth-child(2)', 1400).catch(() => toucher(p, null, '.panneau-panier .puces .puce', 1400));
   await toucher(p, 'Valider', '.panneau-panier button.grand', 1800);
   await toucher(p, 'Nouvelle vente', '.feuille-pied button', 600);
 
@@ -571,8 +594,9 @@ await enregistrer('demo-restaurant', { largeur: 1280, hauteur: 720, mobile: fals
   await toucher(p, 'Grand', '.option', 500);
   await toucher(p, 'Ajouter', '.feuille-pied button', 1000);
 
-  await titre(p, 'Payé par <b>Wave</b>, <b>Orange Money</b>, espèces ou carte', 'Le client paie comme il veut : Wave, Orange Money, espèces, ou carte.');
-  await toucher(p, 'Wave', '.panneau-panier .choix-grille button', 1000);
+  if (MOBILE_MONEY) await titre(p, 'Payé par <b>Wave</b>, <b>Orange Money</b>, espèces ou carte', 'Le client paie comme il veut : Wave, Orange Money, espèces, ou carte.');
+  else await titre(p, 'Payé en <b>espèces</b> ou <b>par carte</b>', 'Le client paie comme il veut : en espèces, ou par carte.');
+  await toucher(p, MOBILE_MONEY ? 'Wave' : 'Carte', '.panneau-panier .choix-grille button', 1000);
   await toucher(p, 'Valider', '.panneau-panier button.grand', 1200);
   await titre(p, 'Ticket <b>imprimé</b> ou envoyé par <b>WhatsApp</b>', 'Et voilà ! Le ticket s’imprime, ou part directement sur WhatsApp.');
   await pause(1500);
@@ -651,8 +675,8 @@ await enregistrer('ajout-produits', { largeur: 1280, hauteur: 720, mobile: false
   await taper(p, '.feuille input[placeholder^="Ex : Jus frais"]', 'Spécialités');
   await toucher(p, 'Créer', '.feuille button', 900);
   await titre(p, 'Le prix de vente et le <b>prix d’achat</b>', 'Indiquez le prix de vente, et le prix d’achat.');
-  await taper(p, await champ(p, 'Prix ('), '4500');
-  await taper(p, await champ(p, 'Prix d’achat'), '2600');
+  await taper(p, await champ(p, 'Prix ('), String(MONTANT_VENTE));
+  await taper(p, await champ(p, 'Prix d’achat'), String(MONTANT_ACHAT));
   await titre(p, 'Kaislo calcule <b>votre marge</b> tout seul', 'Kaislo calcule votre marge, automatiquement.');
   await defiler(p, 'Marge :', 'p', 1600);
 
@@ -667,7 +691,7 @@ await enregistrer('ajout-produits', { largeur: 1280, hauteur: 720, mobile: false
   const prixFrites = await nieme(p, '.feuille .option-edition input.chiffre', 2);
   await toucher(p, null, prixFrites, 200);
   await p.keyboard.press('Backspace');
-  await p.keyboard.type('300', { delay: 180 });
+  await p.keyboard.type(String(MONTANT_OPTION), { delay: 180 });
   await pause(900);
   await toucher(p, 'Enregistrer', '.feuille-pied button', 1000);
 
@@ -710,7 +734,7 @@ await enregistrer('gestion-vendeurs', { largeur: 390, hauteur: 780, mobile: true
   await pause(1200);
   await titre(p, 'Un départ ? <b>Désactivez-le</b> en un geste', 'Un vendeur s’en va ? Désactivez-le, en un seul geste.');
   await toucher(p, null, '.liste-item:last-child button.interrupteur', 1500);
-  await titre(p, 'Et suivez <b>les ventes de chacun</b>', 'Et suivez les ventes de chacun, au franc près.');
+  await titre(p, 'Et suivez <b>les ventes de chacun</b>', `Et suivez les ventes de chacun, ${AU_PRES}.`);
   await toucher(p, 'Accueil', '.menu-lien', 900);
   await defiler(p, 'Par vendeur', 'h2, h3, b, p', 2000);
   await conclusion(p, film);
