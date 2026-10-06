@@ -15,6 +15,7 @@ import LangueSite from './LangueSite';
 import SelecteurLangueSite from './SelecteurLangueSite';
 import BoutonsEspace from './BoutonsEspace';
 import { lien } from '@/lib/site-routes';
+import { jeuDeTailles, afficheVideo } from '@/lib/images-site';
 import { FORMULES } from '@/lib/donnees/tarifs';
 import { tr, langueActive, choisirLangue } from '@/lib/i18n';
 
@@ -119,12 +120,13 @@ export function PiedSite() {
 }
 
 // Capture de l'application dans un cadre simple (ordinateur ou téléphone)
-export function Capture({ src, alt, telephone = false, largeur, hauteur, priorite = false }) {
+// tailles : largeur d'affichage selon l'écran (aide le navigateur à choisir la bonne version réduite, voir lib/images-site.js)
+export function Capture({ src, alt, telephone = false, largeur, hauteur, priorite = false, tailles }) {
   return (
     <div className={`capture ${telephone ? 'telephone' : ''}`}>
       {!telephone && <div className="capture-barre" aria-hidden="true"><i /><i /><i /></div>}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={chemin(src)} alt={alt} width={largeur} height={hauteur} loading={priorite ? 'eager' : 'lazy'} fetchPriority={priorite ? 'high' : undefined} decoding="async" />
+      <img src={chemin(src)} srcSet={jeuDeTailles(src, { telephone })} sizes={telephone ? '300px' : tailles || '(min-width: 900px) 600px, 100vw'} alt={alt} width={largeur} height={hauteur} loading={priorite ? 'eager' : 'lazy'} fetchPriority={priorite ? 'high' : undefined} decoding="async" />
     </div>
   );
 }
@@ -146,7 +148,7 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
           </div>
         </div>
         <div className="hero-capture hero-captures">
-          <Capture src={capture.src} alt={capture.alt} largeur={1440} hauteur={900} priorite />
+          <Capture src={capture.src} alt={capture.alt} largeur={1440} hauteur={900} priorite tailles="(min-width: 900px) 800px, 100vw" />
           {captureMobile && <Capture src={captureMobile.src} alt={captureMobile.alt} telephone largeur={390} hauteur={844} />}
         </div>
       </div>
@@ -196,7 +198,7 @@ export function VideoDemo({ video }) {
   return (
     <figure id={video} className={`video-demo ${v.vertical ? 'vertical' : ''}`}>
       <div className="video-cadre">
-        <video src={chemin(v.src)} poster={chemin(v.poster)} controls playsInline preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
+        <video src={chemin(v.src)} poster={chemin(afficheVideo(v.poster, !!v.vertical))} controls playsInline preload="none" width={v.vertical ? 780 : 1280} height={v.vertical ? 1560 : 720} aria-label={v.titre} />
       </div>
       <figcaption>
         <h3>{v.titre} <span className="badge">{tr('{0} · avec voix', [v.duree])}</span></h3>
@@ -251,7 +253,7 @@ export function VignettesTutos({ videos, titre = tr('Les autres tutoriels') }) {
             <Link key={cle} href={lien('/tutoriels/#' + cle)} className="vignette-tuto">
               <span className="vignette-image">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={chemin(v.poster)} alt="" loading="lazy" decoding="async" />
+                <img src={chemin(v.poster)} srcSet={jeuDeTailles(v.poster, { telephone: !!v.vertical })} sizes="(min-width: 900px) 240px, 45vw" alt="" loading="lazy" decoding="async" />
                 <span className="vignette-lecture" aria-hidden="true">▶</span>
                 <span className="vignette-duree">{v.duree}</span>
               </span>
