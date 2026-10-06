@@ -25,7 +25,7 @@ import { trancheGestion } from './gestion.js';
 import { trancheImpression } from './impression.js';
 import { trancheSynchro } from './synchro.js';
 import { estServeur, noterChangements } from '@/lib/donnees/synchro.js';
-import { tr, choisirLangue, langueDuNavigateur, langueDuSite } from '@/lib/i18n';
+import { tr, choisirLangue, chargerLangue, langueAcharger, langueDuNavigateur, langueDuSite } from '@/lib/i18n';
 
 // ---------- Bouton « retour » du téléphone ----------
 // Chaque écran et chaque fenêtre ajoutent une étape à l'historique du navigateur :
@@ -56,11 +56,12 @@ const trancheCommune = (set, get) => ({
     // Les données de l'appareil (IndexedDB) sont chargées d'abord ; les anciennes données (localStorage) sont reprises une fois
     surErreurStockage(() => get().message(tr('Mémoire de l’appareil pleine : libérez de la place, vos ventes ne sont plus enregistrées sur cet appareil'), 'erreur'));
     await initialiserStockage();
-    set({ prefs: chargerPreferences() });
-    // Langue : celle choisie par l'utilisateur, sinon celle du navigateur
-    const langue = get().prefs.langue || langueDuSite() || langueDuNavigateur();
+    // Langue : celle choisie par l'utilisateur, sinon celle du navigateur (le dictionnaire anglais est chargé avant d'afficher quoi que ce soit)
+    const prefs = chargerPreferences();
+    const langue = prefs.langue || langueDuSite() || langueDuNavigateur();
+    if (langueAcharger(langue)) await chargerLangue(langue);
     choisirLangue(langue);
-    set({ langue });
+    set({ prefs, langue });
     // Identifiant de cet appareil (sert à savoir quel appareil a fait une vente, pour l'impression au poste)
     if (!get().prefs.appareilId) get().sauverPrefs({ appareilId: 'app' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) });
     get().initImprimante();
@@ -111,7 +112,8 @@ const trancheCommune = (set, get) => ({
   },
 
   // Change la langue de l'application (l'écran se redessine entièrement)
-  changerLangue(l) {
+  async changerLangue(l) {
+    if (langueAcharger(l)) await chargerLangue(l);
     choisirLangue(l);
     get().sauverPrefs({ langue: l });
     set({ langue: l });

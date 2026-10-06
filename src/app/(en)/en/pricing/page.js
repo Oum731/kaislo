@@ -1,3 +1,4 @@
+import '@/lib/i18n/charge-en';
 // English version : le contenu est dans src/components/site/pages/Tarifs.jsx
 import Tarifs, { meta } from '@/components/site/pages/Tarifs';
 
