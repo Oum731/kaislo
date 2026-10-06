@@ -1,3 +1,4 @@
+import '@/lib/i18n/charge-en';
 import { Guide, metaGuide, slugsGuides } from '@/components/site/pages/Guides';
 
 export const dynamicParams = false;

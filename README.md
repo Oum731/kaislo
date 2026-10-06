@@ -328,3 +328,12 @@ Fichiers : `src/lib/mesure.js` (logique), `src/components/site/BandeauMesure.jsx
 
 - **Images à la bonne taille** : `npm run images` (`scripts/images.mjs`) fabrique, pour chaque capture de `public/captures/` et chaque affiche de `public/videos/`, des versions réduites (`…-480`, `-800`, `-1200` ; `…-390`, `-600` pour les téléphones). Le site choisit la bonne selon l'écran (`srcset`, `src/lib/images-site.js`) : un téléphone télécharge environ 200 Ko d'images sur l'accueil au lieu d'environ 550 Ko. **À relancer après `npm run captures` ou `npm run videos`** (le test `tests/images-site.test.mjs` échoue s'il manque une version réduite).
 - **Cache long** : les images et vidéos de `captures/`, `videos/`, `icons/` et `logo/` portent le numéro de la publication dans leur adresse (`?v=…`, `src/config.js` et `next.config.mjs`) ; `public/.htaccess` les fait garder 1 an par le navigateur. Une nouvelle image s'affiche tout de suite après une publication, puisque son adresse change. Les autres images (photos de la démo, image de partage, icônes du manifeste) sont gardées 30 jours ; les pages restent toujours à jour (`no-cache`).
+
+## Vitesse : CSS et JavaScript
+
+- **CSS bloquant** : après le build, `scripts/css-critique.mjs` (étape `postbuild`) place dans chaque page le CSS utile au premier écran et charge le fichier complet sans bloquer l'affichage.
+- **JavaScript inutile** : le dictionnaire anglais (140 Ko) n'est plus téléchargé par les pages françaises. Il est livré par les pages `/en/` (`src/lib/i18n/charge-en.js`, importé par chaque page anglaise) et chargé à la demande dans l'application quand la langue est l'anglais. Une nouvelle page anglaise doit donc commencer par `import '@/lib/i18n/charge-en';`.
+
+## Logo pour Google Ads
+
+`npm run build` puis `npm run logos-ads` : crée dans `outils/logos-ads/` le logo carré 1200×1200 et paysage 1200×300 (PNG, fond blanc et transparent).

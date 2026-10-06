@@ -8,10 +8,16 @@
 // Valeurs : tr('Stock {0} · alerte à {1}', [12, 5]) ou tr('Bonjour {nom}', { nom: 'Awa' }).
 // Ajouter une langue : un nouveau dictionnaire ici, et la liste LANGUES.
 // ------------------------------------------------------------
-import { EN } from './en.js';
-
 export const LANGUES = [['fr', 'Français'], ['en', 'English']];
-const DICTIONNAIRES = { en: EN };
+// Le dictionnaire anglais (lourd) n'est pas livré avec les pages françaises : il s'enregistre seulement
+// sur les pages /en/ (charge-en.js) ou à la demande dans l'application (chargerLangue).
+const DICTIONNAIRES = {};
+const CODES = LANGUES.map(([c]) => c);
+export const enregistrerDictionnaire = (l, d) => { DICTIONNAIRES[l] = d; };
+export const langueAcharger = (l) => l === 'en' && !DICTIONNAIRES.en;
+export async function chargerLangue(l) {
+  if (langueAcharger(l)) enregistrerDictionnaire('en', (await import('./en.js')).EN);
+}
 const INTL = { fr: 'fr-FR', en: 'en-GB' };
 
 let langue = 'fr';
@@ -20,7 +26,7 @@ export const langueActive = () => langue;
 export const localeIntl = () => INTL[langue] || INTL.fr;
 
 export function choisirLangue(l) {
-  langue = DICTIONNAIRES[l] || l === 'fr' ? l : 'fr';
+  langue = CODES.includes(l) ? l : 'fr';
   if (typeof document !== 'undefined') document.documentElement.lang = langue;
 }
 
@@ -30,13 +36,13 @@ export function memoriserLangueSite(l) {
   try { localStorage.setItem(CLE_SITE, l); } catch { /* stockage bloqué */ }
 }
 export function langueDuSite() {
-  try { const l = localStorage.getItem(CLE_SITE); return DICTIONNAIRES[l] || l === 'fr' ? l : null; } catch { return null; }
+  try { const l = localStorage.getItem(CLE_SITE); return CODES.includes(l) ? l : null; } catch { return null; }
 }
 
 // Langue du navigateur parmi celles proposées (français si aucune ne correspond)
 export function langueDuNavigateur() {
   const l = typeof navigator !== 'undefined' ? (navigator.language || 'fr').slice(0, 2).toLowerCase() : 'fr';
-  return DICTIONNAIRES[l] ? l : 'fr';
+  return CODES.includes(l) ? l : 'fr';
 }
 
 export function tr(cle, valeurs) {
