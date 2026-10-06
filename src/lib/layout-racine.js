@@ -2,7 +2,7 @@
 // Mise en page commune à toutes les pages (site + application)
 // ------------------------------------------------------------
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google';
-import { SITE_URL, SITE_NOM, SITE_SLOGAN, GOOGLE_VERIFICATION, BASE_PATH, chemin } from '@/config';
+import { SITE_URL, SITE_NOM, SITE_SLOGAN, GOOGLE_VERIFICATION, BASE_PATH, RESEAUX, chemin } from '@/config';
 import '@/app/globals.css';
 import BandeauMesure from '@/components/site/BandeauMesure';
 
@@ -43,7 +43,7 @@ export function metadataRacine(lang) {
 
 // Qui édite Kaislo et quel est le site officiel (lu par Google)
 const donneesSite = (lang) => [
-  { '@context': 'https://schema.org', '@type': 'Organization', name: SITE_NOM, url: SITE_URL, logo: SITE_URL + '/icons/icone-512.png', parentOrganization: { '@type': 'Organization', name: 'Amorac', url: 'https://amorac.com' } },
+  { '@context': 'https://schema.org', '@type': 'Organization', name: SITE_NOM, url: SITE_URL, logo: SITE_URL + '/icons/icone-512.png', parentOrganization: { '@type': 'Organization', name: 'Amorac', url: 'https://amorac.com' }, sameAs: Object.values(RESEAUX).filter(Boolean) },
   { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NOM, url: SITE_URL, inLanguage: lang },
 ];
 
