@@ -139,7 +139,7 @@ const GUIDES_BASE = [
   {
     cle: 'cloture',
     modele: 'ventes',
-    metier: '/gestion-restaurant/',
+    metier: '/logiciel-de-caisse/',
     fr: {
       slug: 'cloture-de-caisse-quotidienne',
       titre: 'La clôture de caisse : faire ses comptes chaque soir',
@@ -223,7 +223,7 @@ const GUIDES_BASE = [
   {
     cle: 'mobile-money',
     modele: 'ventes',
-    metier: '/gestion-boutique/',
+    metier: '/logiciel-de-caisse/',
     fr: {
       slug: 'noter-les-paiements-mobile-money',
       seo: 'Mobile money en boutique : noter Wave et Orange Money',
@@ -309,7 +309,7 @@ const GUIDES_BASE = [
   {
     cle: 'choisir-logiciel',
     modele: 'ventes',
-    metier: '/gestion-boutique/',
+    metier: '/logiciel-de-caisse/',
     fr: {
       slug: 'choisir-un-logiciel-de-caisse-et-de-gestion',
       seo: 'Cahier, Excel ou logiciel de caisse : que choisir ?',
@@ -1126,7 +1126,7 @@ const GUIDES_BASE = [
   {
     cle: 'whatsapp',
     modele: 'ventes',
-    metier: '/gestion-boutique/',
+    metier: '/logiciel-de-caisse/',
     fr: {
       slug: 'vendre-et-fideliser-avec-whatsapp',
       seo: 'Vendre avec WhatsApp : commandes, tickets et clients',
@@ -1169,7 +1169,7 @@ const GUIDES_BASE = [
   {
     cle: 'hors-ligne',
     modele: 'ventes',
-    metier: '/gestion-boutique/',
+    metier: '/logiciel-de-caisse/',
     fr: {
       slug: 'vendre-sans-internet-ni-electricite',
       seo: 'Vendre sans internet ni électricité : mode hors ligne',

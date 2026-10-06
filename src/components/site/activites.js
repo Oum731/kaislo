@@ -48,6 +48,27 @@ function page({ lien, nom, titreSeo, description, titre, chapo, etiquette, titre
 }
 
 export const ACTIVITES = () => ({
+  caisse: page({
+    lien: '/logiciel-de-caisse/', nom: 'Caisse',
+    titreSeo: tr('Logiciel de caisse sur téléphone, avec ou sans internet'),
+    description: tr('Logiciel de caisse sur téléphone, tablette et ordinateur : encaissement rapide, ticket WhatsApp ou imprimé, stock à jour, clôture du soir, même sans internet. Essai gratuit 30 jours.'),
+    titre: tr('Un logiciel de caisse simple, sur votre téléphone.'),
+    chapo: tr('Encaissez en quelques touches, rendez la monnaie sans calcul, envoyez le ticket par WhatsApp et retrouvez vos comptes le soir. Pas de caisse enregistreuse à acheter : un téléphone suffit.'),
+    etiquette: tr('Logiciel de caisse'), titreFonctions: tr('Encaisser vite, sans erreur de caisse.'),
+    chapoFonctions: tr('Tout ce que fait une caisse enregistreuse, avec le stock et le crédit clients en plus.'),
+    lignes: [{ titre: tr('Une vente en quelques touches'), texte: tr('Touchez les articles, choisissez le mode de paiement, validez : le total, la monnaie à rendre et le stock sont mis à jour tout de suite.'), points: [tr('Espèces, carte et mobile money'), tr('Remises et prix promotionnels'), tr('Ticket imprimé ou envoyé par WhatsApp')], capture: CAISSE() }],
+    fonctions: [
+      ['accueil', tr('Encaissement rapide'), tr('Le total et la monnaie à rendre se calculent tout seuls : plus d’erreur de rendu.'), true],
+      ['scan', 'Code-barres', tr('Scannez les produits avec la caméra du téléphone ou un lecteur.')],
+      ['remise', tr('Remises et promotions'), tr('Prix barré au moment de la vente, remises en pourcentage ou en montant.')],
+      ['stock', tr('Stock à jour à chaque vente'), tr('Chaque encaissement diminue le stock : vous voyez les ruptures avant qu’elles arrivent.'), true],
+    ],
+    questions: [
+      [tr('Peut-on encaisser sans internet ?'), tr('Oui. Kaislo enregistre les ventes sans connexion et les envoie au serveur dès que le réseau revient.')],
+      [tr('Faut-il acheter une caisse enregistreuse ?'), tr('Non. Un téléphone, une tablette ou un ordinateur suffit ; l’imprimante de tickets reste facultative.')],
+      [tr('Quels modes de paiement peut-on noter ?'), tr('Espèces, carte, mobile money (Wave, Orange Money, MTN MoMo…) : vous notez le mode, et le total de chacun s’affiche le soir.')],
+    ],
+  }),
   boutique: page({
     lien: '/gestion-boutique/', nom: 'Boutique',
     titreSeo: tr('Logiciel de gestion pour boutique'),
