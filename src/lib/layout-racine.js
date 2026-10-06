@@ -4,6 +4,7 @@
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google';
 import { SITE_URL, SITE_NOM, SITE_SLOGAN, GOOGLE_VERIFICATION, BASE_PATH, chemin } from '@/config';
 import '@/app/globals.css';
+import BandeauMesure from '@/components/site/BandeauMesure';
 
 // Polices téléchargées au moment du "build" et servies par le site lui-même
 const titre = Bricolage_Grotesque({ subsets: ['latin'], weight: ['600', '700', '800'], variable: '--font-titre', display: 'swap' });
@@ -58,6 +59,7 @@ export function LayoutRacine({ lang, children }) {
     <html lang={lang} className={`${titre.variable} ${texte.variable}`}>
       <body>
         {children}
+        <BandeauMesure />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesSite(lang)) }} />
       </body>
     </html>

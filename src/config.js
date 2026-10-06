@@ -9,6 +9,14 @@ export const SITE_URL = 'https://kaislo.com';
 // Google Search Console → Ajouter une propriété → balise HTML : coller ici le code « content » (sinon laisser vide)
 export const GOOGLE_VERIFICATION = '';
 
+// Google Ads : suivi des inscriptions venues de vos publicités (voir le README, « Suivi des inscriptions Google Ads »).
+//  GOOGLE_ADS_ID          : identifiant de la balise, de la forme « AW-1234567890 » (Google Ads → Outils → Mesure → Conversions)
+//  GOOGLE_ADS_INSCRIPTION : étiquette de la conversion « Inscription », de la forme « AbC-D_efG-h12345 »
+// Tant que GOOGLE_ADS_ID est vide : rien n'est chargé, aucun bandeau de cookies n'apparaît. Quand il est rempli, la balise ne se charge
+// qu'après l'accord du visiteur (bandeau « Accepter / Refuser »). Peut aussi être donné au build : NEXT_PUBLIC_GOOGLE_ADS_ID / NEXT_PUBLIC_GOOGLE_ADS_INSCRIPTION.
+export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || '';
+export const GOOGLE_ADS_INSCRIPTION = process.env.NEXT_PUBLIC_GOOGLE_ADS_INSCRIPTION || '';
+
 // Sous-dossier du site : vide sur Hostinger, "/kaislo" pour la version de test
 // sur GitHub Pages (fixé au moment du build par NEXT_PUBLIC_BASE_PATH).
 // Les <Link> de Next l'ajoutent tout seuls ; pour les images et fichiers

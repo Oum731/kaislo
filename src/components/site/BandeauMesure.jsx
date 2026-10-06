@@ -1,0 +1,47 @@
+'use client';
+// ------------------------------------------------------------
+// Bandeau « Accepter / Refuser » pour la mesure des inscriptions Google Ads.
+// N'existe que si GOOGLE_ADS_ID est rempli (src/config.js) ; jamais dans /admin/ et /commercial/.
+// Affiché seulement côté navigateur, après le chargement : aucun effet sur le calcul de la mise en page (pas de décalage).
+// ------------------------------------------------------------
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { mesureActive, pageSansMesure, choixMesure, accepterMesure, refuserMesure, chargerBaliseAuRepos } from '@/lib/mesure';
+
+const TEXTES = {
+  fr: {
+    titre: 'Mesurer nos publicités ?',
+    texte: 'Kaislo aimerait savoir quelles publicités Google amènent de vrais commerces. Cela place un petit cookie de mesure : jamais vos ventes ni vos clients. Refuser ne change rien à l’utilisation de Kaislo.',
+    accepter: 'Accepter', refuser: 'Refuser', plus: 'En savoir plus', lien: '/cookies/',
+  },
+  en: {
+    titre: 'Measure our ads?',
+    texte: 'Kaislo would like to know which Google ads bring real businesses. This sets a small measurement cookie: never your sales or your customers. Declining changes nothing about using Kaislo.',
+    accepter: 'Accept', refuser: 'Decline', plus: 'Learn more', lien: '/cookies/',
+  },
+};
+
+export default function BandeauMesure() {
+  const [visible, setVisible] = useState(false);
+  const [t, setT] = useState(TEXTES.fr);
+  useEffect(() => {
+    if (!mesureActive() || pageSansMesure(window.location.pathname)) return;
+    const choix = choixMesure();
+    if (choix === 'oui') return chargerBaliseAuRepos();
+    if (choix === 'non') return;
+    const anglais = window.location.pathname.startsWith('/en/') || (window.location.pathname.startsWith('/app') && /^en/i.test(navigator.language || ''));
+    setT(anglais ? TEXTES.en : TEXTES.fr);
+    setVisible(true);
+  }, []);
+  if (!visible) return null;
+  const choisir = (accepte) => { (accepte ? accepterMesure : refuserMesure)(); setVisible(false); };
+  return (
+    <div className="bandeau-mesure" role="dialog" aria-live="polite" aria-label={t.titre}>
+      <p><b>{t.titre}</b> {t.texte} <Link href={t.lien}>{t.plus}</Link></p>
+      <div className="bandeau-mesure-actions">
+        <button className="btn secondaire petit" onClick={() => choisir(false)}>{t.refuser}</button>
+        <button className="btn petit" onClick={() => choisir(true)}>{t.accepter}</button>
+      </div>
+    </div>
+  );
+}

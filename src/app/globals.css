@@ -999,3 +999,9 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .verrou-boite { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: stretch; }
 .verrou-boite > :first-child { align-self: center; }
 .verrou-boite .pin-saisie { text-align: center; font-size: 22px; padding: 12px; border: 1px solid var(--bordure); border-radius: var(--rayon-petit); }
+
+/* ---- Bandeau de mesure des inscriptions (Google Ads) ---- */
+.bandeau-mesure { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 350; max-width: 560px; margin: 0 auto; background: var(--encre); color: var(--creme); border-radius: var(--rayon); padding: 14px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.45; }
+.bandeau-mesure p { margin: 0; }
+.bandeau-mesure a { color: var(--safran, #E8A317); }
+.bandeau-mesure-actions { display: flex; gap: 8px; justify-content: flex-end; }

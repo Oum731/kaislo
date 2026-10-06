@@ -4,7 +4,7 @@
 // ------------------------------------------------------------
 import Link from 'next/link';
 import PageLegale from '@/components/site/PageLegale';
-import { SOCIETE } from '@/config';
+import { SOCIETE, GOOGLE_ADS_ID } from '@/config';
 import { metaPage } from '@/lib/seo';
 
 export const metadata = metaPage({
@@ -43,6 +43,7 @@ const SECTIONS = [
           <tr><th>Abonnement</th><td>Offre, dates, montants et références de paiement. Les numéros de carte sont saisis chez le prestataire de paiement et ne nous sont jamais transmis.</td></tr>
           <tr><th>Technique</th><td>Type d’appareil et de navigateur, journaux de connexion et d’erreurs, adresse IP (sécurité et lutte contre la fraude).</td></tr>
           <tr><th>Pays du visiteur</th><td>Pour afficher les tarifs de votre pays : pays déduit de votre adresse IP (sans la conserver), de votre fuseau horaire ou, si vous le demandez, de votre position GPS ; pays choisi, mémorisé dans un cookie d’un an (« kaislo_pays »). Détails dans la page Cookies et stockage.</td></tr>
+          {!!GOOGLE_ADS_ID && <tr><th>Mesure des inscriptions</th><td>Seulement si vous acceptez le bandeau : cookie de mesure Google Ads pour savoir quelles publicités amènent des inscriptions (clic sur une publicité, puis inscription). Aucune donnée de vente ni de client n’est envoyée à Google. Vous pouvez refuser, et effacer le cookie dans votre navigateur. Détails dans la page Cookies et stockage.</td></tr>}
         </tbody>
       </table>
     ),
