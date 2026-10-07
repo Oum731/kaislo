@@ -1992,6 +1992,53 @@ const GUIDES_BASE = [
       ],
     },
   },
+  {
+    cle: 'excel-ou-logiciel',
+    modele: 'ventes',
+    metier: '/logiciel-de-caisse/',
+    fr: {
+      slug: 'excel-ou-logiciel-de-gestion-comparatif',
+      seo: 'Excel ou logiciel de gestion : le comparatif',
+      titre: 'Excel ou logiciel de gestion : le comparatif honnête pour un petit commerce',
+      court: 'Excel ou logiciel de gestion',
+      description: 'Excel ou logiciel de gestion pour votre commerce : comparatif sur 8 critères, coût réel, quand passer au logiciel et comment migrer.',
+      chapo: 'Excel suffit pour démarrer, et beaucoup de commerces s’en servent très bien. Mais à partir d’un certain volume, il fait perdre du temps et laisse passer des erreurs. Voici un comparatif honnête, avec une règle simple pour décider.',
+      sections: [
+        { h: 'Ce que chacun fait bien', p: ['Excel : déjà installé ou gratuit, très souple (vous construisez exactement le tableau voulu), utilisable hors ligne, et tout le monde sait à peu près s’en servir.', 'Un logiciel de gestion : une seule saisie à la vente met à jour le stock, les totaux, la marge et le crédit du client ; plusieurs vendeurs travaillent en même temps ; les données sont sauvegardées automatiquement.'] },
+        { h: 'Le comparatif en huit critères', l: ['Saisie d’une vente : Excel, plusieurs cellules à remplir ou à copier ; logiciel, quelques touches.', 'Stock : Excel, à corriger à la main après chaque vente ; logiciel, mis à jour tout seul avec alerte de rupture.', 'Calculs (totaux, marge, monnaie) : Excel, par vos formules, qui peuvent être cassées par erreur ; logiciel, automatiques.', 'Plusieurs vendeurs : Excel, un fichier que l’on partage mal ; logiciel, un compte par vendeur avec ses droits.', 'Paiements (espèces, mobile money, carte) : Excel, une colonne de plus à tenir ; logiciel, notés à chaque vente avec total par mode.', 'Crédit clients : Excel, une feuille à croiser avec les ventes ; logiciel, carnet relié à chaque vente avec rappel.', 'Sauvegarde : Excel, à faire vous-même ; logiciel, automatique.', 'Coût : Excel, gratuit mais votre temps ne l’est pas ; logiciel, un abonnement, souvent amorti par le temps gagné et les erreurs évitées.'] },
+        { h: 'Le vrai coût d’Excel : votre temps', p: ['Vingt minutes de ressaisie ou de vérification par jour représentent environ cent heures par an. Ajoutez les erreurs : un prix mal recopié, un stock oublié, une formule effacée. Le coût d’Excel n’est pas dans la licence, mais dans le temps et les écarts qu’on ne voit pas.'] },
+        { h: 'Quand rester sur Excel, quand passer au logiciel', l: ['Restez sur Excel si vous vendez peu chaque jour, si vous êtes seul et si vous avez peu de produits.', 'Passez au logiciel si vous êtes plusieurs à vendre, si votre stock bouge tous les jours, si vous vendez à crédit ou si vos comptes du soir ne tombent jamais juste.', 'Passez aussi au logiciel si vous passez plus d’une demi-heure par jour à tenir votre fichier.', 'Ce sont des repères : seul votre temps réel et vos erreurs comptent.'] },
+        { h: 'Passer d’Excel au logiciel sans tout perdre', l: ['Nettoyez votre liste de produits : nom, prix de vente, prix d’achat, quantité en stock.', 'Comptez le stock réel pour partir sur une base juste.', 'Recopiez ou importez les produits (selon le logiciel).', 'Utilisez le logiciel et votre fichier en parallèle pendant trois jours, puis comparez les totaux du soir.', 'Gardez l’ancien fichier Excel comme archive.'] },
+        { h: 'Excel et Kaislo ensemble', p: ['Kaislo propose un essai gratuit de 30 jours pour comparer avec votre fichier sur de vraies journées. Les rapports de Kaislo s’exportent en Excel et en PDF : vous gardez vos tableaux pour votre comptable. Le modèle Excel gratuit de cette page est un bon point de départ si vous voulez commencer par Excel.'] },
+      ],
+      faq: [
+        ['Excel suffit-il pour gérer un petit commerce ?', 'Oui si vous vendez peu, seul et avec peu de produits. Dès que plusieurs personnes vendent ou que le stock bouge chaque jour, un logiciel fait gagner du temps et évite des erreurs.'],
+        ['Peut-on garder Excel avec un logiciel ?', 'Oui : les rapports d’un logiciel comme Kaislo s’exportent en Excel, utile pour votre comptable ou pour vos propres tableaux.'],
+        ['Quel est le plus gros risque d’Excel ?', 'Une formule effacée par erreur ou un fichier perdu sans sauvegarde. Faites une copie du fichier chaque semaine, sur un autre appareil.'],
+      ],
+    },
+    en: {
+      slug: 'excel-or-management-software-comparison',
+      seo: 'Excel or management software: the comparison',
+      titre: 'Excel or management software: an honest comparison for a small business',
+      court: 'Excel or management software',
+      description: 'Excel or management software for your business: 8-criteria comparison, real cost, when to stay on Excel, when to switch and how to migrate.',
+      chapo: 'Excel is enough to get started, and many businesses use it very well. But beyond a certain volume, it wastes time and lets mistakes through. Here is an honest comparison, with a simple rule to decide.',
+      sections: [
+        { h: 'What each does well', p: ['Excel: already installed or free, very flexible (you build exactly the table you want), usable offline, and almost everyone knows how to use it.', 'Management software: a single entry at the sale updates the stock, the totals, the margin and the customer’s credit; several sellers work at the same time; data is backed up automatically.'] },
+        { h: 'The comparison in eight criteria', l: ['Recording a sale: Excel, several cells to fill in or copy; software, a few taps.', 'Stock: Excel, corrected by hand after each sale; software, updated automatically with an out-of-stock alert.', 'Calculations (totals, margin, change): Excel, by your formulas, which can be broken by mistake; software, automatic.', 'Several sellers: Excel, a file that is hard to share; software, one account per seller with their own permissions.', 'Payments (cash, mobile money, card): Excel, one more column to maintain; software, recorded at every sale with a total per method.', 'Customer credit: Excel, a sheet to cross-check with sales; software, a credit book linked to every sale with reminders.', 'Backup: Excel, you do it yourself; software, automatic.', 'Cost: Excel, free but your time is not; software, a subscription, often repaid by the time saved and mistakes avoided.'] },
+        { h: 'The real cost of Excel: your time', p: ['Twenty minutes of re-entry or checking a day adds up to roughly a hundred hours a year. Add the mistakes: a price copied wrongly, a forgotten stock movement, a deleted formula. The cost of Excel is not in the licence, but in the time and in the gaps you do not see.'] },
+        { h: 'When to stay on Excel, when to switch to software', l: ['Stay on Excel if you sell little each day, work alone and have few products.', 'Switch to software if several people sell, if your stock moves every day, if you sell on credit or if your evening accounts never add up.', 'Also switch if you spend more than half an hour a day maintaining your file.', 'These are rules of thumb: only your real time and your mistakes count.'] },
+        { h: 'Moving from Excel to software without losing everything', l: ['Clean up your product list: name, selling price, purchase price, stock quantity.', 'Count the real stock so you start from an accurate base.', 'Copy or import the products (depending on the software).', 'Use the software and your file side by side for three days, then compare the evening totals.', 'Keep the old Excel file as an archive.'] },
+        { h: 'Excel and Kaislo together', p: ['Kaislo offers a 30-day free trial so you can compare with your file on real days. Kaislo reports export to Excel and PDF: you keep your tables for your accountant. The free Excel template on this page is a good starting point if you want to begin with Excel.'] },
+      ],
+      faq: [
+        ['Is Excel enough to run a small business?', 'Yes if you sell little, work alone and have few products. As soon as several people sell or the stock moves every day, software saves time and avoids mistakes.'],
+        ['Can you keep Excel alongside software?', 'Yes: reports from software like Kaislo export to Excel, useful for your accountant or your own tables.'],
+        ['What is the biggest risk of Excel?', 'A formula deleted by mistake or a file lost without a backup. Copy the file every week, onto another device.'],
+      ],
+    },
+  },
 ];
 
 // Guides généraux, puis un guide par pays
