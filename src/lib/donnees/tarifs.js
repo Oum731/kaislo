@@ -54,6 +54,7 @@ export const REGLES_TARIFS = {
   remiseFondateur: 20, // % de remise à vie
   placesFondateur: 20, // pour les 20 premiers clients
   remiseParrain: 10, // % de remise pour un client inscrit avec un code parrain (par rapport au prix catalogue)
+  remiseMultiCommerce: 10, // % de remise sur le 2e commerce et les suivants d'un même gérant (une activité = un abonnement)
   catalogueActif: true, // prix catalogue pour les nouveaux clients sans code
   catalogueDepuis: '2026-10-06', // les commerces inscrits avant cette date gardent leur prix actuel
 };
@@ -68,12 +69,13 @@ export function formuleDuType(typeId, formules = FORMULES) {
  * postes : nombre total de postes (1 inclus) · mois : 1, 3, 6 ou 12 (12 = 2 mois offerts)
  * Renvoie { parMois, total, base, supplement, remise } dans la devise demandée.
  */
-export function prixAbonnement({ formule, devise, postes = 1, mois = 1, fondateur = false, regles = REGLES_TARIFS, mode = 'base' }) {
+export function prixAbonnement({ formule, devise, postes = 1, mois = 1, fondateur = false, regles = REGLES_TARIFS, mode = 'base', multi = false }) {
   const catalogue = mode === 'catalogue';
   const base = catalogue ? prixCatalogue(formule?.prix?.[devise] ?? 0, devise, regles.remiseParrain) : (formule?.prix?.[devise] ?? 0);
   const prixPoste = catalogue ? prixCatalogue(formule?.prixPoste?.[devise] ?? 0, devise, regles.remiseParrain) : (formule?.prixPoste?.[devise] ?? 0);
   const supplement = Math.max(0, postes - 1) * prixPoste;
-  const coefRemise = fondateur ? 1 - (regles.remiseFondateur || 0) / 100 : 1;
+  // La remise du 2e commerce et suivants s'ajoute à la remise fondateur
+  const coefRemise = (fondateur ? 1 - (regles.remiseFondateur || 0) / 100 : 1) * (multi ? 1 - (regles.remiseMultiCommerce || 0) / 100 : 1);
   const parMois = arrondir((base + supplement) * coefRemise, devise);
   const moisFactures = mois === 12 ? 12 - (regles.moisOffertsAnnuel || 0) : mois;
   return { base, supplement, remise: fondateur ? regles.remiseFondateur : 0, parMois, total: arrondir(parMois * moisFactures, devise) };

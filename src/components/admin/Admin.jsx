@@ -500,6 +500,7 @@ function VueTarifs({ ctx }) {
           <p className="petit muet">Les prix saisis ci-dessous sont ceux des clients inscrits <b>avec un code parrain</b> (vos tarifs actuels). Les nouveaux clients <b>sans code</b> paient le prix catalogue : prix ÷ (1 − remise), arrondi au pas supérieur. Le code donne ainsi une vraie remise sans baisser vos tarifs actuels.</p>
           <div className="grille-3">
             <label className="champ"><span>Remise du code parrain (%)</span><input type="number" min="0" max="40" value={regles.remiseParrain ?? 10} onChange={(e) => setRegles({ ...regles, remiseParrain: e.target.value })} /></label>
+            <label className="champ"><span>Remise du 2e commerce et suivants d’un même gérant (%)</span><input type="number" min="0" max="40" value={regles.remiseMultiCommerce ?? 10} onChange={(e) => setRegles({ ...regles, remiseMultiCommerce: e.target.value })} /></label>
             <label className="champ"><span>Prix catalogue pour les nouveaux clients sans code</span>
               <select value={regles.catalogueActif === false ? 'non' : 'oui'} onChange={(e) => setRegles({ ...regles, catalogueActif: e.target.value === 'oui' })}><option value="oui">Oui</option><option value="non">Non (prix actuels pour tous)</option></select>
             </label>

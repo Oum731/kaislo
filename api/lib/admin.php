@@ -273,10 +273,11 @@ function enregistrerPaiement(array $admin, array $e): array
     if ($montant <= 0) throw new ErreurApi('Indiquez le montant reçu');
     $formule = formuleParId((string) ($e['formule'] ?? '')) ?? formuleDuType($c['type']);
     $postes = max(1, min(50, (int) ($e['postes'] ?? nombrePostes($c['id']))));
-    $calcul = prixAbonnement($formule, $c['devise'], $postes, $mois, (bool) $c['fondateur'], modeTarif($c));
+    $multi = rangCommerceDuGerant($c) > 0;
+    $calcul = prixAbonnement($formule, $c['devise'], $postes, $mois, (bool) $c['fondateur'], modeTarif($c), $multi);
     $moyen = mb_substr((string) ($e['moyen'] ?? 'Espèces'), 0, 30);
     $idPaiement = nouvelId('pa');
-    $details = ['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur'], 'mode' => modeTarif($c)];
+    $details = ['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur'], 'mode' => modeTarif($c), 'multiCommerce' => $multi];
     if (!empty($e['groupe'])) $details['groupe'] = (string) $e['groupe'];
     requete('INSERT INTO paiements (id, commerce_id, date, montant, devise, mois, moyen, note, cree_par, postes, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
         $idPaiement, $c['id'], maintenant(), $montant, $c['devise'], $mois, $moyen, mb_substr((string) ($e['note'] ?? ''), 0, 200), $admin['email'], $postes,

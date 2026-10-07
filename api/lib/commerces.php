@@ -29,7 +29,7 @@ function versCommerceGerant(array $c): array
     return [
         'commerceId' => $c['id'], 'utilisateurId' => $c['utilisateur_id'], 'nom' => $c['nom'], 'type' => $c['type'], 'pays' => $c['pays'],
         'devise' => $c['devise'], 'ville' => $c['ville'], 'abonnement' => ['offre' => $c['offre'], 'statut' => $c['statut'], 'essaiFin' => $c['essai_fin'], 'periodeFin' => $c['periode_fin']],
-        'tarif' => ['formule' => $t['formule'], 'nom' => $t['nom'], 'postes' => $t['postes'], 'parMois' => $t['parMois'], 'annuel' => $t['annuel'], 'devise' => $t['devise']],
+        'tarif' => ['formule' => $t['formule'], 'nom' => $t['nom'], 'postes' => $t['postes'], 'parMois' => $t['parMois'], 'annuel' => $t['annuel'], 'devise' => $t['devise'], 'remiseMulti' => $t['remiseMulti'], 'parMoisSansRemiseMulti' => $t['remiseMulti'] > 0 ? (int) round($t['parMois'] / (1 - $t['remiseMulti'] / 100)) : $t['parMois']],
     ];
 }
 
@@ -201,11 +201,12 @@ function signauxActivite(array $c, array $produits, array $reglages): array
     }
     $signaux = [];
     $postes = nombrePostes($c['id']);
-    $actuel = prixAbonnement($declaree, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), modeTarif($c))['parMois'];
+    $multi = rangCommerceDuGerant($c) > 0;
+    $actuel = prixAbonnement($declaree, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), modeTarif($c), $multi)['parMois'];
     foreach ($candidats as $s) {
         $f = formuleParId($s['formule']);
         if (!$f) continue;
-        $ecart = prixAbonnement($f, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), modeTarif($c))['parMois'] - $actuel;
+        $ecart = prixAbonnement($f, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), modeTarif($c), $multi)['parMois'] - $actuel;
         if ($ecart <= 0) continue; // la formule déclarée est déjà aussi chère : rien n'est perdu
         $signaux[] = ['code' => $s['code'], 'gravite' => $s['gravite'], 'texte' => $s['texte'], 'formuleSuggeree' => ['id' => $f['id'], 'nom' => $f['nom']], 'ecartParMois' => $ecart, 'devise' => $c['devise']];
     }

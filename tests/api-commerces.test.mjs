@@ -51,6 +51,7 @@ test('ajouter un commerce : le code PIN est redemandé, puis le second commerce 
   const corps = { commerce: { nom: 'Chez Awa Maquis', type: 'maquis', ville: 'Abidjan' }, conditionsAcceptees: true };
   assert.equal((await api('POST', '/ajouter-commerce', { ...corps, pin: '0000' }, epicerie.jeton)).statut, 401);
   assert.equal((await api('POST', '/ajouter-commerce', { ...corps, pin: '1234', conditionsAcceptees: false }, epicerie.jeton)).statut, 400);
+  await new Promise((r) => setTimeout(r, 1100)); // les dates ont une précision d'une seconde : le 2e commerce doit être créé après le 1er
   resto = await api('POST', '/ajouter-commerce', { ...corps, pin: '1234' }, epicerie.jeton);
   assert.equal(resto.statut, 201, JSON.stringify(resto));
   assert.equal(resto.commerce.type, 'maquis');
@@ -64,6 +65,10 @@ test('ajouter un commerce : le code PIN est redemandé, puis le second commerce 
   assert.equal(m.tarif.formule, 'maquis');
   // Total à payer = somme des deux abonnements (chacun au tarif de son métier)
   assert.equal(liste.totaux.FCFA, e.tarif.parMois + m.tarif.parMois);
+  // Le 2e commerce du gérant a 10 % de remise (le 1er n'en a pas)
+  assert.equal(e.tarif.remiseMulti, 0);
+  assert.equal(m.tarif.remiseMulti, 10);
+  assert.ok(Math.abs(m.tarif.parMois - m.tarif.parMoisSansRemiseMulti * 0.9) <= 100, JSON.stringify(m.tarif));
 });
 
 test('les données de chaque commerce restent séparées', async () => {
