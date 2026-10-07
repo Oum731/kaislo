@@ -43,7 +43,7 @@ export function FeuilleCommerces() {
             return (
               <button key={c.commerceId} className="liste-item" onClick={() => ouvrir(c.commerceId)} disabled={s.connexionEnCours}>
                 <span className="mini-emoji teinte-vert"><Icone nom={courant ? 'ok' : 'caisse'} /></span>
-                <span className="grandit" style={{ textAlign: 'left' }}>
+                <span className="texte-commerce">
                   <b>{c.nom}</b>
                   <span className="petit muet" style={{ display: 'block' }}>{libelleType(c.type)} · {c.ville}</span>
                   <span className="tres-petit muet" style={{ display: 'block' }}>
@@ -88,33 +88,41 @@ export function FeuilleAjoutCommerce() {
     const err = await s.ajouterCommerce(f);
     if (err) setErreur(err);
   };
+  const chaque = REGLES_TARIFS.remiseMultiCommerce;
   return (
-    <Feuille titre={tr('Ajouter un commerce')} surFermer={s.fermer}>
-      <form className="pile" onSubmit={valider}>
-        <p className="petit muet">{tr('Une activité = un commerce. Une épicerie et un restaurant sont deux commerces : chacun a son stock, ses ventes et son abonnement, au tarif de son métier.')}</p>
+    <Feuille titre={tr('Ajouter un commerce')} surFermer={s.fermer} pied={
+      <button type="submit" form="form-ajout-commerce" className="btn grand bloc" disabled={s.connexionEnCours || (!f.accepte && !demo)}>{s.connexionEnCours ? tr('Création…') : tr('Créer ce commerce')}</button>
+    }>
+      <form id="form-ajout-commerce" className="ajout-commerce" onSubmit={valider}>
+        <p className="introduction">
+          <span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>
+          <span>{tr('Une activité = un commerce, avec son stock, ses ventes et son abonnement.')}</span>
+        </p>
         <label className="champ"><span>{tr('Nom du commerce')}</span><input value={f.nom} onChange={(e) => setF({ ...f, nom: e.target.value })} placeholder={tr('Ex : Chez Awa Restaurant')} autoFocus /></label>
-        <label className="champ"><span>{tr('Activité')}</span>
-          <select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
-            {TYPES_COMMERCE.map((t) => <option key={t.id} value={t.id}>{tt(t.nom)}</option>)}
-          </select>
-        </label>
-        <label className="champ"><span>{tr('Ville')}</span><input value={f.ville} onChange={(e) => setF({ ...f, ville: e.target.value })} /></label>
-        <div className="carte pile">
-          <p className="petit muet">{tr('Abonnement de ce commerce')}</p>
-          <b>{tr('{0} · environ {1} par mois', [tr(formule.nom), formatPrix(prix, devise)])}</b>
-          <p className="tres-petit muet">{tr('Remise de {0} % déjà comprise (2e commerce et suivants). Essai gratuit de 30 jours pour chaque nouveau commerce.', [REGLES_TARIFS.remiseMultiCommerce])}</p>
+        <div className="duo">
+          <label className="champ"><span>{tr('Activité')}</span>
+            <select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
+              {TYPES_COMMERCE.map((t) => <option key={t.id} value={t.id}>{tt(t.nom)}</option>)}
+            </select>
+          </label>
+          <label className="champ"><span>{tr('Ville')}</span><input value={f.ville} onChange={(e) => setF({ ...f, ville: e.target.value })} /></label>
         </div>
-      {!demo && <>
-        <label className="champ"><span>{tr('Votre code PIN (pour confirmer)')}</span>
-          <input className="pin-saisie" type="password" inputMode="numeric" autoComplete="current-password" maxLength={4} placeholder="••••" value={f.pin} onChange={(e) => setF({ ...f, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
-        </label>
-        <label className="case-accord">
-          <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
-          <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('de Kaislo.')}</span>
-        </label>
-      </>}
+        <div className="prix-commerce">
+          <span className="petit-titre">{tr('Abonnement de ce commerce')}</span>
+          <div className="montant"><b>{formatPrix(prix, devise)}</b><span>{tr('par mois, environ')}</span></div>
+          <span className="petit muet">{tr(formule.nom)}</span>
+          <div className="puces"><span>{tr('{0} % de remise comprise', [chaque])}</span><span>{tr('30 jours d’essai gratuit')}</span></div>
+        </div>
+        {!demo && <>
+          <label className="champ"><span>{tr('Votre code PIN (pour confirmer)')}</span>
+            <input className="pin-saisie" type="password" inputMode="numeric" autoComplete="current-password" maxLength={4} placeholder="••••" value={f.pin} onChange={(e) => setF({ ...f, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
+          </label>
+          <label className="case-accord">
+            <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
+            <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('de Kaislo.')}</span>
+          </label>
+        </>}
         {erreur && <p className="alerte">{erreur}</p>}
-        <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours || (!f.accepte && !demo)}>{s.connexionEnCours ? tr('Création…') : tr('Créer ce commerce')}</button>
       </form>
     </Feuille>
   );

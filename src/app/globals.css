@@ -477,7 +477,7 @@ button.liste-item:hover, .liste-item.cliquable:hover { background: var(--surface
 .feuille-poignee { width: 36px; height: 4px; border-radius: 2px; background: var(--bordure-forte); margin: 8px auto 2px; flex: none; }
 .feuille-tete { display: flex; align-items: center; gap: 12px; padding: 14px 20px 12px; flex: none; border-bottom: 1px solid var(--bordure); background: var(--surface); border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .feuille-tete .titres { flex: 1; min-width: 0; }
-.feuille-corps { overflow-y: auto; padding: 16px 20px 20px; flex: 1; overscroll-behavior: contain; }
+.feuille-corps { overflow-x: hidden; overflow-wrap: anywhere; min-width: 0; overflow-y: auto; padding: 16px 20px 20px; flex: 1; overscroll-behavior: contain; }
 .feuille-pied { padding: 12px 20px calc(12px + var(--bas-securise)); border-top: 1px solid var(--bordure); background: var(--surface); flex: none; }
 
 /* ---------- Ticket (aperçu) ---------- */
@@ -636,6 +636,10 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 /* Visible seulement sur téléphone / seulement sur grand écran */
 @media (max-width: 767px) { .cache-mobile { display: none !important; } }
 @media (min-width: 768px) { .seulement-mobile { display: none !important; } }
+/* Petits téléphones : les libellés de boutons se réduisent à l'icône, rien ne dépasse de l'écran */
+@media (max-width: 479px) { .masque-etroit { display: none !important; } }
+@media (max-width: 359px) { .menu-lien { font-size: 10px; } }
+.menu-lien > span:not(.pastille-nb) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* =============== 3. SITE PUBLIC =============== */
 /* overflow-x: clip (et non hidden) : coupe ce qui dépasse sans empêcher le menu du haut de rester fixe */
@@ -1005,3 +1009,21 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .bandeau-mesure p { margin: 0; }
 .bandeau-mesure a { color: var(--safran, #E8A317); }
 .bandeau-mesure-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ---------- Fenêtre « Ajouter un commerce » et liste « Mes commerces » ---------- */
+.ajout-commerce { display: grid; gap: 16px; }
+.ajout-commerce .introduction { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--encre-2); line-height: 1.45; }
+.ajout-commerce .introduction .mini-emoji { flex: none; }
+.ajout-commerce .duo { display: grid; gap: 12px; }
+@media (min-width: 480px) { .ajout-commerce .duo { grid-template-columns: 1fr 1fr; } }
+.ajout-commerce .duo > * { min-width: 0; }
+.prix-commerce { border: 1px solid #cfe2d7; background: var(--vert-clair); border-radius: var(--rayon); padding: 14px 16px; display: grid; gap: 4px; }
+.prix-commerce .petit-titre { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--vert); }
+.prix-commerce .montant { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+.prix-commerce .montant b { font-size: 24px; letter-spacing: -0.02em; color: var(--encre); }
+.prix-commerce .montant span { font-size: 13px; color: var(--encre-2); }
+.prix-commerce .puces { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.prix-commerce .puces span { background: var(--surface); border: 1px solid #cfe2d7; color: var(--vert); border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.liste-item .texte-commerce { min-width: 0; flex: 1; text-align: left; }
+.liste-item .texte-commerce > * { overflow-wrap: anywhere; }
+@media (max-width: 399px) { .segment button { padding: 0 6px; font-size: 13px; } }
