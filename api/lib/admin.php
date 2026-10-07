@@ -140,9 +140,16 @@ function resumesCommerces(?string $seulId = null): array
         $paiements[$p['commerce_id']][] = ['id' => $p['id'], 'date' => $p['date'], 'montant' => (float) $p['montant'], 'devise' => $p['devise'], 'mois' => (int) $p['mois'], 'moyen' => $p['moyen'], 'note' => $p['note'], 'creePar' => $p['cree_par'], 'postes' => (int) ($p['postes'] ?? 1), 'details' => json_decode($p['details'] ?? '{}', true) ?: []];
     }
     $gerants = [];
-    foreach (requete("SELECT commerce_id, nom, telephone FROM utilisateurs WHERE role = 'gerant' ORDER BY cree_le")->fetchAll() as $g) $gerants[$g['commerce_id']] ??= $g;
+    $groupes = []; // numéro du gérant -> commerces qu'il gère
+    foreach (requete("SELECT commerce_id, nom, telephone, cle_telephone FROM utilisateurs WHERE role = 'gerant' ORDER BY cree_le")->fetchAll() as $g) {
+        $gerants[$g['commerce_id']] ??= $g;
+        $groupes[$g['cle_telephone']][] = $g['commerce_id'];
+    }
+    $identite = [];
+    foreach (requete('SELECT id, nom, type, statut, devise FROM commerces')->fetchAll() as $x) $identite[$x['id']] = $x;
+    $produitsDe = produitsParCommerce($seulId);
 
-    return array_map(function ($c) use ($nbProduits, $derniere, $nbVendeurs, $nonLus, $ca, $paiements, $gerants) {
+    return array_map(function ($c) use ($nbProduits, $derniere, $nbVendeurs, $nonLus, $ca, $paiements, $gerants, $groupes, $identite, $produitsDe) {
         $id = $c['id'];
         $reglages = reglagesCommerce($id);
         $commerce = versCommerce($c);
@@ -159,6 +166,9 @@ function resumesCommerces(?string $seulId = null): array
             'ca30' => round($ca[$id]['ca'] ?? 0, 2), 'tickets30' => $ca[$id]['tickets'] ?? 0,
             'derniereActivite' => $derniere[$id] ?? $c['cree_le'], 'nbProduits' => (int) ($nbProduits[$id] ?? 0),
             'nbVendeurs' => (int) ($nbVendeurs[$id] ?? 0), 'messagesNonLus' => (int) ($nonLus[$id] ?? 0),
+            // Autres commerces du même gérant (paiement groupé) et activité à vérifier (voir signauxActivite)
+            'autresCommerces' => array_values(array_map(fn ($autre) => $identite[$autre], array_filter($groupes[$gerants[$id]['cle_telephone'] ?? ''] ?? [], fn ($autre) => $autre !== $id && isset($identite[$autre])))),
+            'signaux' => signauxActivite($c, $produitsDe[$id] ?? [], $reglages),
         ];
     }, $commerces);
 }
@@ -252,10 +262,9 @@ function routeAdminActionCommerce(): never
 // { commerceId, formule, postes, mois, montant, moyen, note }
 // Le montant proposé est calculé (formule + postes supplémentaires, 12 mois = 2 offerts, tarif fondateur) ;
 // l'équipe saisit le montant réellement reçu.
-function routeAdminPaiement(): never
+// Enregistre un paiement d'abonnement (sans gérer la transaction : l'appelant s'en occupe). Renvoie les informations utiles.
+function enregistrerPaiement(array $admin, array $e): array
 {
-    $admin = adminConnecte(true);
-    $e = entree();
     $c = requete('SELECT * FROM commerces WHERE id = ?', [(string) ($e['commerceId'] ?? '')])->fetch();
     if (!$c) throw new ErreurApi('Commerce introuvable', 404);
     $mois = (int) ($e['mois'] ?? 1);
@@ -267,26 +276,79 @@ function routeAdminPaiement(): never
     $calcul = prixAbonnement($formule, $c['devise'], $postes, $mois, (bool) $c['fondateur'], modeTarif($c));
     $moyen = mb_substr((string) ($e['moyen'] ?? 'Espèces'), 0, 30);
     $idPaiement = nouvelId('pa');
+    $details = ['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur'], 'mode' => modeTarif($c)];
+    if (!empty($e['groupe'])) $details['groupe'] = (string) $e['groupe'];
+    requete('INSERT INTO paiements (id, commerce_id, date, montant, devise, mois, moyen, note, cree_par, postes, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        $idPaiement, $c['id'], maintenant(), $montant, $c['devise'], $mois, $moyen, mb_substr((string) ($e['note'] ?? ''), 0, 200), $admin['email'], $postes,
+        json_encode($details, JSON_UNESCAPED_UNICODE),
+    ]);
+    // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
+    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, modifie_le = ? WHERE id = ?", [
+        $formule['id'], prolongerDate($c['statut'] === 'actif' ? $c['periode_fin'] : null, $mois * 30), maintenant(), $c['id'],
+    ]);
+    // Commissions du commercial qui a apporté ce commerce
+    if (!empty($c['commercial_id'])) creerCommissions($c, $idPaiement, $montant, $mois);
+    return ['commerce' => $c, 'montant' => $montant, 'mois' => $mois, 'postes' => $postes, 'formule' => $formule];
+}
+
+function journaliserPaiement(array $admin, array $r): void
+{
+    $c = $r['commerce'];
+    journaliser($c['id'], $admin['id'], 'amorac-paiement', ['montant' => $r['montant'], 'devise' => $c['devise'], 'mois' => $r['mois'], 'postes' => $r['postes'], 'formule' => $r['formule']['id'], 'par' => $admin['email']]);
+}
+
+function routeAdminPaiement(): never
+{
+    $admin = adminConnecte(true);
+    $e = entree();
     $pdo = base();
     $pdo->beginTransaction();
     try {
-        requete('INSERT INTO paiements (id, commerce_id, date, montant, devise, mois, moyen, note, cree_par, postes, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            $idPaiement, $c['id'], maintenant(), $montant, $c['devise'], $mois, $moyen, mb_substr((string) ($e['note'] ?? ''), 0, 200), $admin['email'], $postes,
-            json_encode(['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur'], 'mode' => modeTarif($c)], JSON_UNESCAPED_UNICODE),
-        ]);
-        // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
-        requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, modifie_le = ? WHERE id = ?", [
-            $formule['id'], prolongerDate($c['statut'] === 'actif' ? $c['periode_fin'] : null, $mois * 30), maintenant(), $c['id'],
-        ]);
-        // Commissions du commercial qui a apporté ce commerce
-        if (!empty($c['commercial_id'])) creerCommissions($c, $idPaiement, $montant, $mois);
+        $r = enregistrerPaiement($admin, $e);
         $pdo->commit();
     } catch (Throwable $err) {
         $pdo->rollBack();
         throw $err;
     }
-    journaliser($c['id'], $admin['id'], 'amorac-paiement', ['montant' => $montant, 'devise' => $c['devise'], 'mois' => $mois, 'postes' => $postes, 'formule' => $formule['id'], 'par' => $admin['email']]);
-    repondre(['ok' => true, 'commerce' => resumesCommerces($c['id'])[0]]);
+    journaliserPaiement($admin, $r);
+    repondre(['ok' => true, 'commerce' => resumesCommerces($r['commerce']['id'])[0]]);
+}
+
+// ---------- POST /api/admin/paiement-groupe ----------
+// Un gérant qui a plusieurs commerces paie tout en une fois : { lignes: [{ commerceId, montant, mois, postes?, formule? }], moyen, note }
+// Tout est enregistré ensemble (ou rien), chaque commerce reçoit son propre paiement, repéré par le même numéro de groupe.
+// Les commerces doivent avoir le même gérant : on ne peut pas grouper des commerces de personnes différentes.
+function routeAdminPaiementGroupe(): never
+{
+    $admin = adminConnecte(true);
+    $e = entree();
+    $lignes = is_array($e['lignes'] ?? null) ? array_values($e['lignes']) : [];
+    if (count($lignes) < 2 || count($lignes) > MAX_COMMERCES_PAR_GERANT) throw new ErreurApi('Choisissez au moins deux commerces du même gérant');
+    $ids = array_map(fn ($l) => (string) ($l['commerceId'] ?? ''), $lignes);
+    if (count(array_unique($ids)) !== count($ids)) throw new ErreurApi('Un commerce est indiqué deux fois');
+    $cles = [];
+    foreach ($ids as $id) {
+        $g = requete("SELECT cle_telephone FROM utilisateurs WHERE commerce_id = ? AND role = 'gerant' ORDER BY cree_le", [$id])->fetch();
+        if (!$g) throw new ErreurApi('Commerce introuvable', 404);
+        $cles[$g['cle_telephone']] = true;
+    }
+    if (count($cles) !== 1) throw new ErreurApi('Ces commerces n’ont pas le même gérant : enregistrez un paiement séparé pour chacun');
+    $groupe = nouvelId('gr');
+    $pdo = base();
+    $pdo->beginTransaction();
+    $resultats = [];
+    try {
+        foreach ($lignes as $l) {
+            $resultats[] = enregistrerPaiement($admin, [...$l, 'moyen' => $e['moyen'] ?? 'Espèces', 'groupe' => $groupe,
+                'note' => trim('Paiement groupé ' . count($lignes) . ' commerces. ' . (string) ($e['note'] ?? ''))]);
+        }
+        $pdo->commit();
+    } catch (Throwable $err) {
+        $pdo->rollBack();
+        throw $err;
+    }
+    foreach ($resultats as $r) journaliserPaiement($admin, $r);
+    repondre(['ok' => true, 'groupe' => $groupe, 'commerces' => array_map(fn ($r) => resumesCommerces($r['commerce']['id'])[0], $resultats)]);
 }
 
 // ---------- Équipe Amorac ----------

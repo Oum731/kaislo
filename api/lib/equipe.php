@@ -25,8 +25,10 @@ function routeUtilisateur(): never
     $numero = telephoneValide(texte($e, 'telephone', 'le numéro de téléphone', true, 40), $pays, 'numéro de téléphone');
     $telephone = $numero['affichage'];
     $cle = $numero['cle'];
-    $autre = requete('SELECT id FROM utilisateurs WHERE cle_telephone = ?', [$cle])->fetch();
-    if (($autre && $autre['id'] !== $id) || numeroPrisAilleurs($cle, $moi['commerce_id'])) throw new ErreurApi('Ce numéro est déjà utilisé par un autre compte Kaislo', 409);
+    $autre = requete('SELECT id FROM utilisateurs WHERE cle_telephone = ? AND commerce_id = ?', [$cle, $moi['commerce_id']])->fetch();
+    // Le gérant qui a plusieurs commerces garde le même numéro dans chacun : on ne vérifie ailleurs que si le numéro change
+    $memeNumero = $existant && $existant['cle_telephone'] === $cle;
+    if (($autre && $autre['id'] !== $id) || (!$memeNumero && numeroPrisAilleurs($cle, $moi['commerce_id']))) throw new ErreurApi('Ce numéro est déjà utilisé par un autre compte Kaislo', 409);
 
     $pin = (string) ($e['pin'] ?? '');
     if ($pin !== '' || !$existant) {
@@ -55,7 +57,11 @@ function routeUtilisateur(): never
         requete('UPDATE utilisateurs SET nom = ?, telephone = ?, cle_telephone = ?, actif = ?, peut_gerer_produits = ?, peut_faire_remises = ?, poste_id = ?, modifie_le = ? WHERE id = ?', [
             $nom, $telephone, $cle, $actif ? 1 : 0, $produits, $remises, $posteId, maintenant(), $id,
         ]);
-        if ($pin !== '') requete('UPDATE utilisateurs SET pin_hash = ? WHERE id = ?', [password_hash($pin, PASSWORD_DEFAULT), $id]);
+        if ($pin !== '') {
+            requete('UPDATE utilisateurs SET pin_hash = ? WHERE id = ?', [password_hash($pin, PASSWORD_DEFAULT), $id]);
+            // Un gérant a le même code PIN dans tous ses commerces
+            if ($existant['role'] === 'gerant') requete("UPDATE utilisateurs SET pin_hash = ? WHERE cle_telephone = ? AND role = 'gerant'", [password_hash($pin, PASSWORD_DEFAULT), $cle]);
+        }
         // Compte désactivé ou code changé : ses appareils sont déconnectés
         if (!$actif || $pin !== '') requete('DELETE FROM jetons WHERE utilisateur_id = ?', [$id]);
         journaliser($moi['commerce_id'], $moi['id'], 'vendeur-modifie', ['vendeur' => $id, 'actif' => $actif]);
