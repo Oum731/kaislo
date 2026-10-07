@@ -444,6 +444,16 @@ export function FeuilleCompte() {
           </button>
         </div>
       )}
+      {enLigne && s.estGerant() && (
+        <div className="liste" style={{ marginTop: 18 }}>
+          <button className="liste-item" onClick={() => s.ouvrir('commerces')}>
+            <span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>
+            <b className="grandit">{s.commercesGerant().length > 1 ? tr('Mes commerces ({0})', [s.commercesGerant().length]) : tr('Mes commerces')}</b>
+            <span className="petit muet">{tr('Ajouter un commerce')}</span>
+            <Icone nom="droite" className="muet" />
+          </button>
+        </div>
+      )}
       {enLigne && (
         <div className="carte pile" style={{ marginTop: 18 }}>
           <EtatSynchroDetail />

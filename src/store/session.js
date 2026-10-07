@@ -155,6 +155,7 @@ export const trancheSession = (set, get) => ({
     const d = commerceDepuisServeur(rep);
     const jetons = { ...(get().prefs.jetons || {}), [rep.utilisateur.id]: rep.jeton };
     get().sauverPrefs({ commerceAppareil: d.commerce.id, jetons });
+    get().memoriserCommerces(rep.utilisateur, rep.commerces);
     const utilisateurs = d.utilisateurs.some((u) => u.id === rep.utilisateur.id) ? d.utilisateurs.map((u) => (u.id === rep.utilisateur.id ? rep.utilisateur : u)) : [...d.utilisateurs, rep.utilisateur];
     const aJour = { ...d, utilisateurs, commerce: { ...d.commerce, abonnement: { ...d.commerce.abonnement, ...rep.commerce.abonnement } } };
     enregistrerCommerce(aJour);
@@ -322,6 +323,82 @@ export const trancheSession = (set, get) => ({
     if (!get().utilisateur) return;
     get().seDeconnecter();
     get().message(message, 'erreur');
+  },
+
+  // ---------- Plusieurs commerces pour un gérant (un compte, un abonnement par activité) ----------
+
+  // Liste des commerces du gérant connecté (mémorisée dans l'appareil pour pouvoir changer sans internet)
+  commercesGerant() {
+    const cle = cleTelephone(get().utilisateur?.telephone);
+    return (cle && get().prefs.mesCommerces?.[cle]) || [];
+  },
+
+  memoriserCommerces(utilisateur, liste) {
+    const cle = cleTelephone(utilisateur?.telephone);
+    if (!cle || !Array.isArray(liste) || !liste.length) return;
+    get().sauverPrefs({ mesCommerces: { ...(get().prefs.mesCommerces || {}), [cle]: liste } });
+  },
+
+  /** Rafraîchit la liste, les abonnements et le total (internet nécessaire). */
+  async chargerMesCommerces() {
+    if (!estServeur(get().d) || !get().estGerant()) return null;
+    try {
+      const rep = await appelApi('GET', '/mes-commerces', null, get().jetonServeur());
+      get().memoriserCommerces(get().utilisateur, rep.commerces);
+      return rep;
+    } catch {
+      return null;
+    }
+  },
+
+  /** Ouvre un autre commerce du même gérant : ses ventes, son stock et ses comptes sont à part. Renvoie un message d'erreur, ou null. */
+  async basculerCommerce(commerceId) {
+    if (commerceId === get().d?.commerce.id) return get().fermer(), null;
+    const cible = get().commercesGerant().find((c) => c.commerceId === commerceId);
+    if (!cible) return tr('Commerce introuvable');
+    set({ connexionEnCours: true });
+    try {
+      // Ce qui attend d'être envoyé part avant de quitter ce commerce
+      if (estServeur(get().d)) await get().synchroniser().catch(() => {});
+      const rep = await appelApi('POST', '/changer-commerce', { commerceId, appareil: nomAppareil() }, get().jetonServeur());
+      get().fermer();
+      get().arreterSynchro();
+      await get().ouvrirCompteServeur(rep);
+      return null;
+    } catch (e) {
+      // Pas d'internet : on ouvre la copie de ce commerce gardée dans l'appareil, s'il y en a une
+      if (e.horsLigne && chargerCommerce(commerceId)) {
+        get().fermer();
+        get().arreterSynchro();
+        return get().ouvrirSessionHorsLigne(commerceId, cible.utilisateurId);
+      }
+      return e.horsLigne ? tr('Pas de connexion internet : ce commerce n’a pas encore été ouvert sur cet appareil.') : e.message;
+    } finally {
+      set({ connexionEnCours: false });
+    }
+  },
+
+  /** Crée un nouveau commerce pour le gérant (même numéro, même code PIN) et l'ouvre. Renvoie un message d'erreur, ou null. */
+  async ajouterCommerce({ nom, type, ville, pin }) {
+    if (!nom.trim()) return tr('Entrez le nom du commerce');
+    if (!ville.trim()) return tr('Entrez la ville');
+    if (!/^\d{4}$/.test(String(pin))) return tr('Entrez votre code PIN à 4 chiffres pour confirmer');
+    set({ connexionEnCours: true });
+    try {
+      const rep = await appelApi('POST', '/ajouter-commerce', {
+        commerce: { nom: nom.trim(), type, ville: ville.trim() }, pin: String(pin), conditionsAcceptees: true, appareil: nomAppareil(),
+      }, get().jetonServeur());
+      if (estServeur(get().d)) await get().synchroniser().catch(() => {});
+      get().fermer();
+      get().arreterSynchro();
+      await get().ouvrirCompteServeur(rep);
+      get().message(tr('Commerce « {0} » créé : essai gratuit de 30 jours', [rep.commerce.nom]));
+      return null;
+    } catch (e) {
+      return e.horsLigne ? tr('Pas de connexion internet : la création d’un commerce demande internet.') : e.message;
+    } finally {
+      set({ connexionEnCours: false });
+    }
   },
 
   // (ancien nom, gardé pour les boutons existants)

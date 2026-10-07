@@ -40,7 +40,7 @@ const FORMULES_DEFAUT = [
 // Les commerces inscrits avant « catalogueDepuis » gardent leur prix actuel.
 const REGLES_DEFAUT = [
     'moisOffertsAnnuel' => 2, 'remiseFondateur' => 20, 'placesFondateur' => 20,
-    'remiseParrain' => 10, 'catalogueActif' => true, 'catalogueDepuis' => '2026-10-06',
+    'remiseParrain' => 10, 'remiseMultiCommerce' => 10, 'catalogueActif' => true, 'catalogueDepuis' => '2026-10-06',
 ];
 
 // Valeur JSON gardée dans reglages_amorac (ou la valeur par défaut)
@@ -90,7 +90,7 @@ function modeTarif(array $commerce): string
 }
 
 // Même calcul que prixAbonnement() de tarifs.js
-function prixAbonnement(array $formule, string $devise, int $postes, int $mois, bool $fondateur, string $mode = 'base'): array
+function prixAbonnement(array $formule, string $devise, int $postes, int $mois, bool $fondateur, string $mode = 'base', bool $multi = false): array
 {
     $r = reglesTarifs();
     $remiseParrain = (float) $r['remiseParrain'];
@@ -99,11 +99,12 @@ function prixAbonnement(array $formule, string $devise, int $postes, int $mois, 
     $prixPoste = (float) ($formule['prixPoste'][$devise] ?? 0);
     if ($catalogue) { $base = prixCatalogue($base, $devise, $remiseParrain); $prixPoste = prixCatalogue($prixPoste, $devise, $remiseParrain); }
     $supplement = max(0, $postes - 1) * $prixPoste;
-    $coef = $fondateur ? 1 - ((float) $r['remiseFondateur']) / 100 : 1;
+    // Remise du 2e commerce et suivants d'un même gérant (s'ajoute à la remise fondateur)
+    $coef = ($fondateur ? 1 - ((float) $r['remiseFondateur']) / 100 : 1) * ($multi ? 1 - ((float) ($r['remiseMultiCommerce'] ?? 0)) / 100 : 1);
     $pas = $devise === 'GNF' ? 1000 : ($devise === 'FCFA' ? 100 : 1);
     $parMois = round(($base + $supplement) * $coef / $pas) * $pas;
     $moisFactures = $mois === 12 ? 12 - (int) $r['moisOffertsAnnuel'] : $mois;
-    return ['base' => $base, 'supplement' => $supplement, 'remise' => $fondateur ? (float) $r['remiseFondateur'] : 0, 'parMois' => $parMois, 'total' => round($parMois * $moisFactures / $pas) * $pas];
+    return ['base' => $base, 'supplement' => $supplement, 'remise' => $fondateur ? (float) $r['remiseFondateur'] : 0, 'remiseMulti' => $multi ? (float) ($r['remiseMultiCommerce'] ?? 0) : 0, 'parMois' => $parMois, 'total' => round($parMois * $moisFactures / $pas) * $pas];
 }
 
 // Nombre de postes d'un commerce (postes créés par le gérant, au moins 1)
@@ -113,18 +114,30 @@ function nombrePostes(string $commerceId): int
     return max(1, $n);
 }
 
+// Rang du commerce parmi ceux de son gérant (0 = le plus ancien, sans remise ; 1 et plus = remise multi-commerce)
+function rangCommerceDuGerant(array $c): int
+{
+    $g = requete("SELECT cle_telephone FROM utilisateurs WHERE commerce_id = ? AND role = 'gerant' ORDER BY cree_le LIMIT 1", [$c['id']])->fetch();
+    if (!$g) return 0;
+    $lignes = requete("SELECT DISTINCT c.id, c.cree_le, c.nom FROM utilisateurs u JOIN commerces c ON c.id = u.commerce_id
+                       WHERE u.cle_telephone = ? AND u.role = 'gerant' ORDER BY c.cree_le, c.nom", [$g['cle_telephone']])->fetchAll();
+    foreach ($lignes as $i => $l) if ($l['id'] === $c['id']) return $i;
+    return 0;
+}
+
 // Tarif actuel d'un commerce (affiché dans ses réglages et dans l'espace Amorac)
 function tarifCommerce(array $c): array
 {
     $formule = $c['offre'] && formuleParId((string) $c['offre']) ? formuleParId((string) $c['offre']) : formuleDuType((string) $c['type']);
     $postes = nombrePostes($c['id']);
     $mode = modeTarif($c);
-    $prix = prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), $mode);
+    $multi = rangCommerceDuGerant($c) > 0; // 2e commerce et suivants du même gérant : remise
+    $prix = prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), $mode, $multi);
     $prixPoste = (float) ($formule['prixPoste'][$c['devise']] ?? 0);
     return ['formule' => $formule['id'], 'nom' => $formule['nom'], 'postes' => $postes, 'fondateur' => (bool) ($c['fondateur'] ?? 0),
         'mode' => $mode, 'parrain' => !empty($c['commercial_id']),
-        'parMoisCatalogue' => prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), 'catalogue')['parMois'],
-        'parMois' => $prix['parMois'], 'annuel' => prixAbonnement($formule, $c['devise'], $postes, 12, (bool) ($c['fondateur'] ?? 0), $mode)['total'],
+        'parMoisCatalogue' => prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), 'catalogue', $multi)['parMois'], 'remiseMulti' => $multi ? (float) (reglesTarifs()['remiseMultiCommerce'] ?? 0) : 0,
+        'parMois' => $prix['parMois'], 'annuel' => prixAbonnement($formule, $c['devise'], $postes, 12, (bool) ($c['fondateur'] ?? 0), $mode, $multi)['total'],
         'prixPoste' => $mode === 'catalogue' ? prixCatalogue($prixPoste, $c['devise'], (float) reglesTarifs()['remiseParrain']) : $prixPoste, 'devise' => $c['devise']];
 }
 
@@ -157,6 +170,7 @@ function routeAdminTarifs(): never
         'remiseFondateur' => max(0, min(90, (float) ($r['remiseFondateur'] ?? 20))),
         'placesFondateur' => max(0, min(1000, (int) ($r['placesFondateur'] ?? 20))),
         'remiseParrain' => max(0, min(40, (float) ($r['remiseParrain'] ?? 10))),
+        'remiseMultiCommerce' => max(0, min(40, (float) ($r['remiseMultiCommerce'] ?? 10))),
         'catalogueActif' => !empty($r['catalogueActif']),
         'catalogueDepuis' => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($r['catalogueDepuis'] ?? '')) ? (string) $r['catalogueDepuis'] : REGLES_DEFAUT['catalogueDepuis'],
     ];
