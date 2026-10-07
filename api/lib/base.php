@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 6;
+const VERSION_BASE = 7;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -26,9 +26,12 @@ const STRUCTURE = [
             'fondateur' => 'ENTIER', // 1 = tarif fondateur (remise à vie, 20 premiers clients)
             'commission_validee_le' => 'DATE', // 6 mois payés et utilisés : commissions du commercial débloquées
         ],
-        'cle' => ['id'], 'uniques' => [['code'], ['cle_telephone']], 'index' => [],
+        // Le numéro d'un commerce n'est plus unique : un gérant peut avoir plusieurs commerces avec le même numéro
+        // (l'unicité entre personnes différentes est vérifiée dans le code : voir numeroPrisAilleurs et numeroLibrePourGerant)
+        'cle' => ['id'], 'uniques' => [['code']], 'index' => [['cle_telephone']],
     ],
-    // Gérants et vendeurs (le numéro de téléphone est unique dans tout Kaislo)
+    // Gérants et vendeurs : un numéro de téléphone = une personne. Un gérant qui a plusieurs commerces a une ligne par
+    // commerce (même numéro, même code PIN) ; un vendeur n'a qu'un seul commerce.
     'utilisateurs' => [
         'colonnes' => [
             'id' => 'ID', 'commerce_id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)',
@@ -36,7 +39,7 @@ const STRUCTURE = [
             'peut_gerer_produits' => 'ENTIER', 'peut_faire_remises' => 'ENTIER', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
             'poste_id' => 'VARCHAR(40)', // poste (point d'impression) du vendeur : 5 vendeurs au maximum par poste
         ],
-        'cle' => ['id'], 'uniques' => [['cle_telephone']], 'index' => [['commerce_id']],
+        'cle' => ['id'], 'uniques' => [['cle_telephone', 'commerce_id']], 'index' => [['commerce_id']],
     ],
     // Jetons de connexion (un par appareil connecté) ; seul leur empreinte est gardée
     'jetons' => [
@@ -238,6 +241,14 @@ function migrer(PDO $pdo, string $driver): void
 
     // Bases en version 4 ou 5 : validation des commerciaux (ceux qui existent déjà sont considérés comme validés)
     if ($version >= 4 && $version < 6) $essayer('ALTER TABLE commerciaux ADD COLUMN valide_le VARCHAR(30) NULL');
+
+    // Bases en version 1 à 6 : un gérant peut avoir plusieurs commerces (le numéro n'est plus unique à lui seul)
+    if ($version >= 1 && $version < 7 && $driver !== 'sqlite') {
+        $essayer('ALTER TABLE utilisateurs DROP INDEX u_utilisateurs_0');
+        $essayer('ALTER TABLE utilisateurs ADD CONSTRAINT u_utilisateurs_0 UNIQUE (cle_telephone, commerce_id)');
+        $essayer('ALTER TABLE commerces DROP INDEX u_commerces_1');
+        $essayer('ALTER TABLE commerces ADD INDEX i_commerces_0 (cle_telephone)');
+    }
 
     foreach (STRUCTURE as $table => $t) {
         $lignes = [];

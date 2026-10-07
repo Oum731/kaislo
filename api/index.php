@@ -8,6 +8,7 @@
 //   POST /api/connexion     se connecter avec téléphone + code PIN
 //   GET  /api/moi           utilisateur et commerce connectés
 //   POST /api/deconnexion   déconnecter cet appareil
+//   GET  /api/mes-commerces · POST /api/changer-commerce · POST /api/ajouter-commerce   plusieurs commerces pour un gérant (voir lib/commerces.php)
 //   GET|POST /api/donnees   synchronisation des caisses (voir lib/donnees.php)
 //   POST /api/utilisateurs  vendeurs (gérant) · POST /api/verifier-gerant (annulation)
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
@@ -36,6 +37,7 @@ require __DIR__ . '/lib/contact.php';
 require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
 require __DIR__ . '/lib/commerciaux.php';
+require __DIR__ . '/lib/commerces.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -56,6 +58,10 @@ try {
         'POST /connexion' => routeConnexion(),
         'GET /moi' => routeMoi(),
         'POST /deconnexion' => routeDeconnexion(),
+        'GET /mes-commerces' => routeMesCommerces(),
+        'POST /changer-commerce' => routeChangerCommerce(),
+        'POST /ajouter-commerce' => routeAjouterCommerce(),
+        'GET /admin/catalogue' => routeAdminCatalogue(),
         'GET /donnees' => routeDonneesLire(),
         'POST /donnees' => routeDonneesEcrire(),
         'POST /utilisateurs' => routeUtilisateur(),
@@ -77,6 +83,7 @@ try {
         'GET /admin/commerce' => routeAdminCommerce(),
         'POST /admin/commerce' => routeAdminActionCommerce(),
         'POST /admin/paiement' => routeAdminPaiement(),
+        'POST /admin/paiement-groupe' => routeAdminPaiementGroupe(),
         'POST /admin/tarifs' => routeAdminTarifs(),
         'GET /admin/commerciaux' => routeAdminCommerciaux(),
         'GET /admin/commercial' => routeAdminCommercial(),
@@ -234,19 +241,29 @@ function routeConnexion(): never
     verifierBlocage($cleTel);
     verifierBlocage($cleIp);
 
-    $u = requete('SELECT * FROM utilisateurs WHERE cle_telephone = ?', [$cle])->fetch();
+    // Un gérant qui a plusieurs commerces a une ligne par commerce (même numéro, même code PIN)
+    $lignes = requete('SELECT * FROM utilisateurs WHERE cle_telephone = ? ORDER BY cree_le', [$cle])->fetchAll();
+    $valides = array_values(array_filter($lignes, fn ($l) => password_verify($pin, $l['pin_hash'])));
     // Même temps de calcul que le numéro existe ou non (ne révèle pas les numéros inscrits)
-    $valide = password_verify($pin, $u ? $u['pin_hash'] : password_hash('leurre', PASSWORD_DEFAULT));
-    if (!$u || !$valide) {
+    if (!$lignes) password_verify($pin, password_hash('leurre', PASSWORD_DEFAULT));
+    if (!$valides) {
         $bloque = noterEchec($cleTel);
         $bloque = noterEchec($cleIp, 30) || $bloque;
         if ($bloque) throw new ErreurApi('Code incorrect. Trop d’essais : réessayez dans ' . MINUTES_BLOCAGE . ' minutes.', 429);
         throw new ErreurApi('Numéro ou code PIN incorrect', 401);
     }
-    if (!$u['actif']) throw new ErreurApi('Ce compte a été désactivé par le gérant', 403);
-    $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
-    if (!$commerce) throw new ErreurApi('Commerce introuvable', 404);
-    if ($commerce['statut'] === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Amorac.', 403);
+    // Le commerce ouvert est celui utilisé en dernier (parmi ceux qui sont actifs et non suspendus)
+    $dernierUsage = fn (array $l) => (string) (requete('SELECT MAX(vu_le) AS v FROM jetons WHERE utilisateur_id = ?', [$l['id']])->fetch()['v'] ?? '');
+    usort($valides, fn ($a, $b) => $dernierUsage($b) <=> $dernierUsage($a));
+    $u = null; $commerce = null; $refus = null;
+    foreach ($valides as $l) {
+        $c = requete('SELECT * FROM commerces WHERE id = ?', [$l['commerce_id']])->fetch();
+        if (!$l['actif']) { $refus ??= ['Ce compte a été désactivé par le gérant', 403]; continue; }
+        if (!$c) { $refus ??= ['Commerce introuvable', 404]; continue; }
+        if ($c['statut'] === 'suspendu') { $refus ??= ['Ce commerce est suspendu. Contactez Amorac.', 403]; continue; }
+        $u = $l; $commerce = $c; break;
+    }
+    if (!$u) throw new ErreurApi($refus[0], $refus[1]);
 
     effacerEchecs($cleTel);
     // Le hachage du PIN est mis à jour si PHP recommande un réglage plus fort
@@ -255,7 +272,7 @@ function routeConnexion(): never
     }
     $jeton = creerJeton($u, (string) ($e['appareil'] ?? ''));
     journaliser($u['commerce_id'], $u['id'], 'connexion');
-    repondre(['ok' => true, 'jeton' => $jeton, 'utilisateur' => versUtilisateur($u), 'commerce' => versCommerce($commerce)]);
+    repondre(['ok' => true, 'jeton' => $jeton, 'utilisateur' => versUtilisateur($u), 'commerce' => versCommerce($commerce), 'commerces' => listeCommercesGerant($u)]);
 }
 
 // ---------- GET /api/moi ----------
@@ -263,7 +280,7 @@ function routeMoi(): never
 {
     $u = utilisateurConnecte();
     $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
-    repondre(['ok' => true, 'utilisateur' => versUtilisateur($u), 'commerce' => versCommerce($commerce)]);
+    repondre(['ok' => true, 'utilisateur' => versUtilisateur($u), 'commerce' => versCommerce($commerce), 'commerces' => listeCommercesGerant($u)]);
 }
 
 // ---------- POST /api/deconnexion ----------
