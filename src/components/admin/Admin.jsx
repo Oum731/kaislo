@@ -148,7 +148,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin };
 
   return (
-    <div className="coque">
+    <div className="coque admin-espace">
       <nav className="menu" aria-label="Menu Amorac">
         <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Amorac</span></span></div>
         <div className="menu-liens">
@@ -864,8 +864,8 @@ function PaiementGroupe({ c, ctx, fermer, surMessage }) {
   return (
     <div className="pile">
       {lignes.map((l) => (
-        <div key={l.id} className="ligne">
-          <label className="case-accord grandit petit"><input type="checkbox" checked={!!coches[l.id]} onChange={(e) => setCoches({ ...coches, [l.id]: e.target.checked })} /><span>{l.nom} · {l.tarif.nom}</span></label>
+        <div key={l.id} className="ligne-paiement">
+          <label className="case-accord petit"><input type="checkbox" checked={!!coches[l.id]} onChange={(e) => setCoches({ ...coches, [l.id]: e.target.checked })} /><span><b>{l.nom}</b><br />{l.tarif.nom}</span></label>
           <ChampMontant valeur={montantDe(l)} surChanger={(v) => setMontants({ ...montants, [l.id]: v })} />
         </div>
       ))}

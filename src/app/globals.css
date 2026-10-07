@@ -1034,3 +1034,11 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .grille-2 .btn { white-space: normal; height: auto; min-height: 34px; padding-top: 6px; padding-bottom: 6px; line-height: 1.25; text-align: center; }
 .liste-item .badge { flex: none; }
 .puces.enveloppe { flex-wrap: wrap; overflow: visible; }
+.grille-3 > * { min-width: 0; }
+.champ select, .champ input { max-width: 100%; }
+@media (max-width: 599px) { .admin-espace .grille-3 { grid-template-columns: 1fr; } }
+
+/* Paiement groupé : un bloc par commerce (nom au-dessus, montant en dessous) */
+.ligne-paiement { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--bordure); border-radius: var(--rayon-petit); background: var(--surface); }
+.ligne-paiement .case-accord { min-width: 0; overflow-wrap: anywhere; }
+.ligne-paiement .saisie { width: 100%; }
