@@ -10,7 +10,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ACTIVITES = ['restaurant', 'epicerie', 'boutique', 'quincaillerie', 'boulangerie', 'bar'];
-// Pages retirées (métier réglementé non proposé) : redirigées vers l'accueil ou les guides
+// Pages retirées (métier réglementé non proposé) : le .htaccess répond « 410 Gone » ; ce fichier remplace l'ancienne page restée sur le serveur
+// (sans redirection : une page retirée ne doit pas pointer vers une page sans rapport) et reste hors de l'index (noindex)
 const RETIREES = [
   ['caisse-pharmacie', '/'], ['gestion-pharmacie', '/'], ['en/pharmacy-management', '/en/'],
   ['guides/gerer-le-stock-dune-pharmacie-peremptions', '/guides/'], ['en/guides/managing-pharmacy-stock-and-expiry-dates', '/en/guides/'],
@@ -36,6 +37,23 @@ const ecrire = (dossierRelatif, cible) => {
 </html>
 `);
 };
+const retiree = (dossierRelatif, suite) => {
+  const dossier = path.join('out', dossierRelatif);
+  fs.mkdirSync(dossier, { recursive: true });
+  fs.writeFileSync(path.join(dossier, 'index.html'), `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page retirée — Kaislo</title>
+<meta name="robots" content="noindex">
+</head>
+<body>
+<p>Cette page n’existe plus. <a href="${suite}">Retour à Kaislo</a></p>
+</body>
+</html>
+`);
+};
 for (const a of ACTIVITES) ecrire(`caisse-${a}`, `/gestion-${a}/`);
-for (const [ancienne, cible] of RETIREES) ecrire(ancienne, cible);
+for (const [ancienne, suite] of RETIREES) retiree(ancienne, suite);
 console.log(`Anciennes adresses : ${ACTIVITES.length + RETIREES.length} pages de redirection écrites dans out/`);

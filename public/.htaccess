@@ -12,11 +12,14 @@ RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 
 # Anciennes adresses des pages par activité (« caisse-… » devenues « gestion-… »)
 RewriteRule ^caisse-(restaurant|epicerie|boutique|quincaillerie|boulangerie|bar)/?$ /gestion-$1/ [R=301,L]
-# Pages retirées (métier réglementé non proposé)
-RewriteRule ^(caisse|gestion)-pharmacie/?$ / [R=301,L]
-RewriteRule ^en/pharmacy-management/?$ /en/ [R=301,L]
-RewriteRule ^guides/gerer-le-stock-dune-pharmacie-peremptions/?$ /guides/ [R=301,L]
-RewriteRule ^en/guides/managing-pharmacy-stock-and-expiry-dates/?$ /en/guides/ [R=301,L]
+# Pages retirées (métier réglementé non proposé) : « 410 Gone » (disparue pour de bon), pas une redirection vers l'accueil
+# (Google range une redirection vers une page sans rapport parmi les « pages avec redirection » ou les soft 404 ; le 410 la sort de l'index plus vite)
+RewriteRule ^(caisse|gestion)-pharmacie/?$ - [G,L]
+RewriteRule ^en/pharmacy-management/?$ - [G,L]
+RewriteRule ^guides/gerer-le-stock-dune-pharmacie-peremptions/?$ - [G,L]
+RewriteRule ^en/guides/managing-pharmacy-stock-and-expiry-dates/?$ - [G,L]
+# Ancienne adresse des vidéos : vraie redirection 301 (le fichier Next /videos/ n'en est qu'un secours)
+RewriteRule ^videos/?$ /tutoriels/ [R=301,L]
 
 # L'adresse provisoire Hostinger est renvoyée vers kaislo.com (Google garde ainsi une seule adresse)
 # En cas de problème avec le domaine : remettre un # devant les 2 lignes suivantes
