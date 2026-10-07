@@ -342,3 +342,10 @@ Fichiers : `src/lib/mesure.js` (logique), `src/components/site/BandeauMesure.jsx
 
 Les captures du site existent en six devises : `nom.webp` (FCFA, par défaut), `nom-mad.webp`, `-gnf`, `-eur`, `-cad`, `-usd`. Le composant `ImageCapture` choisit la bonne version selon le pays du visiteur (même détection que les tarifs : pays choisi, puis adresse IP, fuseau horaire, langue). La page est écrite avec la version FCFA, remplacée sur l'appareil du visiteur.
 `npm run build` puis `npm run captures` refait les 54 captures (chaque devise via `?pays=`), puis `npm run images` fabrique les versions réduites. Les vidéos de démonstration suivent la même règle (`demo-restaurant-eur.mp4`, affiches comprises) : `npm run videos -- --devise=EUR` (ou MAD, GNF, CAD, USD) refait les cinq vidéos du site dans cette devise, avec les montants saisis convertis et, hors FCFA, un paiement par carte à la place de Wave. Sans accès à la voix de Microsoft, `VOIX_MOTEUR=piper PIPER_MODELE=/chemin/fr_FR-siwis-medium.onnx` utilise la voix Piper (pip install piper-tts) ; les vidéos en FCFA d'origine gardent la voix Vivienne.
+
+## Pages « avec redirection » dans Search Console
+
+Ce motif est normal pour une ancienne adresse : Google n'indexe pas une page qui redirige, il indexe sa destination. À surveiller seulement si une adresse du **plan du site** ou d'un lien interne y figure (`npm run seo` vérifie que le plan du site ne contient aucune redirection).
+- Anciennes adresses d'activité (`/caisse-restaurant/`… vers `/gestion-restaurant/`), `http://` vers `https://`, `www.` vers `kaislo.com`, `…hostingersite.com` vers `kaislo.com` : redirections 301 voulues (`public/.htaccess`).
+- Pages retirées (pharmacie) : réponse « 410 Gone », sans redirection vers l'accueil (Google la rangerait parmi les pages avec redirection ou les soft 404) ; le fichier de secours `scripts/anciennes-adresses.mjs` est une page `noindex` sans redirection.
+- Ancienne adresse `/videos/` : 301 vers `/tutoriels/`.
