@@ -33,7 +33,8 @@ Ajoutés ensuite (6 guides FR + EN, 59 guides au total) :
 6. « vendre en ligne et en boutique : un seul stock juste »
 Ajoutés ensuite : « modèle de facture Excel gratuit » et « modèle de bon de livraison Excel gratuit » (deux nouveaux fichiers Excel FR/EN, 61 guides au total).
 Ajoutés ensuite : 15 guides « logiciel de caisse » par pays (un par pays de la liste, FR + EN, 91 guides au total), reliés à la page du pays et au guide « gérer son commerce » du même pays.
-Idées suivantes : outil de calcul de prix de vente (coefficient), comparatif honnête « Excel ou logiciel ».
+Ajouté ensuite : « Excel ou logiciel de gestion : le comparatif » (comparatif en 8 critères, coût réel, quand passer au logiciel, comment migrer ; 92 guides au total).
+Idées suivantes : outil de calcul de prix de vente (coefficient),
 
 ## Ce qui est en place (vérifié par `npm run seo`)
 
