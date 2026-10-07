@@ -4,7 +4,7 @@
 // Les prix viennent de src/lib/donnees/tarifs.js (même grille que le serveur).
 // ------------------------------------------------------------
 import Link from 'next/link';
-import { EnTeteSite, PiedSite, Faq, AppelFinal, LIEN_DEMO_RESTO, LIEN_INSCRIPTION } from '@/components/site/Site';
+import { EnTeteSite, PiedSite, Faq, Capture, AppelFinal, LIEN_DEMO_RESTO, LIEN_INSCRIPTION } from '@/components/site/Site';
 import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs';
 import TarifsPays from '@/components/site/TarifsPays';
 import { metaPage } from '@/lib/seo';
@@ -76,6 +76,26 @@ export default function Tarifs({ lang }) {
                 <thead><tr><th>{tr('Commerce')}</th><th>{tr('Organisation')}</th><th>{tr('Postes')}</th></tr></thead>
                 <tbody>{EXEMPLES().map(([c, o, p]) => <tr key={c}><td><b>{c}</b></td><td>{o}</td><td><b>{p}</b></td></tr>)}</tbody>
               </table>
+            </div>
+          </div>
+        </section>
+
+        <section className="section">
+          <div className="site-largeur">
+            <div className="fonction-ligne">
+              <div>
+                <span className="etiquette">{tr('Plusieurs commerces')}</span>
+                <h2>{tr('Une activité, un abonnement. 10 % de remise dès le 2e commerce.')}</h2>
+                <p>{tr('Vous avez une épicerie et un restaurant ? Ajoutez-les dans le même compte, avec le même numéro et le même code PIN. Chaque commerce garde son stock, ses ventes, ses comptes du soir et ses vendeurs : rien ne se mélange.')}</p>
+                <ul>
+                  <li>{tr('Un abonnement par activité, au tarif de son métier')}</li>
+                  <li>{tr('10 % de remise sur le 2e commerce et les suivants')}</li>
+                  <li>{tr('Le total de tous vos abonnements est affiché, et vous payez en une seule fois')}</li>
+                  <li>{tr('30 jours d’essai gratuit pour chaque nouveau commerce')}</li>
+                </ul>
+                <p className="petit muet" style={{ marginTop: 12 }}>{tr('Dans l’application : Compte → Mes commerces → Ajouter un commerce. Essayez-le dans la démo.')}</p>
+              </div>
+              <Capture src="/captures/commerces-mobile.webp" alt={tr('Liste des commerces d’un gérant avec le total des abonnements')} telephone largeur={390} hauteur={844} />
             </div>
           </div>
         </section>

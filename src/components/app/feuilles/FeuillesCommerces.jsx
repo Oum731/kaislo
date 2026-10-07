@@ -21,14 +21,20 @@ export function FeuilleCommerces() {
   const s = useKaislo();
   const [erreur, setErreur] = useState('');
   useEffect(() => { s.chargerMesCommerces(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const liste = s.commercesGerant();
+  const demo = s.estDemoActuel();
+  const c0 = s.d.commerce;
+  // Démo : le commerce de démonstration + ceux qu'on ajoute pour essayer (rien n'est enregistré)
+  const liste = demo
+    ? [{ commerceId: c0.id, nom: c0.nom, type: c0.type, ville: c0.ville, abonnement: c0.abonnement, tarif: { devise: c0.devise, remiseMulti: 0, parMois: prixAbonnement({ formule: formuleDuType(c0.type), devise: c0.devise, mode: catalogueEnVigueur() ? 'catalogue' : 'base' }).parMois } }, ...s.commercesDemo]
+    : s.commercesGerant();
   const totaux = {};
   for (const c of liste) totaux[c.tarif.devise] = (totaux[c.tarif.devise] || 0) + c.tarif.parMois;
-  const ouvrir = async (id) => { setErreur(''); const e = await s.basculerCommerce(id); if (e) setErreur(e); };
+  const ouvrir = async (id) => { setErreur(''); if (demo) return id === c0.id ? s.fermer() : setErreur(tr('Démo : avec un vrai compte, ce commerce s’ouvrirait ici avec son propre stock et ses propres ventes.')); const e = await s.basculerCommerce(id); if (e) setErreur(e); };
   return (
     <Feuille titre={tr('Mes commerces')} surFermer={s.fermer} pied={<button className="btn bloc" onClick={() => s.ouvrir('ajoutCommerce')}><Icone nom="plus" /> {tr('Ajouter un commerce')}</button>}>
       <div className="pile">
         <p className="petit muet">{tr('Un seul numéro et un seul code PIN pour tous vos commerces. Chaque activité a son propre abonnement, son stock, ses ventes et ses comptes du soir : rien ne se mélange.')}</p>
+        {demo && <p className="info-verte petit">{tr('Démo : essayez d’ajouter un commerce pour voir le prix et le total. Rien n’est créé.')}</p>}
         {erreur && <p className="alerte">{erreur}</p>}
         <div className="liste">
           {liste.map((c) => {
@@ -69,6 +75,7 @@ export function FeuilleAjoutCommerce() {
   const s = useKaislo();
   const [f, setF] = useState({ nom: '', type: 'epicerie', ville: s.d.commerce.ville || '', pin: '', accepte: false });
   const [erreur, setErreur] = useState('');
+  const demo = s.estDemoActuel();
   const devise = s.d.commerce.devise;
   const formule = formuleDuType(f.type);
   // Le commerce ajouté est au moins le 2e : remise multi-commerce
@@ -77,7 +84,7 @@ export function FeuilleAjoutCommerce() {
   const valider = async (e) => {
     e.preventDefault();
     setErreur('');
-    if (!f.accepte) return setErreur(tr('Merci d’accepter les conditions d’utilisation pour continuer'));
+    if (!f.accepte && !demo) return setErreur(tr('Merci d’accepter les conditions d’utilisation pour continuer'));
     const err = await s.ajouterCommerce(f);
     if (err) setErreur(err);
   };
@@ -97,6 +104,7 @@ export function FeuilleAjoutCommerce() {
           <b>{tr('{0} · environ {1} par mois', [tr(formule.nom), formatPrix(prix, devise)])}</b>
           <p className="tres-petit muet">{tr('Remise de {0} % déjà comprise (2e commerce et suivants). Essai gratuit de 30 jours pour chaque nouveau commerce.', [REGLES_TARIFS.remiseMultiCommerce])}</p>
         </div>
+      {!demo && <>
         <label className="champ"><span>{tr('Votre code PIN (pour confirmer)')}</span>
           <input className="pin-saisie" type="password" inputMode="numeric" autoComplete="current-password" maxLength={4} placeholder="••••" value={f.pin} onChange={(e) => setF({ ...f, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
         </label>
@@ -104,8 +112,9 @@ export function FeuilleAjoutCommerce() {
           <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
           <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('de Kaislo.')}</span>
         </label>
+      </>}
         {erreur && <p className="alerte">{erreur}</p>}
-        <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours}>{s.connexionEnCours ? tr('Création…') : tr('Créer ce commerce')}</button>
+        <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours || (!f.accepte && !demo)}>{s.connexionEnCours ? tr('Création…') : tr('Créer ce commerce')}</button>
       </form>
     </Feuille>
   );

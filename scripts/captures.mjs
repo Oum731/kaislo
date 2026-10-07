@@ -128,6 +128,17 @@ const CAPTURES = [
     await ajouter(p, 'Lait 1L');
     await ajouter(p, 'Lait 1L');
   }],
+  // Plusieurs commerces : on ajoute un 2e commerce dans la démo, puis on ouvre la liste avec le total
+  ['commerces-mobile', TEL, 'chez-sentinelle', 'FR', [20, 15], async (p) => {
+    await toucher(p, '', 'button.avatar', 700); // mon compte
+    await toucher(p, 'Mes commerces', '.feuille button', 700);
+    await toucher(p, 'Ajouter un commerce', '.feuille button', 700);
+    await p.type('.feuille input[placeholder^="Ex"]', 'Chez Awa Restaurant');
+    await p.select('.feuille select', 'restaurant');
+    await toucher(p, 'Créer ce commerce', '.feuille button', 900);
+    await toucher(p, '', 'button.avatar', 700);
+    await toucher(p, 'Mes commerces', '.feuille button', 900);
+  }],
 ];
 
 // Une série de captures par devise : FCFA (nom.webp, par défaut), puis nom-mad, -gnf, -eur, -cad, -usd.webp

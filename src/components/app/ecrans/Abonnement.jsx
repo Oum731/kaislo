@@ -66,8 +66,8 @@ export default function AbonnementCommerce() {
         <p className="info-verte petit">{tr('Code parrain : remise de {0} % sur l’abonnement (prix catalogue : {1} par mois).', [Math.round((1 - tarif.parMois / tarif.parMoisCatalogue) * 100), s.prix(tarif.parMoisCatalogue)])}</p>
       )}
       {tarif?.fondateur && <p className="info-verte petit">{tr('Tarif fondateur : remise à vie déjà appliquée. Merci de faire partie des premiers !')}</p>}
-      {estServeur(s.d) && s.estGerant() && (
-        <button className="btn secondaire bloc" onClick={() => s.ouvrir('commerces')}>{s.commercesGerant().length > 1 ? tr('Mes {0} commerces et le total à payer', [s.commercesGerant().length]) : tr('Ajouter un autre commerce (autre activité)')}</button>
+      {(estServeur(s.d) || s.estDemoActuel()) && s.estGerant() && (
+        <button className="btn secondaire bloc" onClick={() => s.ouvrir('commerces')}>{(s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length) > 1 ? tr('Mes {0} commerces et le total à payer', [s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length]) : tr('Ajouter un autre commerce (autre activité)')}</button>
       )}
       <p className="tres-petit muet">{tr('Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.')}</p>
     </div>

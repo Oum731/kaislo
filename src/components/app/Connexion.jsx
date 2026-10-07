@@ -347,7 +347,7 @@ function Inscription() {
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
             <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('et la')} <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">{tr('politique de confidentialité')}</a> {tr('de Kaislo.')}</span>
           </label>
-          <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours}>{s.connexionEnCours ? tr('Création…') : tr('Créer mon commerce')}</button>
+          <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours || !f.accepte}>{s.connexionEnCours ? tr('Création…') : tr('Créer mon commerce')}</button>
         </form>
       )}
     </div>

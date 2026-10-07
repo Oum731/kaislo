@@ -8,6 +8,8 @@
 //     et garde les données ; l'appareil en a une copie pour marcher sans internet.
 // Le numéro de téléphone identifie la personne et son commerce.
 // ------------------------------------------------------------
+import { DUREE_ESSAI_JOURS } from '@/lib/donnees/abonnement.js';
+import { formuleDuType, prixAbonnement, catalogueEnVigueur, REGLES_TARIFS } from '@/lib/donnees/tarifs.js';
 import { chargerCommerce, creerCommerce, commerceDepuisServeur, enregistrerCommerce, estDemo, trouverParTelephone, supprimerCommerce } from '@/lib/donnees/stockage.js';
 import { typeCommerce, cleTelephone } from '@/lib/donnees/modeles.js';
 import { normaliserTelephone } from '@/lib/donnees/telephone.js';
@@ -33,6 +35,7 @@ const reporteesCetteFois = new Set();
 export const trancheSession = (set, get) => ({
   etapeConnexion: 'accueil', // 'accueil' | 'inscription' | 'connexion' | 'suspendu'
   connexionEnCours: false,
+  commercesDemo: [], // démo : commerces ajoutés pour essayer (rien n'est enregistré)
   verrouille: false, // application verrouillée : empreinte / Face ID (ou code PIN) demandés avant de montrer le commerce
 
   // Au démarrage : rouvre le commerce relié à cet appareil (et la dernière session)
@@ -382,6 +385,15 @@ export const trancheSession = (set, get) => ({
   async ajouterCommerce({ nom, type, ville, pin }) {
     if (!nom.trim()) return tr('Entrez le nom du commerce');
     if (!ville.trim()) return tr('Entrez la ville');
+    if (estDemo(get().d?.commerce.id)) {
+      // Démo : on montre le résultat sans rien créer sur le serveur
+      const formule = formuleDuType(type);
+      const tarif = prixAbonnement({ formule, devise: get().d.commerce.devise, multi: true, mode: catalogueEnVigueur() ? 'catalogue' : 'base' });
+      set({ commercesDemo: [...get().commercesDemo, { commerceId: 'demo-' + (get().commercesDemo.length + 1), nom: nom.trim(), type, ville: ville.trim(), tarif: { parMois: tarif.parMois, devise: get().d.commerce.devise, remiseMulti: REGLES_TARIFS.remiseMultiCommerce }, abonnement: { offre: null, statut: 'essai', essaiFin: new Date(Date.now() + DUREE_ESSAI_JOURS * 86400000).toISOString(), periodeFin: null } }] });
+      get().fermer();
+      get().message(tr('Démo : « {0} » est ajouté pour l’exemple. Avec un vrai compte, il aurait son propre stock et ses propres ventes.', [nom.trim()]));
+      return null;
+    }
     if (!/^\d{4}$/.test(String(pin))) return tr('Entrez votre code PIN à 4 chiffres pour confirmer');
     set({ connexionEnCours: true });
     try {
