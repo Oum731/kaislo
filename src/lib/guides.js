@@ -1901,6 +1901,96 @@ const GUIDES_BASE = [
       ],
     },
   },
+  {
+    cle: 'modele-facture',
+    modele: 'facture',
+    metier: '/gestion-boutique/',
+    fr: {
+      slug: 'modele-de-facture-excel-gratuit',
+      seo: 'Modèle de facture Excel gratuit : mode d’emploi',
+      titre: 'Modèle de facture Excel gratuit : comment bien remplir une facture',
+      court: 'Modèle de facture Excel',
+      description: 'Modèle de facture Excel gratuit à télécharger : totaux, remises et taxe calculés tout seuls. Ce que doit contenir une facture et comment la numéroter.',
+      chapo: 'Une facture est la preuve de ce que vous avez vendu et de ce que le client doit. Avec le modèle Excel gratuit de cette page, les montants se calculent tout seuls : vous n’avez qu’à remplir les cases jaunes.',
+      sections: [
+        { h: 'Ce que contient une facture', p: ['Les règles précises dépendent de chaque pays, mais une facture contient en général les mêmes éléments :'], l: ['Le nom, l’adresse et les références d’identification du vendeur (numéro d’entreprise, numéro fiscal, selon votre pays).', 'Le nom et l’adresse du client.', 'Un numéro de facture unique, la date et, si besoin, la date d’échéance.', 'Le détail des articles : désignation, quantité, prix unitaire, remise.', 'Le sous-total, la taxe éventuelle (TVA ou équivalent) et le total à payer.', 'Les conditions et le moyen de paiement.'] },
+        { h: 'Télécharger et remplir le modèle', p: ['Les cases jaunes sont à remplir : coordonnées, lignes d’articles, taux de taxe. Les cases grises se calculent toutes seules : montant de chaque ligne, sous-total, taxe, total à payer, acompte et reste à payer. Vingt lignes sont prévues ; ajoutez-en en copiant la dernière ligne et ses formules.'] },
+        { h: 'Numéroter et classer ses factures', l: ['Numérotez dans l’ordre, sans trou ni doublon (001, 002, 003…).', 'Gardez un exemplaire de chaque facture, sur papier ou en PDF.', 'Une facture erronée ne s’efface pas : on la corrige par une facture rectificative ou un avoir, selon les règles de votre pays.', 'Conservez vos factures pendant la durée exigée par votre pays.'] },
+        { h: 'Facture, ticket de caisse ou bon de livraison ?', p: ['Le ticket de caisse prouve une vente au comptoir. La facture est demandée surtout par les entreprises et les clients qui veulent déduire l’achat. Le bon de livraison prouve que la marchandise a été remise : voir le modèle de bon de livraison gratuit. Les obligations varient selon les pays : renseignez-vous auprès de votre comptable ou de l’administration fiscale.'] },
+        { h: 'Retrouver ses chiffres avec Kaislo', p: ['Kaislo garde l’historique de vos ventes avec le vendeur, l’heure et le mode de paiement, le carnet de crédit de vos clients et les rapports exportables en Excel et PDF. Vous retrouvez ainsi facilement les montants à reporter sur une facture.'] },
+      ],
+      faq: [
+        ['Une facture est-elle obligatoire ?', 'Cela dépend de votre pays et du client. Les entreprises exigent presque toujours une facture ; pour les particuliers, un ticket suffit souvent. Vérifiez auprès de votre comptable ou de l’administration fiscale.'],
+        ['Comment calculer le total avec la taxe ?', 'Le modèle le fait pour vous : saisissez le taux de taxe, il ajoute la taxe au sous-total. Laissez le taux vide si vous ne facturez pas de taxe.'],
+        ['Peut-on utiliser le modèle sur téléphone ?', 'Oui, avec une application de tableur (Excel, Google Sheets…). Sur ordinateur, l’impression est déjà réglée sur une page A4.'],
+      ],
+    },
+    en: {
+      slug: 'free-invoice-template-excel',
+      seo: 'Free Excel invoice template: how to use it',
+      titre: 'Free Excel invoice template: how to fill in an invoice properly',
+      court: 'Excel invoice template',
+      description: 'Free Excel invoice template to download: totals, discounts and tax calculated for you. What an invoice must contain and how to number it.',
+      chapo: 'An invoice is the proof of what you sold and of what the customer owes. With the free Excel template on this page, the amounts calculate themselves: you only fill in the yellow cells.',
+      sections: [
+        { h: 'What an invoice contains', p: ['The exact rules depend on each country, but an invoice generally contains the same elements:'], l: ['The seller’s name, address and registration references (company number, tax number, depending on your country).', 'The customer’s name and address.', 'A unique invoice number, the date and, if needed, the due date.', 'The detail of the items: description, quantity, unit price, discount.', 'The subtotal, any tax (VAT or equivalent) and the total due.', 'The payment terms and method.'] },
+        { h: 'Downloading and filling in the template', p: ['The yellow cells are for you to fill in: contact details, item lines, tax rate. The grey cells calculate themselves: amount of each line, subtotal, tax, total due, deposit and balance due. Twenty lines are provided; add more by copying the last line and its formulas.'] },
+        { h: 'Numbering and filing your invoices', l: ['Number them in order, with no gaps or duplicates (001, 002, 003…).', 'Keep a copy of every invoice, on paper or as a PDF.', 'A wrong invoice is not erased: it is corrected with a corrective invoice or credit note, according to your country’s rules.', 'Keep your invoices for as long as your country requires.'] },
+        { h: 'Invoice, till receipt or delivery note?', p: ['A till receipt proves a sale at the counter. An invoice is mainly requested by businesses and by customers who want to deduct the purchase. A delivery note proves the goods were handed over: see the free delivery note template. Requirements vary by country: ask your accountant or the tax authority.'] },
+        { h: 'Finding your figures with Kaislo', p: ['Kaislo keeps the history of your sales with the seller, the time and the payment method, your customers’ credit book and reports you can export to Excel and PDF. You can easily find the amounts to copy onto an invoice.'] },
+      ],
+      faq: [
+        ['Is an invoice compulsory?', 'It depends on your country and the customer. Businesses almost always require an invoice; for individuals a receipt is often enough. Check with your accountant or the tax authority.'],
+        ['How do you calculate the total with tax?', 'The template does it for you: enter the tax rate and it adds the tax to the subtotal. Leave the rate empty if you do not charge tax.'],
+        ['Can you use the template on a phone?', 'Yes, with a spreadsheet app (Excel, Google Sheets…). On a computer, printing is already set to one A4 page.'],
+      ],
+    },
+  },
+  {
+    cle: 'bon-de-livraison',
+    modele: 'livraison',
+    metier: '/logiciel-grossiste/',
+    fr: {
+      slug: 'modele-de-bon-de-livraison-excel',
+      seo: 'Modèle de bon de livraison Excel gratuit',
+      titre: 'Modèle de bon de livraison Excel gratuit : à quoi il sert et comment le remplir',
+      court: 'Modèle de bon de livraison',
+      description: 'Modèle de bon de livraison Excel gratuit : quantités commandées et livrées, reste à livrer calculé, signature du client. Mode d’emploi et conseils.',
+      chapo: 'Le bon de livraison prouve ce qui a été livré, quand et à qui. En cas de litige sur une quantité ou un article abîmé, c’est lui qui fait foi. Le modèle gratuit de cette page se remplit en quelques minutes.',
+      sections: [
+        { h: 'À quoi sert un bon de livraison', l: ['Prouver que la marchandise a bien été remise au client.', 'Comparer ce qui était commandé et ce qui est livré.', 'Noter les réserves : article manquant, abîmé ou en trop.', 'Servir de base à la facture et au suivi du stock.'] },
+        { h: 'Ce qu’il doit contenir', l: ['Un numéro et une date de livraison.', 'L’expéditeur et le destinataire, avec l’adresse de livraison et un contact.', 'Pour chaque article : désignation, unité, quantité commandée et quantité livrée.', 'Le reste à livrer, quand la livraison est partielle.', 'La signature du livreur et celle du client, avec la date de réception.'] },
+        { h: 'Remplir le modèle', p: ['Remplissez les cases jaunes. Le reste à livrer se calcule tout seul (commandé moins livré) et le total livré s’affiche en bas. Il y a de la place pour vingt articles et une zone de signature pour chacun.'] },
+        { h: 'Bien utiliser les bons de livraison', l: ['Faites signer deux exemplaires : un pour le client, un pour vous.', 'Comptez avec le client, devant lui, avant de signer.', 'Notez les réserves tout de suite, sur le bon, avant la signature.', 'Classez les bons par numéro et gardez-les avec les factures.', 'Mettez le stock à jour dès la livraison, pas le lendemain.'] },
+        { h: 'Suivre ses livraisons avec Kaislo', p: ['Dans Kaislo, chaque vente met le stock à jour et garde le vendeur, l’heure et le mode de paiement. Pour les ventes à crédit ou en gros, le carnet de crédit indique ce que chaque client doit encore. Le bon de livraison reste le papier signé qui prouve la remise de la marchandise.'] },
+      ],
+      faq: [
+        ['Quelle différence entre bon de livraison et facture ?', 'Le bon de livraison prouve la remise de la marchandise, sans forcément indiquer de prix. La facture demande le paiement.'],
+        ['Que faire si le client refuse une partie de la livraison ?', 'Notez le refus et le motif sur le bon, faites-le signer, et reprenez la marchandise ou convenez d’une nouvelle livraison.'],
+        ['Faut-il garder les bons de livraison ?', 'Oui, avec les factures, pendant la durée exigée dans votre pays.'],
+      ],
+    },
+    en: {
+      slug: 'delivery-note-template-excel',
+      seo: 'Free Excel delivery note template',
+      titre: 'Free Excel delivery note template: what it is for and how to fill it in',
+      court: 'Delivery note template',
+      description: 'Free Excel delivery note template: quantities ordered and delivered, remaining quantity calculated, customer signature. How to use it, with tips.',
+      chapo: 'A delivery note proves what was delivered, when and to whom. In a dispute over a quantity or a damaged item, it is the document that counts. The free template on this page takes a few minutes to fill in.',
+      sections: [
+        { h: 'What a delivery note is for', l: ['Proving the goods were handed over to the customer.', 'Comparing what was ordered with what was delivered.', 'Recording reservations: missing, damaged or extra items.', 'Serving as the basis for the invoice and for stock tracking.'] },
+        { h: 'What it must contain', l: ['A number and a delivery date.', 'The sender and the recipient, with the delivery address and a contact.', 'For each item: description, unit, quantity ordered and quantity delivered.', 'The quantity still to deliver, when the delivery is partial.', 'The driver’s signature and the customer’s, with the date of receipt.'] },
+        { h: 'Filling in the template', p: ['Fill in the yellow cells. The remaining quantity calculates itself (ordered minus delivered) and the total delivered appears at the bottom. There is room for twenty items and a signature box for each party.'] },
+        { h: 'Using delivery notes well', l: ['Have two copies signed: one for the customer, one for you.', 'Count with the customer, in front of them, before signing.', 'Write reservations on the note straight away, before the signature.', 'File notes by number and keep them with the invoices.', 'Update the stock as soon as the delivery is made, not the next day.'] },
+        { h: 'Following deliveries with Kaislo', p: ['In Kaislo, every sale updates the stock and keeps the seller, the time and the payment method. For credit or wholesale sales, the credit book shows what each customer still owes. The delivery note remains the signed paper that proves the goods were handed over.'] },
+      ],
+      faq: [
+        ['What is the difference between a delivery note and an invoice?', 'A delivery note proves the goods were handed over, without necessarily showing prices. An invoice asks for payment.'],
+        ['What if the customer refuses part of the delivery?', 'Write the refusal and the reason on the note, have it signed, and take the goods back or agree on a new delivery.'],
+        ['Should you keep delivery notes?', 'Yes, with the invoices, for as long as your country requires.'],
+      ],
+    },
+  },
 ];
 
 // Guides généraux, puis un guide par pays
@@ -1914,6 +2004,14 @@ export const MODELES = {
   ventes: {
     fr: { fichier: 'modele-suivi-ventes-quotidien.xlsx', nom: 'Modèle Excel de suivi des ventes et dépenses (gratuit)' },
     en: { fichier: 'daily-sales-tracker-template.xlsx', nom: 'Daily sales and expenses Excel template (free)' },
+  },
+  facture: {
+    fr: { fichier: 'modele-facture.xlsx', nom: 'Modèle Excel de facture (gratuit)' },
+    en: { fichier: 'invoice-template.xlsx', nom: 'Invoice Excel template (free)' },
+  },
+  livraison: {
+    fr: { fichier: 'modele-bon-de-livraison.xlsx', nom: 'Modèle Excel de bon de livraison (gratuit)' },
+    en: { fichier: 'delivery-note-template.xlsx', nom: 'Delivery note Excel template (free)' },
   },
 };
 
