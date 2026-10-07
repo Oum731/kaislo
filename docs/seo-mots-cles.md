@@ -31,7 +31,8 @@ Ajoutés ensuite (6 guides FR + EN, 59 guides au total) :
 4. « éviter les vols et fraudes en caisse »
 5. « inventaire tournant : compter un peu chaque semaine » (modèle Excel d'inventaire)
 6. « vendre en ligne et en boutique : un seul stock juste »
-Idées suivantes : modèle de bon de livraison / facture Excel (très recherché, demande un nouveau modèle), outil de calcul de prix de vente (coefficient), guide « logiciel de caisse » par pays (Côte d'Ivoire, Maroc, Sénégal), comparatif honnête « Excel ou logiciel ».
+Ajoutés ensuite : « modèle de facture Excel gratuit » et « modèle de bon de livraison Excel gratuit » (deux nouveaux fichiers Excel FR/EN, 61 guides au total).
+Idées suivantes : outil de calcul de prix de vente (coefficient), guide « logiciel de caisse » par pays (Côte d'Ivoire, Maroc, Sénégal), comparatif honnête « Excel ou logiciel ».
 
 ## Ce qui est en place (vérifié par `npm run seo`)
 
