@@ -14,6 +14,7 @@
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
 //   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
+//   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
 //   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
 //   GET  /api/pays          pays du visiteur d'après son adresse IP (voir lib/pays.php)
 //   /api/commercial/...     espace des commerciaux Kaislo (voir lib/commerciaux.php)
@@ -34,6 +35,7 @@ require __DIR__ . '/lib/biometrie.php';
 require __DIR__ . '/lib/messages.php';
 require __DIR__ . '/lib/admin.php';
 require __DIR__ . '/lib/contact.php';
+require __DIR__ . '/lib/avis.php';
 require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
 require __DIR__ . '/lib/commerciaux.php';
@@ -72,6 +74,11 @@ try {
         'GET /messages' => routeMessagesLire(),
         'POST /messages' => routeMessagesEcrire(),
         'POST /contact' => routeContact(),
+        'GET /avis' => routeAvisPublics(),
+        'GET /mon-avis' => routeMonAvis(),
+        'POST /avis' => routeAvisEnvoyer(),
+        'GET /admin/avis' => routeAdminAvis(),
+        'POST /admin/avis' => routeAdminAvisModerer(),
         'GET /admin/contacts' => routeAdminContacts(),
         'POST /admin/contact' => routeAdminContact(),
         'GET /admin/etat' => routeAdminEtat(),

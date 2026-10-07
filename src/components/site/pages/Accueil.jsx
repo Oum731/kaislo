@@ -11,6 +11,7 @@ import { tr, tt, choisirLangue } from '@/lib/i18n';
 import { alternates, lien } from '@/lib/site-routes';
 import { SCRIPT_REDIRECTION_ESPACE } from '@/lib/espace';
 import RedirectionEspace from '@/components/site/RedirectionEspace';
+import AvisClients from '@/components/site/AvisClients';
 import {
   EnTeteSite, PiedSite, Hero, FonctionLigne, ListeFonctions, Faq, AppelFinal, DonneesLogiciel, SectionVideos,
   LIEN_DEMO_RESTO, LIEN_DEMO_EPICERIE, LIEN_INSCRIPTION,
@@ -172,6 +173,8 @@ export default function Accueil({ lang }) {
             </div>
           </div>
         </section>
+
+        <AvisClients />
 
         <section className="section claire" id="questions">
           <div className="site-largeur">

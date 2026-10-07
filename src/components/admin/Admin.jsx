@@ -130,6 +130,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [nonLus, setNonLus] = useState(0);
   const [plusOuvert, setPlusOuvert] = useState(false);
   const [commerciauxAttente, setCommerciauxAttente] = useState(0);
+  const [avisAttente, setAvisAttente] = useState(0);
   const api = useCallback((m, c, corps) => appelApi(m, c, corps, jeton).catch((e) => { if (e.statut === 401) surDeconnexion(); throw e; }), [jeton, surDeconnexion]);
   const recharger = useCallback(async () => {
     const rep = await api('GET', '/admin/commerces');
@@ -137,18 +138,19 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
     setDonnees({ commerces, formules: rep.formules, regles: rep.regles, fondateurs: rep.fondateurs });
     // Pastille « Messages » : messages des commerces non lus + messages des visiteurs non traités
     setNonLus(commerces.reduce((n, c) => n + c.messagesNonLus, 0) + (rep.contactsNonTraites || 0));
+    setAvisAttente(rep.avisEnAttente || 0); // pastille « Avis » : avis à relire avant publication
     setCommerciauxAttente(rep.commerciauxEnAttente || 0); // pastille « Commerciaux » : inscriptions à valider
   }, [api]);
   useEffect(() => { recharger(); const m = setInterval(recharger, 60000); return () => clearInterval(m); }, [recharger]);
 
   const estAdmin = admin.role === 'admin';
-  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'],
+  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
   const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin };
 
   return (
-    <div className="coque">
+    <div className="coque admin-espace">
       <nav className="menu" aria-label="Menu Amorac">
         <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Amorac</span></span></div>
         <div className="menu-liens">
@@ -189,6 +191,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
             {ecran === 'commerces' && <VueCommerces commerces={donnees.commerces} ctx={ctx} />}
             {ecran === 'messages' && <VueMessages ctx={ctx} />}
             {ecran === 'paiements' && <VuePaiements commerces={donnees.commerces} ctx={ctx} />}
+            {ecran === 'avis' && <VueAvis ctx={ctx} />}
             {ecran === 'tarifs' && <VueTarifs ctx={ctx} />}
             {ecran === 'commerciaux' && <VueCommerciaux ctx={ctx} EnTeteAdmin={EnTeteAdmin} />}
             {ecran === 'equipe' && <VueEquipe ctx={ctx} />}
@@ -472,6 +475,46 @@ function Conversation({ commerceId, ctx, surEnvoi }) {
         <button className="btn" onClick={envoyer} disabled={!texte.trim()}>Répondre</button>
       </div>
     </div>
+  );
+}
+
+// ---------- Avis des gérants : relecture avant publication sur le site ----------
+function VueAvis({ ctx }) {
+  const [liste, setListe] = useState(null);
+  const [filtre, setFiltre] = useState('attente');
+  const [message, setMessage] = useState(null);
+  const charger = useCallback(async () => setListe((await ctx.api('GET', '/admin/avis')).avis), [ctx]);
+  useEffect(() => { charger(); }, [charger]);
+  const agir = async (id, action) => {
+    try { await ctx.api('POST', '/admin/avis', { id, action }); await charger(); await ctx.recharger(); setMessage(null); } catch (e) { setMessage(e.message); }
+  };
+  const nb = (st) => (liste || []).filter((a) => a.statut === st).length;
+  const vus = (liste || []).filter((a) => filtre === 'tous' || a.statut === filtre);
+  const LIBELLE = { attente: 'À relire', publie: 'Publié', refuse: 'Refusé' };
+  return (
+    <>
+      <EnTeteAdmin surTitre="Avis des gérants sur Kaislo" titre="Avis" />
+      <div className="contenu pile" style={{ maxWidth: 760 }}>
+        <p className="petit muet">Seuls les avis que vous publiez ici apparaissent sur le site (prénom, initiale, ville, activité). Ne modifiez jamais le texte : publiez ou refusez.</p>
+        <Puces enveloppe options={[['attente', `À relire (${nb('attente')})`], ['publie', `Publiés (${nb('publie')})`], ['refuse', `Refusés (${nb('refuse')})`], ['tous', 'Tous']]} valeur={filtre} surChanger={setFiltre} />
+        {message && <p className="alerte">{message}</p>}
+        {!liste ? <p className="muet petit">Chargement…</p> : !vus.length ? <p className="muet petit">Aucun avis ici pour le moment.</p> : vus.map((a) => (
+          <div key={a.id} className="carte pile">
+            <div className="ligne espace" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <b>{'★'.repeat(a.note)}<span className="muet">{'★'.repeat(5 - a.note)}</span> <span className="petit muet">{a.note}/5</span></b>
+              <span className={`badge ${a.statut === 'publie' ? '' : a.statut === 'refuse' ? 'rouge' : 'safran'}`}>{LIBELLE[a.statut]}</span>
+            </div>
+            <p style={{ overflowWrap: 'anywhere' }}>{a.texte}</p>
+            <p className="tres-petit muet">{a.nom} · {typeCommerce(a.activite).nom} · {a.ville} · commerce : {a.commerce || '—'} · {a.le}{a.moderePar ? ' · vu par ' + a.moderePar : ''}</p>
+            <div className="grille-2">
+              {a.statut !== 'publie' && <button className="btn petit" onClick={() => agir(a.id, 'publier')}>Publier sur le site</button>}
+              {a.statut !== 'refuse' && <button className="btn secondaire petit" onClick={() => agir(a.id, 'refuser')}>Refuser</button>}
+              {a.statut !== 'attente' && <button className="btn secondaire petit" onClick={() => agir(a.id, 'attente')}>Remettre à relire</button>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -864,8 +907,8 @@ function PaiementGroupe({ c, ctx, fermer, surMessage }) {
   return (
     <div className="pile">
       {lignes.map((l) => (
-        <div key={l.id} className="ligne">
-          <label className="case-accord grandit petit"><input type="checkbox" checked={!!coches[l.id]} onChange={(e) => setCoches({ ...coches, [l.id]: e.target.checked })} /><span>{l.nom} · {l.tarif.nom}</span></label>
+        <div key={l.id} className="ligne-paiement">
+          <label className="case-accord petit"><input type="checkbox" checked={!!coches[l.id]} onChange={(e) => setCoches({ ...coches, [l.id]: e.target.checked })} /><span><b>{l.nom}</b><br />{l.tarif.nom}</span></label>
           <ChampMontant valeur={montantDe(l)} surChanger={(v) => setMontants({ ...montants, [l.id]: v })} />
         </div>
       ))}
