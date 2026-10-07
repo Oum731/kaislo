@@ -444,11 +444,11 @@ export function FeuilleCompte() {
           </button>
         </div>
       )}
-      {enLigne && s.estGerant() && (
+      {(enLigne || s.estDemoActuel()) && s.estGerant() && (
         <div className="liste" style={{ marginTop: 18 }}>
           <button className="liste-item" onClick={() => s.ouvrir('commerces')}>
             <span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>
-            <b className="grandit">{s.commercesGerant().length > 1 ? tr('Mes commerces ({0})', [s.commercesGerant().length]) : tr('Mes commerces')}</b>
+            <b className="grandit">{(s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length) > 1 ? tr('Mes commerces ({0})', [s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length]) : tr('Mes commerces')}</b>
             <span className="petit muet">{tr('Ajouter un commerce')}</span>
             <Icone nom="droite" className="muet" />
           </button>
