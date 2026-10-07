@@ -24,13 +24,14 @@ Règle : un mot-clé principal par page, dans le titre (début), la description,
 ## Requêtes à cibler avec des guides (intention « comment faire »)
 
 Déjà couverts (53 guides FR + EN) : inventaire, marge, crédit clients, clôture de caisse, pertes de stock, mobile money, coût d'un plat, réapprovisionnement, vendeurs, comptabilité simple, par métier et par pays.
-Idées à ajouter ensuite (par ordre d'intérêt) :
-1. « logiciel de caisse gratuit : que choisir » (comparatif honnête, renvoie vers la page caisse)
-2. « caisse enregistreuse ou application de caisse ? » (coûts, obligations selon le pays)
-3. « modèle de facture / bon de livraison Excel » (modèle gratuit, très recherché)
-4. « calculer un prix de vente à partir du prix d'achat » (outil/modèle)
-5. « gérer le stock d'une boutique en ligne / WhatsApp Business »
-6. « tenue de caisse : fond de caisse et écarts » (guide + modèle)
+Ajoutés ensuite (6 guides FR + EN, 59 guides au total) :
+1. « logiciel de caisse gratuit : comment bien choisir »
+2. « caisse enregistreuse ou application de caisse ? » (avec rappel des obligations légales à vérifier par pays)
+3. « écart de caisse : causes et comment les réduire »
+4. « éviter les vols et fraudes en caisse »
+5. « inventaire tournant : compter un peu chaque semaine » (modèle Excel d'inventaire)
+6. « vendre en ligne et en boutique : un seul stock juste »
+Idées suivantes : modèle de bon de livraison / facture Excel (très recherché, demande un nouveau modèle), outil de calcul de prix de vente (coefficient), guide « logiciel de caisse » par pays (Côte d'Ivoire, Maroc, Sénégal), comparatif honnête « Excel ou logiciel ».
 
 ## Ce qui est en place (vérifié par `npm run seo`)
 
