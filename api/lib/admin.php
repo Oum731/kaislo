@@ -146,7 +146,7 @@ function resumesCommerces(?string $seulId = null): array
         $groupes[$g['cle_telephone']][] = $g['commerce_id'];
     }
     $identite = [];
-    foreach (requete('SELECT id, nom, type, statut, devise FROM commerces')->fetchAll() as $x) $identite[$x['id']] = $x;
+    foreach (requete('SELECT * FROM commerces')->fetchAll() as $x) $identite[$x['id']] = $x;
     $produitsDe = produitsParCommerce($seulId);
 
     return array_map(function ($c) use ($nbProduits, $derniere, $nbVendeurs, $nonLus, $ca, $paiements, $gerants, $groupes, $identite, $produitsDe) {
@@ -167,16 +167,25 @@ function resumesCommerces(?string $seulId = null): array
             'derniereActivite' => $derniere[$id] ?? $c['cree_le'], 'nbProduits' => (int) ($nbProduits[$id] ?? 0),
             'nbVendeurs' => (int) ($nbVendeurs[$id] ?? 0), 'messagesNonLus' => (int) ($nonLus[$id] ?? 0),
             // Autres commerces du même gérant (paiement groupé) et activité à vérifier (voir signauxActivite)
-            'autresCommerces' => array_values(array_map(fn ($autre) => $identite[$autre], array_filter($groupes[$gerants[$id]['cle_telephone'] ?? ''] ?? [], fn ($autre) => $autre !== $id && isset($identite[$autre])))),
+            'autresCommerces' => array_values(array_map(fn ($autre) => ['id' => $autre, 'nom' => $identite[$autre]['nom'], 'type' => $identite[$autre]['type'], 'statut' => $identite[$autre]['statut'], 'devise' => $identite[$autre]['devise'], 'tarif' => tarifCommerce($identite[$autre])], array_filter($groupes[$gerants[$id]['cle_telephone'] ?? ''] ?? [], fn ($autre) => $autre !== $id && isset($identite[$autre])))),
             'signaux' => signauxActivite($c, $produitsDe[$id] ?? [], $reglages),
         ];
     }, $commerces);
 }
 
+// Les chiffres de vente d'un commerce sont réservés aux administrateurs ; le support voit les commerces et leurs produits, sans chiffres
+function sansChiffres(array $resume, array $admin): array
+{
+    if ($admin['role'] === 'admin') return $resume;
+    $resume['ca30'] = null;
+    $resume['tickets30'] = null;
+    return $resume;
+}
+
 function routeAdminCommerces(): never
 {
-    adminConnecte();
-    repondre(['ok' => true, 'commerces' => resumesCommerces(), 'formules' => formules(), 'regles' => reglesTarifs(),
+    $admin = adminConnecte();
+    repondre(['ok' => true, 'commerces' => array_map(fn ($r) => sansChiffres($r, $admin), resumesCommerces()), 'formules' => formules(), 'regles' => reglesTarifs(),
         'fondateurs' => (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE fondateur = 1')->fetch()['n'], 'contactsNonTraites' => contactsNonTraites(),
         'commerciauxEnAttente' => (int) requete('SELECT COUNT(*) AS n FROM commerciaux WHERE actif = 0 AND valide_le IS NULL')->fetch()['n']]);
 }
@@ -184,10 +193,11 @@ function routeAdminCommerces(): never
 // Détail d'un commerce : résumé + équipe + journal récent
 function routeAdminCommerce(): never
 {
-    adminConnecte();
+    $admin = adminConnecte();
     $id = (string) ($_GET['id'] ?? '');
     $resume = resumesCommerces($id)[0] ?? null;
     if (!$resume) throw new ErreurApi('Commerce introuvable', 404);
+    $resume = sansChiffres($resume, $admin);
     $journal = requete('SELECT action, details, cree_le FROM journal WHERE commerce_id = ? ORDER BY cree_le DESC LIMIT 30', [$id])->fetchAll();
     repondre(['ok' => true, 'commerce' => $resume, 'equipe' => equipe($id), 'journal' => array_map(fn ($j) => ['action' => $j['action'], 'le' => $j['cree_le'], 'details' => json_decode($j['details'] ?? '{}', true)], $journal)]);
 }

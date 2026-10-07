@@ -25,6 +25,20 @@ const SECTIONS = [
     ),
   },
   {
+    id: 'plusieurs-commerces',
+    titre: 'Plusieurs commerces, une activité = un abonnement',
+    contenu: (
+      <>
+        <p>Un gérant peut gérer plusieurs commerces avec le même numéro et le même code PIN. <b>Chaque activité correspond à un abonnement</b> : stock, ventes, comptes et vendeurs restent séparés pour chaque commerce, et le total des abonnements se règle en une fois.</p>
+        <ul>
+          <li>À partir du <b>2<sup>e</sup> commerce</b>, une remise de <b>10 %</b> est appliquée sur son abonnement.</li>
+          <li>Il est interdit de regrouper plusieurs activités distinctes (par exemple une épicerie et la vente de plats cuisinés) dans un seul commerce pour payer une formule moins chère. Le type de commerce déclaré doit correspondre à l’activité réelle.</li>
+          <li>Amorac peut vérifier la cohérence entre l’activité déclarée et les articles enregistrés (noms et catalogue uniquement, jamais les chiffres de vente), vous demander de créer un commerce distinct, et appliquer la formule correspondant à l’activité réelle.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'compte',
     titre: 'Création du compte et accès',
     contenu: (

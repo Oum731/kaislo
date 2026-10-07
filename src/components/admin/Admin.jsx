@@ -285,7 +285,9 @@ function LigneCommerce({ c, ctx }) {
     <button className="liste-item" onClick={() => ctx.ouvrir(c.id)}>
       <span className="mini-emoji teinte-vert">{initiales(c.commerce.nom)}</span>
       <span className="grandit">
-        <b className="bloc-texte tronque">{c.commerce.nom}{c.messagesNonLus ? <span className="badge safran" style={{ marginLeft: 6 }}>{c.messagesNonLus} message(s)</span> : null}</b>
+        <b className="bloc-texte tronque">{c.commerce.nom}{c.messagesNonLus ? <span className="badge safran" style={{ marginLeft: 6 }}>{c.messagesNonLus} message(s)</span> : null}
+          {c.signaux?.length ? <span className="badge rouge" style={{ marginLeft: 6 }} title={c.signaux[0].texte}>⚠ Activité à vérifier</span> : null}
+          {c.autresCommerces?.length ? <span className="badge" style={{ marginLeft: 6 }}>{c.autresCommerces.length + 1} commerces du gérant</span> : null}</b>
         <span className="tres-petit muet tronque bloc-texte">{paysParId(c.commerce.pays).nom} · {c.commerce.ville} · {c.gerant} · {c.commerce.telephone}</span>
       </span>
       <span style={{ textAlign: 'right' }}>
@@ -302,7 +304,7 @@ function VueCommerces({ commerces, ctx }) {
   const r = recherche.trim().toLowerCase();
   const chiffres = r.replace(/\D/g, '');
   const liste = commerces
-    .filter((c) => (filtre === 'tous' || c.etat.statut === filtre) && (!r
+    .filter((c) => (filtre === 'tous' || (filtre === 'verifier' ? c.signaux?.length > 0 : c.etat.statut === filtre)) && (!r
       || [c.commerce.nom, c.commerce.ville, c.commerce.code, c.gerant].some((x) => (x || '').toLowerCase().includes(r))
       || (chiffres.length >= 4 && [c.commerce.telephone, c.gerantTelephone].some((x) => (x || '').replace(/\D/g, '').includes(chiffres)))))
     .sort((a, b) => (b.derniereActivite || '').localeCompare(a.derniereActivite || ''));
@@ -315,7 +317,7 @@ function VueCommerces({ commerces, ctx }) {
             <Icone nom="recherche" taille="sm" />
             <input type="search" placeholder="Nom, ville, code, gérant, téléphone…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
           </label>
-          <Puces options={[['tous', 'Tous'], ['essai', 'Essai'], ['actif', 'Actifs'], ['expire', 'Expirés'], ['suspendu', 'Suspendus']]} valeur={filtre} surChanger={setFiltre} />
+          <Puces options={[['tous', 'Tous'], ['essai', 'Essai'], ['actif', 'Actifs'], ['expire', 'Expirés'], ['suspendu', 'Suspendus'], ['verifier', '⚠ À vérifier']]} valeur={filtre} surChanger={setFiltre} />
         </div>
         <div className="liste">
           {liste.map((c) => <LigneCommerce key={c.id} c={c} ctx={ctx} />)}
@@ -615,6 +617,8 @@ function FicheCommerce({ c, ctx, fermer }) {
   const [telephone, setTelephone] = useState(c.commerce.telephone || '');
   const [detail, setDetail] = useState(null); // équipe et journal
   const [message, setMessage] = useState(null);
+  const [catalogue, setCatalogue] = useState(false); // fenêtre « produits du commerce » (sans chiffres)
+  const [groupe, setGroupe] = useState(false); // formulaire de paiement groupé
   const pays = paysParId(c.commerce.pays);
   useEffect(() => { ctx.api('GET', '/admin/commerce?id=' + encodeURIComponent(c.id)).then(setDetail).catch(() => {}); }, [c.id, ctx]);
   useEffect(() => { if (ctx.estAdmin) ctx.api('GET', '/admin/commerciaux').then((r) => setCommerciaux(r.commerciaux)).catch(() => {}); }, [ctx]);
@@ -658,15 +662,43 @@ function FicheCommerce({ c, ctx, fermer }) {
             </div>
             <p className="tres-petit muet">Format du pays accepté ; le numéro doit être libre dans tout Kaislo.</p>
           </div>
+          {c.signaux?.length > 0 && (
+            <div className="carte pile" style={{ borderColor: 'var(--rouge, #C8402F)' }}>
+              <h3>⚠ Activité à vérifier</h3>
+              {c.signaux.map((x) => (
+                <p key={x.code} className="petit"><b>{x.texte}</b><br />Formule probable : <b>{x.formuleSuggeree.nom}</b> (+{formatPrix(x.ecartParMois, x.devise)} par mois).</p>
+              ))}
+              <p className="tres-petit muet">Ce n’est qu’un signal : regardez les produits, puis posez la question au gérant. S’il a bien deux activités, proposez-lui un second commerce (remise de {ctx.regles.remiseMultiCommerce ?? 10} %) ou la formule adaptée.</p>
+              <div className="grille-2">
+                <button className="btn secondaire petit" onClick={() => setCatalogue(true)}>Voir les produits</button>
+                {lienWhatsApp && <a className="btn secondaire petit" target="_blank" rel="noreferrer" href={lienWhatsApp + '?text=' + encodeURIComponent('Bonjour, nous avons remarqué que « ' + c.commerce.nom + ' » semble avoir une autre activité (' + c.signaux[0].formuleSuggeree.nom + '). Pouvons-nous en parler ? Vous pouvez créer un second commerce dans Kaislo (Mon compte → Mes commerces) avec 10 % de remise.')}><Icone nom="whatsapp" taille="sm" /> Écrire au gérant</a>}
+              </div>
+            </div>
+          )}
+          {c.autresCommerces?.length > 0 && (
+            <div className="carte pile">
+              <h3>Autres commerces du même gérant</h3>
+              {c.autresCommerces.map((x) => (
+                <button key={x.id} className="liste-item" onClick={() => ctx.ouvrir(x.id)}>
+                  <span className="grandit"><b>{x.nom}</b><span className="tres-petit muet bloc-texte">{typeCommerce(x.type).nom} · {x.tarif.nom} · {formatPrix(x.tarif.parMois, x.devise)}/mois</span></span>
+                  <span className="badge">{x.statut}</span>
+                </button>
+              ))}
+              {ctx.estAdmin && !groupe && <button className="btn secondaire petit" onClick={() => setGroupe(true)}>Enregistrer un paiement groupé</button>}
+              {ctx.estAdmin && groupe && <PaiementGroupe c={c} ctx={ctx} fermer={() => setGroupe(false)} surMessage={setMessage} />}
+            </div>
+          )}
           <div className="carte">
             <h3>Utilisation (30 derniers jours)</h3>
             <div className="grille-2" style={{ marginTop: 12 }}>
-              <div><p className="petit muet">Chiffre d’affaires</p><b>{formatPrix(c.ca30, dev)}</b></div>
-              <div><p className="petit muet">Tickets</p><b>{c.tickets30}</b></div>
+              {c.ca30 !== null && c.ca30 !== undefined && <div><p className="petit muet">Chiffre d’affaires</p><b>{formatPrix(c.ca30, dev)}</b></div>}
+              {c.tickets30 !== null && c.tickets30 !== undefined && <div><p className="petit muet">Tickets</p><b>{c.tickets30}</b></div>}
               <div><p className="petit muet">Articles</p><b>{c.nbProduits}</b></div>
               <div><p className="petit muet">Vendeurs actifs</p><b>{c.nbVendeurs}</b></div>
             </div>
             <p className="tres-petit muet" style={{ marginTop: 10 }}>Dernière activité : {c.derniereActivite ? formatDate(c.derniereActivite) + ' ' + formatHeure(c.derniereActivite) : '—'}</p>
+            {c.ca30 === null && <p className="tres-petit muet">Les chiffres de vente sont réservés aux administrateurs.</p>}
+            <button className="btn secondaire petit" onClick={() => setCatalogue(true)}>Voir les produits (sans chiffres)</button>
           </div>
           <div className="carte pile">
             <h3>Équipe du commerce</h3>
@@ -768,6 +800,80 @@ function FicheCommerce({ c, ctx, fermer }) {
         </div>
       </div>
       <p className="tres-petit muet centre" style={{ marginTop: 16 }}><Link href="/app/" className="lien">Ouvrir l’application</Link></p>
+      {catalogue && <CatalogueCommerce c={c} ctx={ctx} fermer={() => setCatalogue(false)} />}
     </Feuille>
+  );
+}
+
+// Produits d'un commerce vus par l'équipe : noms, catégories, unités et choix. Aucun prix, stock ni chiffre de vente.
+function CatalogueCommerce({ c, ctx, fermer }) {
+  const [rep, setRep] = useState(null);
+  const [erreur, setErreur] = useState('');
+  useEffect(() => { ctx.api('GET', '/admin/catalogue?commerceId=' + encodeURIComponent(c.id)).then(setRep).catch((e) => setErreur(e.message)); }, [c.id, ctx]);
+  const parCategorie = {};
+  for (const p of rep?.produits || []) (parCategorie[p.categorie || 'Sans catégorie'] ||= []).push(p);
+  return (
+    <Feuille titre={'Produits de ' + c.commerce.nom} sousTitre="Consultation sans chiffres : ni prix, ni stock, ni ventes" surFermer={fermer} large>
+      {erreur && <p className="alerte">{erreur}</p>}
+      {!rep && !erreur && <p className="muet petit">Chargement…</p>}
+      {rep && (
+        <div className="pile">
+          <p className="tres-petit muet">{rep.produits.length} produit(s){rep.nbTables ? ' · ' + rep.nbTables + ' table(s)' : ''}. Cette consultation est notée dans le journal du commerce.</p>
+          {Object.entries(parCategorie).map(([categorie, liste]) => (
+            <div key={categorie} className="carte pile">
+              <h3>{categorie}</h3>
+              {liste.map((p, i) => (
+                <p key={i} className="petit">
+                  {p.emoji ? p.emoji + ' ' : ''}<b>{p.nom}</b> <span className="muet">· {p.unite}</span>
+                  {p.groupes.map((g, j) => <span key={j} className="tres-petit muet bloc-texte">{g.nom}{g.obligatoire ? ' (obligatoire)' : ''} : {g.options.join(', ')}</span>)}
+                </p>
+              ))}
+            </div>
+          ))}
+          {!rep.produits.length && <p className="muet petit">Aucun produit enregistré.</p>}
+        </div>
+      )}
+    </Feuille>
+  );
+}
+
+// Un seul paiement pour tous les commerces d'un même gérant : chaque commerce reçoit son propre paiement
+function PaiementGroupe({ c, ctx, fermer, surMessage }) {
+  const lignes = [{ id: c.id, nom: c.commerce.nom, devise: c.commerce.devise, tarif: c.tarif }, ...c.autresCommerces.filter((x) => x.devise === c.commerce.devise)];
+  const [mois, setMois] = useState(1);
+  const [moyen, setMoyen] = useState(MOYENS[0]);
+  const [coches, setCoches] = useState(() => Object.fromEntries(lignes.map((l) => [l.id, true])));
+  const calcul = (l) => prixAbonnement({ formule: ctx.formules.find((f) => f.id === l.tarif.formule), devise: l.devise, postes: l.tarif.postes, mois, fondateur: l.tarif.fondateur, regles: ctx.regles, mode: l.tarif.mode, multi: l.tarif.remiseMulti > 0 }).total;
+  const [montants, setMontants] = useState({});
+  const montantDe = (l) => (montants[l.id] ?? calcul(l));
+  const choisies = lignes.filter((l) => coches[l.id]);
+  const total = choisies.reduce((n, l) => n + Number(montantDe(l)), 0);
+  const envoyer = async () => {
+    try {
+      const rep = await ctx.api('POST', '/admin/paiement-groupe', { lignes: choisies.map((l) => ({ commerceId: l.id, montant: Number(montantDe(l)), mois, postes: l.tarif.postes, formule: l.tarif.formule })), moyen });
+      await ctx.recharger();
+      surMessage({ ok: true, texte: 'Paiement groupé enregistré pour ' + rep.commerces.length + ' commerces' });
+      fermer();
+    } catch (e) { surMessage({ ok: false, texte: e.message }); }
+  };
+  return (
+    <div className="pile">
+      {lignes.map((l) => (
+        <div key={l.id} className="ligne">
+          <label className="case-accord grandit petit"><input type="checkbox" checked={!!coches[l.id]} onChange={(e) => setCoches({ ...coches, [l.id]: e.target.checked })} /><span>{l.nom} · {l.tarif.nom}</span></label>
+          <ChampMontant valeur={montantDe(l)} surChanger={(v) => setMontants({ ...montants, [l.id]: v })} />
+        </div>
+      ))}
+      <div className="grille-2">
+        <label className="champ"><span>Durée</span><select value={mois} onChange={(e) => { setMois(Number(e.target.value)); setMontants({}); }}>{[1, 3, 6, 12].map((m) => <option key={m} value={m}>{m === 12 ? '12 mois (' + ctx.regles.moisOffertsAnnuel + ' offerts)' : m + ' mois'}</option>)}</select></label>
+        <label className="champ"><span>Moyen de paiement</span><select value={moyen} onChange={(e) => setMoyen(e.target.value)}>{MOYENS.map((m) => <option key={m}>{m}</option>)}</select></label>
+      </div>
+      <p className="petit"><b>Total reçu : {formatPrix(total, c.commerce.devise)}</b> pour {choisies.length} commerce(s)</p>
+      <div className="grille-2">
+        <button className="btn secondaire petit" onClick={fermer}>Annuler</button>
+        <button className="btn petit" onClick={envoyer} disabled={choisies.length < 2}><Icone nom="ok" /> Enregistrer</button>
+      </div>
+      {c.autresCommerces.some((x) => x.devise !== c.commerce.devise) && <p className="tres-petit muet">Les commerces dans une autre devise sont à enregistrer séparément.</p>}
+    </div>
   );
 }

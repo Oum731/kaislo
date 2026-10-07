@@ -9,6 +9,7 @@ import { etatAbonnement, LIBELLES_STATUT } from '@/lib/donnees/abonnement';
 import { FORMULES, formuleDuType, prixAbonnement, REGLES_TARIFS } from '@/lib/donnees/tarifs';
 import { postesDe } from '@/lib/donnees/postes';
 import { formatDate } from '@/lib/utils/format';
+import { estServeur } from '@/lib/donnees/synchro';
 import { tr } from '@/lib/i18n';
 
 // Tarif du commerce : { nom, postes, parMois, annuel, prixPoste, fondateur }
@@ -65,6 +66,9 @@ export default function AbonnementCommerce() {
         <p className="info-verte petit">{tr('Code parrain : remise de {0} % sur l’abonnement (prix catalogue : {1} par mois).', [Math.round((1 - tarif.parMois / tarif.parMoisCatalogue) * 100), s.prix(tarif.parMoisCatalogue)])}</p>
       )}
       {tarif?.fondateur && <p className="info-verte petit">{tr('Tarif fondateur : remise à vie déjà appliquée. Merci de faire partie des premiers !')}</p>}
+      {estServeur(s.d) && s.estGerant() && (
+        <button className="btn secondaire bloc" onClick={() => s.ouvrir('commerces')}>{s.commercesGerant().length > 1 ? tr('Mes {0} commerces et le total à payer', [s.commercesGerant().length]) : tr('Ajouter un autre commerce (autre activité)')}</button>
+      )}
       <p className="tres-petit muet">{tr('Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.')}</p>
     </div>
   );
