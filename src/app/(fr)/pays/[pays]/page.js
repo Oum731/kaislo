@@ -11,6 +11,7 @@ import { REGLES_TELEPHONE } from '@/lib/donnees/telephone';
 import { FORMULES } from '@/lib/donnees/tarifs';
 import { formatPrix } from '@/lib/utils/format';
 import { metaPage, JsonLd, filAriane } from '@/lib/seo';
+import { GUIDES, adresseGuide } from '@/lib/guides';
 
 export const dynamicParams = false;
 export const generateStaticParams = () => PAYS_SEO.map((p) => ({ pays: p.slug }));
@@ -82,7 +83,17 @@ export default async function PagePays({ params }) {
             <p className="chapo">Un abonnement selon votre métier, 1 poste et 5 vendeurs inclus. Essai gratuit de 30 jours, sans engagement. <Link href="/tarifs/">Voir tous les tarifs</Link>.</p>
           </div>
         </section>
-        <section className="section" id="questions">
+        <section className="section">
+          <div className="site-largeur">
+            <span className="etiquette">Guides {lieu}</span>
+            <h2>Pour aller plus loin {lieu}.</h2>
+            <ul className="guide-liens">
+              {['pays-', 'caisse-'].map((pre) => GUIDES.find((g) => g.cle === pre + seo.id.toLowerCase())).map((g) => <li key={g.cle}><Link href={adresseGuide(g, 'fr')}>{g.fr.titre}</Link></li>)}
+              <li><Link href="/logiciel-de-caisse/">Logiciel de caisse : toutes les fonctions</Link></li>
+            </ul>
+          </div>
+        </section>
+        <section className="section claire" id="questions">
           <div className="site-largeur">
             <span className="etiquette">Questions fréquentes</span>
             <h2>Kaislo {lieu} : vos questions.</h2>

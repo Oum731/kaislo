@@ -10,7 +10,7 @@ import { FORMULES } from './donnees/tarifs.js';
 import { symbole } from './utils/format.js';
 
 // Nom anglais, adresse anglaise et formulation « in … » de chaque pays
-const EN = {
+export const EN = {
   MA: { nom: 'Morocco', slug: 'morocco' }, CI: { nom: 'Côte d’Ivoire', slug: 'cote-d-ivoire' }, SN: { nom: 'Senegal', slug: 'senegal' },
   ML: { nom: 'Mali', slug: 'mali' }, BF: { nom: 'Burkina Faso', slug: 'burkina-faso' }, BJ: { nom: 'Benin', slug: 'benin' },
   TG: { nom: 'Togo', slug: 'togo' }, NE: { nom: 'Niger', slug: 'niger' }, GN: { nom: 'Guinea', slug: 'guinea' },
@@ -18,18 +18,18 @@ const EN = {
   FR: { nom: 'France', slug: 'france' }, BE: { nom: 'Belgium', slug: 'belgium' }, CA: { nom: 'Canada', slug: 'canada' },
 };
 // Commerces courants, en anglais (même ordre que pays-seo.js)
-const COMMERCES_EN = {
+export const COMMERCES_EN = {
   'maquis et restaurants': 'maquis and restaurants', 'alimentations et boutiques': 'grocery shops and boutiques',   'quincailleries et dépôts': 'hardware stores and depots', 'boutiques et alimentations': 'shops and grocery stores', 'restaurants et gargotes': 'restaurants and street kitchens',
   boulangeries: 'bakeries', quincailleries: 'hardware stores', restaurants: 'restaurants', 'dépôts et grossistes': 'depots and wholesalers',
   'restaurants et maquis': 'restaurants and maquis', 'restaurants et bars': 'restaurants and bars', 'bars et restaurants': 'bars and restaurants',
   'épiceries et supérettes': 'grocery stores and convenience stores', 'restaurants et cafés': 'restaurants and cafes', boutiques: 'boutiques',
   'cosmétiques et beauté': 'cosmetics and beauty shops', 'téléphonie et électronique': 'phone and electronics shops', 'commerces de proximité': 'neighbourhood shops', épiceries: 'grocery stores',
 };
-const ET_FR = (liste) => liste.join(', ').replace(/, ([^,]*)$/, ' et $1');
-const ET_EN = (liste) => liste.join(', ').replace(/, ([^,]*)$/, ' and $1');
+export const ET_FR = (liste) => liste.join(', ').replace(/, ([^,]*)$/, ' et $1');
+export const ET_EN = (liste) => liste.join(', ').replace(/, ([^,]*)$/, ' and $1');
 
 // Conseil de prix selon la devise
-const CONSEIL_DEVISE = {
+export const CONSEIL_DEVISE = {
   FCFA: { fr: 'Le franc CFA n’a pas de centimes : pensez vos prix en montants ronds (par exemple au multiple de 25 ou de 50 FCFA) pour rendre la monnaie facilement.', en: 'The CFA franc has no cents: set prices in round amounts (for example multiples of 25 or 50 FCFA) so giving change is easy.' },
   GNF: { fr: 'Le franc guinéen se compte en grosses sommes, sans centimes : arrondissez vos prix à des montants faciles à rendre et notez-les toujours en entier.', en: 'The Guinean franc is counted in large sums, without cents: round your prices to amounts that are easy to give change for, and always write them in full.' },
   MAD: { fr: 'Le dirham se divise en centimes : gardez les prix au dirham ou au demi-dirham près et vérifiez que vos étiquettes et votre caisse affichent le même montant.', en: 'The dirham is divided into centimes: keep prices to the nearest dirham or half-dirham and check that your labels and your till show the same amount.' },
