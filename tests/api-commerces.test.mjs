@@ -161,3 +161,44 @@ test('paiement groupé : un seul paiement pour tous les commerces du même géra
   const apres = (await api('GET', '/admin/commerces', null, admin)).commerces.find((c) => c.commerce.nom === 'Chez Moussa');
   assert.equal(apres.commerce.abonnement.paiements.length, 0);
 });
+
+test('avis : un gérant donne son avis, rien n’est public avant validation, le support peut modérer', async () => {
+  const vide = await api('GET', '/avis');
+  assert.equal(vide.nombre, 0);
+  assert.equal(vide.moyenne, null);
+  // Conditions de l'envoi
+  assert.equal((await api('POST', '/avis', { note: 5, texte: 'Très bien, vraiment.', autorisation: true })).statut, 401);
+  assert.equal((await api('POST', '/avis', { note: 0, texte: 'x'.repeat(30), autorisation: true }, epicerie.jeton)).statut, 400);
+  assert.equal((await api('POST', '/avis', { note: 5, texte: 'trop court', autorisation: true }, epicerie.jeton)).statut, 400);
+  assert.equal((await api('POST', '/avis', { note: 5, texte: 'x'.repeat(30), autorisation: false }, epicerie.jeton)).statut, 400);
+  const texte = 'Je suis mes ventes et mon stock depuis mon téléphone, même quand le réseau coupe.';
+  assert.equal((await api('POST', '/avis', { note: 5, texte, autorisation: true }, epicerie.jeton)).statut, 201);
+  const mon = await api('GET', '/mon-avis', null, epicerie.jeton);
+  assert.equal(mon.avis.statut, 'attente');
+  // Rien de public tant que l'équipe n'a pas validé
+  assert.equal((await api('GET', '/avis')).nombre, 0);
+  // Modification : un seul avis par commerce, qui repart en validation
+  assert.equal((await api('POST', '/avis', { note: 4, texte, autorisation: true }, epicerie.jeton)).statut, 201);
+  const liste = await api('GET', '/admin/avis', null, admin);
+  assert.equal(liste.avis.length, 1);
+  assert.equal(liste.enAttente, 1);
+  assert.equal(liste.avis[0].nom, 'Awa K.');
+  assert.equal(liste.avis[0].note, 4);
+  // Validation par l'équipe
+  assert.equal((await api('POST', '/admin/avis', { id: liste.avis[0].id, action: 'publier' }, admin)).ok, true);
+  const publics = await api('GET', '/avis');
+  assert.equal(publics.nombre, 1);
+  assert.equal(publics.moyenne, 4);
+  assert.equal(publics.avis[0].nom, 'Awa K.');
+  assert.equal(publics.avis[0].texte, texte);
+  assert.equal(JSON.stringify(publics).includes('0712345702'), false, 'le numéro ne doit jamais apparaître');
+  // Refus : l'avis disparaît du site
+  await api('POST', '/admin/avis', { id: liste.avis[0].id, action: 'refuser' }, admin);
+  assert.equal((await api('GET', '/avis')).nombre, 0);
+  // Un vendeur ne peut pas donner l'avis du commerce
+  const v = await api('POST', '/utilisateurs', { nom: 'Vendeur', telephone: '0712345799', pin: '5555', role: 'vendeur' }, epicerie.jeton);
+  if (v.ok) {
+    const cx = await api('POST', '/connexion', { telephone: '0712345799', pin: '5555' });
+    if (cx.jeton) assert.equal((await api('POST', '/avis', { note: 5, texte, autorisation: true }, cx.jeton)).statut, 403);
+  }
+});
