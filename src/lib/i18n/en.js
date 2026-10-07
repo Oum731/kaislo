@@ -1622,4 +1622,6 @@ export const EN = {
   "Non. Un téléphone, une tablette ou un ordinateur suffit ; l’imprimante de tickets reste facultative.": "No. A phone, a tablet or a computer is enough; the receipt printer is optional.",
   "Quels modes de paiement peut-on noter ?": "Which payment methods can I record?",
   "Espèces, carte, mobile money (Wave, Orange Money, MTN MoMo…) : vous notez le mode, et le total de chacun s’affiche le soir.": "Cash, card, mobile money (Wave, Orange Money, MTN MoMo…): you record the method, and the total for each shows in the evening.",
+  "Logiciel de caisse par pays": "POS software by country",
+  "Paiements à prendre en charge, fonctionnement sans internet et vérifications avant de choisir, dans votre pays.": "Payments to support, working without internet and checks before choosing, in your country.",
 };

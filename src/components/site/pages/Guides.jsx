@@ -52,9 +52,14 @@ export function Guide({ lang, slug }) {
   const pays = GUIDES.filter((x) => x.groupe === 'pays');
   // Voisins dans la liste (en tournant) : chaque guide est ainsi proposé par quatre autres, au lieu de toujours les quatre premiers
   const suivants = (liste) => { const i = liste.indexOf(g); return [...liste.slice(i + 1), ...liste.slice(0, Math.max(i, 0))].filter((x) => x !== g); };
+  const caissePays = GUIDES.filter((x) => x.groupe === 'caisse-pays');
   const autres = g.groupe === 'pays'
-    ? [...['mobile-money', 'cloture'].map((c) => GUIDES.find((x) => x.cle === c)), ...suivants(pays).slice(0, 2)]
-    : (() => { const voisins = suivants(generaux); return [...voisins.filter((x) => x.metier === g.metier), ...voisins.filter((x) => x.metier !== g.metier)].slice(0, 4); })();
+    // guide de pays : deux guides généraux, le guide de caisse du même pays et un autre pays
+    ? [...['mobile-money', 'cloture'].map((c) => GUIDES.find((x) => x.cle === c)), GUIDES.find((x) => x.cle === 'caisse-' + g.cle.slice(5)), ...suivants(pays).slice(0, 1)]
+    : g.groupe === 'caisse-pays'
+      // guide de caisse d'un pays : les deux guides de caisse généraux, le guide du même pays et un autre pays
+      ? [...['caisse-gratuite', 'caisse-ou-application', 'pays-' + g.cle.slice(7)].map((c) => GUIDES.find((x) => x.cle === c)), ...suivants(caissePays).slice(0, 1)]
+      : (() => { const voisins = suivants(generaux); return [...voisins.filter((x) => x.metier === g.metier), ...voisins.filter((x) => x.metier !== g.metier)].slice(0, 4); })();
   const donnees = {
     '@context': 'https://schema.org', '@type': 'Article',
     headline: c.titre, description: c.description, inLanguage: lang,
@@ -156,6 +161,17 @@ export default function Guides({ lang }) {
             <p className="chapo">{tr('Devise, moyens de paiement et suivi des ventes dans votre pays.')}</p>
             <div className="guide-grille" style={{ marginTop: 20 }}>
               {GUIDES.filter((g) => g.groupe === 'pays').map((g) => (
+                <Link key={g.cle} href={adresseGuide(g, lang)} className="guide-carte">
+                  <b>{g[lang].court}</b>
+                  <span className="muet">{g[lang].description}</span>
+                  <span className="guide-lire">{tr('Lire le guide')} →</span>
+                </Link>
+              ))}
+            </div>
+            <h2 id="caisse-pays" style={{ margin: '48px 0 16px' }}>{tr('Logiciel de caisse par pays')}</h2>
+            <p className="chapo">{tr('Paiements à prendre en charge, fonctionnement sans internet et vérifications avant de choisir, dans votre pays.')}</p>
+            <div className="guide-grille" style={{ marginTop: 20 }}>
+              {GUIDES.filter((g) => g.groupe === 'caisse-pays').map((g) => (
                 <Link key={g.cle} href={adresseGuide(g, lang)} className="guide-carte">
                   <b>{g[lang].court}</b>
                   <span className="muet">{g[lang].description}</span>
