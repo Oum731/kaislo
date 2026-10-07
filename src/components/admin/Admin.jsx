@@ -284,10 +284,15 @@ function LigneCommerce({ c, ctx }) {
   return (
     <button className="liste-item" onClick={() => ctx.ouvrir(c.id)}>
       <span className="mini-emoji teinte-vert">{initiales(c.commerce.nom)}</span>
-      <span className="grandit">
-        <b className="bloc-texte tronque">{c.commerce.nom}{c.messagesNonLus ? <span className="badge safran" style={{ marginLeft: 6 }}>{c.messagesNonLus} message(s)</span> : null}
-          {c.signaux?.length ? <span className="badge rouge" style={{ marginLeft: 6 }} title={c.signaux[0].texte}>⚠ Activité à vérifier</span> : null}
-          {c.autresCommerces?.length ? <span className="badge" style={{ marginLeft: 6 }}>{c.autresCommerces.length + 1} commerces du gérant</span> : null}</b>
+      <span className="grandit" style={{ minWidth: 0 }}>
+        <b className="bloc-texte" style={{ overflowWrap: 'anywhere' }}>{c.commerce.nom}</b>
+        {(c.messagesNonLus > 0 || c.signaux?.length > 0 || c.autresCommerces?.length > 0) && (
+          <span className="badges-ligne">
+            {c.messagesNonLus ? <span className="badge safran">{c.messagesNonLus} message(s)</span> : null}
+            {c.signaux?.length ? <span className="badge rouge" title={c.signaux[0].texte}>⚠ À vérifier</span> : null}
+            {c.autresCommerces?.length ? <span className="badge">{c.autresCommerces.length + 1} commerces</span> : null}
+          </span>
+        )}
         <span className="tres-petit muet tronque bloc-texte">{paysParId(c.commerce.pays).nom} · {c.commerce.ville} · {c.gerant} · {c.commerce.telephone}</span>
       </span>
       <span style={{ textAlign: 'right' }}>
@@ -317,7 +322,7 @@ function VueCommerces({ commerces, ctx }) {
             <Icone nom="recherche" taille="sm" />
             <input type="search" placeholder="Nom, ville, code, gérant, téléphone…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
           </label>
-          <Puces options={[['tous', 'Tous'], ['essai', 'Essai'], ['actif', 'Actifs'], ['expire', 'Expirés'], ['suspendu', 'Suspendus'], ['verifier', '⚠ À vérifier']]} valeur={filtre} surChanger={setFiltre} />
+          <Puces options={[['tous', 'Tous'], ['essai', 'Essai'], ['actif', 'Actifs'], ['expire', 'Expirés'], ['suspendu', 'Suspendus'], ['verifier', '⚠ À vérifier']]} valeur={filtre} surChanger={setFiltre} enveloppe />
         </div>
         <div className="liste">
           {liste.map((c) => <LigneCommerce key={c.id} c={c} ctx={ctx} />)}
@@ -680,7 +685,7 @@ function FicheCommerce({ c, ctx, fermer }) {
               <h3>Autres commerces du même gérant</h3>
               {c.autresCommerces.map((x) => (
                 <button key={x.id} className="liste-item" onClick={() => ctx.ouvrir(x.id)}>
-                  <span className="grandit"><b>{x.nom}</b><span className="tres-petit muet bloc-texte">{typeCommerce(x.type).nom} · {x.tarif.nom} · {formatPrix(x.tarif.parMois, x.devise)}/mois</span></span>
+                  <span className="grandit" style={{ minWidth: 0, textAlign: 'left' }}><b>{x.nom}</b><span className="tres-petit muet bloc-texte">{typeCommerce(x.type).nom} · {x.tarif.nom} · {formatPrix(x.tarif.parMois, x.devise)}/mois</span></span>
                   <span className="badge">{x.statut}</span>
                 </button>
               ))}

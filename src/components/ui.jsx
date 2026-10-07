@@ -158,9 +158,9 @@ export function Segment({ options, valeur, surChanger }) {
   );
 }
 
-export function Puces({ options, valeur, surChanger }) {
+export function Puces({ options, valeur, surChanger, enveloppe = false }) {
   return (
-    <div className="puces">
+    <div className={enveloppe ? 'puces enveloppe' : 'puces'}>
       {options.map(([v, l]) => (
         <button key={v} className={`puce ${valeur === v ? 'actif' : ''}`} onClick={() => surChanger(v)}>
           {l}

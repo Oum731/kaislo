@@ -1027,3 +1027,10 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .liste-item .texte-commerce { min-width: 0; flex: 1; text-align: left; }
 .liste-item .texte-commerce > * { overflow-wrap: anywhere; }
 @media (max-width: 399px) { .segment button { padding: 0 6px; font-size: 13px; } }
+
+/* Espace Amorac : badges qui passent à la ligne, boutons de grille qui ne dépassent pas */
+.badges-ligne { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 0; }
+.grille-2 > * { min-width: 0; }
+.grille-2 .btn { white-space: normal; height: auto; min-height: 34px; padding-top: 6px; padding-bottom: 6px; line-height: 1.25; text-align: center; }
+.liste-item .badge { flex: none; }
+.puces.enveloppe { flex-wrap: wrap; overflow: visible; }
