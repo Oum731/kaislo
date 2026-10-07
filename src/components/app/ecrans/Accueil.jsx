@@ -43,10 +43,10 @@ export default function Accueil() {
         <BandeauAbonnement />
         <PremiersPas />
         <div className="ligne" style={{ maxWidth: 620, gap: 8 }}>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
           <Segment options={[['jour', tr('Jour')], ['semaine', tr('Semaine')], ['mois', tr('Mois')], ['annee', tr('Année')]]} valeur={periode} surChanger={(p) => { setPeriode(p); setBarre(null); }} />
           </div>
-          {s.utilisateur.role === 'gerant' && <button className="btn secondaire" onClick={() => s.ouvrir('rapport', { periode })} aria-label={tr('Exporter le rapport (Excel, PDF)')}><Icone nom="carnet" /> {tr('Exporter')}</button>}
+          {s.utilisateur.role === 'gerant' && <button className="btn secondaire" onClick={() => s.ouvrir('rapport', { periode })} aria-label={tr('Exporter le rapport (Excel, PDF)')} style={{ flex: 'none' }}><Icone nom="carnet" /> <span className="masque-etroit">{tr('Exporter')}</span></button>}
         </div>
 
         <div className="grille-ecran deux" style={{ marginTop: 16 }}>
