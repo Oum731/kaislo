@@ -186,7 +186,7 @@ function routeAdminCommerces(): never
 {
     $admin = adminConnecte();
     repondre(['ok' => true, 'commerces' => array_map(fn ($r) => sansChiffres($r, $admin), resumesCommerces()), 'formules' => formules(), 'regles' => reglesTarifs(),
-        'fondateurs' => (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE fondateur = 1')->fetch()['n'], 'contactsNonTraites' => contactsNonTraites(),
+        'fondateurs' => (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE fondateur = 1')->fetch()['n'], 'contactsNonTraites' => contactsNonTraites(), 'avisEnAttente' => avisEnAttente(),
         'commerciauxEnAttente' => (int) requete('SELECT COUNT(*) AS n FROM commerciaux WHERE actif = 0 AND valide_le IS NULL')->fetch()['n']]);
 }
 

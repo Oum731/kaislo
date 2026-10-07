@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 7;
+const VERSION_BASE = 8;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -119,6 +119,16 @@ const STRUCTURE = [
             'ip_hash' => 'VARCHAR(64)', 'cree_le' => 'DATE', 'traite_le' => 'DATE', 'traite_par' => 'TEXTE',
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['cree_le']],
+    ],
+    // Avis des gérants sur Kaislo : un seul par commerce, publié sur le site seulement après validation par l'équipe
+    'avis' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'utilisateur_id' => 'ID', 'note' => 'ENTIER', 'texte' => 'LONG',
+            'nom_affiche' => 'TEXTE', 'activite' => 'VARCHAR(20)', 'ville' => 'TEXTE', 'pays' => 'VARCHAR(4)',
+            'statut' => 'VARCHAR(12)', // 'attente', 'publie' ou 'refuse'
+            'cree_le' => 'DATE', 'modifie_le' => 'DATE', 'modere_le' => 'DATE', 'modere_par' => 'TEXTE',
+        ],
+        'cle' => ['id'], 'uniques' => [['commerce_id']], 'index' => [['statut', 'cree_le']],
     ],
     // Commerciaux Kaislo (code parrain, commission sur les abonnements de leurs clients)
     'commerciaux' => [
