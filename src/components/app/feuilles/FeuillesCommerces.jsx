@@ -114,7 +114,7 @@ export function FeuilleAjoutCommerce() {
         </label>
       </>}
         {erreur && <p className="alerte">{erreur}</p>}
-        <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours}>{s.connexionEnCours ? tr('Création…') : tr('Créer ce commerce')}</button>
+        <button type="submit" className="btn grand bloc" disabled={s.connexionEnCours || (!f.accepte && !demo)}>{s.connexionEnCours ? tr('Création…') : tr('Créer ce commerce')}</button>
       </form>
     </Feuille>
   );

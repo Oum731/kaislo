@@ -129,7 +129,7 @@ function FormulaireInscription() {
           <span>J’ai lu <a className="lien" href="/devenir-commercial/" target="_blank" rel="noreferrer">les conditions du programme commercial</a> (commission, validation à 6 mois) et j’accepte la <a className="lien" href="/confidentialite/" target="_blank" rel="noreferrer">politique de confidentialité</a>.</span>
         </label>
         {erreur && <p className="alerte">{erreur}</p>}
-        <button className="btn bloc" disabled={enCours}>{enCours ? 'Envoi…' : 'Envoyer ma demande'}</button>
+        <button className="btn bloc" disabled={enCours || !f.accepte}>{enCours ? 'Envoi…' : 'Envoyer ma demande'}</button>
       </form>
     </>
   );
