@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kaislo.app",
+      "sha256_cert_fingerprints": [
+        "REMPLACEZ:PAR:L:EMPREINTE:SHA-256:DE:LA:CLE:DE:SIGNATURE:DE:GOOGLE:PLAY"
+      ]
+    }
+  }
+]

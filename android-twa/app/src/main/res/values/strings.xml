@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kaislo</string>
+    <string name="start_url">https://kaislo.com/app/</string>
+    <string name="web_manifest_url">https://kaislo.com/manifest.webmanifest</string>
+    <!-- Lien de confiance entre l'application et le site : le site doit publier /.well-known/assetlinks.json (voir README) -->
+    <string name="asset_statements">[{ \"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": { \"namespace\": \"web\", \"site\": \"https://kaislo.com\" } }]</string>
+</resources>
