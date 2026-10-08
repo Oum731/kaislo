@@ -1,0 +1,12 @@
+# Ne JAMAIS publier la clé de signature ni ses mots de passe
+*.keystore
+*.jks
+keystore.properties
+local.properties
+# Fichiers produits par la compilation
+.gradle/
+build/
+app/build/
+*.aab
+*.apk
+.idea/

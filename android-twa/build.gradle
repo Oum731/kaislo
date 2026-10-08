@@ -1,0 +1,5 @@
+// Projet racine : versions des outils de compilation.
+// Android Studio propose de mettre ces numéros à jour (« AGP Upgrade Assistant ») : acceptez, c'est sans risque ici.
+plugins {
+    id 'com.android.application' version '8.10.1' apply false
+}

@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Clé de signature (facultatif) : si le fichier keystore.properties existe, « gradle bundleRelease » signe l'application.
+// Sinon, laissez Google Play signer (recommandé : « Play App Signing ») et envoyez le bundle tel quel.
+def keystoreProps = new Properties()
+def keystoreFile = rootProject.file('keystore.properties')
+if (keystoreFile.exists()) keystoreProps.load(new FileInputStream(keystoreFile))
+
+android {
+    namespace 'com.kaislo.app'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.kaislo.app'
+        minSdk 23
+        targetSdk 36
+        versionCode 1        // à augmenter de 1 à chaque nouvelle version envoyée sur Google Play
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile.exists()) {
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keystoreFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Lance https://kaislo.com/app/ en plein écran, sans barre d'adresse, une fois le domaine vérifié (assetlinks.json)
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
