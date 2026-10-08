@@ -118,6 +118,7 @@ const SECTIONS = [
       <>
         <p>Vous pouvez demander l’<b>accès</b> à vos données, leur <b>rectification</b>, leur <b>suppression</b>, la <b>limitation</b> ou l’<b>opposition</b> à leur utilisation, et leur <b>portabilité</b>. Le gérant peut déjà exporter les données de son commerce dans Réglages → Profil → Vos données.</p>
         <p>Écrivez à {mail} en précisant votre numéro de téléphone de connexion. Nous répondons dans un délai d’un mois. Nous pouvons vous demander de justifier votre identité.</p>
+        <p>Pour supprimer votre compte et vos données : la marche à suivre est sur la page <Link href="/supprimer-mon-compte/">Supprimer mon compte</Link>.</p>
         <p>Les clients d’un commerce s’adressent d’abord au commerce, qui est responsable de leurs données ; nous l’aidons à répondre.</p>
         <p>Vous pouvez aussi saisir l’autorité de protection des données de votre pays, par exemple la CNDP au Maroc, l’ARTCI en Côte d’Ivoire, la CDP au Sénégal ou la CNIL en France.</p>
       </>
