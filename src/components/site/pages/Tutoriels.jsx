@@ -28,7 +28,7 @@ const DONNEES_VIDEOS = () => ([
     '@context': 'https://schema.org', '@type': 'VideoObject',
     name: VIDEOS()[cle].titre, description: VIDEOS()[cle].texte, inLanguage: langueActive(),
     thumbnailUrl: SITE_URL + VIDEOS()[cle].poster, contentUrl: SITE_URL + VIDEOS()[cle].src, embedUrl: SITE_URL + lien('/tutoriels/#' + cle),
-    uploadDate: '2026-10-05', duration: dureeIso(VIDEOS()[cle].duree),
+    uploadDate: '2026-10-05T08:00:00+00:00', duration: dureeIso(VIDEOS()[cle].duree),
   })),
 ]);
 

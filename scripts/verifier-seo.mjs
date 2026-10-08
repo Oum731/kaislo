@@ -42,6 +42,8 @@ for (const f of pages) {
   if (h1 !== 1) dit(`${h1} titres h1 (un seul attendu)`);
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     try { JSON.parse(m[1]); } catch { dit('données structurées illisibles'); }
+    // Google veut une date et une heure complètes avec fuseau horaire (2026-10-05T08:00:00+00:00), pas une date seule
+    for (const d of m[1].matchAll(/"uploadDate":"([^"]*)"/g)) if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(d[1])) dit(`uploadDate « ${d[1]} » : heure ou fuseau horaire manquant`);
   }
   if (!sitemap.includes(`<loc>${SITE}${adresse}</loc>`)) dit('absente du plan du site');
 }
