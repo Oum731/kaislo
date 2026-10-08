@@ -1336,6 +1336,7 @@ export const EN = {
   "Donner mon avis sur Kaislo": "Review Kaislo",
   "Démo : avec un vrai compte, votre avis serait envoyé à l’équipe Kaislo.": "Demo: with a real account, your review would be sent to the Kaislo team.",
   "Pas de connexion internet : réessayez quand le réseau est revenu.": "No internet connection: try again when the network is back.",
+  "Supprimer mon compte": "Delete my account",
   "Comment payer ?": "How do I pay?",
   "Par mobile money (Wave, Orange Money, MTN MoMo…), virement, ou espèces auprès de l’équipe. Au mois, ou à l’année avec 2 mois offerts.": "By mobile money (Wave, Orange Money, MTN MoMo…), bank transfer, or cash with the team. Monthly, or annually with 2 months free.",
   "Les prix sont-ils les mêmes partout ?": "Are prices the same everywhere?",

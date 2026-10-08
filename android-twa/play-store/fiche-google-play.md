@@ -60,7 +60,7 @@ Réponses d'après la politique de confidentialité du site :
 - **Partagées avec des tiers** : non (pas de revente, pas de publicité dans l'application).
 - **Chiffrement en transit** : oui (HTTPS).
 - **Suppression** : l'utilisateur peut demander la suppression de son compte et de ses données (contact@kaislo.com ; voir aussi Réglages → Profil → Vos données pour l'export).
-- Google Play demande une **adresse web de demande de suppression de compte** pour les applications qui créent des comptes : indiquez `https://kaislo.com/confidentialite/` et vérifiez que la page décrit bien la marche à suivre (e-mail contact@kaislo.com). Dites-le-moi si vous voulez que j'ajoute une section dédiée.
+- Google Play demande une **adresse web de demande de suppression de compte** pour les applications qui créent des comptes : indiquez `https://kaislo.com/supprimer-mon-compte/` (page dédiée : étapes, délai d'un mois, ce qui est supprimé et ce qui est conservé).
 
 ## Autres déclarations
 - **Public cible** : adultes (professionnels). Pas destiné aux enfants.
