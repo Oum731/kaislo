@@ -25,6 +25,7 @@ test('pixel Meta : rien avant l\'accord, puis page vue + inscription sans aucune
   assert.equal(window.fbq, undefined);
   m.accepterMesure();
   assert.equal(stock['kaislo-mesure'], 'oui');
+  assert.equal(scripts.length, 1, 'le pixel se charge tout de suite après « Accepter »');
   assert.equal(m.suivreInscription(), true);
   assert.equal(window.gtag, undefined, 'pas de balise Google sans identifiant Google');
   assert.equal(scripts.length, 1);

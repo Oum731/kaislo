@@ -32,6 +32,7 @@ test('avec identifiant : rien avant l\'accord, la conversion seulement après', 
   // Accord : la balise se charge et la conversion est comptée avec le bon identifiant
   m.accepterMesure();
   assert.equal(stock['kaislo-mesure'], 'oui');
+  assert.equal(scripts.length, 2, 'les balises se chargent tout de suite après « Accepter »');
   assert.equal(m.suivreInscription(), true);
   assert.equal(scripts.length, 2); // balise Google + pixel Meta
   assert.match(scripts[0].src, /^https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=AW-123456789$/);
