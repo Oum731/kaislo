@@ -69,7 +69,9 @@ export function chargerBaliseAuRepos() {
 
 export function accepterMesure() {
   memoriser('oui');
-  chargerBaliseAuRepos();
+  // Le visiteur vient d'accepter : le pixel et la balise se chargent tout de suite (la page est déjà affichée, aucun effet sur la vitesse).
+  // Aux visites suivantes, ils se chargent au repos (chargerBaliseAuRepos).
+  chargerBalise();
 }
 
 export function refuserMesure() {
