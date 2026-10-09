@@ -13,8 +13,9 @@ function navigateurFactice() {
 }
 const evenements = () => (window.dataLayer || []).map((a) => Array.from(a));
 
-test('sans identifiant Google Ads : le module ne fait rien du tout', async () => {
+test('sans identifiant (Google Ads, pixel Meta) : le module ne fait rien du tout', async () => {
   delete process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+  process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID = ''; // pixel Meta désactivé aussi
   const { scripts } = navigateurFactice();
   const m = await import('../src/lib/mesure.js');
   assert.equal(m.mesureActive(), false);

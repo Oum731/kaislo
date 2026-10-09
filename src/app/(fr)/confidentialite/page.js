@@ -4,7 +4,7 @@
 // ------------------------------------------------------------
 import Link from 'next/link';
 import PageLegale from '@/components/site/PageLegale';
-import { SOCIETE, GOOGLE_ADS_ID } from '@/config';
+import { SOCIETE, GOOGLE_ADS_ID, FACEBOOK_PIXEL_ID, REGIES_MESURE } from '@/config';
 import { metaPage } from '@/lib/seo';
 
 export const metadata = metaPage({
@@ -43,7 +43,7 @@ const SECTIONS = [
           <tr><th>Abonnement</th><td>Offre, dates, montants et références de paiement. Les numéros de carte sont saisis chez le prestataire de paiement et ne nous sont jamais transmis.</td></tr>
           <tr><th>Technique</th><td>Type d’appareil et de navigateur, journaux de connexion et d’erreurs, adresse IP (sécurité et lutte contre la fraude).</td></tr>
           <tr><th>Pays du visiteur</th><td>Pour afficher les tarifs de votre pays : pays déduit de votre adresse IP (sans la conserver), de votre fuseau horaire ou, si vous le demandez, de votre position GPS ; pays choisi, mémorisé dans un cookie d’un an (« kaislo_pays »). Détails dans la page Cookies et stockage.</td></tr>
-          {!!GOOGLE_ADS_ID && <tr><th>Mesure des inscriptions</th><td>Seulement si vous acceptez le bandeau : cookie de mesure Google Ads pour savoir quelles publicités amènent des inscriptions (clic sur une publicité, puis inscription). Aucune donnée de vente ni de client n’est envoyée à Google. Vous pouvez refuser, et effacer le cookie dans votre navigateur. Détails dans la page Cookies et stockage.</td></tr>}
+          {!!(GOOGLE_ADS_ID || FACEBOOK_PIXEL_ID) && <tr><th>Mesure des inscriptions</th><td>Seulement si vous acceptez le bandeau : cookies de mesure de {REGIES_MESURE} pour savoir quelles publicités amènent des inscriptions (clic sur une publicité, puis inscription). Aucune donnée de vente ni de client n’est envoyée à ces services. Vous pouvez refuser, et effacer le cookie dans votre navigateur. Détails dans la page Cookies et stockage.</td></tr>}
         </tbody>
       </table>
     ),
@@ -84,6 +84,7 @@ const SECTIONS = [
           <li><b>Prestataires de paiement</b> (carte bancaire, mobile money, banque) pour les abonnements.</li>
           <li><b>Envoi de SMS ou de messages WhatsApp</b> pour les codes de vérification.</li>
           <li><b>Cartographie</b> : OpenStreetMap affiche la carte lorsque vous placez votre commerce.</li>
+          {!!(GOOGLE_ADS_ID || FACEBOOK_PIXEL_ID) && <li><b>Mesure publicitaire</b> — {REGIES_MESURE} : seulement si vous acceptez le bandeau, pour compter les inscriptions venues de nos publicités.</li>}
         </ul>
         <p>L’envoi d’un ticket par WhatsApp se fait depuis votre propre téléphone : c’est vous qui choisissez de l’envoyer.</p>
         <p>Nous pouvons aussi transmettre des données lorsque la loi l’impose (demande d’une autorité judiciaire, par exemple).</p>

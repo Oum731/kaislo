@@ -5,15 +5,15 @@
 // ------------------------------------------------------------
 import PageLegale from '@/components/site/PageLegale';
 import { metaPage } from '@/lib/seo';
-import { GOOGLE_ADS_ID } from '@/config';
+import { GOOGLE_ADS_ID, FACEBOOK_PIXEL_ID, REGIES_MESURE } from '@/config';
 
-// Mesure des inscriptions Google Ads : décrite sur cette page seulement quand elle est activée (src/config.js)
-const MESURE = !!GOOGLE_ADS_ID;
+// Mesure des inscriptions (Google Ads, pixel Meta) : décrite sur cette page seulement quand elle est activée (src/config.js)
+const MESURE = !!(GOOGLE_ADS_ID || FACEBOOK_PIXEL_ID);
 
 export const metadata = metaPage({
   title: 'Cookies et stockage',
   description: MESURE
-    ? 'Kaislo n’utilise un cookie de mesure Google Ads qu’avec votre accord. Liste des éléments enregistrés sur votre appareil et à quoi ils servent.'
+    ? 'Kaislo ne place de cookies de mesure publicitaire qu’avec votre accord. Liste des éléments enregistrés sur votre appareil et à quoi ils servent.'
     : 'Kaislo n’utilise ni cookies publicitaires ni mesure d’audience. Liste des éléments enregistrés sur votre appareil et à quoi ils servent.',
   alternates: { canonical: '/cookies/' },
 });
@@ -25,7 +25,7 @@ const SECTIONS = [
     contenu: (
       MESURE ? (
         <div className="encadre">
-          <p><b>Un seul cookie facultatif, avec votre accord.</b> Kaislo enregistre sur votre appareil ce qui est utile pour faire fonctionner Kaislo et se souvenir de vos choix (comme votre pays). Si vous l’acceptez dans le bandeau, Kaislo place en plus un cookie de mesure de Google Ads, pour savoir quelles publicités amènent de vrais commerces. Il ne contient jamais vos ventes ni vos clients. Si vous refusez, rien n’est chargé et rien ne change dans Kaislo.</p>
+          <p><b>Des cookies de mesure facultatifs, seulement avec votre accord.</b> Kaislo enregistre sur votre appareil ce qui est utile pour faire fonctionner Kaislo et se souvenir de vos choix (comme votre pays). Si vous l’acceptez dans le bandeau, Kaislo place en plus des cookies de mesure de {REGIES_MESURE}, pour savoir quelles publicités amènent de vrais commerces. Ils ne contiennent jamais vos ventes ni vos clients. Si vous refusez, rien n’est chargé et rien ne change dans Kaislo.</p>
         </div>
       ) : (
         <div className="encadre">
@@ -50,7 +50,8 @@ const SECTIONS = [
           <tr><td>kaislo-v… (cache)</td><td>Copie de l’application pour qu’elle s’ouvre vite et hors connexion.</td><td>Remplacée à chaque mise à jour</td></tr>
           <tr><td>kaislo_pays (cookie)</td><td>Se souvenir du pays que vous avez choisi, pour afficher les tarifs dans la monnaie de votre pays. Contient seulement un code de pays (par exemple « CI »).</td><td>1 an</td></tr>
           {MESURE && <tr><td>kaislo-mesure</td><td>Se souvenir de votre réponse au bandeau de mesure (accepté ou refusé).</td><td>Jusqu’à suppression</td></tr>}
-          {MESURE && <tr><td>_gcl_aw, _gcl_au… (cookies, seulement si vous acceptez)</td><td>Mesure Google Ads : relier une inscription à la publicité sur laquelle vous avez cliqué.</td><td>Environ 90 jours</td></tr>}
+          {!!GOOGLE_ADS_ID && <tr><td>_gcl_aw, _gcl_au… (cookies, seulement si vous acceptez)</td><td>Mesure Google Ads : relier une inscription à la publicité sur laquelle vous avez cliqué.</td><td>Environ 90 jours</td></tr>}
+          {!!FACEBOOK_PIXEL_ID && <tr><td>_fbp (cookie, seulement si vous acceptez)</td><td>Mesure Meta (Facebook et Instagram) : relier une inscription à la publicité sur laquelle vous avez cliqué. Le pixel n’enregistre ni vos clics sur les boutons ni le contenu des formulaires.</td><td>Environ 90 jours</td></tr>}
           <tr><td>kaislo:admin-jeton</td><td>Session de l’espace Amorac (équipe Amorac uniquement).</td><td>Fermeture de l’onglet</td></tr>
           <tr><td>kaislo:commercial-jeton</td><td>Session de l’espace des commerciaux Kaislo.</td><td>30 jours, ou « Sortir »</td></tr>
         </tbody>
@@ -65,7 +66,8 @@ const SECTIONS = [
         <li><b>Carte OpenStreetMap</b> : affichée seulement quand le gérant place son commerce sur la carte (Réglages → Profil). OpenStreetMap peut alors enregistrer ses propres éléments techniques.</li>
         <li><b>Détection de votre pays</b> : pour afficher les prix de votre pays, notre serveur cherche le pays qui correspond à votre adresse IP auprès d’un service de géolocalisation gratuit (api.country.is, ou ipwho.is en secours). Seule l’adresse IP leur est transmise ; Kaislo ne la garde pas. Si vous touchez « Utiliser ma position », votre navigateur vous demande d’abord l’autorisation ; vos coordonnées sont alors envoyées à un service gratuit (BigDataCloud) qui renvoie seulement le nom du pays, et ne sont pas conservées par Kaislo. Vous pouvez toujours choisir votre pays vous-même dans la liste.</li>
         <li><b>WhatsApp et Google Maps</b> : ouverts uniquement quand vous touchez un bouton « Envoyer par WhatsApp » ou « Ouvrir dans Google Maps ». Leurs propres règles s’appliquent alors.</li>
-        {MESURE && <li><b>Google Ads</b> (seulement si vous acceptez le bandeau) : mesure des inscriptions venues de nos publicités. Google reçoit que quelqu’un a cliqué sur une publicité puis s’est inscrit ; jamais les ventes, les clients ni le contenu de votre commerce. Les règles de Google s’appliquent alors.</li>}
+        {!!GOOGLE_ADS_ID && <li><b>Google Ads</b> (seulement si vous acceptez le bandeau) : mesure des inscriptions venues de nos publicités. Google reçoit que quelqu’un a cliqué sur une publicité puis s’est inscrit ; jamais les ventes, les clients ni le contenu de votre commerce. Les règles de Google s’appliquent alors.</li>}
+        {!!FACEBOOK_PIXEL_ID && <li><b>Meta (Facebook et Instagram)</b> (seulement si vous acceptez le bandeau) : pixel de mesure des inscriptions venues de nos publicités. Meta reçoit la page vue et le fait qu’une inscription a eu lieu ; jamais les ventes, les clients ni le contenu de votre commerce. Les règles de Meta s’appliquent alors.</li>}
         <li>Les polices de caractères sont servies par Kaislo lui-même : aucune requête vers Google Fonts.</li>
       </ul>
     ),
