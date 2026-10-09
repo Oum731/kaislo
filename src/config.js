@@ -17,6 +17,13 @@ export const GOOGLE_VERIFICATION = '';
 export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || '';
 export const GOOGLE_ADS_INSCRIPTION = process.env.NEXT_PUBLIC_GOOGLE_ADS_INSCRIPTION || '';
 
+// Pixel Meta (Facebook et Instagram) : mesure des inscriptions venues de vos publicités Facebook / Instagram.
+// Comme Google Ads : la balise ne se charge qu'APRÈS l'accord du visiteur (bandeau « Accepter / Refuser »), jamais dans /admin/ ni /commercial/.
+// Pour le désactiver : NEXT_PUBLIC_FACEBOOK_PIXEL_ID= (vide) au build.
+export const FACEBOOK_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID ?? '2023668061621044';
+// Noms des régies publicitaires mesurées (pour le bandeau et les pages Cookies / Confidentialité)
+export const REGIES_MESURE = [GOOGLE_ADS_ID && 'Google Ads', FACEBOOK_PIXEL_ID && 'Meta (Facebook et Instagram)'].filter(Boolean).join(' et ');
+
 // Sous-dossier du site : vide sur Hostinger, "/kaislo" pour la version de test
 // sur GitHub Pages (fixé au moment du build par NEXT_PUBLIC_BASE_PATH).
 // Les <Link> de Next l'ajoutent tout seuls ; pour les images et fichiers

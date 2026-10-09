@@ -322,6 +322,16 @@ Pour savoir quelles publicités amènent de vrais commerces. **Tant que `GOOGLE_
 4. Quand quelqu'un crée son commerce (`inscrire()` dans `src/store/session.js`), `suivreInscription()` envoie la conversion et un événement `sign_up`. Aucune donnée de vente, de client ou de commerce n'est envoyée.
 5. Vérifiez avec Google Tag Assistant (tagassistant.google.com) : visitez le site, acceptez, créez un commerce de test, et contrôlez que la conversion apparaît.
 
+### Pixel Meta (Facebook et Instagram)
+
+Le pixel Meta `2023668061621044` est branché sur **le même bandeau et le même accord** que Google Ads (`FACEBOOK_PIXEL_ID` dans `src/config.js`, ou `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` au build ; vide = désactivé). Il n'est donc **pas collé tel quel dans le HTML** : le code de Facebook collé dans la page se chargerait avant l'accord du visiteur, ce que la page Confidentialité promet de ne pas faire.
+
+- Le script `connect.facebook.net/en_US/fbevents.js` se charge au repos, **après l'accord**, jamais dans `/admin/` ni `/commercial/`.
+- Événements envoyés : `PageView` (page vue) et `CompleteRegistration` (inscription d'un commerce). La détection automatique des boutons et des formulaires est coupée (`autoConfig` à `false`) : aucune donnée de commerce, de client ou de formulaire n'est transmise.
+- La partie `<noscript>` du code Facebook (image de suivi pour les visiteurs sans JavaScript) n'est pas reprise : elle enverrait des données sans accord.
+- La politique de sécurité (`public/.htaccess`) autorise `connect.facebook.net` et `www.facebook.com`.
+- Dans Meta Events Manager, vérifiez avec l'extension « Meta Pixel Helper » : acceptez le bandeau, puis créez un commerce de test.
+
 Fichiers : `src/lib/mesure.js` (logique), `src/components/site/BandeauMesure.jsx` (bandeau), `public/.htaccess` (la politique de sécurité autorise `googletagmanager.com` et les domaines de conversion Google), pages Cookies et Confidentialité (mises à jour automatiquement quand l'identifiant est rempli). Tests : `tests/mesure*.test.mjs`.
 
 ## Vitesse : images et cache
