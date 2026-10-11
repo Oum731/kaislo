@@ -11,7 +11,9 @@
     "zip": "npm run build && node scripts/zip.mjs",
     "server": "node server/dev-server.mjs",
     "test:server": "node server/test.mjs",
-    "preflight": "npm run zip && node scripts/preflight.mjs"
+    "preflight": "npm run zip && node scripts/preflight.mjs",
+    "build:single": "vite build && node scripts/single.mjs",
+    "single": "npm run build:single && node scripts/preflight.mjs --single"
   },
   "dependencies": {
     "three": "0.170.0"

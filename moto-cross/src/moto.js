@@ -75,9 +75,8 @@ function helmetTexture(main, acc) {            // casque blanc, bandes de la cou
   const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d');
   x.fillStyle = '#f3f3f3'; x.fillRect(0, 0, 256, 128);
   x.fillStyle = css(main); for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(i * 64 - 10, 0); x.lineTo(i * 64 + 26, 0); x.lineTo(i * 64 + 70, 128); x.lineTo(i * 64 + 34, 128); x.fill(); }
-  x.fillStyle = css(acc); for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(i * 32, 44); x.lineTo(i * 32 + 22, 70); x.lineTo(i * 32 + 4, 84); x.fill(); }
-  x.fillStyle = '#16161a'; for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(i * 32 + 8, 8); x.lineTo(i * 32 + 30, 30); x.lineTo(i * 32 + 12, 36); x.fill(); }
-  x.fillStyle = '#16161a'; x.fillRect(0, 112, 256, 16);
+  x.fillStyle = css(acc); for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(i * 32, 8); x.lineTo(i * 32 + 24, 34); x.lineTo(i * 32 + 4, 46); x.fill(); }
+  x.fillStyle = '#16161a'; for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(i * 32 + 10, 0); x.lineTo(i * 32 + 30, 18); x.lineTo(i * 32 + 14, 24); x.fill(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 function jerseyTexture(main, acc) {            // maillot : flancs plus sombres, bandes de couleur, grain du tissu
@@ -258,7 +257,9 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   u.add(new THREE.SphereGeometry(1, 18, 14), mats.helmet, [0, 1.75, 0.3], [0, 0, 0], [0.16, 0.17, 0.2]);         // casque
   u.add(new THREE.SphereGeometry(1, 14, 10), mats.paint, [0, 1.79, 0.3], [0, 0, 0], [0.165, 0.1, 0.205]);        // bande couleur
   u.add(new RoundedBoxGeometry(0.2, 0.025, 0.17, 2, 0.01), mats.paint, [0, 1.8, 0.47], [-0.22, 0, 0]);           // visière
-  u.add(new RoundedBoxGeometry(0.14, 0.08, 0.1, 2, 0.03), mats.helmet, [0, 1.67, 0.46]);                         // mentonnière
+  u.add(new RoundedBoxGeometry(0.15, 0.085, 0.1, 2, 0.03), mats.paint, [0, 1.665, 0.46]);                        // mentonnière (couleur de l'équipe)
+  u.add(new RoundedBoxGeometry(0.12, 0.04, 0.03, 1, 0.01), mats.black, [0, 1.703, 0.488]);                          // ouverture du casque sous les lunettes
+  u.add(new THREE.BoxGeometry(0.07, 0.022, 0.012), mats.black, [0, 1.655, 0.512]);   // grille d'aération
   u.add(new RoundedBoxGeometry(0.2, 0.085, 0.06, 2, 0.025), mats.lens, [0, 1.745, 0.465]);                      // lunettes
   u.add(new THREE.TorusGeometry(0.168, 0.014, 6, 20), mats.black, [0, 1.745, 0.3], [Math.PI / 2, 0, 0], [1, 1.2, 1]);
   u.build(upper);

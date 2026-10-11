@@ -16,15 +16,15 @@ async function open(browser, track, bike) {
   return page;
 }
 const hideUI = (page) => page.addStyleTag({ content: '#hud,#touch,.iconbtn,.wallet,.toast,#big,#trick,#nitrofx,#banner,#rankpop,#hint{display:none!important}' });
+// Les règles CrazyGames : sur les couvertures, uniquement le titre du jeu, sans bordure.
 async function overlay(page, kind) {
-  await page.evaluate(([kind, TAGLINE]) => {
+  await page.evaluate((kind) => {
     const d = document.createElement('div');
-    d.style.cssText = `position:fixed;inset:0;display:flex;flex-direction:column;justify-content:${kind === 'wide' ? 'flex-end' : 'flex-start'};align-items:${kind === 'wide' ? 'flex-start' : 'center'};padding:${kind === 'wide' ? '0 0 6% 5%' : '8% 4% 0'};box-sizing:border-box;font-family:system-ui,Segoe UI,Arial;pointer-events:none;background:linear-gradient(${kind === 'wide' ? '90deg,#000a,#0000 55%' : '180deg,#000b,#0000 45%'})`;
     const w = innerWidth;
-    d.innerHTML = `<div style="font-size:${kind === 'wide' ? w * 0.075 : w * 0.17}px;font-weight:900;line-height:.95;color:#ff9d2e;text-shadow:0 ${w * 0.006}px 0 #6a2d00,0 ${w * 0.01}px ${w * 0.02}px #000;letter-spacing:2px;text-align:${kind === 'wide' ? 'left' : 'center'}">MOTO<br>CROSS</div>
-      <div style="margin-top:${w * 0.012}px;font-size:${kind === 'wide' ? w * 0.026 : w * 0.06}px;font-weight:800;color:#fff;text-shadow:0 2px 8px #000;text-align:${kind === 'wide' ? 'left' : 'center'}">${kind === 'wide' ? TAGLINE[1] + ' · ' + TAGLINE[0] : TAGLINE[1] + '<br>' + TAGLINE[0]}</div>`;
+    d.style.cssText = `position:fixed;inset:0;display:flex;align-items:${kind === 'wide' ? 'flex-start' : 'flex-start'};justify-content:center;padding-top:${kind === 'wide' ? '3.5%' : '7%'};box-sizing:border-box;font-family:system-ui,Segoe UI,Arial;pointer-events:none;background:linear-gradient(180deg,#0008 0,#0000 38%)`;
+    d.innerHTML = `<div style="font-size:${kind === 'wide' ? w * 0.082 : w * 0.17}px;font-weight:900;line-height:.92;color:#ff9d2e;text-shadow:0 ${w * 0.006}px 0 #6a2d00,0 ${w * 0.012}px ${w * 0.03}px #000;letter-spacing:2px;text-align:center">MOTO CROSS</div>`;
     document.body.appendChild(d);
-  }, [kind, TAGLINE]);
+  }, kind);
 }
 async function race(page) {
   await page.click('#play', { force: true });
@@ -55,9 +55,6 @@ async function groundShot(page) {
     ['screenshot_4_volcano_jump.png', 3, 4, 'jump', [1920, 1080], null],
     ['screenshot_5_night_race.png', 4, 7, 'ground', [1920, 1080], null],
     ['screenshot_6_tropic_jump.png', 5, 5, 'jump', [1920, 1080], null],
-    ['cover_1920x1080.png', 3, 7, 'jump', [1920, 1080], 'wide'],
-    ['cover_800x1200.png', 5, 6, 'jump', [800, 1200], 'tall'],
-    ['icon_800x800.png', 1, 4, 'jump', [800, 800], 'tall'],
   ];
   for (const [file, track, bike, mode, [w, h], ov, ang = 2.3] of jobs) {
     const page = await open(browser, track, bike);
@@ -70,6 +67,25 @@ async function groundShot(page) {
     await page.screenshot({ path: OUT + file });
     console.log('✔', file);
     await page.close();
+  }
+  // Couvertures : grille de départ (6 pilotes de couleurs différentes) filmée de face, titre seul
+  const covers = [
+    ['cover_1920x1080.png', [1920, 1080], 'wide', { pos: [0, 2.4, 15], fov: 36 }],
+    ['cover_800x1200.png', [800, 1200], 'tall', { pos: [-2.2, 1.9, 8.5], fov: 44 }],
+    ['icon_800x800.png', [800, 800], 'tall', { pos: [0.5, 2.0, 10.5], fov: 42 }],
+  ];
+  for (const [file, [w, h], kind, cam] of covers) {
+    const page = await open(browser, 0, 3);
+    await page.setViewportSize({ width: w, height: h }); await page.waitForTimeout(1200);
+    await page.evaluate((cam) => {
+      const g = window.__g; let cx = 0, cy = 0, cz = 0; g.all.forEach((r) => { cx += r.x; cy += r.y; cz += r.z; }); const n = g.all.length; cx /= n; cy /= n; cz /= n;
+      const hd = g.player.heading, fx = Math.sin(hd), fz = Math.cos(hd), rx = fz, rz = -fx;   // repère de la grille : avant / droite
+      const [a, hgt, fwd] = [cam.pos[0], cam.pos[1], cam.pos[2]];
+      window.__cam = { pos: [cx + rx * a + fx * fwd, cy + hgt, cz + rz * a + fz * fwd], look: [cx, cy + 1.55, cz], fov: cam.fov };
+    }, cam);
+    await page.addStyleTag({ content: '#menu,.iconbtn,.wallet,.toast,.lvlRing{display:none!important}' });
+    await page.waitForTimeout(600); await overlay(page, kind); await page.waitForTimeout(200);
+    await page.screenshot({ path: OUT + file }); console.log('✔', file); await page.close();
   }
   // Garage + menu
   let page = await open(browser, 0, 7);

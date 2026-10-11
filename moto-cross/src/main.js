@@ -637,6 +637,7 @@ function frame(now) {
       camera.fov = 46; camera.clearViewOffset(); camera.updateProjectionMatrix();
       camera.position.set(cx + (fx * Math.cos(ang) + rx * Math.sin(ang)) * dist, cy + 2.3 + Math.sin(t * 0.3) * 0.3, cz + (fz * Math.cos(ang) + rz * Math.sin(ang)) * dist);
       camera.lookAt(cx, cy + 1.0, cz);
+      if (import.meta.env.DEV && window.__cam) { const c = window.__cam; camera.position.set(...c.pos); camera.fov = c.fov || 40; camera.updateProjectionMatrix(); camera.lookAt(...c.look); }
       all.forEach((r, i) => { r.pitch = Math.sin(t * 2.4 + i) * 0.012; r.roll = Math.sin(t * 1.3 + i * 2) * 0.02; applyMesh(r, dt); });
     }
     fx.update(dt, camera, renderer.domElement.height);
@@ -1085,7 +1086,7 @@ async function boot() {
   if (!store.get().challenge.best[dailyInfo().day]) toast(tr('daily.ready'), 3500);
   lb.flushPending();
   updateSignIn();
-  if (import.meta.env.DEV) window.__g = { lb, platform, dailyInfo, setRaceTime: (v) => { raceTime = v; }, player, ais, keys, fx, store, prog, sel, get cup() { return cup; }, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
+  if (import.meta.env.DEV) window.__g = { all, lb, platform, dailyInfo, setRaceTime: (v) => { raceTime = v; }, player, ais, keys, fx, store, prog, sel, get cup() { return cup; }, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
   requestAnimationFrame(frame);
   const ld = $('loading'); if (ld) ld.remove();
   platform.loadingStop();
