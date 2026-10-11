@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>Moto Cross Racing</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:system-ui,sans-serif;color:#fff;user-select:none;touch-action:none}
+  canvas{display:block}
+  #hud{position:fixed;inset:0;pointer-events:none;display:none}
+  #hud .tl{position:absolute;top:12px;left:16px;font-size:22px;font-weight:700;text-shadow:0 2px 4px #000;line-height:1.4}
+  #hud .tr{position:absolute;top:12px;right:16px;font-size:22px;font-weight:700;text-shadow:0 2px 4px #000;text-align:right}
+  #hud .bl{position:absolute;bottom:16px;left:16px;width:200px}
+  #bar{height:14px;background:#0008;border:2px solid #fff;border-radius:8px;overflow:hidden}
+  #nitro{height:100%;width:100%;background:linear-gradient(90deg,#0af,#5ff)}
+  #speed{position:absolute;bottom:16px;right:16px;font-size:40px;font-weight:800;text-shadow:0 2px 4px #000}
+  #speed small{font-size:16px}
+  #big{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;font-weight:900;text-shadow:0 4px 12px #000;pointer-events:none}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#2a3a1faa,#000d);text-align:center;gap:10px}
+  .screen h1{font-size:clamp(36px,8vw,84px);margin:0;letter-spacing:2px;color:#ff9d2e;text-shadow:0 4px 0 #6a2d00}
+  .screen p{margin:4px;opacity:.9}
+  button{pointer-events:auto;font-size:24px;font-weight:800;padding:14px 40px;border:0;border-radius:12px;background:#ff9d2e;color:#222;cursor:pointer}
+  button:hover{background:#ffb95e}
+  #touch{position:fixed;inset:0;display:none;pointer-events:none}
+  #touch div{position:absolute;bottom:40px;width:84px;height:84px;border-radius:50%;background:#fff3;border:3px solid #fff8;display:flex;align-items:center;justify-content:center;font-size:30px;pointer-events:auto}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="tl"><span id="pos"></span><br><span id="lap"></span></div>
+  <div class="tr"><span id="time"></span><br><span id="best"></span></div>
+  <div class="bl"><div>NITRO</div><div id="bar"><div id="nitro"></div></div></div>
+  <div id="speed"></div>
+</div>
+<div id="big"></div>
+<div id="touch">
+  <div id="tL" style="left:20px">◀</div><div id="tR" style="left:120px">▶</div>
+  <div id="tB" style="right:120px">N</div><div id="tG" style="right:20px">▲</div>
+</div>
+<div id="menu" class="screen">
+  <h1>MOTO CROSS</h1>
+  <p>Course 3 tours contre 5 pilotes</p>
+  <p>↑/W accélérer · ↓/S freiner · ←→/AD tourner · Shift nitro · R recommencer</p>
+  <button id="play">JOUER</button>
+</div>
+<div id="end" class="screen" style="display:none">
+  <h1 id="endTitle"></h1><p id="endInfo"></p>
+  <button id="again">REJOUER</button>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
