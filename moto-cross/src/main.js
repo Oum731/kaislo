@@ -112,7 +112,7 @@ function loadTrack(i) {
   coinMesh.frustumCulled = false; scene.add(coinMesh);
   MPS = track.length / track.SAMPLES;
   scene.fog.color.set(def.fog); sun.color.set(def.sunColor);
-  sky.setLook(def.skyTop ?? def.sky, def.fog, def.sunColor, new THREE.Vector3(60, def.night ? 60 : 90, 40), { cloud: def.clouds, stars: def.stars, dark: def.cloudDark });
+  sky.setLook(def.skyTop ?? def.sky, def.fog, def.sunColor, new THREE.Vector3(60, def.night ? 60 : 90, 40), { cloud: def.clouds, stars: def.stars, dark: def.cloudDark, photo: def.photo, photoK: def.photoK });
   const L = def.light || {};
   hemi.intensity = L.hemi ?? 0.85; sun.intensity = L.sun ?? 1.1; scene.environmentIntensity = L.env ?? 0.55; headlight.intensity = L.headlight ? 90 : 0;
   setAIBikes(i >= 3 ? 1 : 0);

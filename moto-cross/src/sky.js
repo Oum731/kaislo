@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import sunnyUrl from './env/sunny.jpg?inline';
+import overcastUrl from './env/overcast.jpg?inline';
+import blueUrl from './env/blue.jpg?inline';
 
 // Ciel procédural : dégradé zénith → horizon, soleil et halo, nuages animés, étoiles la nuit.
 // L'horizon a la couleur du brouillard : le terrain se fond naturellement dans le ciel.
@@ -50,7 +53,18 @@ export function createSky(scene, renderer) {
   scene.add(dome);
   const envScene = new THREE.Scene(); envScene.add(new THREE.Mesh(geo, mat));
   const pmrem = new THREE.PMREMGenerator(renderer);
-  let envRT = null;
+  let envRT = null, photoRT = null, want = null;
+  const photos = { sunny: sunnyUrl, overcast: overcastUrl, blue: blueUrl }, cache = {};
+  const usePhoto = (name, intensity) => {
+    want = name;
+    if (!name || !photos[name]) { scene.environmentIntensity = 1; return; }
+    const apply = () => { if (want !== name) return; scene.environment = cache[name].texture; scene.environmentIntensity = intensity ?? 1; };
+    if (cache[name]) { apply(); return; }
+    new THREE.TextureLoader().load(photos[name], (tex) => {
+      tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+      cache[name] = pmrem.fromEquirectangular(tex); tex.dispose(); apply();
+    });
+  };
   return {
     sunDir: uniforms.uSunDir.value,
     // top = zénith, horizon = couleur du brouillard ; opts : cloud (0-1), stars (0-1), dark (assombrit les nuages)
@@ -61,6 +75,7 @@ export function createSky(scene, renderer) {
       if (envRT) envRT.dispose();
       envRT = pmrem.fromScene(envScene, 0.02);
       scene.environment = envRT.texture;
+      usePhoto(opts.photo, opts.photoK);
     },
     update(t, camera) { uniforms.uTime.value = t; dome.position.copy(camera.position); },
   };

@@ -10,21 +10,21 @@ const hex = (h) => new THREE.Color(h);
 // Définition des 3 pistes : forme, relief, sauts, ambiance.
 export const TRACKS = [
   {
-    id: 'forest', name: 'Forêt de Kaislo', points: 12, width: 16, grip: 1,
+    id: 'forest', photo: 'sunny', photoK: 0.9, name: 'Forêt de Kaislo', points: 12, width: 16, grip: 1,
     shape: (i, n) => { const a = (i / n) * Math.PI * 2; const r = 170 + Math.sin(i * 2.3) * 45 + Math.cos(i * 1.1) * 25; return [Math.cos(a) * r * 1.2, Math.sin(a) * r]; },
     hill: 5, jumps: [0.12, 0.33, 0.58, 0.81], noiseAmp: 1,
     sky: 0x8ec9ee, fog: 0x8ec9ee, skyTop: 0x3f7fd8, clouds: 0.65, dirt: 0xa0713a, ground: 0x4f8f3a, rock: 0x7a6a55, dust: 0xb08a5a, sunColor: 0xfff2d0,
     props: [{ kind: 'pine', count: 520, leaf: 0x1f6b2e, trunk: 0x6b4423 }],
   },
   {
-    id: 'desert', name: 'Canyon du Désert', points: 16, width: 17, grip: 0.95,
+    id: 'desert', photo: 'blue', photoK: 0.9, name: 'Canyon du Désert', points: 16, width: 17, grip: 0.95,
     shape: (i, n) => { const a = (i / n) * Math.PI * 2; const r = 230 + Math.sin(a * 3 + 0.5) * 65 + Math.cos(a * 5) * 28; return [Math.cos(a) * r * 1.3, Math.sin(a) * r * 0.9]; },
     hill: 7, jumps: [0.08, 0.22, 0.37, 0.52, 0.66, 0.85], noiseAmp: 1.6,
     sky: 0xf2c48a, fog: 0xf0cfa0, skyTop: 0x6aa6e8, clouds: 0.25, dirt: 0xd9a05b, ground: 0xe6c27a, rock: 0xb5683a, dust: 0xe0b878, sunColor: 0xffe0a0,
     props: [{ kind: 'cactus', count: 260, leaf: 0x3e8a3a }, { kind: 'rock', count: 160, leaf: 0xa5683c }],
   },
   {
-    id: 'snow', name: 'Glacier Alpin', points: 14, width: 14, grip: 0.8,
+    id: 'snow', photo: 'overcast', photoK: 1, name: 'Glacier Alpin', points: 14, width: 14, grip: 0.8,
     shape: (i, n) => { const a = (i / n) * Math.PI * 2; const r = 160 + Math.sin(a * 4) * 55 + Math.cos(a * 2 + 1) * 30; return [Math.cos(a) * r * 1.15, Math.sin(a) * r]; },
     hill: 6, jumps: [0.1, 0.3, 0.55, 0.78], noiseAmp: 1.3,
     sky: 0xbcd9ef, fog: 0xd6e6f2, skyTop: 0x8fb4d9, clouds: 0.9, dirt: 0xcfd8e2, ground: 0xf4f8fc, rock: 0x8f9aa8, dust: 0xffffff, sunColor: 0xeaf2ff,
@@ -47,7 +47,7 @@ export const TRACKS = [
     props: [{ kind: 'lamp', count: 60, leaf: 0xfff2a0 }, { kind: 'pine', count: 260, leaf: 0x10281f, trunk: 0x2a2018 }],
   },
   {
-    id: 'tropic', name: 'Tropic Island', points: 13, width: 16, grip: 0.95,
+    id: 'tropic', photo: 'blue', photoK: 0.9, name: 'Tropic Island', points: 13, width: 16, grip: 0.95,
     shape: (i, n) => { const a = (i / n) * Math.PI * 2; const r = 175 + Math.sin(a * 2) * 55 + Math.cos(a * 3 + 2) * 30; return [Math.cos(a) * r * 1.2, Math.sin(a) * r]; },
     hill: 6, jumps: [0.1, 0.25, 0.4, 0.55, 0.7, 0.85], noiseAmp: 1.1,
     sky: 0x7fd8ff, fog: 0xb8ecff, skyTop: 0x2e9be8, clouds: 0.5, dirt: 0xe9d29a, ground: 0x3fae5a, rock: 0x8a8f7a, dust: 0xf0e0b0, sunColor: 0xfff6d8,
