@@ -4,5 +4,5 @@ import { defineConfig } from 'vite';
 // Le SDK CrazyGames est chargé directement par index.html : `npm run build` suffit pour toutes les plateformes.
 export default defineConfig({
   base: './',
-  build: { chunkSizeWarningLimit: 900, target: 'es2019' },
+  build: { assetsInlineLimit: 300000, chunkSizeWarningLimit: 1200, target: 'es2019' },
 });

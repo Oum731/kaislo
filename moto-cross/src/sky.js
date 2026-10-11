@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import sunnyUrl from './env/sunny.jpg?inline';
-import overcastUrl from './env/overcast.jpg?inline';
-import blueUrl from './env/blue.jpg?inline';
+import sunnyUrl from './env/sunny.jpg';
+import overcastUrl from './env/overcast.jpg';
+import blueUrl from './env/blue.jpg';
 
 // Ciel procédural : dégradé zénith → horizon, soleil et halo, nuages animés, étoiles la nuit.
 // L'horizon a la couleur du brouillard : le terrain se fond naturellement dans le ciel.
