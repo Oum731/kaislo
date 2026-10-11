@@ -26,6 +26,29 @@ export const TRACKS = [
     sky: 0xbcd9ef, fog: 0xd6e6f2, dirt: 0xcfd8e2, ground: 0xf4f8fc, rock: 0x8f9aa8, dust: 0xffffff, sunColor: 0xeaf2ff,
     props: [{ kind: 'pine', count: 480, leaf: 0xe8f2f8, trunk: 0x5a4632 }, { kind: 'rock', count: 90, leaf: 0x8a95a3 }],
   },
+  {
+    id: 'volcano', name: 'Volcano', points: 15, width: 15, grip: 0.9,
+    shape: (i, n) => { const a = (i / n) * Math.PI * 2; const r = 190 + Math.sin(a * 2 + 0.3) * 60 + Math.cos(a * 5) * 22; return [Math.cos(a) * r * 1.25, Math.sin(a) * r]; },
+    hill: 8, jumps: [0.07, 0.2, 0.34, 0.5, 0.63, 0.77, 0.9], noiseAmp: 1.9,
+    sky: 0x8a4a3a, fog: 0x9a5a48, dirt: 0x7a5646, ground: 0x5a4e4a, rock: 0xc4461c, dust: 0x9a8a84, sunColor: 0xffc08a,
+    light: { hemi: 1.0, sun: 1.2, env: 0.5 },
+    props: [{ kind: 'pine', count: 150, leaf: 0x2a2220, trunk: 0x1a1412 }, { kind: 'rock', count: 200, leaf: 0x3a3436 }, { kind: 'lava', count: 70, leaf: 0xff5a1a }],
+  },
+  {
+    id: 'night', name: 'Neon Night', points: 18, width: 17, grip: 1,
+    shape: (i, n) => { const a = (i / n) * Math.PI * 2; const r = 200 + Math.sin(a * 3) * 35 + Math.cos(a * 6 + 1) * 20; return [Math.cos(a) * r * 1.35, Math.sin(a) * r]; },
+    hill: 3, jumps: [0.15, 0.4, 0.65, 0.88], noiseAmp: 0.6,
+    sky: 0x0a1030, fog: 0x121a44, dirt: 0x5a6688, ground: 0x2c3e66, rock: 0x3a4a78, dust: 0xaab6e0, sunColor: 0x9aa8ff,
+    light: { hemi: 0.95, sun: 0.9, env: 0.4, headlight: true },
+    props: [{ kind: 'lamp', count: 60, leaf: 0xfff2a0 }, { kind: 'pine', count: 260, leaf: 0x10281f, trunk: 0x2a2018 }],
+  },
+  {
+    id: 'tropic', name: 'Tropic Island', points: 13, width: 16, grip: 0.95,
+    shape: (i, n) => { const a = (i / n) * Math.PI * 2; const r = 175 + Math.sin(a * 2) * 55 + Math.cos(a * 3 + 2) * 30; return [Math.cos(a) * r * 1.2, Math.sin(a) * r]; },
+    hill: 6, jumps: [0.1, 0.25, 0.4, 0.55, 0.7, 0.85], noiseAmp: 1.1,
+    sky: 0x7fd8ff, fog: 0xb8ecff, dirt: 0xe9d29a, ground: 0x3fae5a, rock: 0x8a8f7a, dust: 0xf0e0b0, sunColor: 0xfff6d8,
+    props: [{ kind: 'palm', count: 380, leaf: 0x2f9e44, trunk: 0x8a6a3a }, { kind: 'rock', count: 70, leaf: 0x9a9a88 }],
+  },
 ];
 
 // Crée une piste complète (courbe, hauteur du terrain, recherche du point le plus proche).
@@ -108,19 +131,27 @@ export function createTrack(def) {
     // Décor instancié
     const m = new THREE.Matrix4();
     for (const pr of def.props) {
-      const parts = pr.kind === 'pine'
-        ? [[new THREE.CylinderGeometry(0.4, 0.6, 3, 6), pr.trunk, 1.5], [new THREE.ConeGeometry(2.6, 7, 7), pr.leaf, 6]]
-        : pr.kind === 'cactus'
-          ? [[new THREE.CylinderGeometry(0.5, 0.6, 5, 7), pr.leaf, 2.5], [new THREE.CylinderGeometry(0.3, 0.3, 2, 6), pr.leaf, 3.4, 0.9]]
-          : [[new THREE.DodecahedronGeometry(1.6, 0), pr.leaf, 0.6]];
-      const total = Math.round(pr.count * q.trees);
-      const meshes = parts.map(([g, col]) => new THREE.InstancedMesh(g, new THREE.MeshLambertMaterial({ color: col, flatShading: true }), total));
+      // parts : [géométrie, couleur, décalage Y, décalage X, options matériau]
+      let parts;
+      if (pr.kind === 'pine') parts = [[new THREE.CylinderGeometry(0.4, 0.6, 3, 6), pr.trunk, 1.5], [new THREE.ConeGeometry(2.6, 7, 7), pr.leaf, 6]];
+      else if (pr.kind === 'cactus') parts = [[new THREE.CylinderGeometry(0.5, 0.6, 5, 7), pr.leaf, 2.5], [new THREE.CylinderGeometry(0.3, 0.3, 2, 6), pr.leaf, 3.4, 0.9]];
+      else if (pr.kind === 'palm') parts = [[new THREE.CylinderGeometry(0.28, 0.42, 7, 6), pr.trunk, 3.5], [new THREE.SphereGeometry(2.8, 7, 5).scale(1, 0.38, 1), pr.leaf, 7.2]];
+      else if (pr.kind === 'lamp') parts = [[new THREE.CylinderGeometry(0.14, 0.18, 7, 6), 0x555566, 3.5], [new THREE.SphereGeometry(0.55, 8, 6), pr.leaf, 7.2, 0, { basic: true }]];
+      else if (pr.kind === 'lava') parts = [[new THREE.DodecahedronGeometry(1.1, 0), pr.leaf, 0.5, 0, { emissive: 0xff3a00 }]];
+      else parts = [[new THREE.DodecahedronGeometry(1.6, 0), pr.leaf, 0.6]];
+      const total = Math.round(pr.count * (pr.kind === 'lamp' ? Math.max(0.5, q.trees) : q.trees));
+      const mkMat = (col, o = {}) => (o.basic ? new THREE.MeshBasicMaterial({ color: col }) : new THREE.MeshLambertMaterial({ color: col, flatShading: true, emissive: o.emissive || 0x000000 }));
+      const meshes = parts.map(([g, col, , , o]) => new THREE.InstancedMesh(g, mkMat(col, o), total));
       let n = 0, tries = 0;
       while (n < total && tries++ < total * 12) {
-        const x = (Math.random() - 0.5) * 860, z = (Math.random() - 0.5) * 860;
+        let x, z;
+        if (pr.kind === 'lamp') { // le long des bords de piste
+          const i = Math.floor((n / total) * SAMPLES) % SAMPLES, nv = normalAt(i), side = n % 2 ? 1 : -1, p = samples[i];
+          x = p.x + nv.x * side * (width * 0.62); z = p.z + nv.z * side * (width * 0.62);
+        } else { x = (Math.random() - 0.5) * 860; z = (Math.random() - 0.5) * 860; }
         const { d, th } = nearest(x, z);
-        if (d < width * 1.8) continue;
-        const y = blend(th, d, x, z), s = 0.7 + Math.random() * 0.9;
+        if (pr.kind !== 'lamp' && d < width * 1.8) continue;
+        const y = blend(th, d, x, z), s = pr.kind === 'lamp' ? 1 : 0.7 + Math.random() * 0.9;
         parts.forEach(([, , yo, xo = 0], pi) => { m.makeScale(s, s, s).setPosition(x + xo * s, y + yo * s, z); meshes[pi].setMatrixAt(n, m); });
         n++;
       }

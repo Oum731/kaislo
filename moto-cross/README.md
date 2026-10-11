@@ -42,10 +42,10 @@ npm run dev
 
 ## Contenu
 
-- **3 modes** : course rapide, **championnat** (3 manches, points, trophée), **contre-la-montre** contre votre fantôme
-- 3 pistes (Forêt, Désert, Glacier) — les deux dernières se débloquent en finissant top 3 sur la précédente
-- 4 motos, 3 améliorations chacune (5 niveaux), peintures
-- **Progression** : pièces, XP et niveaux, objectifs à 3 étoiles par piste, 16 succès, bonus quotidien, prochain but affiché
+- **3 modes** : course rapide, **championnat** (2 coupes de 3 manches, points, trophée), **contre-la-montre** contre votre fantôme
+- **6 pistes** : Forêt, Désert, Glacier, Volcan, Nuit néon (avec phare), Île tropicale — chacune se débloque en finissant top 3 sur la précédente ; la Coupe Inferno (pistes 4 à 6) se débloque avec le Glacier
+- **8 motos** (de la Rookie 125 à la Neon Ghost), 3 améliorations chacune (5 niveaux, coût selon la moto), peintures
+- **Progression** : pièces, XP et niveaux, objectifs à 3 étoiles par piste, 17 succès, bonus quotidien, prochain but affiché
 - Figures (front/back flip, whip) avec combos, nitro, collisions, 5 pilotes IA, 3 niveaux de difficulté
 - **5 langues** : English, Français, Español, Português, Deutsch (détection automatique, sélecteur en haut à gauche)
 - Musique et effets générés par le code (aucun fichier audio)

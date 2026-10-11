@@ -6,8 +6,8 @@ const URL = process.env.GAME_URL || 'http://localhost:5173/';
 const OUT = process.env.OUT_DIR || 'store/';
 
 const LANG = process.env.LANG_ID || 'en';
-const TAGLINE = { en: ['3 tracks · 4 bikes · stunts', 'RACING 3D'], fr: ['3 pistes · 4 motos · figures', 'RACING 3D'], es: ['3 pistas · 4 motos · acrobacias', 'RACING 3D'], pt: ['3 pistas · 4 motos · manobras', 'RACING 3D'], de: ['3 Strecken · 4 Motorräder · Stunts', 'RACING 3D'] }[LANG] || ['3 tracks · 4 bikes · stunts', 'RACING 3D'];
-const SAVE = JSON.stringify({ coins: 4350, owned: [0, 1, 2, 3], upg: { 2: { eng: 3, han: 2, nit: 2 }, 3: { eng: 2, han: 1, nit: 3 } }, podium: { forest: true, desert: true }, daily: { day: '2999-01-01', streak: 3 }, settings: { music: true, sfx: true, quality: 2, lang: LANG }, stats: { races: 12, wins: 5, tricks: 40, coins: 3000 } });
+const TAGLINE = { en: ['6 tracks · 8 bikes · stunts', 'RACING 3D'], fr: ['6 pistes · 8 motos · figures', 'RACING 3D'], es: ['6 pistas · 8 motos · acrobacias', 'RACING 3D'], pt: ['6 pistas · 8 motos · manobras', 'RACING 3D'], de: ['6 Strecken · 8 Motorräder · Stunts', 'RACING 3D'] }[LANG] || ['6 tracks · 8 bikes · stunts', 'RACING 3D'];
+const SAVE = JSON.stringify({ coins: 4350, owned: [0, 1, 2, 3, 4, 5, 6, 7], upg: { 7: { eng: 2, han: 1, nit: 3 }, 2: { eng: 3, han: 2, nit: 2 } }, podium: { forest: true, desert: true, snow: true, volcano: true, night: true }, daily: { day: '2999-01-01', streak: 3 }, settings: { music: true, sfx: true, quality: 2, lang: LANG }, stats: { races: 12, wins: 5, tricks: 40, coins: 3000 } });
 
 async function open(browser, track, bike) {
   const page = await browser.newPage({ viewport: { width: 480, height: 270 } });
@@ -15,7 +15,7 @@ async function open(browser, track, bike) {
   await page.goto(URL); await page.waitForTimeout(2500);
   return page;
 }
-const hideUI = (page) => page.addStyleTag({ content: '#hud,#touch,.iconbtn,.wallet,.toast,#big,#trick{display:none!important}' });
+const hideUI = (page) => page.addStyleTag({ content: '#hud,#touch,.iconbtn,.wallet,.toast,#big,#trick,#nitrofx,#banner,#rankpop,#hint{display:none!important}' });
 async function overlay(page, kind) {
   await page.evaluate(([kind, TAGLINE]) => {
     const d = document.createElement('div');
@@ -52,9 +52,12 @@ async function groundShot(page) {
     ['screenshot_1_forest_flip.png', 0, 2, 'jump', [1920, 1080], null],
     ['screenshot_2_desert_jump.png', 1, 3, 'jump', [1920, 1080], null],
     ['screenshot_3_snow_race.png', 2, 1, 'ground', [1920, 1080], null],
-    ['cover_1920x1080.png', 0, 3, 'jump', [1920, 1080], 'wide'],
-    ['cover_800x1200.png', 1, 2, 'jump', [800, 1200], 'tall'],
-    ['icon_800x800.png', 1, 2, 'jump', [800, 800], 'tall'],
+    ['screenshot_4_volcano_jump.png', 3, 4, 'jump', [1920, 1080], null],
+    ['screenshot_5_night_race.png', 4, 7, 'ground', [1920, 1080], null],
+    ['screenshot_6_tropic_jump.png', 5, 5, 'jump', [1920, 1080], null],
+    ['cover_1920x1080.png', 3, 7, 'jump', [1920, 1080], 'wide'],
+    ['cover_800x1200.png', 5, 6, 'jump', [800, 1200], 'tall'],
+    ['icon_800x800.png', 1, 4, 'jump', [800, 800], 'tall'],
   ];
   for (const [file, track, bike, mode, [w, h], ov, ang = 2.3] of jobs) {
     const page = await open(browser, track, bike);
@@ -69,10 +72,10 @@ async function groundShot(page) {
     await page.close();
   }
   // Garage + menu
-  let page = await open(browser, 0, 2);
+  let page = await open(browser, 0, 7);
   await page.setViewportSize({ width: 1920, height: 1080 }); await page.waitForTimeout(800);
   await page.click('#garage'); await page.waitForTimeout(3500);
-  await page.screenshot({ path: OUT + 'screenshot_4_garage.png' }); console.log('✔ screenshot_4_garage.png');
+  await page.screenshot({ path: OUT + 'screenshot_7_garage.png' }); console.log('✔ screenshot_7_garage.png');
   await page.close();
   await browser.close();
 })();

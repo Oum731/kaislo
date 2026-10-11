@@ -7,7 +7,7 @@ const defaults = () => ({
   podium: {},              // podium[idPiste] = true si top 3 obtenu
   daily: { day: '', streak: 0 },
   settings: { music: true, sfx: true, quality: 'auto', lang: null },
-  stats: { races: 0, wins: 0, tricks: 0, coins: 0, crashes: 0, bestTrick: 0, flawless: 0 },
+  stats: { races: 0, wins: 0, tricks: 0, coins: 0, crashes: 0, bestTrick: 0, flawless: 0, cupBWins: 0 },
   xp: 0,
   stars: {},               // stars[idPiste] = [bool, bool, bool]
   achv: {},                // achv[id] = true
@@ -34,14 +34,17 @@ export function buyPaint(i) { if (data.paints.includes(i) || data.coins < PAINT_
 export function setPaint(bike, i) { if (!data.paints.includes(i)) return false; data.paint[bike] = i; save(); return true; }
 
 export const MAX_UPG = 5;
-export const BIKE_PRICES = [0, 1500, 4000, 9000];
+export const BIKE_PRICES = [0, 1500, 4000, 9000, 6000, 12000, 20000, 35000];
+// Ordre d'affichage au garage : du moins cher au plus cher
+export const BIKE_ORDER = BIKE_PRICES.map((p, i) => i).sort((a, b) => BIKE_PRICES[a] - BIKE_PRICES[b]);
 export const UPGRADES = [
   { key: 'eng', name: 'Moteur', desc: 'Vitesse max + accélération' },
   { key: 'han', name: 'Suspension', desc: 'Maniabilité' },
   { key: 'nit', name: 'Nitro', desc: 'Puissance et recharge' },
 ];
 export const upgLevel = (bike, key) => ((data.upg[bike] || {})[key]) | 0;
-export const upgCost = (lvl) => Math.round(250 * Math.pow(lvl + 1, 1.5) / 10) * 10;
+// Les motos haut de gamme coûtent plus cher à améliorer
+export const upgCost = (lvl, bike = 0) => Math.round((250 * Math.pow(lvl + 1, 1.5) * (1 + BIKE_PRICES[bike] / 8000)) / 10) * 10;
 export const owns = (bike) => data.owned.includes(bike);
 
 export function addCoins(n) { data.coins += Math.round(n); save(); }
@@ -51,8 +54,8 @@ export function buyBike(i) {
 }
 export function buyUpgrade(bike, key) {
   const lvl = upgLevel(bike, key);
-  if (!owns(bike) || lvl >= MAX_UPG || data.coins < upgCost(lvl)) return false;
-  data.coins -= upgCost(lvl);
+  if (!owns(bike) || lvl >= MAX_UPG || data.coins < upgCost(lvl, bike)) return false;
+  data.coins -= upgCost(lvl, bike);
   (data.upg[bike] ||= {})[key] = lvl + 1; save(); return true;
 }
 // Stats réelles d'une moto = base + améliorations

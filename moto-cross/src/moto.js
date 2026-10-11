@@ -8,6 +8,10 @@ export const BIKES = [
   { name: 'Enduro 250', color: 0x2266ff, style: 1, max: 44, acc: 22, handling: 1.12, nitro: 1.0, desc: 'Très maniable' },
   { name: 'Pro 450', color: 0x22bb44, style: 2, max: 47, acc: 25, handling: 0.95, nitro: 1.1, desc: 'Puissante et équilibrée' },
   { name: 'Phantom 500', color: 0xaa22cc, style: 3, max: 50, acc: 27, handling: 0.85, nitro: 1.25, desc: 'Vitesse max, difficile à tenir' },
+  { name: 'Raptor 2T', color: 0xe0202a, style: 4, max: 46, acc: 30, handling: 1.08, nitro: 1.1, desc: 'Accélération explosive' },
+  { name: 'Dune Runner', color: 0xf2c14e, style: 5, max: 48, acc: 24, handling: 1.25, nitro: 1.2, desc: 'Agile et précise' },
+  { name: 'Thunder 650', color: 0xe8eaf0, style: 6, max: 53, acc: 29, handling: 0.88, nitro: 1.35, desc: 'Puissance brute' },
+  { name: 'Neon Ghost', color: 0x14141c, style: 7, max: 55, acc: 31, handling: 1.0, nitro: 1.5, desc: 'La légende' },
 ];
 
 const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
@@ -97,16 +101,17 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
 
   const c = new THREE.Color(color);
   const std = (col, rough = 0.5, metal = 0.1) => new THREE.MeshStandardMaterial({ color: col, roughness: rough, metalness: metal });
-  const accent = [0xffffff, 0xffd400, 0xffffff, 0xff66ff][style];
+  const accent = [0xffffff, 0xffd400, 0xffffff, 0xff66ff, 0xffffff, 0x2a6df4, 0xe02020, 0x33f0ff][style];
+  const neon = style === 7;
   const mats = {
-    rubber: std(0x141414, 0.95, 0), rim: std(0xc4c8cf, 0.35, 0.85), disc: std(0x9aa0a8, 0.4, 0.8),
+    rubber: std(0x141414, 0.95, 0), rim: neon ? new THREE.MeshBasicMaterial({ color: 0x33f0ff }) : std(0xc4c8cf, 0.35, 0.85), disc: std(0x9aa0a8, 0.4, 0.8),
     paint: std(c, 0.32, 0.2), white: std(0xf4f4f4, 0.4, 0.05), black: std(0x16161a, 0.6, 0.1),
-    frame: std(style === 3 ? 0x1b1b22 : 0xaab0b8, 0.4, 0.8), engine: std(0x777d86, 0.45, 0.7),
-    fork: std(style === 1 || style === 0 ? 0xd9a520 : 0xc9ced6, 0.3, 0.85), seat: std(0x0d0d10, 0.85, 0),
-    shock: std(style === 2 ? 0xe03030 : 0xffc400, 0.4, 0.3), exhaust: std(0x8d949c, 0.35, 0.85),
+    frame: std(style === 3 || style === 7 ? 0x1b1b22 : style === 6 ? 0xd02020 : 0xaab0b8, 0.4, 0.8), engine: std(0x777d86, 0.45, 0.7),
+    fork: std(style === 1 || style === 0 || style === 4 ? 0xd9a520 : style === 5 ? 0x2a6df4 : 0xc9ced6, 0.3, 0.85), seat: std(0x0d0d10, 0.85, 0),
+    shock: std(style === 2 || style === 6 ? 0xe03030 : style === 7 ? 0x33f0ff : 0xffc400, 0.4, 0.3), exhaust: std(0x8d949c, 0.35, 0.85),
     jersey: std(c, 0.75, 0), jerseyAlt: std(accent, 0.75, 0), pants: std(0x24272d, 0.8, 0), helmet: std(0xf7f7f7, 0.22, 0.1),
     lens: std(0x3a8cff, 0.08, 0.9), boots: std(0x1d1d20, 0.6, 0.1), gloves: std(0x202024, 0.7, 0),
-    glow: new THREE.MeshBasicMaterial({ color: 0xff66ff }),
+    glow: new THREE.MeshBasicMaterial({ color: style === 7 ? 0x33f0ff : 0xff66ff }),
   };
   const plateTex = numberTexture(number, '#ffffff', '#111111');
   const plateMat = new THREE.MeshStandardMaterial({ map: plateTex, roughness: 0.5 });
@@ -115,7 +120,7 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
 
   // ----- Roues -----
   const FR = 0.36, RR = 0.35;
-  const rear = makeWheel(RR, 0.12, mats, false); rear.position.set(0, RR, -0.74);
+  const rear = makeWheel(RR, style === 6 ? 0.15 : 0.12, mats, false); rear.position.set(0, RR, -0.74);
   inner.add(rear);
 
   // ----- Partie fixe : cadre, moteur, carrosserie, bas du corps du pilote -----
@@ -132,14 +137,25 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   f.rod([0, 0.93, -0.28], [0, 0.55, -0.42], 0.028, mats.black);                                                // amortisseur
   f.rod([0, 0.88, -0.3], [0, 0.66, -0.38], 0.05, mats.shock, 12);                                              // ressort
   f.tube([[0.07, 0.78, 0.26], [0.17, 0.68, 0.34], [0.23, 0.64, 0.1], [0.21, 0.74, -0.3]], 0.026, mats.exhaust); // collecteur
-  f.rod([0.21, 0.76, -0.26], [0.2, 0.9, -0.8], style === 2 ? 0.07 : 0.055, mats.exhaust, 12);                  // silencieux
+  if (style === 4) { // 2 temps : grosse chambre d'expansion conique
+    f.between(new THREE.CylinderGeometry(0.03, 0.11, 0.62, 12), mats.exhaust, [0.21, 0.72, 0.05], [0.22, 0.84, -0.56]);
+    f.rod([0.22, 0.84, -0.56], [0.2, 0.92, -0.82], 0.04, mats.exhaust, 10);
+  } else f.rod([0.21, 0.76, -0.26], [0.2, 0.9, -0.8], style === 2 || style === 6 ? 0.07 : 0.055, mats.exhaust, 12);   // silencieux
+  if (style === 6) { f.rod([-0.21, 0.76, -0.26], [-0.2, 0.9, -0.8], 0.07, mats.exhaust, 12); f.add(new THREE.CylinderGeometry(0.075, 0.075, 0.02, 12), mats.black, [-0.2, 0.9, -0.8], [1.45, 0, 0]); }
   f.add(new THREE.CylinderGeometry(0.058, 0.058, 0.02, 12), mats.black, [0.2, 0.9, -0.8], [1.45, 0, 0]);
   f.add(new RoundedBoxGeometry(0.3, 0.24, 0.5, 4, 0.07), mats.paint, [0, 1.15, 0.14]);                          // réservoir
   for (const s of [-1, 1]) f.add(new RoundedBoxGeometry(0.1, 0.28, 0.52, 3, 0.04), mats.paint, [s * 0.17, 1.02, 0.2], [0, 0, s * 0.12]); // radiateur
   f.add(new RoundedBoxGeometry(0.25, 0.1, 0.82, 3, 0.04), mats.seat, [0, 1.04, -0.3], [-0.05, 0, 0]);         // selle
   f.add(new RoundedBoxGeometry(0.2, 0.04, 0.48, 2, 0.015), mats.paint, [0, 1.07, -0.8], [0.4, 0, 0]);          // garde-boue arrière
-  if (style === 3) f.add(new THREE.BoxGeometry(0.34, 0.015, 1.3), mats.glow, [0, 0.25, 0]);                    // néon
+  if (style === 3 || style === 7) f.add(new THREE.BoxGeometry(0.34, 0.015, 1.3), mats.glow, [0, 0.25, 0]);                    // néon
   if (style === 1) f.add(new THREE.BoxGeometry(0.31, 0.02, 0.5), mats.jerseyAlt, [0, 1.275, 0.14]);
+  if (style === 4) f.add(new THREE.BoxGeometry(0.31, 0.02, 0.5), mats.black, [0, 1.275, 0.14]);
+  if (style === 5) { // fanion de dune : mât + drapeau
+    f.rod([0.0, 1.05, -0.85], [0.0, 2.9, -0.95], 0.012, mats.black, 5);
+    f.add(new THREE.ConeGeometry(0.16, 0.5, 3), mats.jerseyAlt, [0.0, 2.75, -1.18], [Math.PI / 2, 0, 0]);
+  }
+  if (style === 6) f.add(new RoundedBoxGeometry(0.34, 0.1, 0.6, 2, 0.04), mats.black, [0, 1.3, 0.14]);   // sabot de réservoir
+  if (neon) { f.add(new THREE.BoxGeometry(0.02, 0.04, 1.5), mats.glow, [0.14, 0.95, -0.1]); f.add(new THREE.BoxGeometry(0.02, 0.04, 1.5), mats.glow, [-0.14, 0.95, -0.1]); }
   // Bas du corps : bassin, cuisses, tibias, bottes
   f.add(new RoundedBoxGeometry(0.34, 0.2, 0.24, 3, 0.07), mats.pants, [0, 1.1, -0.12]);
   for (const s of [-1, 1]) {

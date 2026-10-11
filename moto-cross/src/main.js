@@ -16,7 +16,7 @@ setLang(detect(store.get().settings.lang));
 const LAPS = 3, AI_COUNT = 5, TAU = Math.PI * 2;
 const DIFF_K = [0.86, 0.97, 1.07], DIFF_MULT = [0.7, 1, 1.5];
 const MODES = ['race', 'cup', 'trial'];
-const CUP_TRACKS = [0, 1, 2], CUP_POINTS = [10, 8, 6, 5, 4, 3], CUP_REWARD = [1500, 900, 500];
+const CUPS = [[0, 1, 2], [3, 4, 5]], CUP_POINTS = [10, 8, 6, 5, 4, 3], CUP_REWARD = [1500, 900, 500];
 const PLACE_COINS = [400, 250, 160, 100, 70, 50], PLACE_XP = [100, 70, 50, 30, 20, 10];
 const AI_NAMES = ['Rex', 'Nova', 'Kira', 'Zed', 'Maya'];
 const $ = (id) => document.getElementById(id);
@@ -31,7 +31,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8ec9ee);
 scene.fog = new THREE.Fog(0x8ec9ee, 120, 420);
 const camera = new THREE.PerspectiveCamera(70, 1, 0.5, 1200);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x556b3a, 0.85));
+const hemi = new THREE.HemisphereLight(0xffffff, 0x556b3a, 0.85);
+const headlight = new THREE.PointLight(0xfff0c0, 0, 90, 1);
+scene.add(hemi, headlight);
 const sun = new THREE.DirectionalLight(0xfff2d0, 1.1);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -58,13 +60,16 @@ function applyLevel() {
 applyLevel();
 
 // ---------- Réglages sauvegardés ----------
-const sel = { track: 0, bike: 0, diff: 1, mode: 'race' };
+const sel = { track: 0, bike: 0, diff: 1, mode: 'race', cup: 0 };
 try { Object.assign(sel, JSON.parse(localStorage.getItem('motocross_sel') || '{}')); } catch (e) {}
 sel.track = clamp(sel.track | 0, 0, TRACKS.length - 1); sel.bike = clamp(sel.bike | 0, 0, BIKES.length - 1); sel.diff = clamp(sel.diff | 0, 0, 2);
 if (!MODES.includes(sel.mode)) sel.mode = 'race';
+sel.cup = clamp(sel.cup | 0, 0, CUPS.length - 1);
 const trackUnlocked = (i) => i === 0 || !!store.get().podium[TRACKS[i - 1].id];
+const cupUnlocked = (i) => i === 0 || trackUnlocked(CUPS[i][0]);
 if (!store.owns(sel.bike)) sel.bike = 0;
 if (!trackUnlocked(sel.track)) sel.track = 0;
+if (!cupUnlocked(sel.cup)) sel.cup = 0;
 const saveSel = () => {};
 
 // ---------- Entrées ----------
@@ -105,6 +110,9 @@ function loadTrack(i) {
   coinMesh.frustumCulled = false; scene.add(coinMesh);
   MPS = track.length / track.SAMPLES;
   scene.background.set(def.sky); scene.fog.color.set(def.fog); sun.color.set(def.sunColor);
+  const L = def.light || {};
+  hemi.intensity = L.hemi ?? 0.85; sun.intensity = L.sun ?? 1.1; scene.environmentIntensity = L.env ?? 0.55; headlight.intensity = L.headlight ? 90 : 0;
+  setAIBikes(i >= 3 ? 1 : 0);
   readBest(def.id);
 }
 function readBest(id) { best = 0; try { best = parseFloat(localStorage.getItem('motocross_best_' + id) || '0') || 0; } catch (e) {} }
@@ -112,12 +120,23 @@ function readBest(id) { best = 0; try { best = parseFloat(localStorage.getItem('
 // ---------- Pilotes ----------
 let bike = BIKES[sel.bike], stats = store.effectiveStats(bike, sel.bike);
 const player = { isPlayer: true, mesh: null, name: '' };
-const aiStyles = [1, 2, 3, 0, 1];
-const aiColors = [0x2266ff, 0xffcc00, 0xee2266, 0x22bb44, 0x22cccc];
+// Deux paliers d'adversaires : motos de base sur les 3 premières pistes, motos « pro » ensuite
+const AI_TIERS = [
+  { styles: [1, 2, 3, 0, 1], colors: [0x2266ff, 0xffcc00, 0xee2266, 0x22bb44, 0x22cccc] },
+  { styles: [4, 5, 6, 7, 3], colors: [0xff7a00, 0x1fd6c9, 0xffffff, 0x7a5cff, 0xc0ff00] },
+];
+let aiTier = -1;
 const ais = [];
-for (let i = 0; i < AI_COUNT; i++) {
-  const a = { mesh: createMoto(aiColors[i], aiStyles[i], i + 2), isPlayer: false, name: AI_NAMES[i], skill: 0.92 + Math.random() * 0.12, laneBase: (Math.random() - 0.5) * 8 };
-  scene.add(a.mesh); ais.push(a);
+for (let i = 0; i < AI_COUNT; i++) ais.push({ mesh: null, isPlayer: false, name: AI_NAMES[i], skill: 0.92 + Math.random() * 0.12, laneBase: (Math.random() - 0.5) * 8 });
+function setAIBikes(tier) {
+  if (tier === aiTier) return;
+  aiTier = tier;
+  ais.forEach((a, i) => {
+    const vis = a.mesh ? a.mesh.visible : true;
+    if (a.mesh) disposeGroup(a.mesh);
+    a.mesh = createMoto(AI_TIERS[tier].colors[i], AI_TIERS[tier].styles[i], i + 2);
+    a.mesh.visible = vis; scene.add(a.mesh);
+  });
 }
 const all = [player, ...ais];
 let activeAIs = ais, racers = all;
@@ -146,7 +165,8 @@ const gridSlot = (i) => (i === 0 ? 3 : i < 4 ? i - 1 : i);
 let state = 'menu', t = 0, raceTime = 0, finishOrder = [], camHeading = 0, lastIdx = 0, lastCount = 4, shake = 0;
 let garageOpen = false, raceCoins = 0, raceTricks = 0, raceTrickPay = 0, raceCrashes = 0, combo = 0, lastTrickT = -99, lastLap = 1, lastRank = 6, hintUntil = 0;
 let cup = null;
-const newCup = () => ({ round: 0, pts: all.map(() => 0), done: false });
+const cupTracks = () => CUPS[cup ? cup.idx : sel.cup];
+const newCup = () => ({ idx: sel.cup, round: 0, pts: all.map(() => 0), done: false });
 
 const fmt = (s) => { const m = Math.floor(s / 60); return `${m}:${(s - m * 60).toFixed(2).padStart(5, '0')}`; };
 const starsStr = (id) => prog.starsOf(id).map((on) => (on ? '★' : '☆')).join('');
@@ -192,8 +212,9 @@ function startRace() {
   if (sel.mode !== 'cup' && !trackUnlocked(sel.track)) { toast(tr('toast.locked')); sfx.error(); return; }
   if (garageOpen) closeGarage();
   if (sel.mode === 'cup') {
+    if (!cupUnlocked(sel.cup)) { toast(tr('toast.cupLocked'), 4200); sfx.error(); return; }
     if (!cup) cup = newCup();
-    const ti = CUP_TRACKS[cup.round];
+    const ti = cupTracks()[cup.round];
     sel.track = ti; if (loadedTrack !== ti) loadTrack(ti);
   } else if (loadedTrack !== sel.track) loadTrack(sel.track);
   activeAIs = sel.mode === 'trial' ? [] : ais; racers = [player, ...activeAIs];
@@ -336,7 +357,7 @@ function updateAI(a, dt) {
   _b.set(sm[i2].x - sm[i1].x, sm[i2].z - sm[i1].z).normalize();
   const curv = Math.acos(clamp(_a.dot(_b), -1, 1));
   const rubber = clamp(1 + (player.prog - a.prog) * 0.0012, 0.9, 1.1);
-  const target = racing ? 42 * a.skill * DIFF_K[sel.diff] * rubber * (1 - Math.min(0.45, curv * 4.5)) : 0;
+  const target = racing ? (42 + 2 * Math.max(0, loadedTrack)) * a.skill * DIFF_K[sel.diff] * rubber * (1 - Math.min(0.45, curv * 4.5)) : 0;
   a.speed += (target - a.speed) * Math.min(1, 1.6 * dt);
   a.aiProg += (a.speed * dt) / MPS;
 
@@ -449,10 +470,10 @@ function endRace() {
   if (sel.mode === 'cup' && cup) {
     order.forEach((r, i) => { cup.pts[all.indexOf(r)] += CUP_POINTS[i]; });
     cup.round++;
-    if (cup.round >= CUP_TRACKS.length) {
+    if (cup.round >= cupTracks().length) {
       cup.done = true; cupPos = cupRanking().findIndex((e) => e.idx === 0) + 1;
-      if (cupPos <= 3) { cupReward = Math.round(CUP_REWARD[cupPos - 1] * DIFF_MULT[sel.diff]); store.addCoins(cupReward); extra.push(tr('cup.reward', { n: cupReward })); }
-      if (cupPos === 1) st.cupWins++;
+      if (cupPos <= 3) { cupReward = Math.round(CUP_REWARD[cupPos - 1] * DIFF_MULT[sel.diff] * (1 + 0.8 * cup.idx)); store.addCoins(cupReward); extra.push(tr('cup.reward', { n: cupReward })); }
+      if (cupPos === 1) { st.cupWins++; if (cup.idx === 1) st.stats.cupBWins++; }
     }
   }
 
@@ -469,7 +490,7 @@ function endRace() {
   // Affichage
   const winish = trial ? isRecord && !!prevBest : cup && cup.done ? cupPos === 1 : place === 1;
   $('endTitle').textContent = trial ? `🏁 ${fmt(time)}` : cup && cup.done ? (cupPos === 1 ? tr('cup.champion') : tr('cup.final', { p: ord(cupPos) })) : place === 1 ? tr('end.win') : tr('end.place', { p: ord(place) });
-  $('endInfo').textContent = `${tr('track.' + def.id)} · ${trial ? tr('mode.trial') : tr('end.time', { t: fmt(time) })}${isRecord ? tr('end.newrecord') : ''}${sel.mode === 'cup' ? ' · ' + tr('cup.round', { a: cup.round, b: CUP_TRACKS.length }) : ''}`;
+  $('endInfo').textContent = `${tr('track.' + def.id)} · ${trial ? tr('mode.trial') : tr('end.time', { t: fmt(time) })}${isRecord ? tr('end.newrecord') : ''}${sel.mode === 'cup' ? ' · ' + tr('cup.round', { a: cup.round, b: cupTracks().length }) : ''}`;
   const parts = [];
   if (!trial) parts.push(`${tr('earn.place')}: <b>+${base}</b> 🪙`);
   parts.push(`${tr('earn.coins')}: <b>+${coinPay}</b> 🪙`, `${tr('earn.tricks', { n: raceTricks })}: <b>+${trickPay}</b> 🪙`);
@@ -588,6 +609,7 @@ function frame(now) {
   }
   sun.position.set(player.x + 60, player.y + 90, player.z + 40);
   sun.target.position.set(player.x, player.y, player.z);
+  headlight.position.set(player.x + Math.sin(player.heading) * 7, player.y + 3, player.z + Math.cos(player.heading) * 7);
 
   $('pos').textContent = sel.mode === 'trial' ? tr('mode.trial') : tr('hud.pos', { a: rank(), b: racers.length });
   $('lap').textContent = tr('hud.lap', { a: player.lap, b: LAPS });
@@ -629,12 +651,12 @@ const themeId = () => TRACKS[sel.track].id;
 const saveSelAll = () => { try { localStorage.setItem('motocross_sel', JSON.stringify({ ...sel, track: baseTrack })); } catch (e) {} };
 
 function goalHTML() {
-  const d = store.get(), locked = BIKES.map((b, i) => i).filter((i) => !store.owns(i));
+  const d = store.get(), locked = BIKES.map((b, i) => i).filter((i) => !store.owns(i)).sort((a, b) => store.BIKE_PRICES[a] - store.BIKE_PRICES[b]);
   let text, cur = 0, max = 0;
   if (locked.length) { const i = locked[0]; text = tr('menu.goalBike', { name: BIKES[i].name }); cur = d.coins; max = store.BIKE_PRICES[i]; }
   else {
     const costs = [];
-    d.owned.forEach((b) => store.UPGRADES.forEach((u) => { const l = store.upgLevel(b, u.key); if (l < store.MAX_UPG) costs.push(store.upgCost(l)); }));
+    d.owned.forEach((b) => store.UPGRADES.forEach((u) => { const l = store.upgLevel(b, u.key); if (l < store.MAX_UPG) costs.push(store.upgCost(l, b)); }));
     if (costs.length) { text = tr('menu.goalUpg'); max = Math.min(...costs); cur = d.coins; } else text = tr('menu.goalAll');
   }
   return max ? `${text} — ${Math.min(cur, max)}/${max} 🪙<div class="xpbar"><i style="width:${clamp((cur / max) * 100, 0, 100)}%"></i></div>` : text;
@@ -642,17 +664,20 @@ function goalHTML() {
 
 function renderMenu() {
   const mode = sel.mode, cupMode = mode === 'cup';
-  const ti = cupMode ? (cup && !cup.done ? CUP_TRACKS[cup.round] : CUP_TRACKS[0]) : sel.track, def = TRACKS[ti];
-  const unlocked = cupMode || trackUnlocked(sel.track);
+  const ti = cupMode ? (cup && !cup.done ? cupTracks()[cup.round] : CUPS[sel.cup][0]) : sel.track, def = TRACKS[ti];
+  const unlocked = cupMode ? cupUnlocked(sel.cup) : trackUnlocked(sel.track);
   $('modeName').textContent = tr('mode.' + mode);
-  $('trkP').style.visibility = $('trkN').style.visibility = cupMode ? 'hidden' : 'visible';
-  const nm = tr('track.' + def.id);
+  $('trkLab').textContent = tr(cupMode ? 'menu.cup' : 'menu.track');
+  $('trkP').style.visibility = $('trkN').style.visibility = cupMode && cup && !cup.done && cup.round > 0 ? 'hidden' : 'visible';
+  const nm = cupMode ? tr('cup.name.' + sel.cup) : tr('track.' + def.id);
   $('trkName').innerHTML = !unlocked ? `<span class="lock">🔒 ${nm}</span>` : `${nm}${mode === 'race' ? `<span class="stars">${starsStr(def.id)}</span>` : ''}`;
-  if (mode === 'race') {
+  if (!unlocked) {
+    $('objs').innerHTML = tr(cupMode ? 'toast.cupLocked' : 'toast.locked');
+  } else if (mode === 'race') {
     const list = prog.OBJECTIVES[def.id] || [], got = prog.starsOf(def.id);
     $('objs').innerHTML = `<b>${tr('obj.title')}</b>${sel.diff < 1 ? ` <small style="opacity:.7">(${tr('menu.noStars')})</small>` : ''}<br>` + list.map((o, i) => `${got[i] ? '⭐' : '☆'} ${prog.objectiveText(o)}`).join('<br>');
   } else if (cupMode) {
-    $('objs').innerHTML = cup && !cup.done ? tr('menu.cupInfo', { a: cup.round + 1, b: CUP_TRACKS.length, p: cup.pts[0] }) : tr('menu.cupStart');
+    $('objs').innerHTML = cup && !cup.done ? tr('menu.cupInfo', { a: cup.round + 1, b: cupTracks().length, p: cup.pts[0] }) : tr('menu.cupStart', { tracks: CUPS[sel.cup].map((i) => tr('track.' + TRACKS[i].id)).join(' → ') });
   } else $('objs').innerHTML = `${tr('menu.trialInfo')}${best ? `<br>🏁 ${fmt(best)}` : ''}`;
   $('difName').textContent = tr('diff.' + sel.diff);
   const lv = ['eng', 'han', 'nit'].reduce((s, k) => s + store.upgLevel(sel.bike, k), 0);
@@ -666,8 +691,11 @@ function renderMenu() {
 function placeGrid() { all.forEach((r, i) => { resetRider(r, gridSlot(i)); applyMesh(r, 0); }); lastIdx = player.idx; }
 function restoreTrack() { if (sel.mode !== 'cup' && sel.track !== baseTrack) { sel.track = baseTrack; loadTrack(baseTrack); placeGrid(); } }
 function changeTrack() { baseTrack = sel.track; saveSelAll(); loadTrack(sel.track); placeGrid(); renderMenu(); if (audioStarted) startMusic(themeId(), 0.2); }
-$('trkP').onclick = () => { sel.track = cycle(sel.track, -1, TRACKS.length); changeTrack(); };
-$('trkN').onclick = () => { sel.track = cycle(sel.track, 1, TRACKS.length); changeTrack(); };
+const stepTrack = (d) => {
+  if (sel.mode === 'cup') { sel.cup = cycle(sel.cup, d, CUPS.length); cup = null; saveSelAll(); renderMenu(); return; }
+  sel.track = cycle(sel.track, d, TRACKS.length); changeTrack();
+};
+$('trkP').onclick = () => stepTrack(-1); $('trkN').onclick = () => stepTrack(1);
 $('difP').onclick = () => { sel.diff = cycle(sel.diff, -1, 3); saveSelAll(); renderMenu(); };
 $('difN').onclick = () => { sel.diff = cycle(sel.diff, 1, 3); saveSelAll(); renderMenu(); };
 const changeMode = (d) => { sel.mode = MODES[cycle(MODES.indexOf(sel.mode), d, MODES.length)]; saveSelAll(); restoreTrack(); renderMenu(); };
@@ -693,7 +721,7 @@ function renderGarage() {
   $('gStats').innerHTML = statsHTML(owned ? store.effectiveStats(b, gi) : b) + `<span style="grid-column:1/3;opacity:.7">${tr('bike.' + gi)}</span>`;
   const box = $('gUpg'); box.innerHTML = '';
   for (const u of store.UPGRADES) {
-    const lvl = store.upgLevel(gi, u.key), cost = store.upgCost(lvl), max = lvl >= store.MAX_UPG;
+    const lvl = store.upgLevel(gi, u.key), cost = store.upgCost(lvl, gi), max = lvl >= store.MAX_UPG;
     const left = document.createElement('div');
     left.innerHTML = `<b>${tr('upg.' + u.key)}</b> <small style="opacity:.7">${tr('upg.' + u.key + '.d')}</small><br><span class="pips">${'●'.repeat(lvl)}${'○'.repeat(store.MAX_UPG - lvl)}</span>`;
     const btn = document.createElement('button');
@@ -727,8 +755,8 @@ $('gAct').onclick = () => {
   if (!store.owns(gi)) { if (!store.buyBike(gi)) { sfx.error(); return; } sfx.buy(); }
   sel.bike = gi; saveSelAll(); bike = BIKES[gi]; stats = store.effectiveStats(bike, gi); renderGarage(); toastAchv();
 };
-$('gP').onclick = () => { gi = cycle(gi, -1, BIKES.length); setPlayerBike(gi); placeGrid(); renderGarage(); };
-$('gN').onclick = () => { gi = cycle(gi, 1, BIKES.length); setPlayerBike(gi); placeGrid(); renderGarage(); };
+const stepBike = (d) => { const o = store.BIKE_ORDER; gi = o[cycle(o.indexOf(gi), d, o.length)]; setPlayerBike(gi); placeGrid(); renderGarage(); };
+$('gP').onclick = () => stepBike(-1); $('gN').onclick = () => stepBike(1);
 $('garage').onclick = openGarage; $('gBack').onclick = closeGarage;
 
 // Succès débloqués en dehors des courses (achats…)

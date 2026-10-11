@@ -17,52 +17,52 @@ Moto Cross Racing
 ## Long description
 
 **EN**
-Jump on your dirt bike and race 5 rivals across 3 spectacular tracks: a rolling forest, a desert canyon and an alpine glacier.
+Jump on your dirt bike and race 5 rivals across 6 spectacular tracks: a pine forest, a desert canyon, an alpine glacier, an erupting volcano, a neon-lit night circuit and a tropical island.
 
-- **Three ways to play**: quick race, a 3-round **championship** with points and a trophy, and **time trial** where you race your own ghost.
+- **Three ways to play**: quick race, two 3-round **championships** (Kaislo Cup and Inferno Cup) with points and a trophy, and **time trial** where you race your own ghost.
 - **Stunts**: front flips, back flips and whips. Land cleanly for nitro and combos — miss the landing and you crash!
-- **Progress and rewards**: earn coins and XP, level up, complete objectives for ⭐ stars, unlock 16 achievements and a daily bonus.
-- **Garage**: buy 4 different bikes, upgrade engine, suspension and nitro, and repaint them.
+- **Progress and rewards**: earn coins and XP, level up, complete objectives for ⭐ stars, unlock 17 achievements and a daily bonus.
+- **Garage**: collect 8 different bikes — from the beginner Rookie 125 to the legendary Neon Ghost — upgrade engine, suspension and nitro, and repaint them.
 - **3 difficulty levels**, tracks to unlock by finishing on the podium.
 - **Play anywhere**: desktop and mobile, right in your browser, no download. Available in English, French, Spanish, Portuguese and German.
 
 **FR**
-Enfourchez votre moto de cross et affrontez 5 pilotes sur 3 pistes spectaculaires : une forêt vallonnée, un canyon désertique et un glacier alpin.
+Enfourchez votre moto de cross et affrontez 5 pilotes sur 6 pistes spectaculaires : une forêt de pins, un canyon désertique, un glacier alpin, un volcan en éruption, un circuit nocturne néon et une île tropicale.
 
-- **Trois façons de jouer** : course rapide, **championnat** en 3 manches avec points et trophée, et **contre-la-montre** contre votre propre fantôme.
+- **Trois façons de jouer** : course rapide, deux **championnats** de 3 manches (Coupe Kaislo et Coupe Inferno) avec points et trophée, et **contre-la-montre** contre votre propre fantôme.
 - **Figures** : front flip, back flip, whip. Réceptionnez-vous droit pour gagner du nitro et des combos — ratez l'atterrissage et c'est la chute !
-- **Progression** : pièces et XP, niveaux, objectifs à ⭐ étoiles, 16 succès et bonus quotidien.
-- **Garage** : 4 motos à acheter, moteur, suspension et nitro à améliorer, peintures.
+- **Progression** : pièces et XP, niveaux, objectifs à ⭐ étoiles, 17 succès et bonus quotidien.
+- **Garage** : 8 motos à collectionner — de la Rookie 125 débutante à la légendaire Neon Ghost — moteur, suspension et nitro à améliorer, peintures.
 - **3 niveaux de difficulté**, pistes à débloquer en finissant sur le podium.
 - **Jouable partout** : ordinateur et mobile, dans le navigateur, sans téléchargement. Disponible en français, anglais, espagnol, portugais et allemand.
 
 **ES**
-Sube a tu moto de cross y compite contra 5 rivales en 3 pistas espectaculares: un bosque ondulado, un cañón del desierto y un glaciar alpino.
+Sube a tu moto de cross y compite contra 5 rivales en 6 pistas espectaculares: un bosque de pinos, un cañón del desierto, un glaciar alpino, un volcán en erupción, un circuito nocturno de neón y una isla tropical.
 
-- **Tres formas de jugar**: carrera rápida, **campeonato** de 3 carreras con puntos y trofeo, y **contrarreloj** contra tu propio fantasma.
+- **Tres formas de jugar**: carrera rápida, dos **campeonatos** de 3 carreras (Copa Kaislo y Copa Inferno) con puntos y trofeo, y **contrarreloj** contra tu propio fantasma.
 - **Acrobacias**: front flip, back flip y whip. Aterriza bien para ganar nitro y combos; si fallas, ¡caída!
-- **Progreso**: monedas y XP, niveles, objetivos con ⭐ estrellas, 16 logros y bono diario.
-- **Garaje**: compra 4 motos, mejora motor, suspensión y nitro, y cambia su pintura.
+- **Progreso**: monedas y XP, niveles, objetivos con ⭐ estrellas, 17 logros y bono diario.
+- **Garaje**: colecciona 8 motos, de la Rookie 125 a la legendaria Neon Ghost; mejora motor, suspensión y nitro, y cambia su pintura.
 - **3 niveles de dificultad** y pistas que se desbloquean subiendo al podio.
 - **Juega donde quieras**: ordenador y móvil, en el navegador y sin descargas. Disponible en español, inglés, francés, portugués y alemán.
 
 **PT**
-Suba na sua moto de cross e enfrente 5 rivais em 3 pistas espetaculares: uma floresta ondulada, um cânion do deserto e uma geleira alpina.
+Suba na sua moto de cross e enfrente 5 rivais em 6 pistas espetaculares: uma floresta de pinheiros, um cânion do deserto, uma geleira alpina, um vulcão em erupção, um circuito noturno de neon e uma ilha tropical.
 
-- **Três modos de jogo**: corrida rápida, **campeonato** de 3 etapas com pontos e troféu, e **contra o relógio** contra o seu próprio fantasma.
+- **Três modos de jogo**: corrida rápida, dois **campeonatos** de 3 etapas (Copa Kaislo e Copa Inferno) com pontos e troféu, e **contra o relógio** contra o seu próprio fantasma.
 - **Manobras**: front flip, back flip e whip. Aterrisse bem para ganhar nitro e combos; errou, queda!
-- **Progressão**: moedas e XP, níveis, objetivos com ⭐ estrelas, 16 conquistas e bônus diário.
-- **Garagem**: compre 4 motos, melhore motor, suspensão e nitro, e mude a pintura.
+- **Progressão**: moedas e XP, níveis, objetivos com ⭐ estrelas, 17 conquistas e bônus diário.
+- **Garagem**: colecione 8 motos, da Rookie 125 à lendária Neon Ghost; melhore motor, suspensão e nitro, e mude a pintura.
 - **3 níveis de dificuldade** e pistas para desbloquear subindo ao pódio.
 - **Jogue em qualquer lugar**: computador e celular, no navegador, sem download. Disponível em português, inglês, francês, espanhol e alemão.
 
 **DE**
-Schwing dich auf dein Crossmotorrad und fahre gegen 5 Rivalen auf 3 spektakulären Strecken: ein hügeliger Wald, eine Wüstenschlucht und ein Alpengletscher.
+Schwing dich auf dein Crossmotorrad und fahre gegen 5 Rivalen auf 6 spektakulären Strecken: ein Kiefernwald, eine Wüstenschlucht, ein Alpengletscher, ein ausbrechender Vulkan, ein neonbeleuchteter Nachtkurs und eine Tropeninsel.
 
-- **Drei Spielmodi**: schnelles Rennen, **Meisterschaft** mit 3 Läufen, Punkten und Pokal sowie **Zeitfahren** gegen deinen eigenen Geist.
+- **Drei Spielmodi**: schnelles Rennen, zwei **Meisterschaften** mit je 3 Läufen (Kaislo-Cup und Inferno-Cup), Punkten und Pokal sowie **Zeitfahren** gegen deinen eigenen Geist.
 - **Stunts**: Frontflips, Backflips und Whips. Sauber landen bringt Nitro und Combos — misslungene Landung endet im Sturz!
-- **Fortschritt**: Münzen und XP, Level-Ups, Ziele mit ⭐ Sternen, 16 Erfolge und Tagesbonus.
-- **Garage**: 4 Motorräder kaufen, Motor, Fahrwerk und Nitro verbessern, neu lackieren.
+- **Fortschritt**: Münzen und XP, Level-Ups, Ziele mit ⭐ Sternen, 17 Erfolge und Tagesbonus.
+- **Garage**: 8 Motorräder sammeln — von der Rookie 125 bis zur legendären Neon Ghost —, Motor, Fahrwerk und Nitro verbessern, neu lackieren.
 - **3 Schwierigkeitsstufen**, Strecken werden durch Podestplätze freigeschaltet.
 - **Überall spielbar**: PC und Handy, direkt im Browser, ohne Download. Verfügbar auf Deutsch, Englisch, Französisch, Spanisch und Portugiesisch.
 
@@ -91,6 +91,6 @@ Tags: moto, motocross, racing, bike, dirt bike, 3d, stunts, tricks, jumps, nitro
 | `cover_1920x1080.png` | landscape 16:9 cover |
 | `cover_800x1200.png` | portrait 2:3 cover |
 | `icon_800x800.png` | square cover / icon |
-| `screenshot_*.png` | store screenshots |
+| `screenshot_1…7_*.png` | store screenshots (6 tracks + garage) |
 
 > Exact expected sizes vary by platform — check them in the developer portal when submitting and crop if needed. Covers are generated in English; regenerate in another language with `LANG_ID=fr node scripts/store-assets.cjs`.

@@ -107,6 +107,9 @@ export function startEngine() { initAudio(); }
 const THEMES = {
   forest: { bpm: 126, root: 45, scale: [0, 2, 3, 5, 7, 8, 10], chords: [0, 5, 3, 4], bass: [0, null, 0, 0, null, 0, 7, null, 0, null, 0, 0, null, 3, 5, null], lead: [0, 2, 4, 2, 5, 4, 2, 0, 0, 2, 4, 6, 5, 4, 2, 4] },
   desert: { bpm: 112, root: 38, scale: [0, 1, 4, 5, 7, 8, 11], chords: [0, 1, 0, 5], bass: [0, null, null, 0, 1, null, 0, null, 0, null, 3, null, 4, null, 1, null], lead: [4, null, 5, 4, null, 2, 1, null, 4, null, 5, 6, null, 5, 4, 2] },
+  volcano: { bpm: 134, root: 38, scale: [0, 1, 3, 5, 7, 8, 10], chords: [0, 0, 5, 1], bass: [0, 0, null, 0, null, 0, 1, null, 0, 0, null, 0, null, 3, 1, null], lead: [4, null, 4, 5, null, 4, 2, null, 4, null, 6, 5, null, 4, 3, 1] },
+  night: { bpm: 116, root: 45, scale: [0, 2, 3, 5, 7, 8, 10], chords: [0, 5, 2, 4], bass: [0, null, 0, null, 0, null, 0, null, 0, null, 0, null, 3, null, 4, null], lead: [4, 6, 4, 7, 4, 6, 4, 9, 5, 7, 5, 8, 6, 8, 6, 9] },
+  tropic: { bpm: 108, root: 48, scale: [0, 2, 4, 5, 7, 9, 11], chords: [0, 4, 5, 3], bass: [0, null, null, 0, null, 4, null, null, 0, null, null, 0, null, 4, 3, null], lead: [4, 5, 4, 2, 4, null, 2, 1, 4, 5, 6, 4, 2, null, 1, 2] },
   snow: { bpm: 120, root: 40, scale: [0, 2, 3, 5, 7, 8, 10], chords: [0, 2, 5, 4], bass: [0, null, null, 0, null, 0, null, 3, 0, null, null, 0, null, 4, null, 2], lead: [4, 6, 7, 6, 4, 6, 7, 9, 8, 7, 6, 4, 6, 4, 2, 4] },
 };
 let mTimer = 0, mStep = 0, mNext = 0, mTheme = null, mIntensity = 1;
