@@ -25,10 +25,10 @@ const AUTOPILOT = () => {
   let flip = false, decided = false;
   window.__auto = () => {
     const g = window.__g, pl = g.player; if (!g || (g.state !== 'racing' && g.state !== 'countdown')) return;
-    const S = g.track.SAMPLES, sm = g.track.samples, tgt = sm[(pl.idx + 14) % S];
+    const S = g.track.SAMPLES, sm = g.track.samples, tgt = sm[(pl.idx + 8 + Math.min(10, Math.round(Math.hypot(pl.vx || 0, pl.vz || 0) * 0.12))) % S];
     let e = Math.atan2(tgt.x - pl.x, tgt.z - pl.z) - pl.heading; e = Math.atan2(Math.sin(e), Math.cos(e));
-    g.keys.left = e > 0.05 && pl.grounded; g.keys.right = e < -0.05 && pl.grounded; g.keys.nitro = true;
-    if (pl.grounded) { g.keys.up = true; g.keys.down = false; flip = false; decided = false; window.__closeup = undefined; return; }
+    g.keys.left = e > 0.05 && pl.grounded; g.keys.right = e < -0.05 && pl.grounded; g.keys.nitro = Math.abs(e) < 0.12;
+    if (pl.grounded) { g.keys.up = Math.abs(e) < 0.6; g.keys.down = Math.abs(e) > 1.0; flip = false; decided = false; window.__closeup = undefined; return; }
     g.keys.up = false;
     if (!decided && pl.airT > 0.12) { decided = true; flip = pl.vy > 6; }
     if (flip) { g.keys.down = pl.spinX > -(Math.PI * 2) + 0.45; window.__closeup = 2.3; window.__closeDist = 8.5; window.__closeH = 2.2; window.__closeFov = 52; }
