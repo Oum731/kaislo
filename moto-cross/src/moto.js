@@ -88,6 +88,17 @@ function jerseyTexture(main, acc) {            // maillot : flancs plus sombres,
   for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * 0.1})`; x.fillRect(Math.random() * 128, Math.random() * 128, 1, 2); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
+function liveryTexture(style, main, acc) {    // décors de carénage : couleur d'équipe, éclair blanc et bandes d'accent (motifs originaux, un par style)
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d');
+  const base = new THREE.Color(main), dark = base.clone().multiplyScalar(0.55), light = base.clone().lerp(new THREE.Color(0xffffff), 0.35);
+  const v = style % 4;
+  x.fillStyle = v === 1 ? '#f4f4f4' : css(base); x.fillRect(0, 0, 256, 128);
+  if (v === 0) { x.fillStyle = '#ffffff'; x.beginPath(); x.moveTo(0, 128); x.lineTo(0, 70); x.lineTo(150, 0); x.lineTo(256, 0); x.lineTo(256, 20); x.lineTo(110, 128); x.fill(); x.fillStyle = css(acc); x.beginPath(); x.moveTo(60, 128); x.lineTo(210, 0); x.lineTo(236, 0); x.lineTo(86, 128); x.fill(); }
+  if (v === 1) { x.fillStyle = css(base); x.beginPath(); x.moveTo(256, 0); x.lineTo(256, 128); x.lineTo(70, 128); x.lineTo(150, 0); x.fill(); x.fillStyle = css(acc); x.beginPath(); x.moveTo(40, 128); x.lineTo(120, 0); x.lineTo(150, 0); x.lineTo(70, 128); x.fill(); x.fillStyle = css(dark); x.fillRect(0, 108, 256, 20); }
+  if (v === 2) { x.fillStyle = css(dark); x.beginPath(); x.moveTo(0, 0); x.lineTo(256, 0); x.lineTo(256, 50); x.lineTo(0, 100); x.fill(); x.fillStyle = css(acc); x.beginPath(); x.moveTo(0, 100); x.lineTo(256, 50); x.lineTo(256, 66); x.lineTo(0, 118); x.fill(); x.fillStyle = '#ffffff'; for (let i = 0; i < 6; i++) x.fillRect(20 + i * 38, 10, 14, 14); }
+  if (v === 3) { x.fillStyle = css(light); for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(i * 60 - 20, 128); x.lineTo(i * 60 + 20, 0); x.lineTo(i * 60 + 38, 0); x.lineTo(i * 60 - 2, 128); x.fill(); } x.fillStyle = css(acc); x.fillRect(0, 0, 256, 10); x.fillRect(0, 118, 256, 10); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
 let _fabric = null, _blob = null;
 function fabricBump() {                        // petit grain de tissu partagé
   if (_fabric) return _fabric;
@@ -156,6 +167,8 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
     shock: std(style === 2 || style === 6 ? 0xe03030 : style === 7 ? 0x33f0ff : 0xffc400, 0.4, 0.3), exhaust: std(0x8d949c, 0.35, 0.85),
     jersey: cloth(0xffffff, { map: jerseyTexture(c, neonAcc) }), jerseyAlt: cloth(neonAcc), pants: cloth(new THREE.Color(c).multiplyScalar(0.28).lerp(new THREE.Color(0x1d2026), 0.55)), helmet: new THREE.MeshPhysicalMaterial({ map: helmetTexture(c, neonAcc), roughness: 0.25, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.1 }),
     lens: std(0x3a8cff, 0.08, 0.9), boots: std(0x1d1d20, 0.5, 0.15), gloves: cloth(0x202024),
+    livery: new THREE.MeshPhysicalMaterial({ map: liveryTexture(style, c, neonAcc), roughness: 0.32, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.14, vertexColors: true }),
+    fender: gloss(style === 6 ? 0xd9dce4 : 0xf2f2f2), alu: std(0xb8bcc4, 0.4, 0.8),
     glow: new THREE.MeshBasicMaterial({ color: style === 7 ? 0x33f0ff : 0xff66ff }),
   };
   const plateTex = numberTexture(number, '#ffffff', '#111111');
@@ -189,9 +202,12 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   if (style === 6) { f.rod([-0.21, 0.76, -0.26], [-0.2, 0.9, -0.8], 0.07, mats.exhaust, 12); f.add(new THREE.CylinderGeometry(0.075, 0.075, 0.02, 12), mats.black, [-0.2, 0.9, -0.8], [1.45, 0, 0]); }
   f.add(new THREE.CylinderGeometry(0.058, 0.058, 0.02, 12), mats.black, [0.2, 0.9, -0.8], [1.45, 0, 0]);
   f.add(new RoundedBoxGeometry(0.3, 0.24, 0.5, 4, 0.07), mats.paint, [0, 1.15, 0.14]);                          // réservoir
-  for (const s of [-1, 1]) f.add(new RoundedBoxGeometry(0.1, 0.28, 0.52, 3, 0.04), mats.paint, [s * 0.17, 1.02, 0.2], [0, 0, s * 0.12]); // radiateur
-  f.add(new RoundedBoxGeometry(0.25, 0.1, 0.82, 3, 0.04), mats.seat, [0, 1.04, -0.3], [-0.05, 0, 0]);         // selle
-  f.add(new RoundedBoxGeometry(0.2, 0.04, 0.48, 2, 0.015), mats.paint, [0, 1.07, -0.8], [0.4, 0, 0]);          // garde-boue arrière
+  for (const s of [-1, 1]) f.add(new RoundedBoxGeometry(0.11, 0.34, 0.66, 3, 0.045), mats.livery, [s * 0.185, 1.0, 0.17], [0, 0, s * 0.1]); // carénages de radiateur (décorés)
+  f.add(new RoundedBoxGeometry(0.25, 0.1, 0.98, 3, 0.04), mats.seat, [0, 1.05, -0.25], [-0.04, 0, 0]);         // selle
+  f.add(new RoundedBoxGeometry(0.25, 0.1, 0.66, 3, 0.04), mats.livery, [0, 1.07, -0.78], [0.28, 0, 0]);          // arrière de carrosserie (décoré)
+  f.add(new RoundedBoxGeometry(0.18, 0.025, 0.3, 2, 0.01), mats.black, [0, 1.0, -1.1], [0.5, 0, 0]);               // garde-boue arrière
+  f.add(new RoundedBoxGeometry(0.2, 0.04, 0.42, 2, 0.015), mats.alu, [0, 0.35, 0.02]);                              // sabot de protection
+  f.rod([0.0, 0.53, -0.2], [-0.04, 0.45, -0.72], 0.008, mats.black, 4); f.rod([0.0, 0.46, -0.2], [-0.04, 0.26, -0.72], 0.008, mats.black, 4); // chaîne
   if (style === 3 || style === 7) f.add(new THREE.BoxGeometry(0.34, 0.015, 1.3), mats.glow, [0, 0.25, 0]);                    // néon
   if (style === 1) f.add(new THREE.BoxGeometry(0.31, 0.02, 0.5), mats.jerseyAlt, [0, 1.275, 0.14]);
   if (style === 4) f.add(new THREE.BoxGeometry(0.31, 0.02, 0.5), mats.black, [0, 1.275, 0.14]);
@@ -213,8 +229,8 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   }
   f.build(inner);
   for (const s of [-1, 1]) { // plaques latérales arrière
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), plateMat);
-    m.position.set(s * 0.125, 0.98, -0.66); m.rotation.y = s * Math.PI / 2; m.rotation.x = 0.12; inner.add(m);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.27, 0.25), plateMat);
+    m.position.set(s * 0.135, 1.03, -0.7); m.rotation.y = s * Math.PI / 2; m.rotation.x = 0.12; inner.add(m);
   }
 
   // ----- Fourche avant + guidon (pivot sur l'axe de direction) -----
@@ -230,10 +246,12 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   s.add(new RoundedBoxGeometry(0.22, 0.04, 0.07, 2, 0.015), mats.black, [0, 1.13, 0.47]);
   s.tube([[-0.4, 1.19, 0.64], [-0.3, 1.24, 0.57], [-0.1, 1.255, 0.54], [0.1, 1.255, 0.54], [0.3, 1.24, 0.57], [0.4, 1.19, 0.64]], 0.011, mats.black);
   s.rod([-0.3, 1.24, 0.57], [-0.34, 1.215, 0.7], 0.008, mats.black, 5);                                         // levier d'embrayage
-  s.add(new RoundedBoxGeometry(0.13, 0.03, 0.52, 2, 0.012), mats.paint, [0, 0.8, 0.76], [-0.18, 0, 0]);       // garde-boue avant
+  s.add(new RoundedBoxGeometry(0.17, 0.035, 0.62, 3, 0.015), mats.fender, [0, 0.93, 0.8], [-0.3, 0, 0]);         // garde-boue avant haut
+  s.add(new RoundedBoxGeometry(0.12, 0.03, 0.22, 2, 0.012), mats.fender, [0, 0.78, 1.14], [-0.6, 0, 0]);          // bec du garde-boue
+  for (const k of [-1, 1]) { s.add(new RoundedBoxGeometry(0.022, 0.11, 0.1, 2, 0.008), mats.black, [k * 0.43, 1.26, 0.68], [0.15, 0, 0]); s.rod([k * 0.38, 1.22, 0.66], [k * 0.43, 1.27, 0.72], 0.007, mats.black, 4); }   // protège-mains
   s.build(steer);
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.24), plateMat);                                   // plaque numéro avant
-  plate.position.set(0, 1.12, 0.65 - 0.48); plate.rotation.x = -0.25; steer.add(plate);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.33, 0.29), plateMat);                                   // plaque numéro avant
+  plate.position.set(0, 1.19, 0.69 - 0.48); plate.rotation.x = -0.3; steer.add(plate);
 
   // ----- Haut du corps du pilote (pivote légèrement pour se pencher) -----
   const upper = new THREE.Group(); upper.position.set(0, 1.1, -0.12); inner.add(upper);
