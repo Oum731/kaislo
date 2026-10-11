@@ -68,6 +68,16 @@
   #hint{position:fixed;left:0;right:0;bottom:90px;text-align:center;font-size:18px;font-weight:700;text-shadow:0 2px 6px #000;pointer-events:none;opacity:0;transition:opacity .4s}
   #nitrofx{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 140px 30px rgba(70,200,255,.55);opacity:0;transition:opacity .25s}
   #nitrofx.on{opacity:1}
+  .lbtable{border-collapse:collapse;margin:4px auto;font-size:16px;min-width:min(420px,90vw)}
+  .lbtable td,.lbtable th{padding:3px 12px;text-align:left}
+  .lbtable th{opacity:.6;font-weight:600;font-size:13px}
+  .lbtable td:last-child,.lbtable th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .lbtable tr.me{color:#ffd84d;font-weight:800}
+  .lbtable tr.medal td:first-child{font-weight:800}
+  .daily-box{background:#0005;border:2px solid #ffd84d66;border-radius:12px;padding:8px 16px;font-size:15px;line-height:1.55;max-width:min(560px,94vw)}
+  .daily-box b{color:#ffd84d}
+  input.txt{font:inherit;font-size:18px;font-weight:700;background:#000a;color:#fff;border:2px solid #fff6;border-radius:10px;padding:8px 12px;width:min(220px,60vw);text-align:center;pointer-events:auto;user-select:text;-webkit-user-select:text}
+  #nameBox{display:none;margin:6px 0}
   #ghostTag{position:absolute;top:70px;right:16px;font-size:16px;font-weight:700;opacity:.85}
   .upg{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;text-align:left;margin:6px 0}
   .pips{letter-spacing:3px;color:#ff9d2e}
@@ -91,6 +101,7 @@
     .earn{font-size:14px;line-height:1.35}.screen h2{font-size:22px}
     .objs{font-size:12px;padding:3px 10px}.goal{font-size:11px}.lvl{font-size:13px}#hint{bottom:70px;font-size:14px}table.st{font-size:13px}.achvgrid div{font-size:12px;padding:4px 8px}.achvgrid b{font-size:13px}.setrow{font-size:15px}
     .small{font-size:14px;padding:5px 12px}
+    .daily-box{font-size:12px;padding:4px 10px;line-height:1.4}.lbtable{font-size:13px}.lbtable td,.lbtable th{padding:1px 10px}input.txt{font-size:15px;padding:5px 8px}
   }
 </style>
 </head>
@@ -127,7 +138,7 @@
   <div class="sel"><span class="lab" data-i18n="menu.bike">Bike</span><div class="val" id="bkName" style="min-width:0;margin:0 8px"></div></div>
   <div class="goal" id="goal"></div>
   <div class="row"><button id="play">PLAY</button><button id="garage" class="alt" data-i18n="menu.garage">🔧 GARAGE</button></div>
-  <div class="row"><button id="bAchv" class="alt small" data-i18n="menu.achv">🏆</button><button id="bSet" class="alt small" data-i18n="menu.settings">⚙</button></div>
+  <div class="row"><button id="bLb" class="alt small" style="display:none" data-i18n="menu.leaderboard">🏅 Ranking</button><button id="bAchv" class="alt small" data-i18n="menu.achv">🏆</button><button id="bSet" class="alt small" data-i18n="menu.settings">⚙</button></div>
   <p class="help" style="margin-top:6px;font-size:13px" data-i18n-html="menu.help"></p>
 </div>
 
@@ -156,12 +167,22 @@
   <button id="achvBack" data-i18n="common.back">BACK</button>
 </div>
 
+<div id="lbScreen" class="screen" style="display:none">
+  <h2 data-i18n="daily.title">Daily challenge</h2>
+  <div class="daily-box" id="lbInfo"></div>
+  <div id="lbTable"></div>
+  <div class="row" style="gap:8px"><span data-i18n="lb.name" style="opacity:.75">Your name</span><input class="txt" id="lbName" maxlength="14" autocomplete="off" /><button class="small" id="lbSaveName" data-i18n="lb.save">OK</button></div>
+  <div id="lbMsg" style="font-size:13px;opacity:.85;min-height:16px"></div>
+  <div class="row"><button id="lbPlay" data-i18n="menu.play">PLAY</button><button id="lbRefresh" class="alt small">↻</button><button id="lbBack" class="alt" data-i18n="common.back">BACK</button></div>
+</div>
+
 <div id="end" class="screen" style="display:none">
   <h1 id="endTitle"></h1><p id="endInfo"></p>
   <div class="earn" id="endEarn"></div>
   <div class="earn" id="endExtra"></div>
+  <div id="nameBox"><div style="font-size:13px;opacity:.85" data-i18n="lb.nameHint">Choose a name</div><div class="row" style="gap:8px"><input class="txt" id="nameInput" maxlength="14" autocomplete="off" /><button class="small" id="nameOk" data-i18n="lb.save">OK</button></div><div id="nameErr" style="color:#ff7a6b;font-size:13px;min-height:16px"></div></div>
   <div id="standings"></div>
-  <div class="row"><button id="again">PLAY AGAIN</button><button id="toMenu" class="alt" data-i18n="end.menu">MENU</button></div>
+  <div class="row"><button id="again">PLAY AGAIN</button><button id="endLb" class="alt" style="display:none" data-i18n="menu.leaderboard">🏅</button><button id="toMenu" class="alt" data-i18n="end.menu">MENU</button></div>
 </div>
 <script type="module" src="/src/main.js"></script>
 </body>

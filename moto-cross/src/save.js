@@ -14,6 +14,9 @@ const defaults = () => ({
   paints: [0],             // peintures possédées (indices de PAINTS)
   paint: {},               // paint[indexMoto] = indice de peinture équipée
   cupWins: 0,
+  playerName: '',
+  playerId: '',
+  challenge: { best: {}, paid: {}, history: {}, streak: { last: '', count: 0 }, pending: null },   // défi quotidien
 });
 let data = defaults();
 try {
@@ -23,7 +26,18 @@ try {
     data = { ...d, ...raw, settings: { ...d.settings, ...(raw.settings || {}) }, stats: { ...d.stats, ...(raw.stats || {}) }, daily: { ...d.daily, ...(raw.daily || {}) } };
   }
 } catch (e) {}
+// Identifiant anonyme du joueur (pour le classement) — généré une fois
+export function playerId() {
+  if (!data.playerId) {
+    const rnd = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+    data.playerId = rnd(); save();
+  }
+  return data.playerId;
+}
 export const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} };
+if (!data.challenge || typeof data.challenge !== 'object') data.challenge = defaults().challenge;
+for (const k of ['best', 'paid', 'history']) if (!data.challenge[k]) data.challenge[k] = {};
+if (!data.challenge.streak) data.challenge.streak = { last: '', count: 0 };
 export const get = () => data;
 
 export const PAINTS = [null, 0xe8212b, 0xffd400, 0x00b7ff, 0x7dff3a, 0xff5fd2, 0xf5f5f5, 0x1b1b1f];

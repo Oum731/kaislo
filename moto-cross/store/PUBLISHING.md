@@ -22,7 +22,10 @@ Chaque plateforme a son propre SDK et ses règles : ajoutez un adaptateur dans `
 - **itch.io** : upload du `dist/` zippé, aucun SDK, bon pour récupérer des retours.
 - **Poki**, **GameDistribution**, **GameMonetize**, **Y8**, **Newgrounds**… : comptes développeur et SDK propres. Certaines exigent l'exclusivité : lisez leurs conditions avant de publier ailleurs.
 
-## 4. Avant de soumettre (checklist)
+## 4. Classement du défi quotidien (facultatif)
+Le défi quotidien marche hors ligne. Pour un classement mondial, déployez le serveur (`server/README.md`, gratuit sur Cloudflare) puis construisez avec `VITE_LEADERBOARD_URL`. **Vérifiez d'abord que la plateforme autorise les appels vers un serveur externe** : sinon publiez la version sans classement en ligne.
+
+## 5. Avant de soumettre (checklist)
 - [ ] Testé sur un vrai téléphone (Chrome Android, Safari iOS) en paysage
 - [ ] Testé sur navigateur ordinateur (Chrome, Firefox, Edge)
 - [ ] Aucun lien externe ni publicité tierce dans le jeu
@@ -30,7 +33,7 @@ Chaque plateforme a son propre SDK et ses règles : ajoutez un adaptateur dans `
 - [x] Interface en 5 langues (EN/FR/ES/PT/DE) avec détection automatique — remplissez la fiche en anglais en priorité (`store/LISTING.md`)
 - [ ] Sauvegarde testée (fermer / rouvrir la page)
 
-## 5. Après la publication
+## 6. Après la publication
 - Le jeu retient les joueurs grâce au championnat, au fantôme, aux étoiles, aux succès et au bonus quotidien : regardez quelle fonction fait revenir les joueurs et renforcez-la.
 - Surveillez les statistiques (durée de session, taux de retour) : c'est ce qui décide de la mise en avant.
 - Ajoutez régulièrement du contenu : nouvelles pistes, motos, défis quotidiens.

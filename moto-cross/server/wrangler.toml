@@ -1,0 +1,9 @@
+name = "moto-cross-leaderboard"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Après `npx wrangler d1 create moto-cross`, collez ici l'identifiant affiché :
+[[d1_databases]]
+binding = "DB"
+database_name = "moto-cross"
+database_id = "REMPLACEZ-PAR-VOTRE-DATABASE-ID"

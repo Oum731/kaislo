@@ -9,13 +9,15 @@ import * as prog from './progress.js';
 import { confetti } from './confetti.js';
 import { t as tr, ord, LANGS, detect, setLang, getLang, onLang } from './i18n.js';
 import { LEVELS, autoLevel, isMobile } from './quality.js';
+import * as lb from './leaderboard.js';
+import { dailyFor, dayString, shiftDay, medalFor, medalTargets, modifierEffects, secondsToNextDay, cleanName, DAILY_LAPS, DAILY_BIKE, MEDAL_COINS } from '../shared/daily.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 setLang(detect(store.get().settings.lang));
 
-const LAPS = 3, AI_COUNT = 5, TAU = Math.PI * 2;
+const AI_COUNT = 5, TAU = Math.PI * 2;
 const DIFF_K = [0.86, 0.97, 1.07], DIFF_MULT = [0.7, 1, 1.5];
-const MODES = ['race', 'cup', 'trial'];
+const MODES = ['race', 'cup', 'trial', 'daily'];
 const CUPS = [[0, 1, 2], [3, 4, 5]], CUP_POINTS = [10, 8, 6, 5, 4, 3], CUP_REWARD = [1500, 900, 500];
 const PLACE_COINS = [400, 250, 160, 100, 70, 50], PLACE_XP = [100, 70, 50, 30, 20, 10];
 const AI_NAMES = ['Rex', 'Nova', 'Kira', 'Zed', 'Maya'];
@@ -76,7 +78,7 @@ const saveSel = () => {};
 const keys = {};
 const map = { ArrowUp: 'up', KeyW: 'up', KeyZ: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', KeyQ: 'left', ArrowRight: 'right', KeyD: 'right', ShiftLeft: 'nitro', ShiftRight: 'nitro', Space: 'nitro' };
 addEventListener('keydown', (e) => {
-  if (e.target && e.target.tagName === 'SELECT') return;
+  if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT')) return;   // saisie du pseudo : pas de commandes de jeu
   if (map[e.code]) { keys[map[e.code]] = true; e.preventDefault(); }
   if (e.code === 'KeyR' && (state === 'racing' || state === 'countdown')) startRace();
   if (e.code === 'KeyM') toggleSfx();
@@ -119,6 +121,7 @@ function readBest(id) { best = 0; try { best = parseFloat(localStorage.getItem('
 
 // ---------- Pilotes ----------
 let bike = BIKES[sel.bike], stats = store.effectiveStats(bike, sel.bike);
+let phys = stats, physFx = modifierEffects('classic');   // stats utilisées par la physique (moto prêtée + modificateur en défi quotidien)
 const player = { isPlayer: true, mesh: null, name: '' };
 // Deux paliers d'adversaires : motos de base sur les 3 premières pistes, motos « pro » ensuite
 const AI_TIERS = [
@@ -141,10 +144,10 @@ function setAIBikes(tier) {
 const all = [player, ...ais];
 let activeAIs = ais, racers = all;
 const riderName = (r) => (r.isPlayer ? tr('rider.you') : r.name);
-function setPlayerBike(idx = sel.bike) {
+function setPlayerBike(idx = sel.bike, plain = false) {
   const b = BIKES[idx];
   if (player.mesh) disposeGroup(player.mesh);
-  player.mesh = createMoto(store.paintColor(idx, b.color), b.style, 1);
+  player.mesh = createMoto(plain ? b.color : store.paintColor(idx, b.color), b.style, 1);
   scene.add(player.mesh);
   if (idx === sel.bike) { bike = b; stats = store.effectiveStats(b, idx); }
 }
@@ -164,7 +167,9 @@ const gridSlot = (i) => (i === 0 ? 3 : i < 4 ? i - 1 : i);
 // ---------- État de course ----------
 let state = 'menu', t = 0, raceTime = 0, finishOrder = [], camHeading = 0, lastIdx = 0, lastCount = 4, shake = 0;
 let garageOpen = false, raceCoins = 0, raceTricks = 0, raceTrickPay = 0, raceCrashes = 0, combo = 0, lastTrickT = -99, lastLap = 1, lastRank = 6, hintUntil = 0;
-let cup = null;
+let cup = null, raceLaps = 3;
+const dailyInfo = () => dailyFor(dayString());
+const hms = (s) => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 const cupTracks = () => CUPS[cup ? cup.idx : sel.cup];
 const newCup = () => ({ idx: sel.cup, round: 0, pts: all.map(() => 0), done: false });
 
@@ -179,14 +184,14 @@ function rankPop(txt) { const el = $('rankpop'); el.textContent = txt; el.style.
 // ---------- Fantôme (meilleur tour enregistré) ----------
 let ghostRec = [], ghostAcc = 0, ghostData = null, ghostMesh = null;
 const ghostR = { x: 0, y: 0, z: 0, heading: 0, pitch: 0, roll: 0, speed: 30, spinX: 0, spinZ: 0, crashTilt: 0, mesh: null };
-const ghostKey = () => 'motocross_ghost_' + TRACKS[sel.track].id;
+const ghostKey = () => (sel.mode === 'daily' ? 'motocross_ghost_daily_' + dailyInfo().day : 'motocross_ghost_' + TRACKS[sel.track].id);
 function setupGhost() {
   ghostRec = []; ghostAcc = 0; ghostData = null;
   if (ghostMesh) { disposeGroup(ghostMesh); ghostMesh = null; }
-  if (sel.mode !== 'trial') return;
+  if (sel.mode !== 'trial' && sel.mode !== 'daily') return;
   try { const raw = localStorage.getItem(ghostKey()); ghostData = raw ? JSON.parse(raw) : null; } catch (e) { ghostData = null; }
   if (!ghostData || !ghostData.d || ghostData.d.length < 12) { ghostData = null; return; }
-  ghostMesh = createMoto(0xffffff, bike.style, 'G');
+  ghostMesh = createMoto(0xffffff, BIKES[sel.mode === 'daily' ? DAILY_BIKE : sel.bike].style, 'G');
   ghostMesh.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); Object.assign(o.material, { transparent: true, opacity: 0.38, depthWrite: false }); o.castShadow = false; } });
   scene.add(ghostMesh); ghostR.mesh = ghostMesh;
 }
@@ -209,29 +214,36 @@ function recordGhost(h) {
 }
 
 function startRace() {
-  if (sel.mode !== 'cup' && !trackUnlocked(sel.track)) { toast(tr('toast.locked')); sfx.error(); return; }
+  if (sel.mode !== 'cup' && sel.mode !== 'daily' && !trackUnlocked(sel.track)) { toast(tr('toast.locked')); sfx.error(); return; }
   if (garageOpen) closeGarage();
-  if (sel.mode === 'cup') {
+  const daily = sel.mode === 'daily', solo = daily || sel.mode === 'trial';
+  if (daily) { const dd = dailyInfo(); sel.track = dd.trackIdx; if (loadedTrack !== dd.trackIdx) loadTrack(dd.trackIdx); }
+  else if (sel.mode === 'cup') {
     if (!cupUnlocked(sel.cup)) { toast(tr('toast.cupLocked'), 4200); sfx.error(); return; }
     if (!cup) cup = newCup();
     const ti = cupTracks()[cup.round];
     sel.track = ti; if (loadedTrack !== ti) loadTrack(ti);
   } else if (loadedTrack !== sel.track) loadTrack(sel.track);
-  activeAIs = sel.mode === 'trial' ? [] : ais; racers = [player, ...activeAIs];
-  ais.forEach((a) => { a.mesh.visible = sel.mode !== 'trial'; });
-  coinList.forEach((c) => { c.on = true; });
+  activeAIs = solo ? [] : ais; racers = [player, ...activeAIs];
+  ais.forEach((a) => { a.mesh.visible = !solo; });
+  coinList.forEach((c) => { c.on = !daily; });   // pas de pièces en défi quotidien (classement au temps pur)
+  raceLaps = daily ? DAILY_LAPS : 3;
+  phys = daily ? { ...BIKES[DAILY_BIKE], recharge: 1 } : stats; physFx = modifierEffects(daily ? dailyInfo().mod : 'classic');
+  setPlayerBike(daily ? DAILY_BIKE : sel.bike, daily);
   raceCoins = raceTricks = raceTrickPay = raceCrashes = combo = 0; lastTrickT = -99; lastLap = 1; lastRank = racers.length;
   all.forEach((r, i) => resetRider(r, gridSlot(i)));
   lastIdx = player.idx;
   finishOrder = []; raceTime = 0; state = 'countdown'; t = 0; lastCount = 4;
   camHeading = player.heading;
-  readBest(TRACKS[sel.track].id); setupGhost();
+  readBest(TRACKS[sel.track].id); if (daily) best = store.get().challenge.best[dailyInfo().day] || 0;
+  setupGhost();
   $('menu').style.display = $('end').style.display = 'none'; $('standings').innerHTML = '';
+  $('nameBox').style.display = 'none'; $('endLb').style.display = 'none';
   $('hud').style.display = 'block';
   $('trick').style.opacity = 0;
   $('wallet').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'none';
   $('touch').style.display = isTouch ? 'block' : 'none';
-  $('ghostTag').textContent = sel.mode === 'trial' ? tr('hud.ghost') + (ghostData ? ' ' + fmt(ghostData.t) : '') : '';
+  $('ghostTag').textContent = (daily ? '🎯 ' + tr('mod.' + dailyInfo().mod) + ' · ' : '') + (solo ? tr('hud.ghost') + (ghostData ? ' ' + fmt(ghostData.t) : '') : '');
   if (store.get().stats.races < 3 && sel.mode !== 'trial') { const h = $('hint'); h.textContent = tr(isTouch ? 'hint.mobile' : 'hint.pc'); h.style.opacity = 1; hintUntil = 7; } else { $('hint').style.opacity = 0; hintUntil = 0; }
   initAudio(); startMusic(TRACKS[sel.track].id, 1); setMusicIntensity(1);
   platform.gameplayStop();
@@ -277,12 +289,12 @@ function landPlayer(p, impact) {
 
 // ---------- Joueur ----------
 function updatePlayer(dt) {
-  const p = player, racing = state === 'racing', ctl = racing && p.stun <= 0, def = TRACKS[sel.track], grip = def.grip;
+  const p = player, racing = state === 'racing', ctl = racing && p.stun <= 0, def = TRACKS[sel.track], grip = def.grip * physFx.grip;
   p.stun = Math.max(0, p.stun - dt);
   const up = ctl && keys.up, down = ctl && keys.down;
   const steer = ctl ? (keys.left ? 1 : 0) - (keys.right ? 1 : 0) : 0; // + = gauche
   const nitroOn = ctl && keys.nitro && p.nitro > 0 && p.speed > 5;
-  p.nitro = nitroOn ? Math.max(0, p.nitro - dt * 0.3) : Math.min(1, p.nitro + dt * 0.05 * stats.recharge);
+  p.nitro = nitroOn ? Math.max(0, p.nitro - dt * 0.3) : Math.min(1, p.nitro + dt * 0.05 * phys.recharge * physFx.recharge);
   if (nitroOn && !p.nitroOn) sfx.nitro();
   p.nitroOn = nitroOn;
 
@@ -291,19 +303,19 @@ function updatePlayer(dt) {
   const nl = track.normalAt(nr.i), sp = track.samples[nr.i];
   p.lat = (p.x - sp.x) * nl.x + (p.z - sp.z) * nl.z;
   const offTrack = nr.d > track.width * 0.62;
-  const maxSpeed = (stats.max + (nitroOn ? 16 * stats.nitro : 0)) * (offTrack ? 0.6 : 1);
+  const maxSpeed = (phys.max * physFx.speed + (nitroOn ? 16 * phys.nitro : 0)) * (offTrack ? 0.6 : 1);
 
   if (p.grounded) {
     const fx_ = Math.sin(p.heading), fz_ = Math.cos(p.heading);
     const slope = (track.heightAt(p.x + fx_, p.z + fz_, lastIdx) - track.heightAt(p.x - fx_, p.z - fz_, lastIdx)) / 2;
-    if (up) p.speed += (stats.acc + (nitroOn ? 18 : 0)) * dt;
+    if (up) p.speed += (phys.acc * physFx.accel + (nitroOn ? 18 : 0)) * dt;
     if (down) p.speed -= 45 * grip * dt;
     if (p.stun > 0) p.speed -= p.speed * 2.2 * dt;
     p.speed -= slope * 9.8 * 0.7 * dt;
     p.speed -= p.speed * (offTrack ? 0.35 : 0.06) * dt;
     if (p.speed > maxSpeed) p.speed -= (p.speed - maxSpeed) * 2.5 * dt;
     p.speed = Math.max(0, p.speed);
-    p.heading += steer * (1.9 - p.speed / 48) * stats.handling * Math.min(1, grip + 0.1) * Math.min(1, p.speed / 8) * dt;
+    p.heading += steer * (1.9 - p.speed / 48) * phys.handling * Math.min(1, grip + 0.1) * Math.min(1, p.speed / 8) * dt;
   } else {
     p.heading += steer * 0.15 * dt;
     if (ctl) { // figures
@@ -315,7 +327,7 @@ function updatePlayer(dt) {
 
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -440, 440);
   const nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -440, 440);
-  const ground = track.heightAt(nx, nz, lastIdx), G = 24;
+  const ground = track.heightAt(nx, nz, lastIdx), G = 24 * physFx.gravity;
   if (p.grounded) {
     const predicted = p.y + p.vy * dt - 0.5 * G * dt * dt;
     if (ground < predicted - 0.03 && p.speed > 6) { p.grounded = false; p.airT = 0; p.spinX = p.spinZ = 0; }
@@ -344,8 +356,8 @@ function advanceProgress(r, i) {
   let d = i - (r.idx % S);
   if (d > S / 2) d -= S; else if (d < -S / 2) d += S;
   r.prog += d; r.idx = i;
-  r.lap = clamp(Math.floor(r.prog / S) + 1, 1, LAPS);
-  if (!r.finished && r.prog >= LAPS * S) { r.finished = true; r.finishTime = raceTime; finishOrder.push(r); }
+  r.lap = clamp(Math.floor(r.prog / S) + 1, 1, raceLaps);
+  if (!r.finished && r.prog >= raceLaps * S) { r.finished = true; r.finishTime = raceTime; finishOrder.push(r); }
 }
 
 // ---------- IA ----------
@@ -382,8 +394,8 @@ function updateAI(a, dt) {
   a.pitch += (-Math.atan2(a.vy, Math.max(a.speed, 1)) * 0.8 - a.pitch) * Math.min(1, 8 * dt);
   a.roll += (-clamp(dh * 2, -0.5, 0.5) - a.roll) * Math.min(1, 6 * dt);
   a.prog = a.aiProg; a.idx = ia;
-  a.lap = clamp(Math.floor(a.prog / S) + 1, 1, LAPS);
-  if (!a.finished && a.prog >= LAPS * S) { a.finished = true; a.finishTime = raceTime; finishOrder.push(a); }
+  a.lap = clamp(Math.floor(a.prog / S) + 1, 1, raceLaps);
+  if (!a.finished && a.prog >= raceLaps * S) { a.finished = true; a.finishTime = raceTime; finishOrder.push(a); }
 }
 
 // ---------- Collisions joueur / IA ----------
@@ -438,6 +450,7 @@ function standingsHTML() {
 }
 
 function endRace() {
+  if (sel.mode === 'daily') return endDaily();
   state = 'finished';
   stopEngine(); setMusicIntensity(0.3); platform.gameplayStop();
   $('nitrofx').classList.remove('on'); $('hint').style.opacity = 0;
@@ -506,6 +519,68 @@ function endRace() {
   if (newStars.length) setTimeout(() => sfx.star(), 900);
   if (lv.after > lv.before) setTimeout(() => sfx.levelup(), 1500);
   else if (newAchv.length) setTimeout(() => sfx.star(), 1500);
+}
+
+// ---------- Fin du défi quotidien : médailles, récompenses, classement ----------
+function endDaily() {
+  state = 'finished';
+  stopEngine(); setMusicIntensity(0.3); platform.gameplayStop();
+  $('nitrofx').classList.remove('on'); $('hint').style.opacity = 0;
+  const dd = dailyInfo(), st = store.get(), ch = st.challenge, time = player.finishTime;
+  const prevBest = ch.best[dd.day] || 0, first = !prevBest, improved = first || time < prevBest;
+  if (improved) { ch.best[dd.day] = time; best = time; try { localStorage.setItem(ghostKey(), JSON.stringify({ t: time, d: ghostRec })); } catch (e) {} }
+  const bestT = ch.best[dd.day], medal = medalFor(dd.id, bestT), paid = ch.paid[dd.day] | 0;
+  let reward = 0, medalPay = 0;
+  if (first) {
+    ch.streak.count = ch.streak.last === shiftDay(dd.day, -1) ? ch.streak.count + 1 : 1; ch.streak.last = dd.day;
+    reward = 250 + 50 * Math.min(ch.streak.count - 1, 6);
+  }
+  if (medal > paid) { medalPay = MEDAL_COINS[medal] - MEDAL_COINS[paid]; ch.paid[dd.day] = medal; }
+  ch.history[dd.day] = { time: bestT, medal, track: dd.id };
+  Object.keys(ch.history).sort().slice(0, -30).forEach((k) => { delete ch.history[k]; delete ch.best[k]; delete ch.paid[k]; });
+  const coins = reward + medalPay;
+  st.stats.races++; st.stats.coins += coins; st.stats.tricks += raceTricks;
+  store.addCoins(coins);
+  const lv = prog.addXp(first ? 120 : improved ? 40 : 20);
+  const newAchv = prog.checkAchievements();
+
+  const extra = [tr('end.xp', { n: first ? 120 : improved ? 40 : 20 })];
+  if (first) extra.push(tr('end.dailyStreak', { n: ch.streak.count }));
+  if (lv.after > lv.before) extra.push(tr('end.levelup', { n: lv.after, c: lv.reward }));
+  newAchv.forEach((a) => extra.push(tr('end.achv', { name: prog.achvName(a), n: a.reward })));
+  const tg = medalTargets(dd.id);
+  $('endTitle').textContent = medal ? tr('medal.' + medal) : tr('daily.title');
+  $('endInfo').textContent = `${tr('track.' + dd.id)} · ${tr('mod.' + dd.mod)} · ${tr('end.time', { t: fmt(time) })}${!first && improved ? tr('end.newrecord') : ''}`;
+  const parts = [];
+  if (reward) parts.push(tr('end.dailyReward', { n: reward }).replace(/\+(\d+)/, '<b>+$1</b>'));
+  if (medalPay) parts.push(tr('end.medalBonus', { n: medalPay }).replace(/\+(\d+)/, '<b>+$1</b>'));
+  $('endEarn').innerHTML = `${parts.join(' · ') || tr('daily.best', { t: fmt(bestT) })}<br>${tr('daily.targets', { g: fmt(tg.gold), s: fmt(tg.silver), b: fmt(tg.bronze) })} — ${tr('earn.balance')}: <b>${store.get().coins}</b> 🪙`;
+  $('endExtra').innerHTML = extra.join('<br>');
+  $('standings').innerHTML = '';
+  $('again').textContent = tr('end.retry'); $('endLb').style.display = '';
+  showWallet();
+  $('touch').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'flex';
+  $('hud').style.display = 'none'; $('end').style.display = 'flex';
+  if (medal >= 2) { confetti(medal === 3 ? 180 : 90); platform.happytime(); sfx.win(); } else if (medal === 1) sfx.win(); else sfx.lose();
+  if (newAchv.length || lv.after > lv.before) setTimeout(() => sfx.levelup(), 1200);
+
+  // Envoi au classement en ligne (si configuré) — il faut d'abord un pseudo
+  if (lb.lbEnabled && improved) {
+    const send = () => lb.submitScore({ day: dd.day, track: dd.id, time: bestT }).then((res) => {
+      if ($('end').style.display === 'none') return;
+      $('endExtra').innerHTML += '<br>' + (res ? `${tr('lb.rank', { r: res.rank, t: res.total })} · ${tr('lb.sent')}` : tr('lb.unreachable'));
+    });
+    if (st.playerName) send();
+    else {
+      $('nameBox').style.display = 'block'; $('nameErr').textContent = ''; $('nameInput').value = '';
+      const ok = () => {
+        const n = cleanName($('nameInput').value);
+        if (!n) { $('nameErr').textContent = tr('lb.badName'); sfx.error(); return; }
+        st.playerName = n; store.save(); $('nameBox').style.display = 'none'; send();
+      };
+      $('nameOk').onclick = ok; $('nameInput').onkeydown = (e) => { if (e.key === 'Enter') ok(); e.stopPropagation(); };
+    }
+  }
 }
 
 // ---------- Pièces ----------
@@ -582,7 +657,7 @@ function frame(now) {
 
   // Annonces : tours, dépassements, conseils
   if (state === 'racing') {
-    if (player.lap > lastLap) { lastLap = player.lap; banner(player.lap === LAPS ? tr('hud.finalLap') : tr('hud.lapN', { n: player.lap })); sfx.lap(); }
+    if (player.lap > lastLap) { lastLap = player.lap; banner(player.lap === raceLaps ? tr('hud.finalLap') : tr('hud.lapN', { n: player.lap })); sfx.lap(); }
     const rk = rank();
     if (raceTime > 2 && rk < lastRank && racers.length > 1) { rankPop(tr('hud.overtake', { n: rk })); sfx.overtake(); }
     lastRank = rk;
@@ -611,8 +686,8 @@ function frame(now) {
   sun.target.position.set(player.x, player.y, player.z);
   headlight.position.set(player.x + Math.sin(player.heading) * 7, player.y + 3, player.z + Math.cos(player.heading) * 7);
 
-  $('pos').textContent = sel.mode === 'trial' ? tr('mode.trial') : tr('hud.pos', { a: rank(), b: racers.length });
-  $('lap').textContent = tr('hud.lap', { a: player.lap, b: LAPS });
+  $('pos').textContent = sel.mode === 'trial' || sel.mode === 'daily' ? tr('mode.' + sel.mode) : tr('hud.pos', { a: rank(), b: racers.length });
+  $('lap').textContent = tr('hud.lap', { a: player.lap, b: raceLaps });
   $('time').textContent = fmt(raceTime);
   $('best').textContent = best ? tr('hud.record', { t: fmt(best) }) : '';
   $('coins').textContent = raceCoins;
@@ -633,7 +708,7 @@ function nextToast() {
   toastBusy = true; el.textContent = it[0]; el.style.display = 'block'; setTimeout(nextToast, it[1]);
 }
 const showWallet = () => { $('wallet').textContent = `🪙 ${store.get().coins}`; $('wallet').style.display = 'block'; };
-const SCREENS = ['menu', 'garageScreen', 'settings', 'achvScreen'];
+const SCREENS = ['menu', 'garageScreen', 'settings', 'achvScreen', 'lbScreen'];
 function showScreen(id) { SCREENS.forEach((s) => { $(s).style.display = s === id ? 'flex' : 'none'; }); }
 function renderIcons() {
   $('bMusic').textContent = isMusicOn() ? '🎵' : '🔇'; $('bMusic').style.opacity = isMusicOn() ? 1 : 0.5;
@@ -644,6 +719,56 @@ function toggleMusic() { const v = !isMusicOn(); setMusicOn(v); store.get().sett
 function toggleSfx() { const v = !isSfxOn(); setSfxOn(v); store.get().settings.sfx = v; store.save(); renderIcons(); }
 $('bMusic').onclick = toggleMusic; $('bSfx').onclick = toggleSfx;
 setMusicOn(store.get().settings.music); setSfxOn(store.get().settings.sfx);
+
+// ---------- Défi quotidien ----------
+const nextDailyReward = () => { const s = store.get().challenge.streak, y = shiftDay(dayString(), -1); return 250 + 50 * Math.min(s.last === y ? s.count : 0, 6); };
+function dailyHTML(dd) {
+  const ch = store.get().challenge, done = ch.best[dd.day], med = done ? medalFor(dd.id, done) : 0, tg = medalTargets(dd.id);
+  return `<b>${tr('mod.' + dd.mod)}</b> — ${tr('mod.' + dd.mod + '.d')}<br>${tr('daily.same', { laps: DAILY_LAPS })}<br>${tr('daily.targets', { g: fmt(tg.gold), s: fmt(tg.silver), b: fmt(tg.bronze) })}<br>`
+    + (done ? `${tr('daily.best', { t: fmt(done) })} ${med ? tr('medal.' + med) : ''}` : tr('daily.todo', { n: nextDailyReward() }))
+    + `<br><small id="dNext">${tr('daily.next', { t: hms(secondsToNextDay()) })}</small>`;
+}
+let shownDay = dayString();
+setInterval(() => {
+  const n = $('dNext'), l = $('lbNext'), txt = tr('daily.next', { t: hms(secondsToNextDay()) });
+  if (n) n.textContent = txt; if (l) l.textContent = txt;
+  if (dayString() !== shownDay) { shownDay = dayString(); if (state === 'menu') { renderMenu(); if ($('lbScreen').style.display !== 'none') renderLb(); toast(tr('daily.ready'), 3500); } }
+}, 1000);
+
+const MEDAL_ICON = ['', '🥉', '🥈', '🥇'];
+function historyHTML() {
+  const h = store.get().challenge.history, days = Object.keys(h).sort().reverse().slice(0, 7);
+  if (!days.length) return '';
+  return `<div style="margin-top:6px"><b style="font-size:13px;opacity:.75">${tr('lb.history')}</b><table class="lbtable">${days.map((d) => `<tr><td>${d.slice(5)}</td><td>${MEDAL_ICON[h[d].medal] || ''} ${tr('track.' + h[d].track)}</td><td>${fmt(h[d].time)}</td></tr>`).join('')}</table></div>`;
+}
+let lbReturn = 'menu';
+function openLb(from) {
+  lbReturn = from; if (from === 'end') $('end').style.display = 'none';
+  showScreen('lbScreen'); $('lbName').value = store.get().playerName || ''; $('lbMsg').textContent = '';
+  renderLb(); lb.flushPending();
+}
+function closeLb() { if (lbReturn === 'end') { $('lbScreen').style.display = 'none'; $('end').style.display = 'flex'; } else { showScreen('menu'); renderMenu(); } }
+async function renderLb() {
+  const dd = dailyInfo(), box = $('lbTable'), tg = medalTargets(dd.id), done = store.get().challenge.best[dd.day];
+  $('lbInfo').innerHTML = `<b>${dd.day}</b> · ${tr('track.' + dd.id)} · ${tr('mod.' + dd.mod)}<br><small>${tr('mod.' + dd.mod + '.d')} — ${tr('daily.same', { laps: DAILY_LAPS })}</small><br>${tr('daily.targets', { g: fmt(tg.gold), s: fmt(tg.silver), b: fmt(tg.bronze) })}<br>${done ? tr('daily.best', { t: fmt(done) }) : tr('daily.todo', { n: nextDailyReward() })}<br><small id="lbNext">${tr('daily.next', { t: hms(secondsToNextDay()) })}</small>`;
+  const note = (k) => `<div style="font-size:13px;opacity:.85;margin:6px;max-width:92vw">${tr(k)}</div>`;
+  if (!lb.lbEnabled) { box.innerHTML = note('lb.offline') + historyHTML(); return; }
+  box.innerHTML = `<div style="margin:8px">${tr('lb.loading')}</div>`;
+  const res = await lb.fetchBoard(dd.day, 20);
+  if ($('lbScreen').style.display === 'none') return;
+  if (!res) { box.innerHTML = note('lb.unreachable') + historyHTML(); return; }
+  const you = res.you, rows = res.entries.map((e) => `<tr class="${you && you.rank === e.rank ? 'me' : ''} ${e.rank <= 3 ? 'medal' : ''}"><td>${MEDAL_ICON[4 - e.rank] && e.rank <= 3 ? MEDAL_ICON[4 - e.rank] : e.rank}</td><td>${e.name.replace(/[<>&]/g, '')}</td><td>${fmt(e.time)}</td></tr>`).join('');
+  const extra = you && you.rank > res.entries.length ? `<tr class="me"><td>${you.rank}</td><td>${tr('lb.you')}</td><td>${fmt(you.time)}</td></tr>` : '';
+  box.innerHTML = res.entries.length ? `<table class="lbtable"><tr><th>#</th><th>${tr('lb.player')}</th><th>${tr('lb.col.time')}</th></tr>${rows}${extra}</table>${you ? `<div style="font-weight:800;color:#ffd84d">${tr('lb.rank', { r: you.rank, t: res.total })}</div>` : ''}` : note('lb.empty');
+}
+function saveLbName() {
+  const n = cleanName($('lbName').value);
+  if (!n) { $('lbMsg').textContent = tr('lb.badName'); sfx.error(); return; }
+  store.get().playerName = n; store.save(); $('lbMsg').textContent = '✔'; lb.flushPending();
+}
+$('lbSaveName').onclick = saveLbName; $('lbRefresh').onclick = () => renderLb(); $('lbBack').onclick = closeLb;
+$('lbPlay').onclick = () => { sel.mode = 'daily'; saveSelAll(); $('lbScreen').style.display = 'none'; startRace(); };
+$('bLb').onclick = () => openLb('menu'); $('endLb').onclick = () => openLb('end');
 
 // ---------- Menu principal ----------
 let baseTrack = sel.track, audioStarted = false;
@@ -663,12 +788,13 @@ function goalHTML() {
 }
 
 function renderMenu() {
-  const mode = sel.mode, cupMode = mode === 'cup';
-  const ti = cupMode ? (cup && !cup.done ? cupTracks()[cup.round] : CUPS[sel.cup][0]) : sel.track, def = TRACKS[ti];
-  const unlocked = cupMode ? cupUnlocked(sel.cup) : trackUnlocked(sel.track);
+  const mode = sel.mode, cupMode = mode === 'cup', dailyMode = mode === 'daily', dd = dailyMode ? dailyInfo() : null;
+  const ti = dailyMode ? dd.trackIdx : cupMode ? (cup && !cup.done ? cupTracks()[cup.round] : CUPS[sel.cup][0]) : sel.track, def = TRACKS[ti];
+  const unlocked = dailyMode || (cupMode ? cupUnlocked(sel.cup) : trackUnlocked(sel.track));
   $('modeName').textContent = tr('mode.' + mode);
   $('trkLab').textContent = tr(cupMode ? 'menu.cup' : 'menu.track');
-  $('trkP').style.visibility = $('trkN').style.visibility = cupMode && cup && !cup.done && cup.round > 0 ? 'hidden' : 'visible';
+  $('trkP').style.visibility = $('trkN').style.visibility = dailyMode || (cupMode && cup && !cup.done && cup.round > 0) ? 'hidden' : 'visible';
+  $('bLb').style.display = dailyMode ? '' : 'none';
   const nm = cupMode ? tr('cup.name.' + sel.cup) : tr('track.' + def.id);
   $('trkName').innerHTML = !unlocked ? `<span class="lock">🔒 ${nm}</span>` : `${nm}${mode === 'race' ? `<span class="stars">${starsStr(def.id)}</span>` : ''}`;
   if (!unlocked) {
@@ -676,12 +802,14 @@ function renderMenu() {
   } else if (mode === 'race') {
     const list = prog.OBJECTIVES[def.id] || [], got = prog.starsOf(def.id);
     $('objs').innerHTML = `<b>${tr('obj.title')}</b>${sel.diff < 1 ? ` <small style="opacity:.7">(${tr('menu.noStars')})</small>` : ''}<br>` + list.map((o, i) => `${got[i] ? '⭐' : '☆'} ${prog.objectiveText(o)}`).join('<br>');
+  } else if (dailyMode) {
+    $('objs').innerHTML = dailyHTML(dd);
   } else if (cupMode) {
     $('objs').innerHTML = cup && !cup.done ? tr('menu.cupInfo', { a: cup.round + 1, b: cupTracks().length, p: cup.pts[0] }) : tr('menu.cupStart', { tracks: CUPS[sel.cup].map((i) => tr('track.' + TRACKS[i].id)).join(' → ') });
   } else $('objs').innerHTML = `${tr('menu.trialInfo')}${best ? `<br>🏁 ${fmt(best)}` : ''}`;
   $('difName').textContent = tr('diff.' + sel.diff);
   const lv = ['eng', 'han', 'nit'].reduce((s, k) => s + store.upgLevel(sel.bike, k), 0);
-  $('bkName').textContent = `${bike.name}${lv ? ` (+${lv})` : ''}`;
+  $('bkName').textContent = dailyMode ? `${BIKES[DAILY_BIKE].name} 🎯` : `${bike.name}${lv ? ` (+${lv})` : ''}`;
   $('play').disabled = !unlocked; $('play').textContent = unlocked ? tr('menu.play') : tr('menu.locked');
   const li = prog.levelInfo();
   $('lvlTxt').textContent = tr('menu.level', { n: li.lvl }); $('xpFill').style.width = `${(li.rem / li.need) * 100}%`; $('xpTxt').textContent = `${li.rem}/${li.need} XP`;
@@ -825,7 +953,7 @@ $('toMenu').onclick = async () => {
   showScreen('menu'); document.querySelector('.iconbtn').style.display = 'flex';
   ais.forEach((a) => { a.mesh.visible = true; }); if (ghostMesh) ghostMesh.visible = false;
   stopEngine(); if (audioStarted) { startMusic(themeId(), 0.2); setMusicIntensity(0.2); }
-  restoreTrack(); placeGrid(); renderMenu();
+  restoreTrack(); setPlayerBike(sel.bike); placeGrid(); renderMenu();
 };
 
 // Premier geste de l'utilisateur : le navigateur autorise alors le son
@@ -840,6 +968,8 @@ loadTrack(sel.track); setPlayerBike(); placeGrid(); renderMenu(); renderIcons();
 const bonus = store.claimDaily();
 if (bonus) { toast(tr('toast.daily', { n: bonus, s: store.get().daily.streak }), 4500); renderMenu(); }
 toastAchv();
+if (!store.get().challenge.best[dailyInfo().day]) toast(tr('daily.ready'), 3500);
+lb.flushPending();
 sdk.then(() => { platform.loadingStart(); platform.loadingStop(); });
-if (import.meta.env.DEV) window.__g = { player, ais, keys, fx, store, prog, sel, get cup() { return cup; }, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
+if (import.meta.env.DEV) window.__g = { lb, dailyInfo, setRaceTime: (v) => { raceTime = v; }, player, ais, keys, fx, store, prog, sel, get cup() { return cup; }, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
 requestAnimationFrame(frame);

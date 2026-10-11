@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "build:crazygames": "vite build --mode crazygames",
-    "zip": "npm run build:crazygames && node scripts/zip.mjs"
+    "zip": "npm run build:crazygames && node scripts/zip.mjs",
+    "server": "node server/dev-server.mjs",
+    "test:server": "node server/test.mjs"
   },
   "dependencies": {
     "three": "0.170.0"

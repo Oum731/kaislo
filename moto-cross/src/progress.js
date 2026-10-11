@@ -65,6 +65,9 @@ export const ACHIEVEMENTS = [
   { id: 'allStars', reward: 1000, check: () => totalStars() >= Object.keys(OBJECTIVES).length * 3 },
   { id: 'champion', reward: 500, check: (d) => d.cupWins >= 1 },
   { id: 'champion2', reward: 800, check: (d) => d.stats.cupBWins >= 1 },
+  { id: 'daily1', reward: 150, check: (d) => Object.keys(d.challenge.history).length >= 1 },
+  { id: 'daily7', reward: 700, check: (d) => d.challenge.streak.count >= 7 },
+  { id: 'dailyGold', reward: 400, check: (d) => Object.values(d.challenge.history).some((h) => h.medal === 3) },
   { id: 'level5', reward: 200, check: () => levelInfo().lvl >= 5 },
   { id: 'streak3', reward: 150, check: (d) => d.daily.streak >= 3 },
 ];
