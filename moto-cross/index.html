@@ -21,6 +21,20 @@
   .screen p{margin:4px;opacity:.9}
   button{pointer-events:auto;font-size:24px;font-weight:800;padding:14px 40px;border:0;border-radius:12px;background:#ff9d2e;color:#222;cursor:pointer}
   button:hover{background:#ffb95e}
+  .sel{display:flex;align-items:center;gap:12px;margin:2px 0}
+  .sel .lab{width:92px;text-align:right;opacity:.75;font-size:14px;text-transform:uppercase;letter-spacing:1px}
+  .sel .val{min-width:220px;font-size:22px;font-weight:800}
+  .arr{font-size:20px;padding:6px 16px;border-radius:8px}
+  .stats{display:grid;grid-template-columns:auto 140px;gap:2px 10px;font-size:13px;text-align:left;margin:4px 0 10px}
+  .stats i{display:block;height:8px;border-radius:4px;background:#ff9d2e;margin-top:5px}
+  #trick{position:fixed;left:0;right:0;top:26%;text-align:center;font-size:44px;font-weight:900;color:#ffe14d;text-shadow:0 3px 8px #000;pointer-events:none;opacity:0;transition:opacity .25s}
+  #trick.crash{color:#ff5a4d}
+  .screen{overflow-y:auto;justify-content:safe center}
+  @media (max-height:620px){
+    .screen h1{font-size:34px}.screen{gap:4px}.sel .val{font-size:18px;min-width:180px}.arr{padding:4px 12px}
+    .stats{grid-template-columns:auto 100px;margin:0 0 4px;font-size:11px}.stats i{margin-top:3px}
+    #menu .help{display:none}button{padding:8px 28px;font-size:20px}#big{font-size:70px}
+  }
   #touch{position:fixed;inset:0;display:none;pointer-events:none}
   #touch div{position:absolute;bottom:40px;width:84px;height:84px;border-radius:50%;background:#fff3;border:3px solid #fff8;display:flex;align-items:center;justify-content:center;font-size:30px;pointer-events:auto}
 </style>
@@ -33,19 +47,24 @@
   <div id="speed"></div>
 </div>
 <div id="big"></div>
+<div id="trick"></div>
 <div id="touch">
   <div id="tL" style="left:20px">◀</div><div id="tR" style="left:120px">▶</div>
-  <div id="tB" style="right:120px">N</div><div id="tG" style="right:20px">▲</div>
+  <div id="tB" style="right:120px">N</div><div id="tG" style="right:20px">▲</div><div id="tD" style="right:20px;bottom:140px">▼</div>
 </div>
 <div id="menu" class="screen">
   <h1>MOTO CROSS</h1>
-  <p>Course 3 tours contre 5 pilotes</p>
-  <p>↑/W accélérer · ↓/S freiner · ←→/AD tourner · Shift nitro · R recommencer</p>
+  <div class="sel"><span class="lab">Piste</span><button class="arr" id="trkP">◀</button><div class="val" id="trkName"></div><button class="arr" id="trkN">▶</button></div>
+  <div class="sel"><span class="lab">Moto</span><button class="arr" id="bkP">◀</button><div class="val" id="bkName"></div><button class="arr" id="bkN">▶</button></div>
+  <div class="stats" id="bkStats"></div>
+  <div class="sel"><span class="lab">Niveau</span><button class="arr" id="difP">◀</button><div class="val" id="difName"></div><button class="arr" id="difN">▶</button></div>
+  <p class="help" style="margin-top:14px;font-size:14px">↑/W gaz · ↓/S frein · ←→/AD tourner · Shift nitro · R recommencer<br>
+  <b>En l'air</b> : ↑ front flip · ↓ back flip · ←→ whip — atterrissez droit pour gagner du nitro !</p>
   <button id="play">JOUER</button>
 </div>
 <div id="end" class="screen" style="display:none">
   <h1 id="endTitle"></h1><p id="endInfo"></p>
-  <button id="again">REJOUER</button>
+  <div style="display:flex;gap:12px"><button id="again">REJOUER</button><button id="toMenu" style="background:#ddd">MENU</button></div>
 </div>
 <script type="module" src="/src/main.js"></script>
 </body>
