@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:crazygames": "vite build --mode crazygames",
+    "zip": "npm run build:crazygames && node scripts/zip.mjs"
   },
   "dependencies": {
     "three": "0.170.0"

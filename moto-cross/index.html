@@ -2,46 +2,75 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#111111" />
+<meta name="description" content="Course de moto-cross 3D : 3 pistes, 4 motos, figures, nitro, améliorations. Jouable gratuitement dans le navigateur." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff9d2e'/><text x='32' y='46' font-size='38' text-anchor='middle'>🏍️</text></svg>" />
 <title>Moto Cross Racing</title>
 <style>
-  html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:system-ui,sans-serif;color:#fff;user-select:none;touch-action:none}
+  html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
   canvas{display:block}
   #hud{position:fixed;inset:0;pointer-events:none;display:none}
   #hud .tl{position:absolute;top:12px;left:16px;font-size:22px;font-weight:700;text-shadow:0 2px 4px #000;line-height:1.4}
   #hud .tr{position:absolute;top:12px;right:16px;font-size:22px;font-weight:700;text-shadow:0 2px 4px #000;text-align:right}
+  #hud .tc{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:22px;font-weight:800;color:#ffd84d;text-shadow:0 2px 4px #000}
   #hud .bl{position:absolute;bottom:16px;left:16px;width:200px}
   #bar{height:14px;background:#0008;border:2px solid #fff;border-radius:8px;overflow:hidden}
   #nitro{height:100%;width:100%;background:linear-gradient(90deg,#0af,#5ff)}
   #speed{position:absolute;bottom:16px;right:16px;font-size:40px;font-weight:800;text-shadow:0 2px 4px #000}
   #speed small{font-size:16px}
   #big{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;font-weight:900;text-shadow:0 4px 12px #000;pointer-events:none}
-  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#2a3a1faa,#000d);text-align:center;gap:10px}
-  .screen h1{font-size:clamp(36px,8vw,84px);margin:0;letter-spacing:2px;color:#ff9d2e;text-shadow:0 4px 0 #6a2d00}
-  .screen p{margin:4px;opacity:.9}
-  button{pointer-events:auto;font-size:24px;font-weight:800;padding:14px 40px;border:0;border-radius:12px;background:#ff9d2e;color:#222;cursor:pointer}
-  button:hover{background:#ffb95e}
-  .sel{display:flex;align-items:center;gap:12px;margin:2px 0}
-  .sel .lab{width:92px;text-align:right;opacity:.75;font-size:14px;text-transform:uppercase;letter-spacing:1px}
-  .sel .val{min-width:220px;font-size:22px;font-weight:800}
-  .arr{font-size:20px;padding:6px 16px;border-radius:8px}
-  .stats{display:grid;grid-template-columns:auto 140px;gap:2px 10px;font-size:13px;text-align:left;margin:4px 0 10px}
-  .stats i{display:block;height:8px;border-radius:4px;background:#ff9d2e;margin-top:5px}
   #trick{position:fixed;left:0;right:0;top:26%;text-align:center;font-size:44px;font-weight:900;color:#ffe14d;text-shadow:0 3px 8px #000;pointer-events:none;opacity:0;transition:opacity .25s}
   #trick.crash{color:#ff5a4d}
-  .screen{overflow-y:auto;justify-content:safe center}
-  @media (max-height:620px){
-    .screen h1{font-size:34px}.screen{gap:4px}.sel .val{font-size:18px;min-width:180px}.arr{padding:4px 12px}
-    .stats{grid-template-columns:auto 100px;margin:0 0 4px;font-size:11px}.stats i{margin-top:3px}
-    #menu .help{display:none}button{padding:8px 28px;font-size:20px}#big{font-size:70px}
-  }
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#2a3a1faa,#000d);text-align:center;gap:8px;overflow-y:auto;justify-content:safe center;padding:8px 12px;box-sizing:border-box}
+  .screen h1{font-size:clamp(34px,8vw,80px);margin:0;letter-spacing:2px;color:#ff9d2e;text-shadow:0 4px 0 #6a2d00}
+  .screen h2{margin:0;font-size:30px}
+  .screen p{margin:4px;opacity:.9}
+  button{pointer-events:auto;font-family:inherit;font-size:22px;font-weight:800;padding:12px 36px;border:0;border-radius:12px;background:#ff9d2e;color:#222;cursor:pointer}
+  button:hover:not(:disabled){background:#ffb95e}
+  button:disabled{background:#666;color:#bbb;cursor:not-allowed}
+  button.alt{background:#e4e4e4}
+  .row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+  .sel{display:flex;align-items:center;gap:12px;margin:2px 0}
+  .sel .lab{width:92px;text-align:right;opacity:.75;font-size:14px;text-transform:uppercase;letter-spacing:1px}
+  .sel .val{min-width:230px;font-size:22px;font-weight:800}
+  .arr{font-size:20px;padding:6px 16px;border-radius:8px}
+  .stats{display:grid;grid-template-columns:auto 150px;gap:2px 10px;font-size:13px;text-align:left;margin:4px 0 8px}
+  .stats i{display:block;height:8px;border-radius:4px;background:#ff9d2e;margin-top:5px}
+  .wallet{position:fixed;top:10px;right:14px;font-size:22px;font-weight:800;color:#ffd84d;text-shadow:0 2px 4px #000;z-index:5}
+  .iconbtn{position:fixed;top:8px;left:12px;z-index:5;display:flex;gap:8px}
+  .iconbtn button{font-size:20px;padding:6px 12px;background:#0007;color:#fff;border:2px solid #fff6}
+  .lock{color:#ff7a6b}
+  .upg{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;text-align:left;margin:6px 0}
+  .pips{letter-spacing:3px;color:#ff9d2e}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#000c;border:2px solid #ffd84d;color:#ffd84d;padding:10px 20px;border-radius:12px;font-weight:800;z-index:9;display:none}
+  .earn{font-size:18px;line-height:1.6;margin:6px 0}
+  .earn b{color:#ffd84d}
   #touch{position:fixed;inset:0;display:none;pointer-events:none}
   #touch div{position:absolute;bottom:40px;width:84px;height:84px;border-radius:50%;background:#fff3;border:3px solid #fff8;display:flex;align-items:center;justify-content:center;font-size:30px;pointer-events:auto}
+  @media (pointer:coarse){
+    #speed{right:auto;left:50%;transform:translateX(-50%);bottom:6px;font-size:30px}
+    #hud .bl{left:50%;transform:translateX(-50%);bottom:50px;width:170px}
+    #touch div{width:68px;height:68px;bottom:18px;font-size:26px}
+    #tL{left:14px!important}#tR{left:96px!important}#tB{right:96px!important}#tG{right:14px!important}#tD{right:14px!important;bottom:100px!important}
+    #hud .tl,#hud .tr,#hud .tc{font-size:17px;top:6px}
+  }
+  @media (max-height:620px){
+    .screen h1{font-size:30px}.screen{gap:3px}.sel .val{font-size:17px;min-width:170px}.arr{padding:4px 12px}
+    .stats{grid-template-columns:auto 100px;margin:0 0 3px;font-size:11px}.stats i{margin-top:3px}
+    .help{display:none}button{padding:7px 24px;font-size:18px}#big{font-size:70px}.wallet{font-size:17px}
+    .earn{font-size:14px;line-height:1.35}.screen h2{font-size:22px}
+  }
 </style>
 </head>
 <body>
+<div class="wallet" id="wallet" style="display:none"></div>
+<div class="iconbtn"><button id="bMusic" title="Musique (N)">🎵</button><button id="bSfx" title="Effets (M)">🔊</button></div>
+<div class="toast" id="toast"></div>
 <div id="hud">
   <div class="tl"><span id="pos"></span><br><span id="lap"></span></div>
+  <div class="tc">🪙 <span id="coins">0</span></div>
   <div class="tr"><span id="time"></span><br><span id="best"></span></div>
   <div class="bl"><div>NITRO</div><div id="bar"><div id="nitro"></div></div></div>
   <div id="speed"></div>
@@ -52,19 +81,31 @@
   <div id="tL" style="left:20px">◀</div><div id="tR" style="left:120px">▶</div>
   <div id="tB" style="right:120px">N</div><div id="tG" style="right:20px">▲</div><div id="tD" style="right:20px;bottom:140px">▼</div>
 </div>
+
 <div id="menu" class="screen">
   <h1>MOTO CROSS</h1>
   <div class="sel"><span class="lab">Piste</span><button class="arr" id="trkP">◀</button><div class="val" id="trkName"></div><button class="arr" id="trkN">▶</button></div>
-  <div class="sel"><span class="lab">Moto</span><button class="arr" id="bkP">◀</button><div class="val" id="bkName"></div><button class="arr" id="bkN">▶</button></div>
-  <div class="stats" id="bkStats"></div>
   <div class="sel"><span class="lab">Niveau</span><button class="arr" id="difP">◀</button><div class="val" id="difName"></div><button class="arr" id="difN">▶</button></div>
-  <p class="help" style="margin-top:14px;font-size:14px">↑/W gaz · ↓/S frein · ←→/AD tourner · Shift nitro · R recommencer<br>
+  <div class="sel"><span class="lab">Qualité</span><button class="arr" id="qP">◀</button><div class="val" id="qName"></div><button class="arr" id="qN">▶</button></div>
+  <div class="sel"><span class="lab">Moto</span><div class="val" id="bkName" style="min-width:0;margin:0 8px"></div></div>
+  <p class="help" style="margin-top:8px;font-size:14px">↑/W gaz · ↓/S frein · ←→/AD tourner · Shift nitro · R recommencer · M son · N musique<br>
   <b>En l'air</b> : ↑ front flip · ↓ back flip · ←→ whip — atterrissez droit pour gagner du nitro !</p>
-  <button id="play">JOUER</button>
+  <div class="row"><button id="play">JOUER</button><button id="garage" class="alt">🔧 GARAGE</button></div>
 </div>
+
+<div id="garageScreen" class="screen" style="display:none;background:linear-gradient(#0000,#000c 55%)">
+  <div style="flex:1"></div>
+  <h2 id="gName"></h2>
+  <div class="row"><button class="arr" id="gP">◀</button><div id="gStatus" style="min-width:220px;font-weight:800;font-size:18px"></div><button class="arr" id="gN">▶</button></div>
+  <div class="stats" id="gStats"></div>
+  <div class="upg" id="gUpg"></div>
+  <div class="row"><button id="gAct"></button><button id="gBack" class="alt">RETOUR</button></div>
+</div>
+
 <div id="end" class="screen" style="display:none">
   <h1 id="endTitle"></h1><p id="endInfo"></p>
-  <div style="display:flex;gap:12px"><button id="again">REJOUER</button><button id="toMenu" style="background:#ddd">MENU</button></div>
+  <div class="earn" id="endEarn"></div>
+  <div class="row"><button id="again">REJOUER</button><button id="toMenu" class="alt">MENU</button></div>
 </div>
 <script type="module" src="/src/main.js"></script>
 </body>

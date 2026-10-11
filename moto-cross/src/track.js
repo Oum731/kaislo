@@ -81,9 +81,9 @@ export function createTrack(def) {
     return { x: -tz / l, z: tx / l };
   };
 
-  function build(scene) {
+  function build(scene, q = { seg: 200, trees: 1 }) {
     const group = new THREE.Group();
-    const size = 900, seg = 200;
+    const size = 900, seg = q.seg;
     const geo = new THREE.PlaneGeometry(size, size, seg, seg);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
@@ -113,9 +113,10 @@ export function createTrack(def) {
         : pr.kind === 'cactus'
           ? [[new THREE.CylinderGeometry(0.5, 0.6, 5, 7), pr.leaf, 2.5], [new THREE.CylinderGeometry(0.3, 0.3, 2, 6), pr.leaf, 3.4, 0.9]]
           : [[new THREE.DodecahedronGeometry(1.6, 0), pr.leaf, 0.6]];
-      const meshes = parts.map(([g, col]) => new THREE.InstancedMesh(g, new THREE.MeshLambertMaterial({ color: col, flatShading: true }), pr.count));
+      const total = Math.round(pr.count * q.trees);
+      const meshes = parts.map(([g, col]) => new THREE.InstancedMesh(g, new THREE.MeshLambertMaterial({ color: col, flatShading: true }), total));
       let n = 0, tries = 0;
-      while (n < pr.count && tries++ < pr.count * 12) {
+      while (n < total && tries++ < total * 12) {
         const x = (Math.random() - 0.5) * 860, z = (Math.random() - 0.5) * 860;
         const { d, th } = nearest(x, z);
         if (d < width * 1.8) continue;
@@ -159,7 +160,26 @@ export function createTrack(def) {
     return group;
   }
 
-  return { def, samples, SAMPLES, width, length, trackH, nearest, heightAt, normalAt, build };
+  // Pièces à ramasser : lignes sur la piste + arcs au-dessus des sauts
+  function makeCoins() {
+    const out = [];
+    const rowAt = (i, lane, lift = 0) => {
+      const p = samples[i], nv = normalAt(i), x = p.x + nv.x * lane, z = p.z + nv.z * lane;
+      out.push({ x, y: heightAt(x, z, i) + 1.3 + lift, z, i, on: true });
+    };
+    const lanes = [-3.5, 0, 3.5];
+    for (let i = 30, k = 0; i < SAMPLES - 10; i += 38, k++) {
+      const lane = lanes[k % 3];
+      for (let c = 0; c < 4; c++) rowAt((i + c * 3) % SAMPLES, lane);
+    }
+    for (const j of def.jumps) {
+      const jc = Math.round(j * SAMPLES);
+      for (let c = 0; c < 6; c++) rowAt((jc + 3 + c * 3) % SAMPLES, 0, Math.sin((c / 5) * Math.PI) * 5.5);
+    }
+    return out;
+  }
+
+  return { def, samples, SAMPLES, width, length, trackH, nearest, heightAt, normalAt, build, makeCoins };
 }
 
 export function disposeGroup(g) {

@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import { TRACKS, createTrack, disposeGroup } from './track.js';
 import { BIKES, createMoto } from './moto.js';
 import { createParticles } from './particles.js';
-import { startEngine, setEngine, stopEngine, beep } from './audio.js';
+import { initAudio, setEngine, stopEngine, startMusic, setMusicIntensity, setMusicOn, setSfxOn, isMusicOn, isSfxOn, sfx } from './audio.js';
 import { platform } from './platform.js';
+import * as store from './save.js';
+import { LEVELS, autoLevel, isMobile } from './quality.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const LAPS = 3, AI_COUNT = 5, TAU = Math.PI * 2;
@@ -12,8 +14,7 @@ const $ = (id) => document.getElementById(id);
 const clamp = THREE.MathUtils.clamp;
 
 // ---------- Rendu ----------
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: 'high-performance' });
 renderer.shadowMap.enabled = true;
 document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene();
@@ -26,17 +27,33 @@ sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 200 });
 scene.add(sun, sun.target);
-function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
-addEventListener('resize', resize); resize();
+let pixelRatio = 1;
+function resize() { renderer.setPixelRatio(Math.min(devicePixelRatio, pixelRatio)); renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.55;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 const fx = createParticles(scene);
 
+// ---------- Qualité graphique (auto / bas / moyen / élevé) ----------
+const QMODES = ['auto', 0, 1, 2];
+let qMode = QMODES.includes(store.get().settings.quality) ? store.get().settings.quality : 'auto', level = qMode === 'auto' ? autoLevel() : qMode;
+function applyLevel() {
+  const L = LEVELS[level];
+  pixelRatio = L.pr; resize();
+  sun.castShadow = L.shadows;
+  if (sun.shadow.mapSize.x !== L.shadowSize) { sun.shadow.mapSize.set(L.shadowSize, L.shadowSize); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+  scene.fog.far = L.fogFar;
+}
+applyLevel();
+
 // ---------- Réglages sauvegardés ----------
 const sel = { track: 0, bike: 0, diff: 1 };
 try { Object.assign(sel, JSON.parse(localStorage.getItem('motocross_sel') || '{}')); } catch (e) {}
 sel.track = clamp(sel.track | 0, 0, TRACKS.length - 1); sel.bike = clamp(sel.bike | 0, 0, BIKES.length - 1); sel.diff = clamp(sel.diff | 0, 0, DIFFS.length - 1);
+const trackUnlocked = (i) => i === 0 || !!store.get().podium[TRACKS[i - 1].id];
+if (!store.owns(sel.bike)) sel.bike = 0;
+if (!trackUnlocked(sel.track)) sel.track = 0;
 const saveSel = () => { try { localStorage.setItem('motocross_sel', JSON.stringify(sel)); } catch (e) {} };
 
 // ---------- Entrées ----------
@@ -45,11 +62,13 @@ const map = { ArrowUp: 'up', KeyW: 'up', KeyZ: 'up', ArrowDown: 'down', KeyS: 'd
 addEventListener('keydown', (e) => {
   if (map[e.code]) { keys[map[e.code]] = true; e.preventDefault(); }
   if (e.code === 'KeyR' && state !== 'menu') startRace();
+  if (e.code === 'KeyM') toggleSfx();
+  if (e.code === 'KeyN') toggleMusic();
 });
 addEventListener('keyup', (e) => { if (map[e.code]) keys[map[e.code]] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
-if ('ontouchstart' in window) {
-  $('touch').style.display = 'block';
+const isTouch = 'ontouchstart' in window;
+if (isTouch) {
   for (const [id, k] of [['tL', 'left'], ['tR', 'right'], ['tB', 'nitro'], ['tG', 'up'], ['tD', 'down']]) {
     const el = $(id);
     el.addEventListener('pointerdown', (e) => { keys[k] = true; e.preventDefault(); });
@@ -58,12 +77,19 @@ if ('ontouchstart' in window) {
 }
 
 // ---------- Piste ----------
-let track, worldGroup, MPS, best = 0;
+let track, worldGroup, MPS, best = 0, coinList = [], coinMesh = null;
+const coinGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.14, 16); coinGeo.rotateX(Math.PI / 2);
+const coinMat = new THREE.MeshStandardMaterial({ color: 0xffc400, metalness: 0.8, roughness: 0.25, emissive: 0x663f00 });
+const COIN_VALUE = 5;
 function loadTrack(i) {
   if (worldGroup) disposeGroup(worldGroup);
+  if (coinMesh) { scene.remove(coinMesh); coinMesh.dispose(); }
   const def = TRACKS[i];
   track = createTrack(def);
-  worldGroup = track.build(scene);
+  worldGroup = track.build(scene, LEVELS[level]);
+  coinList = track.makeCoins();
+  coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, coinList.length);
+  coinMesh.frustumCulled = false; scene.add(coinMesh);
   MPS = track.length / track.SAMPLES;
   scene.background.set(def.sky); scene.fog.color.set(def.fog); sun.color.set(def.sunColor);
   best = 0;
@@ -71,7 +97,7 @@ function loadTrack(i) {
 }
 
 // ---------- Pilotes ----------
-let bike = BIKES[sel.bike];
+let bike = BIKES[sel.bike], stats = store.effectiveStats(bike, sel.bike);
 const player = { isPlayer: true, mesh: null };
 const aiStyles = [1, 2, 3, 0, 1];
 const aiColors = [0x2266ff, 0xffcc00, 0xee2266, 0x22bb44, 0x22cccc];
@@ -81,11 +107,12 @@ for (let i = 0; i < AI_COUNT; i++) {
   scene.add(a.mesh); ais.push(a);
 }
 const all = [player, ...ais];
-function setPlayerBike() {
-  bike = BIKES[sel.bike];
-  if (player.mesh) scene.remove(player.mesh);
-  player.mesh = createMoto(bike.color, bike.style, 1);
+function setPlayerBike(idx = sel.bike) {
+  const b = BIKES[idx];
+  if (player.mesh) disposeGroup(player.mesh);
+  player.mesh = createMoto(b.color, b.style, 1);
   scene.add(player.mesh);
+  if (idx === sel.bike) { bike = b; stats = store.effectiveStats(b, idx); }
 }
 
 function resetRider(r, slot) {
@@ -103,7 +130,12 @@ const gridSlot = (i) => (i === 0 ? 3 : i < 4 ? i - 1 : i);
 // ---------- État de course ----------
 let state = 'menu', t = 0, raceTime = 0, finishOrder = [], camHeading = 0, lastIdx = 0, lastCount = 4, shake = 0;
 
+let garageOpen = false, raceCoins = 0, raceTricks = 0;
 function startRace() {
+  if (!trackUnlocked(sel.track)) { toast('🔒 Piste verrouillée : finissez dans le top 3 sur la piste précédente'); sfx.error(); return; }
+  if (garageOpen) closeGarage();
+  coinList.forEach((c) => { c.on = true; }); raceCoins = 0; raceTricks = 0;
+  ais.forEach((a) => { a.mesh.visible = true; });
   all.forEach((r, i) => resetRider(r, gridSlot(i)));
   lastIdx = player.idx;
   finishOrder = []; raceTime = 0; state = 'countdown'; t = 0; lastCount = 4;
@@ -111,7 +143,10 @@ function startRace() {
   $('menu').style.display = $('end').style.display = 'none';
   $('hud').style.display = 'block';
   $('trick').style.opacity = 0;
-  startEngine(); platform.gameplayStop();
+  $('wallet').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'none';
+  $('touch').style.display = isTouch ? 'block' : 'none';
+  initAudio(); startMusic(TRACKS[sel.track].id, 1); setMusicIntensity(1);
+  platform.gameplayStop();
 }
 const fmt = (s) => { const m = Math.floor(s / 60); return `${m}:${(s - m * 60).toFixed(2).padStart(5, '0')}`; };
 const ordinal = (n) => (n === 1 ? '1er' : `${n}e`);
@@ -137,16 +172,16 @@ function landPlayer(p, impact) {
   const dust = TRACKS[sel.track].dust;
   if (spun && (Math.abs(rx) > 0.9 || Math.abs(rz) > 0.9)) {
     p.stun = 1.2; p.crashSign = Math.random() < 0.5 ? -1 : 1; p.speed *= 0.3;
-    fx.burst(p.x, p.y, p.z, dust, 30, 9); shake = 1; beep(90, 0.3);
+    fx.burst(p.x, p.y, p.z, dust, 30, 9); shake = 1; sfx.crash();
     showTrick('CHUTE !', true);
     return;
   }
   if (nx || nz) {
     const n = Math.abs(nx) + Math.abs(nz);
     p.nitro = Math.min(1, p.nitro + 0.3 * n);
-    showTrick(`${trickName(nx, nz)}  +NITRO`, false); beep(1100, 0.2);
+    showTrick(`${trickName(nx, nz)}  +NITRO`, false); sfx.trick(); raceTricks += n;
   }
-  if (impact < -12) { fx.burst(p.x, p.y, p.z, dust, 14, 5); shake = Math.max(shake, 0.4); beep(130, 0.12); }
+  if (impact < -12) { fx.burst(p.x, p.y, p.z, dust, 14, 5); shake = Math.max(shake, 0.4); sfx.land(clamp(-impact / 25, 0.3, 1)); }
   if (impact < -18) p.speed *= 0.9;
 }
 
@@ -157,7 +192,8 @@ function updatePlayer(dt) {
   const up = ctl && keys.up, down = ctl && keys.down;
   const steer = ctl ? (keys.left ? 1 : 0) - (keys.right ? 1 : 0) : 0; // + = gauche
   const nitroOn = ctl && keys.nitro && p.nitro > 0 && p.speed > 5;
-  p.nitro = nitroOn ? Math.max(0, p.nitro - dt * 0.3) : Math.min(1, p.nitro + dt * 0.05);
+  p.nitro = nitroOn ? Math.max(0, p.nitro - dt * 0.3) : Math.min(1, p.nitro + dt * 0.05 * stats.recharge);
+  if (nitroOn && !p.nitroOn) sfx.nitro();
   p.nitroOn = nitroOn;
 
   const nr = track.nearest(p.x, p.z, lastIdx);
@@ -165,19 +201,19 @@ function updatePlayer(dt) {
   const nl = track.normalAt(nr.i), sp = track.samples[nr.i];
   p.lat = (p.x - sp.x) * nl.x + (p.z - sp.z) * nl.z;
   const offTrack = nr.d > track.width * 0.62;
-  const maxSpeed = (bike.max + (nitroOn ? 16 * bike.nitro : 0)) * (offTrack ? 0.6 : 1);
+  const maxSpeed = (stats.max + (nitroOn ? 16 * stats.nitro : 0)) * (offTrack ? 0.6 : 1);
 
   if (p.grounded) {
     const fx_ = Math.sin(p.heading), fz_ = Math.cos(p.heading);
     const slope = (track.heightAt(p.x + fx_, p.z + fz_, lastIdx) - track.heightAt(p.x - fx_, p.z - fz_, lastIdx)) / 2;
-    if (up) p.speed += (bike.acc + (nitroOn ? 18 : 0)) * dt;
+    if (up) p.speed += (stats.acc + (nitroOn ? 18 : 0)) * dt;
     if (down) p.speed -= 45 * grip * dt;
     if (p.stun > 0) p.speed -= p.speed * 2.2 * dt;
     p.speed -= slope * 9.8 * 0.7 * dt;
     p.speed -= p.speed * (offTrack ? 0.35 : 0.06) * dt;
     if (p.speed > maxSpeed) p.speed -= (p.speed - maxSpeed) * 2.5 * dt;
     p.speed = Math.max(0, p.speed);
-    p.heading += steer * (1.9 - p.speed / 48) * bike.handling * Math.min(1, grip + 0.1) * Math.min(1, p.speed / 8) * dt;
+    p.heading += steer * (1.9 - p.speed / 48) * stats.handling * Math.min(1, grip + 0.1) * Math.min(1, p.speed / 8) * dt;
   } else {
     p.heading += steer * 0.15 * dt;
     if (ctl) { // figures
@@ -210,7 +246,7 @@ function updatePlayer(dt) {
   p.crashTilt += ((p.stun > 0.3 ? 1.35 * (p.crashSign || 1) : 0) - p.crashTilt) * Math.min(1, 10 * dt);
 
   advanceProgress(p, nr.i);
-  setEngine(p.speed / 62, up ? 1 : 0.2, nitroOn);
+  setEngine(p.speed / 62, up ? 1 : 0.2, nitroOn, p.grounded);
 }
 
 function advanceProgress(r, i) {
@@ -274,7 +310,7 @@ function collide(dt) {
     const rel = player.speed - a.speed;
     if (rel > 0) { player.speed -= rel * 0.3; a.speed += rel * 0.3; }
     if (player.hitCd <= 0 && (rel > 4 || ov > 0.5)) {
-      player.hitCd = 0.3; shake = Math.max(shake, 0.35); beep(170, 0.1);
+      player.hitCd = 0.3; shake = Math.max(shake, 0.35); sfx.bump();
       for (let k = 0; k < 6; k++) fx.spark(player.x - nx * 0.7, player.y + 1, player.z - nz * 0.7);
     }
   }
@@ -284,10 +320,10 @@ function collide(dt) {
 function emitFX(r, dt) {
   const sx = Math.sin(r.heading), sz = Math.cos(r.heading);
   if (r.grounded && r.speed > 7 && state !== 'menu') {
-    r.dustAcc += r.speed * dt * (r.isPlayer ? 0.9 : 0.45);
+    r.dustAcc += r.speed * dt * (r.isPlayer ? 0.9 : 0.45) * LEVELS[level].particles;
     while (r.dustAcc >= 1) { r.dustAcc -= 1; fx.dust(r.x - sx * 1.0, r.y, r.z - sz * 1.0, TRACKS[sel.track].dust, r.speed); }
   }
-  if (r.nitroOn) for (let k = 0; k < 3; k++) fx.flame(r.x - sx * 1.5, r.y + 0.9, r.z - sz * 1.5, -sx * 9, -sz * 9, true);
+  if (r.nitroOn) for (let k = 0, n = Math.max(1, Math.round(3 * LEVELS[level].particles)); k < n; k++) fx.flame(r.x - sx * 1.5, r.y + 0.9, r.z - sz * 1.5, -sx * 9, -sz * 9, true);
   else if (r.isPlayer && state === 'racing' && r.speed > 3 && keys.up && Math.random() < 0.3) fx.flame(r.x - sx * 1.5, r.y + 0.9, r.z - sz * 1.5, -sx * 4, -sz * 4, false);
 }
 
@@ -302,35 +338,85 @@ function applyMesh(r, dt) {
   front.rotation.x = rear.rotation.x = (front.rotation.x + (r.speed * dt) / wheelR) % TAU;
 }
 
-// ---------- Fin de course ----------
+
+// ---------- Fin de course + récompenses ----------
 const rank = () => [...all].sort((a, b) => (b.finished - a.finished) || (a.finished && b.finished ? a.finishTime - b.finishTime : b.prog - a.prog)).indexOf(player) + 1;
+const PLACE_COINS = [400, 250, 160, 100, 70, 50], DIFF_MULT = [0.7, 1, 1.5];
 function endRace() {
   state = 'finished';
-  stopEngine(); platform.gameplayStop();
+  stopEngine(); setMusicIntensity(0.3); platform.gameplayStop();
   const place = finishOrder.indexOf(player) + 1, time = player.finishTime;
   let rec = '';
   if (!best || time < best) {
     best = time; rec = ' — Nouveau record !';
     try { localStorage.setItem('motocross_best_' + TRACKS[sel.track].id, String(time)); } catch (e) {}
   }
-  if (place === 1) platform.happytime();
+  const mult = DIFF_MULT[sel.diff] * (1 + 0.3 * sel.track);
+  const base = Math.round(PLACE_COINS[Math.min(5, place - 1)] * mult), trickPay = raceTricks * 25, coinPay = raceCoins, total = base + trickPay + coinPay;
+  const st = store.get();
+  st.stats.races++; st.stats.tricks += raceTricks; st.stats.coins += total; if (place === 1) st.stats.wins++;
+  let unlock = '';
+  if (place <= 3 && !st.podium[TRACKS[sel.track].id]) {
+    st.podium[TRACKS[sel.track].id] = true;
+    const nx = TRACKS[sel.track + 1]; if (nx) unlock = `<br>🔓 Nouvelle piste débloquée : <b>${nx.name}</b> !`;
+  }
+  store.addCoins(total);
+  if (place === 1) { platform.happytime(); sfx.win(); } else sfx.lose();
   $('endTitle').textContent = place === 1 ? '🏆 VICTOIRE !' : `${ordinal(place)} place`;
   $('endInfo').textContent = `${TRACKS[sel.track].name} · Temps : ${fmt(time)}${rec}`;
+  $('endEarn').innerHTML = `Position : <b>+${base}</b> 🪙 · Pièces ramassées : <b>+${coinPay}</b> 🪙 · Figures (${raceTricks}) : <b>+${trickPay}</b> 🪙<br>Total : <b>+${total}</b> 🪙 — Solde : <b>${st.coins}</b> 🪙${unlock}`;
+  $('wallet').textContent = `🪙 ${st.coins}`; $('wallet').style.display = 'block';
+  $('touch').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'flex';
   $('hud').style.display = 'none';
   $('end').style.display = 'flex';
 }
 
+// ---------- Pièces ----------
+const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(), _e = new THREE.Euler();
+function updateCoins() {
+  const racing = state === 'racing';
+  for (let i = 0; i < coinList.length; i++) {
+    const c = coinList[i];
+    if (c.on && racing) {
+      const dx = player.x - c.x, dz = player.z - c.z;
+      if (dx * dx + dz * dz < 7.8 && Math.abs(player.y + 1 - c.y) < 3.2) {
+        c.on = false; raceCoins += COIN_VALUE; sfx.coin();
+        fx.burst(c.x, c.y - 0.4, c.z, 0xffd84d, 6, 3);
+      }
+    }
+    const k = c.on ? 1 : 0;
+    coinMesh.setMatrixAt(i, _m.compose(_p.set(c.x, c.y, c.z), _q.setFromEuler(_e.set(0, t * 3 + i, 0)), _s.set(k, k, k)));
+  }
+  coinMesh.instanceMatrix.needsUpdate = true;
+}
+
 // ---------- Boucle ----------
-let prev = performance.now();
+let prev = performance.now(), ema = 16, lowAcc = 0;
 const camTarget = new THREE.Vector3();
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+  const raw = Math.min(0.1, (now - prev) / 1000), dt = Math.min(0.05, raw); prev = now;
   t += dt;
+  ema += (raw * 1000 - ema) * 0.05;
+  // Qualité adaptative : si le jeu rame en course, on baisse d'un cran (résolution, ombres, particules)
+  if (state === 'racing' && raceTime > 3 && qMode === 'auto' && level > 0) {
+    if (ema > 26) lowAcc += raw; else lowAcc = Math.max(0, lowAcc - raw * 0.5);
+    if (lowAcc > 2.5) { level--; applyLevel(); lowAcc = 0; ema = 16; }
+  }
+  updateCoins();
   if (state === 'menu') {
-    const a = t * 0.1;
-    camera.position.set(Math.cos(a) * 300, 90, Math.sin(a) * 250);
-    camera.lookAt(0, 0, 0);
+    if (garageOpen) { // la caméra tourne autour de la moto
+      const a = t * 0.6;
+      camera.position.set(player.x + Math.cos(a) * 5.4, player.y + 1.4, player.z + Math.sin(a) * 5.4);
+      camera.lookAt(player.x, player.y - 0.1, player.z);
+      camera.fov = 50; camera.updateProjectionMatrix();
+      applyMesh(player, dt);
+    } else {
+      const a = t * 0.1;
+      camera.fov = 70; camera.updateProjectionMatrix();
+      camera.position.set(Math.cos(a) * 300, 90, Math.sin(a) * 250);
+      camera.lookAt(0, 0, 0);
+    }
     fx.update(dt);
     renderer.render(scene, camera);
     return;
@@ -339,8 +425,8 @@ function frame(now) {
     const c = 3 - Math.floor(t);
     if (c !== lastCount) {
       lastCount = c;
-      if (c > 0) { $('big').textContent = c; beep(500); }
-      else { $('big').textContent = 'GO !'; beep(900, 0.4); state = 'racing'; platform.gameplayStart(); setTimeout(() => { if (state !== 'countdown') $('big').textContent = ''; }, 800); }
+      if (c > 0) { $('big').textContent = c; sfx.count(); }
+      else { $('big').textContent = 'GO !'; sfx.go(); state = 'racing'; platform.gameplayStart(); setTimeout(() => { if (state !== 'countdown') $('big').textContent = ''; }, 800); }
     }
   }
   // Simulation en pas fixes (~1/60 s) : physique stable même si l'affichage ralentit
@@ -367,7 +453,11 @@ function frame(now) {
   camera.lookAt(player.x + Math.sin(camHeading) * 6, player.y + 1.8, player.z + Math.cos(camHeading) * 6);
   camera.fov += ((68 + player.speed * 0.4 + (player.nitroOn ? 10 : 0)) - camera.fov) * Math.min(1, 4 * dt);
   camera.updateProjectionMatrix();
-  if (import.meta.env.DEV && window.__closeup) { const a = window.__closeup; camera.position.set(player.x + Math.sin(player.heading + a) * 3.6, player.y + 1.5, player.z + Math.cos(player.heading + a) * 3.6); camera.lookAt(player.x, player.y + 1.0, player.z); }
+  if (import.meta.env.DEV && window.__closeup !== undefined) { // caméra cinématique (outils de capture)
+    const a = window.__closeup, d = window.__closeDist || 3.6, hh = window.__closeH ?? 1.5;
+    camera.position.set(player.x + Math.sin(player.heading + a) * d, player.y + hh, player.z + Math.cos(player.heading + a) * d);
+    camera.fov = window.__closeFov || 55; camera.updateProjectionMatrix(); camera.lookAt(player.x, player.y + 1.0, player.z);
+  }
   sun.position.set(player.x + 60, player.y + 90, player.z + 40);
   sun.target.position.set(player.x, player.y, player.z);
 
@@ -375,34 +465,117 @@ function frame(now) {
   $('lap').textContent = `Tour ${player.lap}/${LAPS}`;
   $('time').textContent = fmt(raceTime);
   $('best').textContent = best ? `Record ${fmt(best)}` : '';
+  $('coins').textContent = raceCoins;
   $('speed').innerHTML = `${Math.round(player.speed * 3.6)} <small>km/h</small>`;
   $('nitro').style.width = `${player.nitro * 100}%`;
   renderer.render(scene, camera);
 }
 
-// ---------- Menu ----------
-function renderMenu() {
-  $('trkName').textContent = TRACKS[sel.track].name;
-  $('bkName').textContent = bike.name;
-  $('difName').textContent = DIFFS[sel.diff].name;
-  const bar = (v, lo, hi) => `<i style="width:${clamp(((v - lo) / (hi - lo)) * 100, 8, 100)}%"></i>`;
-  $('bkStats').innerHTML = `<span>Vitesse</span>${bar(bike.max, 30, 52)}<span>Accélération</span>${bar(bike.acc, 12, 28)}<span>Maniabilité</span>${bar(bike.handling, 0.6, 1.15)}<span>Nitro</span>${bar(bike.nitro, 0.6, 1.3)}<span style="grid-column:1/3;opacity:.7">${bike.desc}</span>`;
-}
+// ---------- Interface : menu, garage, réglages ----------
 const cycle = (v, d, n) => (v + d + n) % n;
+const bar = (v, lo, hi) => `<i style="width:${clamp(((v - lo) / (hi - lo)) * 100, 8, 100)}%"></i>`;
+const statsHTML = (b) => `<span>Vitesse</span>${bar(b.max, 30, 58)}<span>Accélération</span>${bar(b.acc, 12, 34)}<span>Maniabilité</span>${bar(b.handling, 0.6, 1.35)}<span>Nitro</span>${bar(b.nitro, 0.6, 1.8)}`;
+let toastTimer;
+function toast(msg, ms = 3200) { const el = $('toast'); el.textContent = msg; el.style.display = 'block'; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.style.display = 'none'; }, ms); }
+const showWallet = () => { $('wallet').textContent = `🪙 ${store.get().coins}`; $('wallet').style.display = 'block'; };
+function renderIcons() {
+  $('bMusic').textContent = isMusicOn() ? '🎵' : '🔇'; $('bMusic').style.opacity = isMusicOn() ? 1 : 0.5;
+  $('bSfx').textContent = isSfxOn() ? '🔊' : '🔈'; $('bSfx').style.opacity = isSfxOn() ? 1 : 0.5;
+}
+function toggleMusic() { const v = !isMusicOn(); setMusicOn(v); store.get().settings.music = v; store.save(); renderIcons(); }
+function toggleSfx() { const v = !isSfxOn(); setSfxOn(v); store.get().settings.sfx = v; store.save(); renderIcons(); }
+$('bMusic').onclick = toggleMusic; $('bSfx').onclick = toggleSfx;
+setMusicOn(store.get().settings.music); setSfxOn(store.get().settings.sfx);
+
+function renderMenu() {
+  const ok = trackUnlocked(sel.track);
+  $('trkName').innerHTML = ok ? TRACKS[sel.track].name : `<span class="lock">🔒 ${TRACKS[sel.track].name}</span>`;
+  $('difName').textContent = DIFFS[sel.diff].name;
+  $('qName').textContent = qMode === 'auto' ? `Auto (${LEVELS[level].name})` : LEVELS[qMode].name;
+  const lv = ['eng', 'han', 'nit'].reduce((s, k) => s + store.upgLevel(sel.bike, k), 0);
+  $('bkName').textContent = `${bike.name}${lv ? ` (+${lv})` : ''}`;
+  $('play').disabled = !ok; $('play').textContent = ok ? 'JOUER' : '🔒 VERROUILLÉE';
+  showWallet();
+}
+function placeGrid() { all.forEach((r, i) => { resetRider(r, gridSlot(i)); applyMesh(r, 0); }); lastIdx = player.idx; }
+let audioStarted = false;
+const themeId = () => TRACKS[sel.track].id;
+function changeTrack() { saveSel(); loadTrack(sel.track); placeGrid(); renderMenu(); if (audioStarted) startMusic(themeId(), 0.2); }
 $('trkP').onclick = () => { sel.track = cycle(sel.track, -1, TRACKS.length); changeTrack(); };
 $('trkN').onclick = () => { sel.track = cycle(sel.track, 1, TRACKS.length); changeTrack(); };
-$('bkP').onclick = () => { sel.bike = cycle(sel.bike, -1, BIKES.length); changeBike(); };
-$('bkN').onclick = () => { sel.bike = cycle(sel.bike, 1, BIKES.length); changeBike(); };
 $('difP').onclick = () => { sel.diff = cycle(sel.diff, -1, DIFFS.length); saveSel(); renderMenu(); };
 $('difN').onclick = () => { sel.diff = cycle(sel.diff, 1, DIFFS.length); saveSel(); renderMenu(); };
-function placeGrid() { all.forEach((r, i) => { resetRider(r, gridSlot(i)); applyMesh(r, 0); }); lastIdx = player.idx; }
-function changeTrack() { saveSel(); loadTrack(sel.track); placeGrid(); renderMenu(); }
-function changeBike() { saveSel(); setPlayerBike(); placeGrid(); renderMenu(); }
+function changeQuality(d) {
+  qMode = QMODES[cycle(QMODES.indexOf(qMode), d, QMODES.length)];
+  store.get().settings.quality = qMode; store.save();
+  level = qMode === 'auto' ? autoLevel() : qMode;
+  applyLevel(); loadTrack(sel.track); placeGrid(); renderMenu();
+}
+$('qP').onclick = () => changeQuality(-1); $('qN').onclick = () => changeQuality(1);
+
+// Garage : acheter, équiper, améliorer
+let gi = 0;
+function openGarage() {
+  garageOpen = true; gi = sel.bike;
+  $('menu').style.display = 'none'; $('garageScreen').style.display = 'flex';
+  ais.forEach((a) => { a.mesh.visible = false; });
+  setPlayerBike(gi); placeGrid(); renderGarage();
+}
+function closeGarage() {
+  garageOpen = false; $('garageScreen').style.display = 'none'; $('menu').style.display = 'flex';
+  ais.forEach((a) => { a.mesh.visible = true; });
+  setPlayerBike(sel.bike); placeGrid(); renderMenu();
+}
+function renderGarage() {
+  const b = BIKES[gi], owned = store.owns(gi), eq = gi === sel.bike, coins = store.get().coins;
+  $('gName').textContent = b.name;
+  $('gStatus').innerHTML = owned ? (eq ? '✔ Équipée' : 'Possédée') : `<span class="lock">🔒 ${store.BIKE_PRICES[gi]} 🪙</span>`;
+  $('gStats').innerHTML = statsHTML(owned ? store.effectiveStats(b, gi) : b) + `<span style="grid-column:1/3;opacity:.7">${b.desc}</span>`;
+  const box = $('gUpg'); box.innerHTML = '';
+  for (const u of store.UPGRADES) {
+    const lvl = store.upgLevel(gi, u.key), cost = store.upgCost(lvl), max = lvl >= store.MAX_UPG;
+    const left = document.createElement('div');
+    left.innerHTML = `<b>${u.name}</b> <small style="opacity:.7">${u.desc}</small><br><span class="pips">${'●'.repeat(lvl)}${'○'.repeat(store.MAX_UPG - lvl)}</span>`;
+    const btn = document.createElement('button');
+    btn.style.cssText = 'font-size:16px;padding:6px 16px';
+    btn.textContent = !owned ? '—' : max ? 'MAX' : `🪙 ${cost}`;
+    btn.disabled = !owned || max || coins < cost;
+    btn.onclick = () => { if (store.buyUpgrade(gi, u.key)) { sfx.buy(); if (gi === sel.bike) stats = store.effectiveStats(bike, gi); renderGarage(); } else sfx.error(); };
+    box.append(left, btn);
+  }
+  const act = $('gAct');
+  if (!owned) { act.textContent = `ACHETER 🪙 ${store.BIKE_PRICES[gi]}`; act.disabled = coins < store.BIKE_PRICES[gi]; }
+  else if (!eq) { act.textContent = 'ÉQUIPER'; act.disabled = false; }
+  else { act.textContent = 'ÉQUIPÉE'; act.disabled = true; }
+  showWallet();
+}
+$('gAct').onclick = () => {
+  if (!store.owns(gi)) { if (!store.buyBike(gi)) { sfx.error(); return; } sfx.buy(); }
+  sel.bike = gi; saveSel(); bike = BIKES[gi]; stats = store.effectiveStats(bike, gi); renderGarage();
+};
+$('gP').onclick = () => { gi = cycle(gi, -1, BIKES.length); setPlayerBike(gi); placeGrid(); renderGarage(); };
+$('gN').onclick = () => { gi = cycle(gi, 1, BIKES.length); setPlayerBike(gi); placeGrid(); renderGarage(); };
+$('garage').onclick = openGarage; $('gBack').onclick = closeGarage;
 
 $('play').onclick = startRace;
 $('again').onclick = async () => { await platform.showMidgameAd(); startRace(); };
-$('toMenu').onclick = async () => { await platform.showMidgameAd(); state = 'menu'; $('end').style.display = 'none'; $('hud').style.display = 'none'; $('menu').style.display = 'flex'; stopEngine(); placeGrid(); };
+$('toMenu').onclick = async () => {
+  await platform.showMidgameAd();
+  state = 'menu'; $('end').style.display = 'none'; $('hud').style.display = 'none'; $('menu').style.display = 'flex'; document.querySelector('.iconbtn').style.display = 'flex';
+  stopEngine(); if (audioStarted) { startMusic(themeId(), 0.2); setMusicIntensity(0.2); }
+  placeGrid(); renderMenu();
+};
 
-loadTrack(sel.track); setPlayerBike(); placeGrid(); renderMenu();
-if (import.meta.env.DEV) window.__g = { player, ais, keys, fx, get state() { return state; }, get track() { return track; } };
+// Premier geste de l'utilisateur : le navigateur autorise alors le son
+const firstGesture = () => { if (audioStarted) return; audioStarted = true; initAudio(); startMusic(themeId(), state === 'menu' ? 0.2 : 1); };
+addEventListener('pointerdown', firstGesture); addEventListener('keydown', firstGesture);
+document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('button')) sfx.click(); });
+
+// ---------- Démarrage ----------
+const sdk = platform.init();
+loadTrack(sel.track); setPlayerBike(); placeGrid(); renderMenu(); renderIcons();
+const bonus = store.claimDaily();
+if (bonus) { toast(`🎁 Bonus quotidien : +${bonus} 🪙 (série de ${store.get().daily.streak} jour${store.get().daily.streak > 1 ? 's' : ''})`, 4500); renderMenu(); }
+sdk.then(() => { platform.loadingStart(); platform.loadingStop(); });
+if (import.meta.env.DEV) window.__g = { player, ais, keys, fx, store, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
 requestAnimationFrame(frame);
