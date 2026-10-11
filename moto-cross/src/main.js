@@ -1091,6 +1091,6 @@ async function boot() {
   const ld = $('loading'); if (ld) ld.remove();
   platform.loadingStop();
   // Nouveau joueur sur CrazyGames : on l'amène directement en course (pas d'écran « Jouer » à cliquer)
-  if (platform.ready && store.get().stats.races === 0 && sel.mode === 'race') startRace();
+  if (platform.ready && sel.mode === 'race') startRace();
 }
 boot();
