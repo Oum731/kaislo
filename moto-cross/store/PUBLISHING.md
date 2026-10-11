@@ -62,6 +62,8 @@ npm run zip          # construit le jeu et crée moto-cross.zip (index.html à l
 - Le SDK a été branché d'après la documentation officielle et testé avec une **simulation** de son API (démarrage, pubs, sauvegarde cloud, environnement désactivé). Il n'a pas pu être essayé contre le vrai SDK depuis l'environnement de développement : faites un premier passage dans l'outil de prévisualisation et regardez la console du navigateur.
 - **À vérifier dans le portail** : les exigences actuelles de CrazyGames (technique, gameplay, pubs, comptes) évoluent ; relisez leur page « requirements » avant de soumettre.
 
+**Fiche de test pas à pas** : [`TEST_CRAZYGAMES.md`](TEST_CRAZYGAMES.md) (45 à 60 min), à dérouler avant de soumettre. `npm run preflight` fait le contrôle automatique du build (poids, nombre de fichiers, chemins relatifs, SDK, adresses externes).
+
 ## 3. Autres plateformes
 Chaque plateforme a son propre SDK et ses règles : ajoutez un adaptateur dans `src/platform.js` (mêmes fonctions : `gameplayStart`, `showMidgameAd`, …).
 - **itch.io** : upload du `dist/` zippé, aucun SDK, bon pour récupérer des retours.

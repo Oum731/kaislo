@@ -30,10 +30,10 @@ jobs:
         env:
           # Facultatif : Settings ▸ Secrets and variables ▸ Actions ▸ Variables ▸ LEADERBOARD_URL
           VITE_LEADERBOARD_URL: ${{ vars.LEADERBOARD_URL }}
-      - name: Vérifier que le SDK CrazyGames est présent dans la page
-        run: grep -q "sdk.crazygames.com/crazygames-sdk-v3.js" dist/index.html
       - name: Créer le zip (index.html à la racine)
         run: cd dist && zip -r -q ../moto-cross.zip .
+      - name: Contrôle avant envoi (poids, fichiers, chemins, SDK, adresses externes)
+        run: node scripts/preflight.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: moto-cross-crazygames

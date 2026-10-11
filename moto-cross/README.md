@@ -28,6 +28,7 @@ npm run dev
 | `npm run build` | Version finale dans `dist/` (hébergement libre : itch.io, GitHub Pages…) |
 | `npm run server` | Serveur de classement local (port 8787) |
 | `npm run test:server` | Tests du serveur de classement |
+| `npm run preflight` | Construit, crée le zip et contrôle le build (poids, fichiers, chemins, SDK, adresses externes) |
 | `npm run zip` | Construit puis crée `moto-cross.zip` prêt à envoyer sur CrazyGames (le SDK CrazyGames est déjà intégré) |
 
 ## Commandes en jeu
@@ -73,4 +74,4 @@ scripts/           zip et génération des visuels
 store/             visuels et textes de publication
 ```
 
-Publication : voir [store/PUBLISHING.md](store/PUBLISHING.md).
+Publication : voir [store/PUBLISHING.md](store/PUBLISHING.md) et la fiche de test [store/TEST_CRAZYGAMES.md](store/TEST_CRAZYGAMES.md).
