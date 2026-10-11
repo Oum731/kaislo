@@ -31,7 +31,7 @@ Ouvrez les outils du navigateur (**F12**) ▸ onglet **Console**, et ouvrez le j
 
 | # | Étape | Résultat attendu | OK |
 |---|---|---|---|
-| 1.1 | Ouvrir la page | Écran « MOTO CROSS » avec roue qui tourne, puis disparition | ☐ |
+| 1.1 | Ouvrir la page | Écran « MOTO CROSS RACING » avec roue qui tourne, puis disparition | ☐ |
 | 1.2 | Regarder la console | Messages du SDK (initialisation, début/fin de chargement). **Aucune erreur rouge** | ☐ |
 | 1.3 | Rien cliquer | Le jeu **démarre tout seul en course** (compte à rebours 3-2-1-GO) : un nouveau joueur n'a pas de menu à passer | ☐ |
 | 1.4 | À « GO » | Un événement de **début de gameplay** apparaît dans la console | ☐ |

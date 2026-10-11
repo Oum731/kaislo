@@ -22,7 +22,7 @@ async function overlay(page, kind) {
     const d = document.createElement('div');
     const w = innerWidth;
     d.style.cssText = `position:fixed;inset:0;display:flex;align-items:${kind === 'wide' ? 'flex-start' : 'flex-start'};justify-content:center;padding-top:${kind === 'wide' ? '3.5%' : '7%'};box-sizing:border-box;font-family:system-ui,Segoe UI,Arial;pointer-events:none;background:linear-gradient(180deg,#0008 0,#0000 38%)`;
-    d.innerHTML = `<div style="font-size:${kind === 'wide' ? w * 0.082 : w * 0.17}px;font-weight:900;line-height:.92;color:#ff9d2e;text-shadow:0 ${w * 0.006}px 0 #6a2d00,0 ${w * 0.012}px ${w * 0.03}px #000;letter-spacing:2px;text-align:center">MOTO CROSS</div>`;
+    d.innerHTML = `<div style="font-size:${kind === 'wide' ? w * 0.082 : w * 0.17}px;font-weight:900;line-height:.92;color:#ff9d2e;text-shadow:0 ${w * 0.006}px 0 #6a2d00,0 ${w * 0.012}px ${w * 0.03}px #000;letter-spacing:2px;text-align:center">MOTO CROSS<br>RACING</div>`;
     document.body.appendChild(d);
   }, kind);
 }
