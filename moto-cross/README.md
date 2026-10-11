@@ -42,12 +42,14 @@ npm run dev
 
 ## Contenu
 
+- **3 modes** : course rapide, **championnat** (3 manches, points, trophée), **contre-la-montre** contre votre fantôme
 - 3 pistes (Forêt, Désert, Glacier) — les deux dernières se débloquent en finissant top 3 sur la précédente
-- 4 motos, 3 améliorations chacune (moteur, suspension, nitro), 5 niveaux par amélioration
-- Pièces à ramasser, récompenses de course, bonus quotidien, garage
-- 5 pilotes IA, 3 niveaux de difficulté, collisions, figures, nitro
+- 4 motos, 3 améliorations chacune (5 niveaux), peintures
+- **Progression** : pièces, XP et niveaux, objectifs à 3 étoiles par piste, 16 succès, bonus quotidien, prochain but affiché
+- Figures (front/back flip, whip) avec combos, nitro, collisions, 5 pilotes IA, 3 niveaux de difficulté
+- **5 langues** : English, Français, Español, Português, Deutsch (détection automatique, sélecteur en haut à gauche)
 - Musique et effets générés par le code (aucun fichier audio)
-- Qualité graphique automatique (bas sur téléphone, élevé sur PC) avec dégradation si le jeu ralentit
+- Qualité graphique automatique (basse sur téléphone) avec dégradation si le jeu ralentit
 
 ## Structure
 
@@ -57,7 +59,10 @@ src/track.js       pistes, relief, décor, pièces
 src/moto.js        modèle 3D de la moto et du pilote, stats des motos
 src/particles.js   poussière, flammes, étincelles
 src/audio.js       moteur, effets, musique
-src/save.js        sauvegarde, boutique, améliorations
+src/save.js        sauvegarde, boutique, améliorations, peintures
+src/progress.js    niveaux/XP, objectifs à étoiles, succès
+src/i18n.js        traductions (5 langues) — ajouter une langue = une colonne
+src/confetti.js    confettis de victoire
 src/quality.js     niveaux de qualité graphique
 src/platform.js    pont vers le SDK des plateformes (CrazyGames…)
 scripts/           zip et génération des visuels

@@ -23,7 +23,8 @@
   #big{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;font-weight:900;text-shadow:0 4px 12px #000;pointer-events:none}
   #trick{position:fixed;left:0;right:0;top:26%;text-align:center;font-size:44px;font-weight:900;color:#ffe14d;text-shadow:0 3px 8px #000;pointer-events:none;opacity:0;transition:opacity .25s}
   #trick.crash{color:#ff5a4d}
-  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#2a3a1faa,#000d);text-align:center;gap:8px;overflow-y:auto;justify-content:safe center;padding:8px 12px;box-sizing:border-box}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#2a3a1faa,#000d);text-align:center;gap:8px;overflow-y:auto;justify-content:safe center;padding:54px 12px 10px;box-sizing:border-box}
+  #end{background:radial-gradient(#000a,#000e)}
   .screen h1{font-size:clamp(34px,8vw,80px);margin:0;letter-spacing:2px;color:#ff9d2e;text-shadow:0 4px 0 #6a2d00}
   .screen h2{margin:0;font-size:30px}
   .screen p{margin:4px;opacity:.9}
@@ -42,9 +43,35 @@
   .iconbtn{position:fixed;top:8px;left:12px;z-index:5;display:flex;gap:8px}
   .iconbtn button{font-size:20px;padding:6px 12px;background:#0007;color:#fff;border:2px solid #fff6}
   .lock{color:#ff7a6b}
+  select{font:inherit;font-weight:700;font-size:16px;background:#0007;color:#fff;border:2px solid #fff6;border-radius:10px;padding:5px 8px;pointer-events:auto}
+  select option{color:#111}
+  .lvl{display:flex;align-items:center;gap:10px;font-weight:800;margin:0 0 4px}
+  .xpbar{width:170px;height:10px;border-radius:6px;background:#0008;border:2px solid #fff7;overflow:hidden}
+  .xpbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9d2e,#ffd84d)}
+  .objs{font-size:14px;line-height:1.5;margin:2px 0 4px;text-align:left;background:#0005;border-radius:10px;padding:6px 14px}
+  .objs b{color:#ffd84d}
+  .goal{font-size:13px;opacity:.95;margin:4px 0 2px}
+  .goal .xpbar{width:220px;margin:4px auto 0}
+  .small{font-size:16px;padding:8px 18px}
+  .stars{color:#ffd84d;letter-spacing:2px;margin-left:8px}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:20px;width:min(440px,92vw);font-size:18px;font-weight:700}
+  .achvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;width:min(900px,96vw);text-align:left}
+  .achvgrid div{background:#0007;border:2px solid #fff3;border-radius:12px;padding:8px 12px;font-size:14px}
+  .achvgrid div.on{border-color:#ffd84d;background:#3a2c0a99}
+  .achvgrid b{display:block;font-size:16px}
+  table.st{border-collapse:collapse;margin:6px auto;font-size:16px}
+  table.st td{padding:2px 12px}
+  table.st tr.me{color:#ffd84d;font-weight:800}
+  #banner{position:fixed;left:0;right:0;top:34%;text-align:center;font-size:clamp(34px,7vw,72px);font-weight:900;color:#fff;text-shadow:0 4px 14px #000;pointer-events:none;opacity:0;transform:scale(.8);transition:opacity .25s,transform .25s}
+  #banner.on{opacity:1;transform:scale(1)}
+  #rankpop{position:fixed;left:16px;top:84px;font-size:22px;font-weight:900;color:#7dff3a;text-shadow:0 2px 6px #000;pointer-events:none;opacity:0;transition:opacity .3s}
+  #hint{position:fixed;left:0;right:0;bottom:90px;text-align:center;font-size:18px;font-weight:700;text-shadow:0 2px 6px #000;pointer-events:none;opacity:0;transition:opacity .4s}
+  #nitrofx{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 140px 30px rgba(70,200,255,.55);opacity:0;transition:opacity .25s}
+  #nitrofx.on{opacity:1}
+  #ghostTag{position:absolute;top:70px;right:16px;font-size:16px;font-weight:700;opacity:.85}
   .upg{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;text-align:left;margin:6px 0}
   .pips{letter-spacing:3px;color:#ff9d2e}
-  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#000c;border:2px solid #ffd84d;color:#ffd84d;padding:10px 20px;border-radius:12px;font-weight:800;z-index:9;display:none}
+  .toast{position:fixed;top:58px;left:50%;transform:translateX(-50%);background:#000c;border:2px solid #ffd84d;color:#ffd84d;padding:10px 20px;border-radius:12px;font-weight:800;z-index:9;display:none}
   .earn{font-size:18px;line-height:1.6;margin:6px 0}
   .earn b{color:#ffd84d}
   #touch{position:fixed;inset:0;display:none;pointer-events:none}
@@ -57,24 +84,32 @@
     #hud .tl,#hud .tr,#hud .tc{font-size:17px;top:6px}
   }
   @media (max-height:620px){
+    .screen{padding-top:48px}
     .screen h1{font-size:30px}.screen{gap:3px}.sel .val{font-size:17px;min-width:170px}.arr{padding:4px 12px}
     .stats{grid-template-columns:auto 100px;margin:0 0 3px;font-size:11px}.stats i{margin-top:3px}
     .help{display:none}button{padding:7px 24px;font-size:18px}#big{font-size:70px}.wallet{font-size:17px}
     .earn{font-size:14px;line-height:1.35}.screen h2{font-size:22px}
+    .objs{font-size:12px;padding:3px 10px}.goal{font-size:11px}.lvl{font-size:13px}#hint{bottom:70px;font-size:14px}table.st{font-size:13px}.achvgrid div{font-size:12px;padding:4px 8px}.achvgrid b{font-size:13px}.setrow{font-size:15px}
+    .small{font-size:14px;padding:5px 12px}
   }
 </style>
 </head>
 <body>
 <div class="wallet" id="wallet" style="display:none"></div>
-<div class="iconbtn"><button id="bMusic" title="Musique (N)">🎵</button><button id="bSfx" title="Effets (M)">🔊</button></div>
+<div class="iconbtn"><select id="langSel" aria-label="Language"></select><button id="bMusic" title="Music (N)">🎵</button><button id="bSfx" title="Sound (M)">🔊</button></div>
 <div class="toast" id="toast"></div>
 <div id="hud">
   <div class="tl"><span id="pos"></span><br><span id="lap"></span></div>
   <div class="tc">🪙 <span id="coins">0</span></div>
   <div class="tr"><span id="time"></span><br><span id="best"></span></div>
-  <div class="bl"><div>NITRO</div><div id="bar"><div id="nitro"></div></div></div>
+  <div class="bl"><div data-i18n="hud.nitro">NITRO</div><div id="bar"><div id="nitro"></div></div></div>
   <div id="speed"></div>
+  <div id="ghostTag"></div>
 </div>
+<div id="nitrofx"></div>
+<div id="banner"></div>
+<div id="rankpop"></div>
+<div id="hint"></div>
 <div id="big"></div>
 <div id="trick"></div>
 <div id="touch">
@@ -84,13 +119,16 @@
 
 <div id="menu" class="screen">
   <h1>MOTO CROSS</h1>
-  <div class="sel"><span class="lab">Piste</span><button class="arr" id="trkP">◀</button><div class="val" id="trkName"></div><button class="arr" id="trkN">▶</button></div>
-  <div class="sel"><span class="lab">Niveau</span><button class="arr" id="difP">◀</button><div class="val" id="difName"></div><button class="arr" id="difN">▶</button></div>
-  <div class="sel"><span class="lab">Qualité</span><button class="arr" id="qP">◀</button><div class="val" id="qName"></div><button class="arr" id="qN">▶</button></div>
-  <div class="sel"><span class="lab">Moto</span><div class="val" id="bkName" style="min-width:0;margin:0 8px"></div></div>
-  <p class="help" style="margin-top:8px;font-size:14px">↑/W gaz · ↓/S frein · ←→/AD tourner · Shift nitro · R recommencer · M son · N musique<br>
-  <b>En l'air</b> : ↑ front flip · ↓ back flip · ←→ whip — atterrissez droit pour gagner du nitro !</p>
-  <div class="row"><button id="play">JOUER</button><button id="garage" class="alt">🔧 GARAGE</button></div>
+  <div class="lvl"><span id="lvlTxt"></span><div class="xpbar"><i id="xpFill"></i></div><small id="xpTxt" style="opacity:.75;font-weight:600"></small></div>
+  <div class="sel"><span class="lab" data-i18n="menu.mode">Mode</span><button class="arr" id="modeP">◀</button><div class="val" id="modeName"></div><button class="arr" id="modeN">▶</button></div>
+  <div class="sel"><span class="lab" data-i18n="menu.track">Track</span><button class="arr" id="trkP">◀</button><div class="val" id="trkName"></div><button class="arr" id="trkN">▶</button></div>
+  <div class="objs" id="objs"></div>
+  <div class="sel"><span class="lab" data-i18n="menu.diff">Level</span><button class="arr" id="difP">◀</button><div class="val" id="difName"></div><button class="arr" id="difN">▶</button></div>
+  <div class="sel"><span class="lab" data-i18n="menu.bike">Bike</span><div class="val" id="bkName" style="min-width:0;margin:0 8px"></div></div>
+  <div class="goal" id="goal"></div>
+  <div class="row"><button id="play">PLAY</button><button id="garage" class="alt" data-i18n="menu.garage">🔧 GARAGE</button></div>
+  <div class="row"><button id="bAchv" class="alt small" data-i18n="menu.achv">🏆</button><button id="bSet" class="alt small" data-i18n="menu.settings">⚙</button></div>
+  <p class="help" style="margin-top:6px;font-size:13px" data-i18n-html="menu.help"></p>
 </div>
 
 <div id="garageScreen" class="screen" style="display:none;background:linear-gradient(#0000,#000c 55%)">
@@ -99,13 +137,31 @@
   <div class="row"><button class="arr" id="gP">◀</button><div id="gStatus" style="min-width:220px;font-weight:800;font-size:18px"></div><button class="arr" id="gN">▶</button></div>
   <div class="stats" id="gStats"></div>
   <div class="upg" id="gUpg"></div>
-  <div class="row"><button id="gAct"></button><button id="gBack" class="alt">RETOUR</button></div>
+  <div class="row" id="gPaint"></div>
+  <div class="row"><button id="gAct"></button><button id="gBack" class="alt" data-i18n="common.back">BACK</button></div>
+</div>
+
+<div id="settings" class="screen" style="display:none">
+  <h2 data-i18n="set.title">Settings</h2>
+  <div class="setrow"><span data-i18n="set.lang">Language</span><select id="langSel2"></select></div>
+  <div class="setrow"><span data-i18n="set.quality">Quality</span><span class="row" style="gap:8px"><button class="arr" id="qP">◀</button><span id="qName" style="min-width:110px;display:inline-block"></span><button class="arr" id="qN">▶</button></span></div>
+  <div class="setrow"><span data-i18n="set.music">Music</span><button class="small alt" id="setMusic"></button></div>
+  <div class="setrow"><span data-i18n="set.sound">Sound effects</span><button class="small alt" id="setSfx"></button></div>
+  <div class="row" style="margin-top:10px"><button id="setReset" class="alt small" data-i18n="set.reset">Reset progress</button><button id="setBack" data-i18n="common.back">BACK</button></div>
+</div>
+
+<div id="achvScreen" class="screen" style="display:none">
+  <h2><span data-i18n="achv.title">Achievements</span> <small id="achvCount" style="opacity:.7"></small></h2>
+  <div class="achvgrid" id="achvGrid"></div>
+  <button id="achvBack" data-i18n="common.back">BACK</button>
 </div>
 
 <div id="end" class="screen" style="display:none">
   <h1 id="endTitle"></h1><p id="endInfo"></p>
   <div class="earn" id="endEarn"></div>
-  <div class="row"><button id="again">REJOUER</button><button id="toMenu" class="alt">MENU</button></div>
+  <div class="earn" id="endExtra"></div>
+  <div id="standings"></div>
+  <div class="row"><button id="again">PLAY AGAIN</button><button id="toMenu" class="alt" data-i18n="end.menu">MENU</button></div>
 </div>
 <script type="module" src="/src/main.js"></script>
 </body>

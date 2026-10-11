@@ -65,6 +65,10 @@ export const sfx = {
   lose() { [392, 330, 262].forEach((f, i) => tone(f, 0.3, 'triangle', 0.14, 0, i * 0.15)); },
   buy() { tone(988, 0.1, 'square', 0.1); tone(1319, 0.3, 'square', 0.1, 0, 0.09); },
   error() { tone(150, 0.2, 'square', 0.12, -30); },
+  star() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, 'triangle', 0.12, 0, i * 0.08)); },
+  levelup() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, 'square', 0.09, 0, i * 0.09)); },
+  overtake() { noise(0.3, 600, 0.8, 0.2, 'bandpass', 0, sfxBus, 2500); },
+  lap() { tone(880, 0.12, 'square', 0.1); tone(1320, 0.25, 'square', 0.1, 0, 0.1); },
 };
 
 // ---------- moteur (boîte de vitesses simulée) ----------

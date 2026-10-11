@@ -3,9 +3,11 @@
 // Nécessite Playwright : npm i -D playwright && npx playwright install chromium
 const { chromium } = require('playwright');
 const URL = process.env.GAME_URL || 'http://localhost:5173/';
-const OUT = 'store/';
+const OUT = process.env.OUT_DIR || 'store/';
 
-const SAVE = JSON.stringify({ coins: 4350, owned: [0, 1, 2, 3], upg: { 2: { eng: 3, han: 2, nit: 2 }, 3: { eng: 2, han: 1, nit: 3 } }, podium: { forest: true, desert: true }, daily: { day: '2999-01-01', streak: 3 }, settings: { music: true, sfx: true, quality: 2 }, stats: { races: 12, wins: 5, tricks: 40, coins: 3000 } });
+const LANG = process.env.LANG_ID || 'en';
+const TAGLINE = { en: ['3 tracks · 4 bikes · stunts', 'RACING 3D'], fr: ['3 pistes · 4 motos · figures', 'RACING 3D'], es: ['3 pistas · 4 motos · acrobacias', 'RACING 3D'], pt: ['3 pistas · 4 motos · manobras', 'RACING 3D'], de: ['3 Strecken · 4 Motorräder · Stunts', 'RACING 3D'] }[LANG] || ['3 tracks · 4 bikes · stunts', 'RACING 3D'];
+const SAVE = JSON.stringify({ coins: 4350, owned: [0, 1, 2, 3], upg: { 2: { eng: 3, han: 2, nit: 2 }, 3: { eng: 2, han: 1, nit: 3 } }, podium: { forest: true, desert: true }, daily: { day: '2999-01-01', streak: 3 }, settings: { music: true, sfx: true, quality: 2, lang: LANG }, stats: { races: 12, wins: 5, tricks: 40, coins: 3000 } });
 
 async function open(browser, track, bike) {
   const page = await browser.newPage({ viewport: { width: 480, height: 270 } });
@@ -15,14 +17,14 @@ async function open(browser, track, bike) {
 }
 const hideUI = (page) => page.addStyleTag({ content: '#hud,#touch,.iconbtn,.wallet,.toast,#big,#trick{display:none!important}' });
 async function overlay(page, kind) {
-  await page.evaluate((kind) => {
+  await page.evaluate(([kind, TAGLINE]) => {
     const d = document.createElement('div');
     d.style.cssText = `position:fixed;inset:0;display:flex;flex-direction:column;justify-content:${kind === 'wide' ? 'flex-end' : 'flex-start'};align-items:${kind === 'wide' ? 'flex-start' : 'center'};padding:${kind === 'wide' ? '0 0 6% 5%' : '8% 4% 0'};box-sizing:border-box;font-family:system-ui,Segoe UI,Arial;pointer-events:none;background:linear-gradient(${kind === 'wide' ? '90deg,#000a,#0000 55%' : '180deg,#000b,#0000 45%'})`;
     const w = innerWidth;
     d.innerHTML = `<div style="font-size:${kind === 'wide' ? w * 0.075 : w * 0.17}px;font-weight:900;line-height:.95;color:#ff9d2e;text-shadow:0 ${w * 0.006}px 0 #6a2d00,0 ${w * 0.01}px ${w * 0.02}px #000;letter-spacing:2px;text-align:${kind === 'wide' ? 'left' : 'center'}">MOTO<br>CROSS</div>
-      <div style="margin-top:${w * 0.012}px;font-size:${kind === 'wide' ? w * 0.026 : w * 0.06}px;font-weight:800;color:#fff;text-shadow:0 2px 8px #000;text-align:${kind === 'wide' ? 'left' : 'center'}">${kind === 'wide' ? 'RACING 3D · 3 pistes · 4 motos · figures' : 'RACING 3D<br>3 pistes · 4 motos · figures'}</div>`;
+      <div style="margin-top:${w * 0.012}px;font-size:${kind === 'wide' ? w * 0.026 : w * 0.06}px;font-weight:800;color:#fff;text-shadow:0 2px 8px #000;text-align:${kind === 'wide' ? 'left' : 'center'}">${kind === 'wide' ? TAGLINE[1] + ' · ' + TAGLINE[0] : TAGLINE[1] + '<br>' + TAGLINE[0]}</div>`;
     document.body.appendChild(d);
-  }, kind);
+  }, [kind, TAGLINE]);
 }
 async function race(page) {
   await page.click('#play');

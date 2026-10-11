@@ -5,13 +5,23 @@ import { createParticles } from './particles.js';
 import { initAudio, setEngine, stopEngine, startMusic, setMusicIntensity, setMusicOn, setSfxOn, isMusicOn, isSfxOn, sfx } from './audio.js';
 import { platform } from './platform.js';
 import * as store from './save.js';
+import * as prog from './progress.js';
+import { confetti } from './confetti.js';
+import { t as tr, ord, LANGS, detect, setLang, getLang, onLang } from './i18n.js';
 import { LEVELS, autoLevel, isMobile } from './quality.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
+setLang(detect(store.get().settings.lang));
+
 const LAPS = 3, AI_COUNT = 5, TAU = Math.PI * 2;
-const DIFFS = [{ name: 'Facile', k: 0.86 }, { name: 'Normal', k: 0.97 }, { name: 'Difficile', k: 1.07 }];
+const DIFF_K = [0.86, 0.97, 1.07], DIFF_MULT = [0.7, 1, 1.5];
+const MODES = ['race', 'cup', 'trial'];
+const CUP_TRACKS = [0, 1, 2], CUP_POINTS = [10, 8, 6, 5, 4, 3], CUP_REWARD = [1500, 900, 500];
+const PLACE_COINS = [400, 250, 160, 100, 70, 50], PLACE_XP = [100, 70, 50, 30, 20, 10];
+const AI_NAMES = ['Rex', 'Nova', 'Kira', 'Zed', 'Maya'];
 const $ = (id) => document.getElementById(id);
 const clamp = THREE.MathUtils.clamp;
+const vib = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
 
 // ---------- Rendu ----------
 const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: 'high-performance' });
@@ -48,20 +58,22 @@ function applyLevel() {
 applyLevel();
 
 // ---------- Réglages sauvegardés ----------
-const sel = { track: 0, bike: 0, diff: 1 };
+const sel = { track: 0, bike: 0, diff: 1, mode: 'race' };
 try { Object.assign(sel, JSON.parse(localStorage.getItem('motocross_sel') || '{}')); } catch (e) {}
-sel.track = clamp(sel.track | 0, 0, TRACKS.length - 1); sel.bike = clamp(sel.bike | 0, 0, BIKES.length - 1); sel.diff = clamp(sel.diff | 0, 0, DIFFS.length - 1);
+sel.track = clamp(sel.track | 0, 0, TRACKS.length - 1); sel.bike = clamp(sel.bike | 0, 0, BIKES.length - 1); sel.diff = clamp(sel.diff | 0, 0, 2);
+if (!MODES.includes(sel.mode)) sel.mode = 'race';
 const trackUnlocked = (i) => i === 0 || !!store.get().podium[TRACKS[i - 1].id];
 if (!store.owns(sel.bike)) sel.bike = 0;
 if (!trackUnlocked(sel.track)) sel.track = 0;
-const saveSel = () => { try { localStorage.setItem('motocross_sel', JSON.stringify(sel)); } catch (e) {} };
+const saveSel = () => {};
 
 // ---------- Entrées ----------
 const keys = {};
 const map = { ArrowUp: 'up', KeyW: 'up', KeyZ: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', KeyQ: 'left', ArrowRight: 'right', KeyD: 'right', ShiftLeft: 'nitro', ShiftRight: 'nitro', Space: 'nitro' };
 addEventListener('keydown', (e) => {
+  if (e.target && e.target.tagName === 'SELECT') return;
   if (map[e.code]) { keys[map[e.code]] = true; e.preventDefault(); }
-  if (e.code === 'KeyR' && state !== 'menu') startRace();
+  if (e.code === 'KeyR' && (state === 'racing' || state === 'countdown')) startRace();
   if (e.code === 'KeyM') toggleSfx();
   if (e.code === 'KeyN') toggleMusic();
 });
@@ -77,7 +89,7 @@ if (isTouch) {
 }
 
 // ---------- Piste ----------
-let track, worldGroup, MPS, best = 0, coinList = [], coinMesh = null;
+let track, worldGroup, MPS, best = 0, coinList = [], coinMesh = null, loadedTrack = -1;
 const coinGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.14, 16); coinGeo.rotateX(Math.PI / 2);
 const coinMat = new THREE.MeshStandardMaterial({ color: 0xffc400, metalness: 0.8, roughness: 0.25, emissive: 0x663f00 });
 const COIN_VALUE = 5;
@@ -85,6 +97,7 @@ function loadTrack(i) {
   if (worldGroup) disposeGroup(worldGroup);
   if (coinMesh) { scene.remove(coinMesh); coinMesh.dispose(); }
   const def = TRACKS[i];
+  loadedTrack = i;
   track = createTrack(def);
   worldGroup = track.build(scene, LEVELS[level]);
   coinList = track.makeCoins();
@@ -92,25 +105,27 @@ function loadTrack(i) {
   coinMesh.frustumCulled = false; scene.add(coinMesh);
   MPS = track.length / track.SAMPLES;
   scene.background.set(def.sky); scene.fog.color.set(def.fog); sun.color.set(def.sunColor);
-  best = 0;
-  try { best = parseFloat(localStorage.getItem('motocross_best_' + def.id) || '0') || 0; } catch (e) {}
+  readBest(def.id);
 }
+function readBest(id) { best = 0; try { best = parseFloat(localStorage.getItem('motocross_best_' + id) || '0') || 0; } catch (e) {} }
 
 // ---------- Pilotes ----------
 let bike = BIKES[sel.bike], stats = store.effectiveStats(bike, sel.bike);
-const player = { isPlayer: true, mesh: null };
+const player = { isPlayer: true, mesh: null, name: '' };
 const aiStyles = [1, 2, 3, 0, 1];
 const aiColors = [0x2266ff, 0xffcc00, 0xee2266, 0x22bb44, 0x22cccc];
 const ais = [];
 for (let i = 0; i < AI_COUNT; i++) {
-  const a = { mesh: createMoto(aiColors[i], aiStyles[i], i + 2), isPlayer: false, skill: 0.92 + Math.random() * 0.12, laneBase: (Math.random() - 0.5) * 8 };
+  const a = { mesh: createMoto(aiColors[i], aiStyles[i], i + 2), isPlayer: false, name: AI_NAMES[i], skill: 0.92 + Math.random() * 0.12, laneBase: (Math.random() - 0.5) * 8 };
   scene.add(a.mesh); ais.push(a);
 }
 const all = [player, ...ais];
+let activeAIs = ais, racers = all;
+const riderName = (r) => (r.isPlayer ? tr('rider.you') : r.name);
 function setPlayerBike(idx = sel.bike) {
   const b = BIKES[idx];
   if (player.mesh) disposeGroup(player.mesh);
-  player.mesh = createMoto(b.color, b.style, 1);
+  player.mesh = createMoto(store.paintColor(idx, b.color), b.style, 1);
   scene.add(player.mesh);
   if (idx === sel.bike) { bike = b; stats = store.effectiveStats(b, idx); }
 }
@@ -129,38 +144,88 @@ const gridSlot = (i) => (i === 0 ? 3 : i < 4 ? i - 1 : i);
 
 // ---------- État de course ----------
 let state = 'menu', t = 0, raceTime = 0, finishOrder = [], camHeading = 0, lastIdx = 0, lastCount = 4, shake = 0;
+let garageOpen = false, raceCoins = 0, raceTricks = 0, raceTrickPay = 0, raceCrashes = 0, combo = 0, lastTrickT = -99, lastLap = 1, lastRank = 6, hintUntil = 0;
+let cup = null;
+const newCup = () => ({ round: 0, pts: all.map(() => 0), done: false });
 
-let garageOpen = false, raceCoins = 0, raceTricks = 0;
+const fmt = (s) => { const m = Math.floor(s / 60); return `${m}:${(s - m * 60).toFixed(2).padStart(5, '0')}`; };
+const starsStr = (id) => prog.starsOf(id).map((on) => (on ? '★' : '☆')).join('');
+
+// Bandeaux, annonces et conseils
+let bannerT, popT;
+function banner(txt, ms = 1500) { const el = $('banner'); el.textContent = txt; el.classList.add('on'); clearTimeout(bannerT); bannerT = setTimeout(() => el.classList.remove('on'), ms); }
+function rankPop(txt) { const el = $('rankpop'); el.textContent = txt; el.style.opacity = 1; clearTimeout(popT); popT = setTimeout(() => { el.style.opacity = 0; }, 1600); }
+
+// ---------- Fantôme (meilleur tour enregistré) ----------
+let ghostRec = [], ghostAcc = 0, ghostData = null, ghostMesh = null;
+const ghostR = { x: 0, y: 0, z: 0, heading: 0, pitch: 0, roll: 0, speed: 30, spinX: 0, spinZ: 0, crashTilt: 0, mesh: null };
+const ghostKey = () => 'motocross_ghost_' + TRACKS[sel.track].id;
+function setupGhost() {
+  ghostRec = []; ghostAcc = 0; ghostData = null;
+  if (ghostMesh) { disposeGroup(ghostMesh); ghostMesh = null; }
+  if (sel.mode !== 'trial') return;
+  try { const raw = localStorage.getItem(ghostKey()); ghostData = raw ? JSON.parse(raw) : null; } catch (e) { ghostData = null; }
+  if (!ghostData || !ghostData.d || ghostData.d.length < 12) { ghostData = null; return; }
+  ghostMesh = createMoto(0xffffff, bike.style, 'G');
+  ghostMesh.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); Object.assign(o.material, { transparent: true, opacity: 0.38, depthWrite: false }); o.castShadow = false; } });
+  scene.add(ghostMesh); ghostR.mesh = ghostMesh;
+}
+function updateGhost(dt) {
+  if (!ghostMesh || !ghostData) return;
+  const d = ghostData.d, f = raceTime / 0.05, i = Math.floor(f), n = d.length / 6;
+  ghostMesh.visible = state !== 'finished' && i < n - 1;
+  if (!ghostMesh.visible) return;
+  const k = f - i, a = i * 6, b = a + 6, L = (j, s) => (d[a + j] + (d[b + j] - d[a + j]) * k) / s;
+  Object.assign(ghostR, { x: L(0, 10), y: L(1, 10), z: L(2, 10), heading: L(3, 1000), pitch: L(4, 1000), roll: L(5, 1000) });
+  applyMesh(ghostR, dt);
+}
+function recordGhost(h) {
+  if (state !== 'racing') return;
+  ghostAcc += h;
+  while (ghostAcc >= 0.05) {
+    ghostAcc -= 0.05;
+    if (ghostRec.length < 6 * 20 * 400) ghostRec.push(Math.round(player.x * 10), Math.round(player.y * 10), Math.round(player.z * 10), Math.round(player.heading * 1000), Math.round(player.pitch * 1000), Math.round(player.roll * 1000));
+  }
+}
+
 function startRace() {
-  if (!trackUnlocked(sel.track)) { toast('🔒 Piste verrouillée : finissez dans le top 3 sur la piste précédente'); sfx.error(); return; }
+  if (sel.mode !== 'cup' && !trackUnlocked(sel.track)) { toast(tr('toast.locked')); sfx.error(); return; }
   if (garageOpen) closeGarage();
-  coinList.forEach((c) => { c.on = true; }); raceCoins = 0; raceTricks = 0;
-  ais.forEach((a) => { a.mesh.visible = true; });
+  if (sel.mode === 'cup') {
+    if (!cup) cup = newCup();
+    const ti = CUP_TRACKS[cup.round];
+    sel.track = ti; if (loadedTrack !== ti) loadTrack(ti);
+  } else if (loadedTrack !== sel.track) loadTrack(sel.track);
+  activeAIs = sel.mode === 'trial' ? [] : ais; racers = [player, ...activeAIs];
+  ais.forEach((a) => { a.mesh.visible = sel.mode !== 'trial'; });
+  coinList.forEach((c) => { c.on = true; });
+  raceCoins = raceTricks = raceTrickPay = raceCrashes = combo = 0; lastTrickT = -99; lastLap = 1; lastRank = racers.length;
   all.forEach((r, i) => resetRider(r, gridSlot(i)));
   lastIdx = player.idx;
   finishOrder = []; raceTime = 0; state = 'countdown'; t = 0; lastCount = 4;
   camHeading = player.heading;
-  $('menu').style.display = $('end').style.display = 'none';
+  readBest(TRACKS[sel.track].id); setupGhost();
+  $('menu').style.display = $('end').style.display = 'none'; $('standings').innerHTML = '';
   $('hud').style.display = 'block';
   $('trick').style.opacity = 0;
   $('wallet').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'none';
   $('touch').style.display = isTouch ? 'block' : 'none';
+  $('ghostTag').textContent = sel.mode === 'trial' ? tr('hud.ghost') + (ghostData ? ' ' + fmt(ghostData.t) : '') : '';
+  if (store.get().stats.races < 3 && sel.mode !== 'trial') { const h = $('hint'); h.textContent = tr(isTouch ? 'hint.mobile' : 'hint.pc'); h.style.opacity = 1; hintUntil = 7; } else { $('hint').style.opacity = 0; hintUntil = 0; }
   initAudio(); startMusic(TRACKS[sel.track].id, 1); setMusicIntensity(1);
   platform.gameplayStop();
 }
-const fmt = (s) => { const m = Math.floor(s / 60); return `${m}:${(s - m * 60).toFixed(2).padStart(5, '0')}`; };
-const ordinal = (n) => (n === 1 ? '1er' : `${n}e`);
 
 // ---------- Figures ----------
 let trickTimer;
 function showTrick(txt, bad) {
   const el = $('trick'); el.textContent = txt; el.className = bad ? 'crash' : ''; el.style.opacity = 1;
-  clearTimeout(trickTimer); trickTimer = setTimeout(() => { el.style.opacity = 0; }, 1400);
+  clearTimeout(trickTimer); trickTimer = setTimeout(() => { el.style.opacity = 0; }, 1500);
 }
 const trickName = (nx, nz) => {
   const parts = [];
-  if (nx) parts.push(`${Math.abs(nx) > 1 ? Math.abs(nx) + 'x ' : ''}${nx > 0 ? 'FRONT FLIP' : 'BACK FLIP'}`);
-  if (nz) parts.push(`${Math.abs(nz) > 1 ? Math.abs(nz) + 'x ' : ''}WHIP`);
+  if (nx) parts.push(`${Math.abs(nx) > 1 ? Math.abs(nx) + 'x ' : ''}${tr(nx > 0 ? 'trick.front' : 'trick.back')}`);
+  if (nz) parts.push(`${Math.abs(nz) > 1 ? Math.abs(nz) + 'x ' : ''}${tr('trick.whip')}`);
   return parts.join(' + ');
 };
 function landPlayer(p, impact) {
@@ -172,14 +237,18 @@ function landPlayer(p, impact) {
   const dust = TRACKS[sel.track].dust;
   if (spun && (Math.abs(rx) > 0.9 || Math.abs(rz) > 0.9)) {
     p.stun = 1.2; p.crashSign = Math.random() < 0.5 ? -1 : 1; p.speed *= 0.3;
-    fx.burst(p.x, p.y, p.z, dust, 30, 9); shake = 1; sfx.crash();
-    showTrick('CHUTE !', true);
+    fx.burst(p.x, p.y, p.z, dust, 30, 9); shake = 1; sfx.crash(); vib(220);
+    if (state === 'racing') { raceCrashes++; store.get().stats.crashes++; combo = 0; }
+    showTrick(tr('trick.crash'), true);
     return;
   }
   if (nx || nz) {
     const n = Math.abs(nx) + Math.abs(nz);
+    combo = raceTime - lastTrickT < 6 ? combo + 1 : 1; lastTrickT = raceTime;
     p.nitro = Math.min(1, p.nitro + 0.3 * n);
-    showTrick(`${trickName(nx, nz)}  +NITRO`, false); sfx.trick(); raceTricks += n;
+    raceTricks += n; raceTrickPay += 25 * n * combo;
+    const st = store.get().stats; if (n > st.bestTrick) st.bestTrick = n;
+    showTrick(`${trickName(nx, nz)}  +NITRO${combo > 1 ? '  ' + tr('trick.combo', { n: combo }) : ''}`, false); sfx.trick(); vib(40);
   }
   if (impact < -12) { fx.burst(p.x, p.y, p.z, dust, 14, 5); shake = Math.max(shake, 0.4); sfx.land(clamp(-impact / 25, 0.3, 1)); }
   if (impact < -18) p.speed *= 0.9;
@@ -267,13 +336,13 @@ function updateAI(a, dt) {
   _b.set(sm[i2].x - sm[i1].x, sm[i2].z - sm[i1].z).normalize();
   const curv = Math.acos(clamp(_a.dot(_b), -1, 1));
   const rubber = clamp(1 + (player.prog - a.prog) * 0.0012, 0.9, 1.1);
-  const target = racing ? 42 * a.skill * DIFFS[sel.diff].k * rubber * (1 - Math.min(0.45, curv * 4.5)) : 0;
+  const target = racing ? 42 * a.skill * DIFF_K[sel.diff] * rubber * (1 - Math.min(0.45, curv * 4.5)) : 0;
   a.speed += (target - a.speed) * Math.min(1, 1.6 * dt);
   a.aiProg += (a.speed * dt) / MPS;
 
   // Évite les pilotes juste devant
   const lim = track.width * 0.42;
-  for (const r of all) {
+  for (const r of racers) {
     if (r === a) continue;
     const gap = (r.prog - a.prog) * MPS, rl = r.isPlayer ? r.lat : r.lane;
     if (gap > 0 && gap < 9 && Math.abs(rl - a.lane) < 2.4) a.lane += ((a.lane - rl) >= 0 ? 1 : -1) * 6 * dt;
@@ -301,7 +370,7 @@ function collide(dt) {
   player.hitCd = Math.max(0, player.hitCd - dt);
   if (state !== 'racing') return;
   const R = 1.5, lim = track.width * 0.42;
-  for (const a of ais) {
+  for (const a of activeAIs) {
     const dx = player.x - a.x, dz = player.z - a.z, d = Math.hypot(dx, dz);
     if (d >= R || d < 0.001 || Math.abs(player.y - a.y) > 2.2) continue;
     const nx = dx / d, nz = dz / d, ov = R - d, nl = track.normalAt(a.idx);
@@ -310,7 +379,7 @@ function collide(dt) {
     const rel = player.speed - a.speed;
     if (rel > 0) { player.speed -= rel * 0.3; a.speed += rel * 0.3; }
     if (player.hitCd <= 0 && (rel > 4 || ov > 0.5)) {
-      player.hitCd = 0.3; shake = Math.max(shake, 0.35); sfx.bump();
+      player.hitCd = 0.3; shake = Math.max(shake, 0.35); sfx.bump(); vib(25);
       for (let k = 0; k < 6; k++) fx.spark(player.x - nx * 0.7, player.y + 1, player.z - nz * 0.7);
     }
   }
@@ -338,37 +407,84 @@ function applyMesh(r, dt) {
   front.rotation.x = rear.rotation.x = (front.rotation.x + (r.speed * dt) / wheelR) % TAU;
 }
 
+// ---------- Classement et fin de course ----------
+const rank = () => [...racers].sort((a, b) => (b.finished - a.finished) || (a.finished && b.finished ? a.finishTime - b.finishTime : b.prog - a.prog)).indexOf(player) + 1;
+const finalOrder = () => [...finishOrder, ...racers.filter((r) => !r.finished).sort((a, b) => b.prog - a.prog)];
+const cupRanking = () => cup.pts.map((p, idx) => ({ idx, p })).sort((a, b) => (b.p - a.p) || (a.idx - b.idx));
+function standingsHTML() {
+  const rows = cupRanking().map((e, i) => `<tr class="${e.idx === 0 ? 'me' : ''}"><td>${i + 1}</td><td>${riderName(all[e.idx])}</td><td>${tr('cup.pts', { n: e.p })}</td></tr>`).join('');
+  return `<b>${tr('cup.standings')}</b><table class="st">${rows}</table>`;
+}
 
-// ---------- Fin de course + récompenses ----------
-const rank = () => [...all].sort((a, b) => (b.finished - a.finished) || (a.finished && b.finished ? a.finishTime - b.finishTime : b.prog - a.prog)).indexOf(player) + 1;
-const PLACE_COINS = [400, 250, 160, 100, 70, 50], DIFF_MULT = [0.7, 1, 1.5];
 function endRace() {
   state = 'finished';
   stopEngine(); setMusicIntensity(0.3); platform.gameplayStop();
-  const place = finishOrder.indexOf(player) + 1, time = player.finishTime;
-  let rec = '';
-  if (!best || time < best) {
-    best = time; rec = ' — Nouveau record !';
-    try { localStorage.setItem('motocross_best_' + TRACKS[sel.track].id, String(time)); } catch (e) {}
+  $('nitrofx').classList.remove('on'); $('hint').style.opacity = 0;
+  const trial = sel.mode === 'trial', def = TRACKS[sel.track], st = store.get();
+  const order = finalOrder(), place = finishOrder.indexOf(player) + 1, time = player.finishTime;
+  const prevBest = best, isRecord = !best || time < best;
+  if (isRecord) {
+    best = time;
+    try { localStorage.setItem('motocross_best_' + def.id, String(time)); localStorage.setItem(ghostKey(), JSON.stringify({ t: time, d: ghostRec })); } catch (e) {}
   }
   const mult = DIFF_MULT[sel.diff] * (1 + 0.3 * sel.track);
-  const base = Math.round(PLACE_COINS[Math.min(5, place - 1)] * mult), trickPay = raceTricks * 25, coinPay = raceCoins, total = base + trickPay + coinPay;
-  const st = store.get();
-  st.stats.races++; st.stats.tricks += raceTricks; st.stats.coins += total; if (place === 1) st.stats.wins++;
-  let unlock = '';
-  if (place <= 3 && !st.podium[TRACKS[sel.track].id]) {
-    st.podium[TRACKS[sel.track].id] = true;
-    const nx = TRACKS[sel.track + 1]; if (nx) unlock = `<br>🔓 Nouvelle piste débloquée : <b>${nx.name}</b> !`;
+  const base = trial ? 0 : Math.round(PLACE_COINS[Math.min(5, place - 1)] * mult);
+  const coinPay = raceCoins, trickPay = raceTrickPay, recBonus = trial && isRecord && prevBest ? 100 : 0;
+  const total = base + coinPay + trickPay + recBonus;
+  st.stats.races++; st.stats.tricks += raceTricks; st.stats.coins += total;
+  if (!trial && place === 1) { st.stats.wins++; if (raceCrashes === 0) st.stats.flawless++; }
+  const extra = [];
+  if (!trial && place <= 3 && !st.podium[def.id]) {
+    st.podium[def.id] = true;
+    const nx = TRACKS[sel.track + 1]; if (nx) extra.push(tr('end.unlock', { name: tr('track.' + nx.id) }));
   }
   store.addCoins(total);
-  if (place === 1) { platform.happytime(); sfx.win(); } else sfx.lose();
-  $('endTitle').textContent = place === 1 ? '🏆 VICTOIRE !' : `${ordinal(place)} place`;
-  $('endInfo').textContent = `${TRACKS[sel.track].name} · Temps : ${fmt(time)}${rec}`;
-  $('endEarn').innerHTML = `Position : <b>+${base}</b> 🪙 · Pièces ramassées : <b>+${coinPay}</b> 🪙 · Figures (${raceTricks}) : <b>+${trickPay}</b> 🪙<br>Total : <b>+${total}</b> 🪙 — Solde : <b>${st.coins}</b> 🪙${unlock}`;
-  $('wallet').textContent = `🪙 ${st.coins}`; $('wallet').style.display = 'block';
+
+  // Étoiles (objectifs) — uniquement en Normal / Difficile, hors contre-la-montre
+  const newStars = !trial && sel.diff >= 1 ? prog.awardObjectives(def.id, { place, coins: coinPay, tricks: raceTricks, crashes: raceCrashes }) : [];
+  newStars.forEach((s) => extra.push(tr('end.star', { text: s.text, n: s.coins })));
+
+  // Championnat
+  let cupPos = 0, cupReward = 0;
+  if (sel.mode === 'cup' && cup) {
+    order.forEach((r, i) => { cup.pts[all.indexOf(r)] += CUP_POINTS[i]; });
+    cup.round++;
+    if (cup.round >= CUP_TRACKS.length) {
+      cup.done = true; cupPos = cupRanking().findIndex((e) => e.idx === 0) + 1;
+      if (cupPos <= 3) { cupReward = Math.round(CUP_REWARD[cupPos - 1] * DIFF_MULT[sel.diff]); store.addCoins(cupReward); extra.push(tr('cup.reward', { n: cupReward })); }
+      if (cupPos === 1) st.cupWins++;
+    }
+  }
+
+  // XP, niveau, succès
+  const xp = (trial ? 40 : PLACE_XP[Math.min(5, place - 1)]) + Math.round(coinPay / 2) + raceTricks * 10 + newStars.length * 60 + (cup && cup.done ? 150 : 0);
+  const lv = prog.addXp(xp);
+  extra.unshift(tr('end.xp', { n: xp }));
+  if (lv.after > lv.before) extra.push(tr('end.levelup', { n: lv.after, c: lv.reward }));
+  const newAchv = prog.checkAchievements();
+  newAchv.forEach((a) => extra.push(tr('end.achv', { name: prog.achvName(a), n: a.reward })));
+  if (trial) extra.push(!prevBest ? tr('trial.first') : isRecord ? tr('trial.beat') : tr('trial.slower', { t: '+' + (time - prevBest).toFixed(2) + 's' }));
+  store.save();
+
+  // Affichage
+  const winish = trial ? isRecord && !!prevBest : cup && cup.done ? cupPos === 1 : place === 1;
+  $('endTitle').textContent = trial ? `🏁 ${fmt(time)}` : cup && cup.done ? (cupPos === 1 ? tr('cup.champion') : tr('cup.final', { p: ord(cupPos) })) : place === 1 ? tr('end.win') : tr('end.place', { p: ord(place) });
+  $('endInfo').textContent = `${tr('track.' + def.id)} · ${trial ? tr('mode.trial') : tr('end.time', { t: fmt(time) })}${isRecord ? tr('end.newrecord') : ''}${sel.mode === 'cup' ? ' · ' + tr('cup.round', { a: cup.round, b: CUP_TRACKS.length }) : ''}`;
+  const parts = [];
+  if (!trial) parts.push(`${tr('earn.place')}: <b>+${base}</b> 🪙`);
+  parts.push(`${tr('earn.coins')}: <b>+${coinPay}</b> 🪙`, `${tr('earn.tricks', { n: raceTricks })}: <b>+${trickPay}</b> 🪙`);
+  $('endEarn').innerHTML = `${parts.join(' · ')}<br>${tr('earn.total')}: <b>+${total + cupReward}</b> 🪙 — ${tr('earn.balance')}: <b>${store.get().coins}</b> 🪙`;
+  $('endExtra').innerHTML = extra.join('<br>');
+  $('standings').innerHTML = sel.mode === 'cup' && cup ? standingsHTML() : '';
+  $('again').textContent = sel.mode === 'cup' && cup ? (cup.done ? tr('cup.new') : tr('end.next')) : tr('end.again');
+  showWallet();
   $('touch').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'flex';
-  $('hud').style.display = 'none';
-  $('end').style.display = 'flex';
+  $('hud').style.display = 'none'; $('end').style.display = 'flex';
+  if (winish) { confetti(place === 1 || cupPos === 1 ? 180 : 100); platform.happytime(); }
+  if (place === 1 || winish) sfx.win(); else sfx.lose();
+  if (newStars.length) setTimeout(() => sfx.star(), 900);
+  if (lv.after > lv.before) setTimeout(() => sfx.levelup(), 1500);
+  else if (newAchv.length) setTimeout(() => sfx.star(), 1500);
 }
 
 // ---------- Pièces ----------
@@ -426,7 +542,7 @@ function frame(now) {
     if (c !== lastCount) {
       lastCount = c;
       if (c > 0) { $('big').textContent = c; sfx.count(); }
-      else { $('big').textContent = 'GO !'; sfx.go(); state = 'racing'; platform.gameplayStart(); setTimeout(() => { if (state !== 'countdown') $('big').textContent = ''; }, 800); }
+      else { $('big').textContent = tr('hud.go'); sfx.go(); state = 'racing'; platform.gameplayStart(); setTimeout(() => { if (state !== 'countdown') $('big').textContent = ''; }, 800); }
     }
   }
   // Simulation en pas fixes (~1/60 s) : physique stable même si l'affichage ralentit
@@ -434,12 +550,24 @@ function frame(now) {
   for (let s = 0; s < steps; s++) {
     if (state === 'racing') raceTime += h;
     updatePlayer(h);
-    ais.forEach((a) => updateAI(a, h));
+    activeAIs.forEach((a) => updateAI(a, h));
     collide(h);
+    recordGhost(h);
     if (state === 'racing' && player.finished) endRace();
   }
-  all.forEach((r) => { emitFX(r, dt); applyMesh(r, dt); });
+  racers.forEach((r) => { emitFX(r, dt); applyMesh(r, dt); });
+  updateGhost(dt);
   fx.update(dt);
+
+  // Annonces : tours, dépassements, conseils
+  if (state === 'racing') {
+    if (player.lap > lastLap) { lastLap = player.lap; banner(player.lap === LAPS ? tr('hud.finalLap') : tr('hud.lapN', { n: player.lap })); sfx.lap(); }
+    const rk = rank();
+    if (raceTime > 2 && rk < lastRank && racers.length > 1) { rankPop(tr('hud.overtake', { n: rk })); sfx.overtake(); }
+    lastRank = rk;
+    if (hintUntil > 0) { hintUntil -= dt; if (hintUntil <= 0) $('hint').style.opacity = 0; }
+  }
+  $('nitrofx').classList.toggle('on', !!player.nitroOn);
 
   // Caméra de poursuite
   let dh = player.heading - camHeading; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
@@ -461,109 +589,215 @@ function frame(now) {
   sun.position.set(player.x + 60, player.y + 90, player.z + 40);
   sun.target.position.set(player.x, player.y, player.z);
 
-  $('pos').textContent = `Position ${rank()}/${all.length}`;
-  $('lap').textContent = `Tour ${player.lap}/${LAPS}`;
+  $('pos').textContent = sel.mode === 'trial' ? tr('mode.trial') : tr('hud.pos', { a: rank(), b: racers.length });
+  $('lap').textContent = tr('hud.lap', { a: player.lap, b: LAPS });
   $('time').textContent = fmt(raceTime);
-  $('best').textContent = best ? `Record ${fmt(best)}` : '';
+  $('best').textContent = best ? tr('hud.record', { t: fmt(best) }) : '';
   $('coins').textContent = raceCoins;
   $('speed').innerHTML = `${Math.round(player.speed * 3.6)} <small>km/h</small>`;
   $('nitro').style.width = `${player.nitro * 100}%`;
   renderer.render(scene, camera);
 }
 
-// ---------- Interface : menu, garage, réglages ----------
+// ---------- Interface : outils ----------
 const cycle = (v, d, n) => (v + d + n) % n;
 const bar = (v, lo, hi) => `<i style="width:${clamp(((v - lo) / (hi - lo)) * 100, 8, 100)}%"></i>`;
-const statsHTML = (b) => `<span>Vitesse</span>${bar(b.max, 30, 58)}<span>Accélération</span>${bar(b.acc, 12, 34)}<span>Maniabilité</span>${bar(b.handling, 0.6, 1.35)}<span>Nitro</span>${bar(b.nitro, 0.6, 1.8)}`;
-let toastTimer;
-function toast(msg, ms = 3200) { const el = $('toast'); el.textContent = msg; el.style.display = 'block'; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.style.display = 'none'; }, ms); }
+const statsHTML = (b) => `<span>${tr('stat.speed')}</span>${bar(b.max, 30, 58)}<span>${tr('stat.acc')}</span>${bar(b.acc, 12, 34)}<span>${tr('stat.handling')}</span>${bar(b.handling, 0.6, 1.35)}<span>${tr('stat.nitro')}</span>${bar(b.nitro, 0.6, 1.8)}`;
+let toastQ = [], toastBusy = false;
+function toast(msg, ms = 3200) { toastQ.push([msg, ms]); if (!toastBusy) nextToast(); }
+function nextToast() {
+  const it = toastQ.shift(), el = $('toast');
+  if (!it) { el.style.display = 'none'; toastBusy = false; return; }
+  toastBusy = true; el.textContent = it[0]; el.style.display = 'block'; setTimeout(nextToast, it[1]);
+}
 const showWallet = () => { $('wallet').textContent = `🪙 ${store.get().coins}`; $('wallet').style.display = 'block'; };
+const SCREENS = ['menu', 'garageScreen', 'settings', 'achvScreen'];
+function showScreen(id) { SCREENS.forEach((s) => { $(s).style.display = s === id ? 'flex' : 'none'; }); }
 function renderIcons() {
   $('bMusic').textContent = isMusicOn() ? '🎵' : '🔇'; $('bMusic').style.opacity = isMusicOn() ? 1 : 0.5;
   $('bSfx').textContent = isSfxOn() ? '🔊' : '🔈'; $('bSfx').style.opacity = isSfxOn() ? 1 : 0.5;
+  if ($('settings').style.display !== 'none') renderSettings();
 }
 function toggleMusic() { const v = !isMusicOn(); setMusicOn(v); store.get().settings.music = v; store.save(); renderIcons(); }
 function toggleSfx() { const v = !isSfxOn(); setSfxOn(v); store.get().settings.sfx = v; store.save(); renderIcons(); }
 $('bMusic').onclick = toggleMusic; $('bSfx').onclick = toggleSfx;
 setMusicOn(store.get().settings.music); setSfxOn(store.get().settings.sfx);
 
+// ---------- Menu principal ----------
+let baseTrack = sel.track, audioStarted = false;
+const themeId = () => TRACKS[sel.track].id;
+const saveSelAll = () => { try { localStorage.setItem('motocross_sel', JSON.stringify({ ...sel, track: baseTrack })); } catch (e) {} };
+
+function goalHTML() {
+  const d = store.get(), locked = BIKES.map((b, i) => i).filter((i) => !store.owns(i));
+  let text, cur = 0, max = 0;
+  if (locked.length) { const i = locked[0]; text = tr('menu.goalBike', { name: BIKES[i].name }); cur = d.coins; max = store.BIKE_PRICES[i]; }
+  else {
+    const costs = [];
+    d.owned.forEach((b) => store.UPGRADES.forEach((u) => { const l = store.upgLevel(b, u.key); if (l < store.MAX_UPG) costs.push(store.upgCost(l)); }));
+    if (costs.length) { text = tr('menu.goalUpg'); max = Math.min(...costs); cur = d.coins; } else text = tr('menu.goalAll');
+  }
+  return max ? `${text} — ${Math.min(cur, max)}/${max} 🪙<div class="xpbar"><i style="width:${clamp((cur / max) * 100, 0, 100)}%"></i></div>` : text;
+}
+
 function renderMenu() {
-  const ok = trackUnlocked(sel.track);
-  $('trkName').innerHTML = ok ? TRACKS[sel.track].name : `<span class="lock">🔒 ${TRACKS[sel.track].name}</span>`;
-  $('difName').textContent = DIFFS[sel.diff].name;
-  $('qName').textContent = qMode === 'auto' ? `Auto (${LEVELS[level].name})` : LEVELS[qMode].name;
+  const mode = sel.mode, cupMode = mode === 'cup';
+  const ti = cupMode ? (cup && !cup.done ? CUP_TRACKS[cup.round] : CUP_TRACKS[0]) : sel.track, def = TRACKS[ti];
+  const unlocked = cupMode || trackUnlocked(sel.track);
+  $('modeName').textContent = tr('mode.' + mode);
+  $('trkP').style.visibility = $('trkN').style.visibility = cupMode ? 'hidden' : 'visible';
+  const nm = tr('track.' + def.id);
+  $('trkName').innerHTML = !unlocked ? `<span class="lock">🔒 ${nm}</span>` : `${nm}${mode === 'race' ? `<span class="stars">${starsStr(def.id)}</span>` : ''}`;
+  if (mode === 'race') {
+    const list = prog.OBJECTIVES[def.id] || [], got = prog.starsOf(def.id);
+    $('objs').innerHTML = `<b>${tr('obj.title')}</b>${sel.diff < 1 ? ` <small style="opacity:.7">(${tr('menu.noStars')})</small>` : ''}<br>` + list.map((o, i) => `${got[i] ? '⭐' : '☆'} ${prog.objectiveText(o)}`).join('<br>');
+  } else if (cupMode) {
+    $('objs').innerHTML = cup && !cup.done ? tr('menu.cupInfo', { a: cup.round + 1, b: CUP_TRACKS.length, p: cup.pts[0] }) : tr('menu.cupStart');
+  } else $('objs').innerHTML = `${tr('menu.trialInfo')}${best ? `<br>🏁 ${fmt(best)}` : ''}`;
+  $('difName').textContent = tr('diff.' + sel.diff);
   const lv = ['eng', 'han', 'nit'].reduce((s, k) => s + store.upgLevel(sel.bike, k), 0);
   $('bkName').textContent = `${bike.name}${lv ? ` (+${lv})` : ''}`;
-  $('play').disabled = !ok; $('play').textContent = ok ? 'JOUER' : '🔒 VERROUILLÉE';
+  $('play').disabled = !unlocked; $('play').textContent = unlocked ? tr('menu.play') : tr('menu.locked');
+  const li = prog.levelInfo();
+  $('lvlTxt').textContent = tr('menu.level', { n: li.lvl }); $('xpFill').style.width = `${(li.rem / li.need) * 100}%`; $('xpTxt').textContent = `${li.rem}/${li.need} XP`;
+  $('goal').innerHTML = goalHTML();
   showWallet();
 }
 function placeGrid() { all.forEach((r, i) => { resetRider(r, gridSlot(i)); applyMesh(r, 0); }); lastIdx = player.idx; }
-let audioStarted = false;
-const themeId = () => TRACKS[sel.track].id;
-function changeTrack() { saveSel(); loadTrack(sel.track); placeGrid(); renderMenu(); if (audioStarted) startMusic(themeId(), 0.2); }
+function restoreTrack() { if (sel.mode !== 'cup' && sel.track !== baseTrack) { sel.track = baseTrack; loadTrack(baseTrack); placeGrid(); } }
+function changeTrack() { baseTrack = sel.track; saveSelAll(); loadTrack(sel.track); placeGrid(); renderMenu(); if (audioStarted) startMusic(themeId(), 0.2); }
 $('trkP').onclick = () => { sel.track = cycle(sel.track, -1, TRACKS.length); changeTrack(); };
 $('trkN').onclick = () => { sel.track = cycle(sel.track, 1, TRACKS.length); changeTrack(); };
-$('difP').onclick = () => { sel.diff = cycle(sel.diff, -1, DIFFS.length); saveSel(); renderMenu(); };
-$('difN').onclick = () => { sel.diff = cycle(sel.diff, 1, DIFFS.length); saveSel(); renderMenu(); };
-function changeQuality(d) {
-  qMode = QMODES[cycle(QMODES.indexOf(qMode), d, QMODES.length)];
-  store.get().settings.quality = qMode; store.save();
-  level = qMode === 'auto' ? autoLevel() : qMode;
-  applyLevel(); loadTrack(sel.track); placeGrid(); renderMenu();
-}
-$('qP').onclick = () => changeQuality(-1); $('qN').onclick = () => changeQuality(1);
+$('difP').onclick = () => { sel.diff = cycle(sel.diff, -1, 3); saveSelAll(); renderMenu(); };
+$('difN').onclick = () => { sel.diff = cycle(sel.diff, 1, 3); saveSelAll(); renderMenu(); };
+const changeMode = (d) => { sel.mode = MODES[cycle(MODES.indexOf(sel.mode), d, MODES.length)]; saveSelAll(); restoreTrack(); renderMenu(); };
+$('modeP').onclick = () => changeMode(-1); $('modeN').onclick = () => changeMode(1);
 
-// Garage : acheter, équiper, améliorer
+// ---------- Garage : acheter, équiper, améliorer, peindre ----------
 let gi = 0;
 function openGarage() {
   garageOpen = true; gi = sel.bike;
-  $('menu').style.display = 'none'; $('garageScreen').style.display = 'flex';
+  showScreen('garageScreen');
   ais.forEach((a) => { a.mesh.visible = false; });
   setPlayerBike(gi); placeGrid(); renderGarage();
 }
 function closeGarage() {
-  garageOpen = false; $('garageScreen').style.display = 'none'; $('menu').style.display = 'flex';
+  garageOpen = false; showScreen('menu');
   ais.forEach((a) => { a.mesh.visible = true; });
   setPlayerBike(sel.bike); placeGrid(); renderMenu();
 }
 function renderGarage() {
   const b = BIKES[gi], owned = store.owns(gi), eq = gi === sel.bike, coins = store.get().coins;
   $('gName').textContent = b.name;
-  $('gStatus').innerHTML = owned ? (eq ? '✔ Équipée' : 'Possédée') : `<span class="lock">🔒 ${store.BIKE_PRICES[gi]} 🪙</span>`;
-  $('gStats').innerHTML = statsHTML(owned ? store.effectiveStats(b, gi) : b) + `<span style="grid-column:1/3;opacity:.7">${b.desc}</span>`;
+  $('gStatus').innerHTML = owned ? (eq ? tr('garage.equipped') : tr('garage.owned')) : `<span class="lock">🔒 ${store.BIKE_PRICES[gi]} 🪙</span>`;
+  $('gStats').innerHTML = statsHTML(owned ? store.effectiveStats(b, gi) : b) + `<span style="grid-column:1/3;opacity:.7">${tr('bike.' + gi)}</span>`;
   const box = $('gUpg'); box.innerHTML = '';
   for (const u of store.UPGRADES) {
     const lvl = store.upgLevel(gi, u.key), cost = store.upgCost(lvl), max = lvl >= store.MAX_UPG;
     const left = document.createElement('div');
-    left.innerHTML = `<b>${u.name}</b> <small style="opacity:.7">${u.desc}</small><br><span class="pips">${'●'.repeat(lvl)}${'○'.repeat(store.MAX_UPG - lvl)}</span>`;
+    left.innerHTML = `<b>${tr('upg.' + u.key)}</b> <small style="opacity:.7">${tr('upg.' + u.key + '.d')}</small><br><span class="pips">${'●'.repeat(lvl)}${'○'.repeat(store.MAX_UPG - lvl)}</span>`;
     const btn = document.createElement('button');
     btn.style.cssText = 'font-size:16px;padding:6px 16px';
-    btn.textContent = !owned ? '—' : max ? 'MAX' : `🪙 ${cost}`;
+    btn.textContent = !owned ? '—' : max ? tr('garage.max') : `🪙 ${cost}`;
     btn.disabled = !owned || max || coins < cost;
-    btn.onclick = () => { if (store.buyUpgrade(gi, u.key)) { sfx.buy(); if (gi === sel.bike) stats = store.effectiveStats(bike, gi); renderGarage(); } else sfx.error(); };
+    btn.onclick = () => { if (store.buyUpgrade(gi, u.key)) { sfx.buy(); if (gi === sel.bike) stats = store.effectiveStats(bike, gi); renderGarage(); toastAchv(); } else sfx.error(); };
     box.append(left, btn);
   }
+  // Peintures
+  const pr = $('gPaint'); pr.innerHTML = '';
+  const lab = document.createElement('span'); lab.textContent = tr('garage.paint'); lab.style.cssText = 'font-size:14px;opacity:.8'; pr.append(lab);
+  store.PAINTS.forEach((c, i) => {
+    const own = store.get().paints.includes(i), eqp = owned && store.paintOf(gi) === i, hex = '#' + (c === null ? b.color : c).toString(16).padStart(6, '0');
+    const sw = document.createElement('button');
+    sw.style.cssText = `width:34px;height:34px;padding:0;border-radius:50%;background:${hex};border:3px solid ${eqp ? '#fff' : '#0009'};font-size:13px;opacity:${!owned || (!own && coins < store.PAINT_COST) ? 0.45 : 1}`;
+    sw.textContent = own ? '' : '🔒'; sw.title = own ? '' : `🪙 ${store.PAINT_COST}`; sw.disabled = !owned;
+    sw.onclick = () => {
+      if (!own) { if (!store.buyPaint(i)) { sfx.error(); return; } sfx.buy(); }
+      store.setPaint(gi, i); setPlayerBike(gi); placeGrid(); renderGarage();
+    };
+    pr.append(sw);
+  });
   const act = $('gAct');
-  if (!owned) { act.textContent = `ACHETER 🪙 ${store.BIKE_PRICES[gi]}`; act.disabled = coins < store.BIKE_PRICES[gi]; }
-  else if (!eq) { act.textContent = 'ÉQUIPER'; act.disabled = false; }
-  else { act.textContent = 'ÉQUIPÉE'; act.disabled = true; }
+  if (!owned) { act.textContent = tr('garage.buy', { n: store.BIKE_PRICES[gi] }); act.disabled = coins < store.BIKE_PRICES[gi]; }
+  else if (!eq) { act.textContent = tr('garage.equip'); act.disabled = false; }
+  else { act.textContent = tr('garage.equippedBtn'); act.disabled = true; }
   showWallet();
 }
 $('gAct').onclick = () => {
   if (!store.owns(gi)) { if (!store.buyBike(gi)) { sfx.error(); return; } sfx.buy(); }
-  sel.bike = gi; saveSel(); bike = BIKES[gi]; stats = store.effectiveStats(bike, gi); renderGarage();
+  sel.bike = gi; saveSelAll(); bike = BIKES[gi]; stats = store.effectiveStats(bike, gi); renderGarage(); toastAchv();
 };
 $('gP').onclick = () => { gi = cycle(gi, -1, BIKES.length); setPlayerBike(gi); placeGrid(); renderGarage(); };
 $('gN').onclick = () => { gi = cycle(gi, 1, BIKES.length); setPlayerBike(gi); placeGrid(); renderGarage(); };
 $('garage').onclick = openGarage; $('gBack').onclick = closeGarage;
 
+// Succès débloqués en dehors des courses (achats…)
+function toastAchv() {
+  prog.checkAchievements().forEach((a) => { toast(tr('toast.achv', { name: prog.achvName(a), n: a.reward }), 3800); sfx.star(); });
+  showWallet();
+}
+
+// ---------- Réglages et succès ----------
+function fillLangSelects() {
+  for (const id of ['langSel', 'langSel2']) {
+    const s = $(id); s.innerHTML = LANGS.map((l) => `<option value="${l.id}">${l.name}</option>`).join(''); s.value = getLang();
+    s.onchange = () => changeLang(s.value);
+  }
+}
+function changeLang(v) {
+  store.get().settings.lang = v; store.save();
+  setLang(v);
+  $('langSel').value = $('langSel2').value = v;
+}
+function changeQuality(d) {
+  qMode = QMODES[cycle(QMODES.indexOf(qMode), d, QMODES.length)];
+  store.get().settings.quality = qMode; store.save();
+  level = qMode === 'auto' ? autoLevel() : qMode;
+  applyLevel(); loadTrack(loadedTrack >= 0 ? loadedTrack : sel.track); placeGrid(); renderSettings();
+}
+function renderSettings() {
+  $('qName').textContent = qMode === 'auto' ? tr('q.auto', { l: tr('q.' + level) }) : tr('q.' + qMode);
+  $('setMusic').textContent = isMusicOn() ? tr('set.on') : tr('set.off');
+  $('setSfx').textContent = isSfxOn() ? tr('set.on') : tr('set.off');
+  $('langSel2').value = getLang();
+}
+function renderAchv() {
+  const d = store.get();
+  $('achvCount').textContent = `${Object.keys(d.achv).length}/${prog.ACHIEVEMENTS.length}`;
+  $('achvGrid').innerHTML = prog.ACHIEVEMENTS.map((a) => `<div class="${d.achv[a.id] ? 'on' : ''}"><b>${d.achv[a.id] ? '🏅' : '🔒'} ${prog.achvName(a)}</b>${prog.achvDesc(a)}<br><small>+${a.reward} 🪙</small></div>`).join('');
+}
+$('qP').onclick = () => changeQuality(-1); $('qN').onclick = () => changeQuality(1);
+$('setMusic').onclick = toggleMusic; $('setSfx').onclick = toggleSfx;
+$('bSet').onclick = () => { renderSettings(); showScreen('settings'); };
+$('setBack').onclick = () => showScreen('menu');
+$('bAchv').onclick = () => { renderAchv(); showScreen('achvScreen'); };
+$('achvBack').onclick = () => showScreen('menu');
+$('setReset').onclick = () => {
+  if (!confirm(tr('set.resetConfirm'))) return;
+  try {
+    ['motocross_save_v2', 'motocross_sel'].forEach((k) => localStorage.removeItem(k));
+    TRACKS.forEach((d) => { localStorage.removeItem('motocross_best_' + d.id); localStorage.removeItem('motocross_ghost_' + d.id); });
+  } catch (e) {}
+  location.reload();
+};
+onLang(() => {
+  renderMenu(); renderIcons();
+  if (garageOpen) renderGarage();
+  if ($('achvScreen').style.display !== 'none') renderAchv();
+  if ($('settings').style.display !== 'none') renderSettings();
+});
+
+// ---------- Boutons principaux ----------
 $('play').onclick = startRace;
-$('again').onclick = async () => { await platform.showMidgameAd(); startRace(); };
+$('again').onclick = async () => { await platform.showMidgameAd(); if (sel.mode === 'cup' && cup && cup.done) cup = newCup(); startRace(); };
 $('toMenu').onclick = async () => {
   await platform.showMidgameAd();
-  state = 'menu'; $('end').style.display = 'none'; $('hud').style.display = 'none'; $('menu').style.display = 'flex'; document.querySelector('.iconbtn').style.display = 'flex';
+  if (cup && cup.done) cup = null;
+  state = 'menu'; $('end').style.display = 'none'; $('hud').style.display = 'none'; $('touch').style.display = 'none';
+  showScreen('menu'); document.querySelector('.iconbtn').style.display = 'flex';
+  ais.forEach((a) => { a.mesh.visible = true; }); if (ghostMesh) ghostMesh.visible = false;
   stopEngine(); if (audioStarted) { startMusic(themeId(), 0.2); setMusicIntensity(0.2); }
-  placeGrid(); renderMenu();
+  restoreTrack(); placeGrid(); renderMenu();
 };
 
 // Premier geste de l'utilisateur : le navigateur autorise alors le son
@@ -573,9 +807,11 @@ document.addEventListener('click', (e) => { if (e.target.closest && e.target.clo
 
 // ---------- Démarrage ----------
 const sdk = platform.init();
+fillLangSelects();
 loadTrack(sel.track); setPlayerBike(); placeGrid(); renderMenu(); renderIcons();
 const bonus = store.claimDaily();
-if (bonus) { toast(`🎁 Bonus quotidien : +${bonus} 🪙 (série de ${store.get().daily.streak} jour${store.get().daily.streak > 1 ? 's' : ''})`, 4500); renderMenu(); }
+if (bonus) { toast(tr('toast.daily', { n: bonus, s: store.get().daily.streak }), 4500); renderMenu(); }
+toastAchv();
 sdk.then(() => { platform.loadingStart(); platform.loadingStop(); });
-if (import.meta.env.DEV) window.__g = { player, ais, keys, fx, store, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
+if (import.meta.env.DEV) window.__g = { player, ais, keys, fx, store, prog, sel, get cup() { return cup; }, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
 requestAnimationFrame(frame);

@@ -27,10 +27,11 @@ Chaque plateforme a son propre SDK et ses règles : ajoutez un adaptateur dans `
 - [ ] Testé sur navigateur ordinateur (Chrome, Firefox, Edge)
 - [ ] Aucun lien externe ni publicité tierce dans le jeu
 - [ ] Titre unique, visuels et textes prêts (`store/`)
-- [ ] Version anglaise de l'interface si vous visez le public international
+- [x] Interface en 5 langues (EN/FR/ES/PT/DE) avec détection automatique — remplissez la fiche en anglais en priorité (`store/LISTING.md`)
 - [ ] Sauvegarde testée (fermer / rouvrir la page)
 
 ## 5. Après la publication
+- Le jeu retient les joueurs grâce au championnat, au fantôme, aux étoiles, aux succès et au bonus quotidien : regardez quelle fonction fait revenir les joueurs et renforcez-la.
 - Surveillez les statistiques (durée de session, taux de retour) : c'est ce qui décide de la mise en avant.
 - Ajoutez régulièrement du contenu : nouvelles pistes, motos, défis quotidiens.
 - Les revenus dépendent des pubs et du trafic : ils peuvent être faibles au début et ne sont pas garantis.

@@ -6,8 +6,14 @@ const defaults = () => ({
   upg: {},                 // upg[indexMoto] = { eng, han, nit } (niveaux 0..5)
   podium: {},              // podium[idPiste] = true si top 3 obtenu
   daily: { day: '', streak: 0 },
-  settings: { music: true, sfx: true, quality: 'auto' },
-  stats: { races: 0, wins: 0, tricks: 0, coins: 0 },
+  settings: { music: true, sfx: true, quality: 'auto', lang: null },
+  stats: { races: 0, wins: 0, tricks: 0, coins: 0, crashes: 0, bestTrick: 0, flawless: 0 },
+  xp: 0,
+  stars: {},               // stars[idPiste] = [bool, bool, bool]
+  achv: {},                // achv[id] = true
+  paints: [0],             // peintures possédées (indices de PAINTS)
+  paint: {},               // paint[indexMoto] = indice de peinture équipée
+  cupWins: 0,
 });
 let data = defaults();
 try {
@@ -19,6 +25,13 @@ try {
 } catch (e) {}
 export const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} };
 export const get = () => data;
+
+export const PAINTS = [null, 0xe8212b, 0xffd400, 0x00b7ff, 0x7dff3a, 0xff5fd2, 0xf5f5f5, 0x1b1b1f];
+export const PAINT_COST = 250;
+export const paintOf = (bike) => (data.paint[bike] | 0);
+export const paintColor = (bike, base) => { const p = PAINTS[paintOf(bike)]; return p === null || p === undefined ? base : p; };
+export function buyPaint(i) { if (data.paints.includes(i) || data.coins < PAINT_COST) return false; data.coins -= PAINT_COST; data.paints.push(i); save(); return true; }
+export function setPaint(bike, i) { if (!data.paints.includes(i)) return false; data.paint[bike] = i; save(); return true; }
 
 export const MAX_UPG = 5;
 export const BIKE_PRICES = [0, 1500, 4000, 9000];
