@@ -18,10 +18,18 @@ const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 const UP = new THREE.Vector3(0, 1, 0);
 
 // Assemble des géométries et les fusionne par matériau (peu d'appels de rendu par moto).
+const MUD = new THREE.Color(0x6a5440), hash3 = (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); };
 class Part {
-  constructor(offset = [0, 0, 0]) { this.map = new Map(); this.off = V(offset); }
+  // baseY : hauteur de l'origine de la pièce au-dessus du sol (sert à salir le bas de la moto)
+  constructor(offset = [0, 0, 0], baseY = 0) { this.map = new Map(); this.off = V(offset); this.baseY = baseY; }
   push(geo, mat) { // tout en non-indexé pour pouvoir fusionner des géométries de types différents
     const g = geo.index ? geo.toNonIndexed() : geo; if (g !== geo) geo.dispose();
+    const p = g.attributes.position, col = new Float32Array(p.count * 3);   // boue : plus de saleté près du sol, par éclaboussures
+    for (let i = 0; i < p.count; i++) {
+      const h = p.getY(i) + this.baseY, k = Math.pow(Math.max(0, 1 - h / 0.95), 1.3) * 0.62 * (0.55 + 0.9 * hash3(p.getX(i) * 31, p.getZ(i) * 29 + p.getY(i) * 17));
+      col[i * 3] = 1 + (MUD.r - 1) * k; col[i * 3 + 1] = 1 + (MUD.g - 1) * k; col[i * 3 + 2] = 1 + (MUD.b - 1) * k;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     const l = this.map.get(mat) || []; l.push(g); this.map.set(mat, l);
   }
   add(geo, mat, p = [0, 0, 0], r = [0, 0, 0], s = [1, 1, 1]) {
@@ -61,9 +69,44 @@ function numberTexture(num, bg, fg, round = true) {
   return t;
 }
 
+const hsl = (c) => { const o = {}; new THREE.Color(c).getHSL(o); return o; };
+const css = (c) => '#' + new THREE.Color(c).getHexString();
+function helmetTexture(main, acc) {            // casque blanc, bandes de la couleur de l'équipe, éclats néon et noirs (motif original)
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d');
+  x.fillStyle = '#f3f3f3'; x.fillRect(0, 0, 256, 128);
+  x.fillStyle = css(main); for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(i * 64 - 10, 0); x.lineTo(i * 64 + 26, 0); x.lineTo(i * 64 + 70, 128); x.lineTo(i * 64 + 34, 128); x.fill(); }
+  x.fillStyle = css(acc); for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(i * 32, 44); x.lineTo(i * 32 + 22, 70); x.lineTo(i * 32 + 4, 84); x.fill(); }
+  x.fillStyle = '#16161a'; for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(i * 32 + 8, 8); x.lineTo(i * 32 + 30, 30); x.lineTo(i * 32 + 12, 36); x.fill(); }
+  x.fillStyle = '#16161a'; x.fillRect(0, 112, 256, 16);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+function jerseyTexture(main, acc) {            // maillot : flancs plus sombres, bandes de couleur, grain du tissu
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  x.fillStyle = css(main); x.fillRect(0, 0, 128, 128);
+  const dark = new THREE.Color(main).multiplyScalar(0.62); x.fillStyle = css(dark); x.fillRect(0, 0, 16, 128); x.fillRect(112, 0, 16, 128);
+  x.fillStyle = css(acc); x.fillRect(0, 22, 128, 7); x.fillRect(0, 96, 128, 7);
+  x.fillStyle = '#ffffff'; x.globalAlpha = 0.85; x.fillRect(0, 31, 128, 2); x.fillRect(0, 93, 128, 2); x.globalAlpha = 1;
+  for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(0,0,0,${Math.random() * 0.1})`; x.fillRect(Math.random() * 128, Math.random() * 128, 1, 2); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+let _fabric = null, _blob = null;
+function fabricBump() {                        // petit grain de tissu partagé
+  if (_fabric) return _fabric;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  x.fillStyle = '#888'; x.fillRect(0, 0, 64, 64);
+  for (let i = 0; i < 64; i += 2) { x.fillStyle = 'rgba(255,255,255,0.28)'; x.fillRect(0, i, 64, 1); x.fillStyle = 'rgba(0,0,0,0.2)'; x.fillRect(i, 0, 1, 64); }
+  _fabric = new THREE.CanvasTexture(c); _fabric.wrapS = _fabric.wrapT = THREE.RepeatWrapping; _fabric.repeat.set(4, 4); return _fabric;
+}
+function shadowBlob() {                        // ombre douce sous la moto
+  if (_blob) return _blob;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 2, 32, 32, 30); g.addColorStop(0, 'rgba(0,0,0,0.85)'); g.addColorStop(0.55, 'rgba(0,0,0,0.45)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64); _blob = new THREE.CanvasTexture(c); return _blob;
+}
+
 // Roue : pneu à crampons, jante, rayons, moyeu (+ disque de frein à l'avant). Axe = X.
 function makeWheel(r, w, mats, front) {
-  const g = new THREE.Group(), p = new Part();
+  const g = new THREE.Group(), p = new Part([0, 0, 0], r);
   const rr = r - 0.095, prof = [];
   for (let k = 0; k <= 14; k++) { // profil de pneu arrondi
     const a = (k / 14) * Math.PI - Math.PI / 2;
@@ -100,17 +143,20 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   body.add(inner); root.add(body);
 
   const c = new THREE.Color(color);
-  const std = (col, rough = 0.5, metal = 0.1) => new THREE.MeshStandardMaterial({ color: col, roughness: rough, metalness: metal });
+  const std = (col, rough = 0.5, metal = 0.1) => new THREE.MeshStandardMaterial({ color: col, roughness: rough, metalness: metal, vertexColors: true });
+  const gloss = (col) => new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.3, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.12, vertexColors: true });
+  const cloth = (col, o = {}) => new THREE.MeshStandardMaterial({ color: col, roughness: 0.85, metalness: 0, bumpMap: fabricBump(), bumpScale: 0.5, vertexColors: true, ...o });
+  const hh = hsl(color), neonAcc = new THREE.Color().setHSL((hh.h + 0.31) % 1, 0.95, 0.55);   // couleur d'accent complémentaire de l'équipe
   const accent = [0xffffff, 0xffd400, 0xffffff, 0xff66ff, 0xffffff, 0x2a6df4, 0xe02020, 0x33f0ff][style];
   const neon = style === 7;
   const mats = {
     rubber: std(0x141414, 0.95, 0), rim: neon ? new THREE.MeshBasicMaterial({ color: 0x33f0ff }) : std(0xc4c8cf, 0.35, 0.85), disc: std(0x9aa0a8, 0.4, 0.8),
-    paint: std(c, 0.32, 0.2), white: std(0xf4f4f4, 0.4, 0.05), black: std(0x16161a, 0.6, 0.1),
+    paint: gloss(c), white: std(0xf4f4f4, 0.4, 0.05), black: std(0x16161a, 0.6, 0.1),
     frame: std(style === 3 || style === 7 ? 0x1b1b22 : style === 6 ? 0xd02020 : 0xaab0b8, 0.4, 0.8), engine: std(0x777d86, 0.45, 0.7),
     fork: std(style === 1 || style === 0 || style === 4 ? 0xd9a520 : style === 5 ? 0x2a6df4 : 0xc9ced6, 0.3, 0.85), seat: std(0x0d0d10, 0.85, 0),
     shock: std(style === 2 || style === 6 ? 0xe03030 : style === 7 ? 0x33f0ff : 0xffc400, 0.4, 0.3), exhaust: std(0x8d949c, 0.35, 0.85),
-    jersey: std(c, 0.75, 0), jerseyAlt: std(accent, 0.75, 0), pants: std(0x24272d, 0.8, 0), helmet: std(0xf7f7f7, 0.22, 0.1),
-    lens: std(0x3a8cff, 0.08, 0.9), boots: std(0x1d1d20, 0.6, 0.1), gloves: std(0x202024, 0.7, 0),
+    jersey: cloth(0xffffff, { map: jerseyTexture(c, neonAcc) }), jerseyAlt: cloth(neonAcc), pants: cloth(new THREE.Color(c).multiplyScalar(0.28).lerp(new THREE.Color(0x1d2026), 0.55)), helmet: new THREE.MeshPhysicalMaterial({ map: helmetTexture(c, neonAcc), roughness: 0.25, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.1 }),
+    lens: std(0x3a8cff, 0.08, 0.9), boots: std(0x1d1d20, 0.5, 0.15), gloves: cloth(0x202024),
     glow: new THREE.MeshBasicMaterial({ color: style === 7 ? 0x33f0ff : 0xff66ff }),
   };
   const plateTex = numberTexture(number, '#ffffff', '#111111');
@@ -163,6 +209,7 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
     f.limb(hip, knee, 0.09, mats.pants); f.add(new THREE.SphereGeometry(0.09, 10, 8), mats.pants, knee);
     f.limb(knee, ankle, 0.075, mats.boots);
     f.add(new RoundedBoxGeometry(0.11, 0.09, 0.3, 2, 0.03), mats.boots, [s * 0.27, 0.42, 0.06]);
+    for (let q = 0; q < 3; q++) f.add(new RoundedBoxGeometry(0.02, 0.03, 0.07, 1, 0.008), mats.jerseyAlt, [s * 0.335, 0.52 + q * 0.09, 0.07 - q * 0.015]);   // boucles de botte
     f.add(new RoundedBoxGeometry(0.06, 0.1, 0.06, 2, 0.02), mats.white, [s * 0.3, 0.8, 0.34]);               // genouillère
   }
   f.build(inner);
@@ -193,8 +240,9 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   const upper = new THREE.Group(); upper.position.set(0, 1.1, -0.12); inner.add(upper);
   const u = new Part([0, 1.1, -0.12]);
   const torso = new THREE.Group(); torso.position.set(0, 1.38 - 1.1, 0.06 + 0.12); torso.rotation.x = 0.55; upper.add(torso);
-  const chest = new THREE.Mesh(new RoundedBoxGeometry(0.38, 0.48, 0.24, 3, 0.09), mats.jersey); chest.castShadow = true; torso.add(chest);
-  const guard = new THREE.Mesh(new RoundedBoxGeometry(0.3, 0.3, 0.05, 2, 0.02), mats.jerseyAlt); guard.position.set(0, 0.04, 0.125); torso.add(guard);
+  const chest = new THREE.Mesh(new RoundedBoxGeometry(0.38, 0.48, 0.24, 4, 0.09), mats.jersey); chest.castShadow = true; torso.add(chest);
+  const guard = new THREE.Mesh(new RoundedBoxGeometry(0.31, 0.34, 0.05, 3, 0.02), mats.black); guard.position.set(0, 0.04, 0.125); torso.add(guard);          // protection pectorale
+  for (let k = 0; k < 3; k++) { const rib = new THREE.Mesh(new RoundedBoxGeometry(0.27, 0.035, 0.03, 2, 0.01), mats.jerseyAlt); rib.position.set(0, 0.12 - k * 0.09, 0.15); torso.add(rib); }
   const back = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), backMat); back.position.set(0, 0.02, -0.125); back.rotation.y = Math.PI; torso.add(back);
   for (const k of [-1, 1]) {
     const sh = [k * 0.22, 1.54, 0.2], el = [k * 0.38, 1.4, 0.5], wr = [k * 0.4, 1.19, 0.66];
@@ -202,6 +250,9 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
     u.limb(sh, el, 0.058, mats.jersey); u.add(new THREE.SphereGeometry(0.058, 8, 8), mats.jersey, el);
     u.limb(el, wr, 0.048, mats.jersey);
     u.add(new THREE.SphereGeometry(0.058, 10, 8), mats.gloves, [wr[0], wr[1] - 0.01, wr[2]], [0, 0, 0], [1, 0.9, 1.15]);
+  }
+  for (const k of [-1, 1]) {                                                                                       // coudières
+    u.add(new THREE.SphereGeometry(0.066, 10, 8), mats.black, [k * 0.38, 1.4, 0.5], [0, 0, 0], [1, 0.9, 1.1]);
   }
   u.add(new THREE.CylinderGeometry(0.055, 0.065, 0.1, 10), mats.jerseyAlt, [0, 1.63, 0.24]);                    // cou
   u.add(new THREE.SphereGeometry(1, 18, 14), mats.helmet, [0, 1.75, 0.3], [0, 0, 0], [0.16, 0.17, 0.2]);         // casque
@@ -212,6 +263,8 @@ export function createMoto(color = 0xff5500, style = 0, number = 1) {
   u.add(new THREE.TorusGeometry(0.168, 0.014, 6, 20), mats.black, [0, 1.745, 0.3], [Math.PI / 2, 0, 0], [1, 1.2, 1]);
   u.build(upper);
 
-  root.userData = { body, front: frontW, rear, wheelR: (FR + RR) / 2, steer, upper };
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 1.5), new THREE.MeshBasicMaterial({ map: shadowBlob(), transparent: true, opacity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.set(0, 0.05, -0.05); shadow.renderOrder = 2; root.add(shadow);
+  root.userData = { body, front: frontW, rear, wheelR: (FR + RR) / 2, steer, upper, shadow };
   return root;
 }

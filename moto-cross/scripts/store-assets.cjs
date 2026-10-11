@@ -27,7 +27,7 @@ async function overlay(page, kind) {
   }, [kind, TAGLINE]);
 }
 async function race(page) {
-  await page.click('#play');
+  await page.click('#play', { force: true });
   await page.waitForFunction(() => window.__g.state === 'racing', null, { timeout: 90000 });
 }
 // Téléporte le joueur juste avant un saut, puis attend d'être en l'air en plein flip

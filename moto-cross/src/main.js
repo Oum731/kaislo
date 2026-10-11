@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TRACKS, createTrack, disposeGroup } from './track.js';
 import { BIKES, createMoto } from './moto.js';
 import { createParticles } from './particles.js';
+import { createSky } from './sky.js';
 import { setPlatformMute, initAudio, setEngine, stopEngine, startMusic, setMusicIntensity, setMusicOn, setSfxOn, isMusicOn, isSfxOn, sfx } from './audio.js';
 import { platform } from './platform.js';
 import * as store from './save.js';
@@ -11,7 +12,6 @@ import { t as tr, ord, LANGS, detect, setLang, getLang, onLang } from './i18n.js
 import { LEVELS, autoLevel, isMobile } from './quality.js';
 import * as lb from './leaderboard.js';
 import { dailyFor, dayString, shiftDay, medalFor, medalTargets, modifierEffects, secondsToNextDay, cleanName, DAILY_LAPS, DAILY_BIKE, MEDAL_COINS } from '../shared/daily.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 setLang(detect(store.get().settings.lang));
 
@@ -31,7 +31,7 @@ renderer.shadowMap.enabled = true;
 document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8ec9ee);
-scene.fog = new THREE.Fog(0x8ec9ee, 120, 420);
+scene.fog = new THREE.FogExp2(0x8ec9ee, 0.0046);
 const camera = new THREE.PerspectiveCamera(70, 1, 0.5, 1200);
 const hemi = new THREE.HemisphereLight(0xffffff, 0x556b3a, 0.85);
 const headlight = new THREE.PointLight(0xfff0c0, 0, 90, 1);
@@ -44,8 +44,8 @@ scene.add(sun, sun.target);
 let pixelRatio = 1;
 function resize() { renderer.setPixelRatio(Math.min(devicePixelRatio, pixelRatio)); renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
-scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.55;
+const sky = createSky(scene, renderer);
+scene.environmentIntensity = 0.7;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 const fx = createParticles(scene);
 
@@ -57,7 +57,7 @@ function applyLevel() {
   pixelRatio = L.pr; resize();
   sun.castShadow = L.shadows;
   if (sun.shadow.mapSize.x !== L.shadowSize) { sun.shadow.mapSize.set(L.shadowSize, L.shadowSize); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
-  scene.fog.far = L.fogFar;
+  scene.fog.density = L.fogDensity;
 }
 applyLevel();
 
@@ -111,7 +111,8 @@ function loadTrack(i) {
   coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, coinList.length);
   coinMesh.frustumCulled = false; scene.add(coinMesh);
   MPS = track.length / track.SAMPLES;
-  scene.background.set(def.sky); scene.fog.color.set(def.fog); sun.color.set(def.sunColor);
+  scene.fog.color.set(def.fog); sun.color.set(def.sunColor);
+  sky.setLook(def.skyTop ?? def.sky, def.fog, def.sunColor, new THREE.Vector3(60, def.night ? 60 : 90, 40), { cloud: def.clouds, stars: def.stars, dark: def.cloudDark });
   const L = def.light || {};
   hemi.intensity = L.hemi ?? 0.85; sun.intensity = L.sun ?? 1.1; scene.environmentIntensity = L.env ?? 0.55; headlight.intensity = L.headlight ? 90 : 0;
   setAIBikes(i >= 3 ? 1 : 0);
@@ -433,7 +434,8 @@ function emitFX(r, dt) {
 function applyMesh(r, dt) {
   r.mesh.position.set(r.x, r.y, r.z);
   r.mesh.rotation.y = r.heading;
-  const { body, front, rear, wheelR, steer, upper } = r.mesh.userData;
+  const { body, front, rear, wheelR, steer, upper, shadow } = r.mesh.userData;
+  if (shadow) shadow.visible = r.grounded !== false;
   steer.rotation.y = -r.roll * 0.55;
   upper.rotation.z = r.roll * 0.3; upper.rotation.x = clamp(-r.pitch * 0.3, -0.2, 0.2);
   body.rotation.x = r.pitch + (r.spinX || 0);
@@ -620,17 +622,25 @@ function frame(now) {
   if (state === 'menu') {
     if (garageOpen) { // la caméra tourne autour de la moto
       const a = t * 0.6;
-      camera.position.set(player.x + Math.cos(a) * 5.4, player.y + 1.4, player.z + Math.sin(a) * 5.4);
-      camera.lookAt(player.x, player.y - 0.1, player.z);
-      camera.fov = 50; camera.updateProjectionMatrix();
+      camera.position.set(player.x + Math.cos(a) * 5.6, player.y + 1.5, player.z + Math.sin(a) * 5.6);
+      camera.lookAt(player.x, player.y + 0.95, player.z);
+      camera.fov = 48;
+      const W = innerWidth, H = innerHeight;      // en paysage, la moto se place à gauche du panneau ; en portrait, au-dessus
+      if (W / H > 1) camera.setViewOffset(W, H, W * 0.2, 0, W, H); else camera.setViewOffset(W, H, 0, H * 0.22, W, H);
+      camera.updateProjectionMatrix();
       applyMesh(player, dt);
     } else {
-      const a = t * 0.1;
-      camera.fov = 70; camera.updateProjectionMatrix();
-      camera.position.set(Math.cos(a) * 300, 90, Math.sin(a) * 250);
-      camera.lookAt(0, 0, 0);
+      // la caméra balance doucement devant la ligne de départ où posent les 6 pilotes
+      let cx = 0, cy = 0, cz = 0; all.forEach((r) => { cx += r.x; cy += r.y; cz += r.z; }); cx /= all.length; cy /= all.length; cz /= all.length;
+      const hd = player.heading, fx = Math.sin(hd), fz = Math.cos(hd), rx = fz, rz = -fx;
+      const ang = Math.sin(t * 0.22) * 0.85, dist = 13 + Math.sin(t * 0.15) * 1.5;
+      camera.fov = 46; camera.clearViewOffset(); camera.updateProjectionMatrix();
+      camera.position.set(cx + (fx * Math.cos(ang) + rx * Math.sin(ang)) * dist, cy + 2.3 + Math.sin(t * 0.3) * 0.3, cz + (fz * Math.cos(ang) + rz * Math.sin(ang)) * dist);
+      camera.lookAt(cx, cy + 1.0, cz);
+      all.forEach((r, i) => { r.pitch = Math.sin(t * 2.4 + i) * 0.012; r.roll = Math.sin(t * 1.3 + i * 2) * 0.02; applyMesh(r, dt); });
     }
-    fx.update(dt);
+    fx.update(dt, camera, renderer.domElement.height);
+    sky.update(t, camera);
     renderer.render(scene, camera);
     return;
   }
@@ -654,7 +664,7 @@ function frame(now) {
   }
   racers.forEach((r) => { emitFX(r, dt); applyMesh(r, dt); });
   updateGhost(dt);
-  fx.update(dt);
+  fx.update(dt, camera, renderer.domElement.height);
 
   // Annonces : tours, dépassements, conseils
   if (state === 'racing') {
@@ -665,8 +675,10 @@ function frame(now) {
     if (hintUntil > 0) { hintUntil -= dt; if (hintUntil <= 0) $('hint').style.opacity = 0; }
   }
   $('nitrofx').classList.toggle('on', !!player.nitroOn);
+  sky.update(t, camera);
 
   // Caméra de poursuite
+  camera.clearViewOffset();
   let dh = player.heading - camHeading; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
   camHeading += dh * Math.min(1, 4 * dt);
   const back = 9 + player.speed * 0.04;
@@ -709,7 +721,7 @@ function nextToast() {
   toastBusy = true; el.textContent = it[0]; el.style.display = 'block'; setTimeout(nextToast, it[1]);
 }
 const showWallet = () => { $('wallet').textContent = `🪙 ${store.get().coins}`; $('wallet').style.display = 'block'; };
-const SCREENS = ['menu', 'garageScreen', 'settings', 'achvScreen', 'lbScreen'];
+const SCREENS = ['menu', 'garageScreen', 'settings', 'achvScreen', 'lbScreen', 'helpScreen'];
 function showScreen(id) { SCREENS.forEach((s) => { $(s).style.display = s === id ? 'flex' : 'none'; }); }
 function renderIcons() {
   $('bMusic').textContent = isMusicOn() ? '🎵' : '🔇'; $('bMusic').style.opacity = isMusicOn() ? 1 : 0.5;
@@ -811,13 +823,51 @@ function renderMenu() {
   $('difName').textContent = tr('diff.' + sel.diff);
   const lv = ['eng', 'han', 'nit'].reduce((s, k) => s + store.upgLevel(sel.bike, k), 0);
   $('bkName').textContent = dailyMode ? `${BIKES[DAILY_BIKE].name} 🎯` : `${bike.name}${lv ? ` (+${lv})` : ''}`;
-  $('play').disabled = !unlocked; $('play').textContent = unlocked ? tr('menu.play') : tr('menu.locked');
+  $('play').disabled = !unlocked; $('playLbl').textContent = unlocked ? tr('menu.play') : '🔒';
+  renderHome(def, mode, unlocked, dailyMode);
   const li = prog.levelInfo();
   $('lvlTxt').textContent = tr('menu.level', { n: li.lvl }); $('xpFill').style.width = `${(li.rem / li.need) * 100}%`; $('xpTxt').textContent = `${li.rem}/${li.need} XP`;
   $('goal').innerHTML = goalHTML();
   showWallet();
 }
-function placeGrid() { all.forEach((r, i) => { resetRider(r, gridSlot(i)); applyMesh(r, 0); }); lastIdx = player.idx; }
+// ----- Accueil visuel : pastilles à icônes au lieu de listes de texte -----
+let infoOpen = false;
+const hex6 = (c) => '#' + c.toString(16).padStart(6, '0');
+function renderHome(def, mode, unlocked, dailyMode) {
+  const ICO = { race: '🏁', cup: '🏆', trial: '⏱', daily: '🎯' };
+  $('chipModeIco').textContent = ICO[mode]; $('chipModeTxt').textContent = tr('mode.' + mode);
+  $('chipThumb').style.background = `linear-gradient(${hex6(def.sky)} 0 45%, ${hex6(def.ground)} 45% 70%, ${hex6(def.dirt)} 70%)`;
+  $('chipLock').style.display = unlocked ? 'none' : 'flex';
+  $('chipTrackTxt').textContent = mode === 'cup' ? tr('cup.name.' + sel.cup) : tr('track.' + def.id);
+  $('chipStars').textContent = mode === 'race' && unlocked ? starsStr(def.id) : '';
+  const DOT = ['#4be36b', '#ffc233', '#ff5a4d'];
+  [...$('chipDots').children].forEach((d, i) => { d.style.background = i <= sel.diff ? DOT[sel.diff] : ''; });
+  $('chipDiffTxt').textContent = tr('diff.' + sel.diff);
+  const b = dailyMode ? BIKES[DAILY_BIKE] : bike;
+  $('chipSwatch').style.background = hex6(dailyMode ? b.color : store.paintColor(sel.bike, b.color));
+  $('chipBikeTxt').textContent = b.name;
+  const li = prog.levelInfo();
+  $('lvlNum').textContent = li.lvl; $('ringFg').style.strokeDashoffset = 119.4 * (1 - li.rem / li.need);
+  $('lvlRing').title = `${tr('menu.level', { n: li.lvl })} · ${li.rem}/${li.need} XP`;
+  // fiche d'info : affichée seulement pour le défi quotidien, une piste verrouillée, ou à la demande (ℹ)
+  const card = $('infoCard'); card.innerHTML = $('objs').innerHTML;
+  card.style.display = dailyMode || !unlocked || infoOpen ? 'block' : 'none';
+  $('garage').title = tr('menu.garage'); $('bAchv').title = tr('menu.achv'); $('bSet').title = tr('menu.settings');
+  $('bLb').title = tr('menu.leaderboard'); $('bSignIn').title = tr('menu.signin'); $('bInfo').title = tr('obj.title');
+}
+// Vitrine : les 6 pilotes côte à côte sur la ligne de départ (accueil et garage)
+function placeGrid() {
+  all.forEach((r, i) => resetRider(r, gridSlot(i)));
+  const S = track.SAMPLES, idx = S - 10, p = track.samples[idx], q = track.samples[(idx + 3) % S], nv = track.normalAt(idx);
+  const hd = Math.atan2(q.x - p.x, q.z - p.z);
+  all.forEach((r, i) => {
+    const off = (i - 2.5) * 2.7, fw = (i % 2) * 1.5;
+    r.x = p.x + nv.x * off + Math.sin(hd) * fw; r.z = p.z + nv.z * off + Math.cos(hd) * fw; r.heading = hd;
+    r.y = track.heightAt(r.x, r.z, idx); r.idx = idx;
+    applyMesh(r, 0);
+  });
+  lastIdx = player.idx;
+}
 function restoreTrack() { if (sel.mode !== 'cup' && sel.track !== baseTrack) { sel.track = baseTrack; loadTrack(baseTrack); placeGrid(); } }
 function changeTrack() { baseTrack = sel.track; saveSelAll(); loadTrack(sel.track); placeGrid(); renderMenu(); if (audioStarted) startMusic(themeId(), 0.2); }
 const stepTrack = (d) => {
@@ -943,6 +993,16 @@ onLang(() => {
   if ($('achvScreen').style.display !== 'none') renderAchv();
   if ($('settings').style.display !== 'none') renderSettings();
 });
+
+// ---------- Accueil : pastilles (toucher = suivant, clic droit = précédent) ----------
+const chipAct = (id, next, prev) => { $(id).onclick = next; $(id).oncontextmenu = (e) => { e.preventDefault(); prev(); }; };
+chipAct('chipMode', () => $('modeN').click(), () => $('modeP').click());
+chipAct('chipTrack', () => stepTrack(1), () => stepTrack(-1));
+chipAct('chipDiff', () => $('difN').click(), () => $('difP').click());
+$('chipBike').onclick = () => openGarage();
+$('bInfo').onclick = () => { infoOpen = !infoOpen; renderMenu(); };
+$('bHelp').onclick = () => showScreen('helpScreen');
+$('helpBack').onclick = () => showScreen('menu');
 
 // ---------- Boutons principaux ----------
 $('play').onclick = startRace;

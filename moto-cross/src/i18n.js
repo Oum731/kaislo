@@ -37,6 +37,7 @@ const ROWS = [
   ['menu.trialInfo', 'Race your own ghost!', 'Affrontez votre propre fantôme !', '¡Compite contra tu propio fantasma!', 'Corra contra o seu próprio fantasma!', 'Fahre gegen deinen eigenen Geist!'],
   ['menu.noStars', 'Stars count on Normal or Hard only', 'Les étoiles comptent en Normal ou Difficile', 'Las estrellas cuentan en Normal o Difícil', 'As estrelas contam em Normal ou Difícil', 'Sterne zählen nur bei Normal oder Schwer'],
   ['menu.signin', '👤 Sign in to sync progress', '👤 Se connecter pour synchroniser', '👤 Inicia sesión para sincronizar', '👤 Entrar para sincronizar', '👤 Anmelden zum Synchronisieren'],
+  ['help.title', 'Controls', 'Commandes', 'Controles', 'Controles', 'Steuerung'],
   ['menu.achv', '🏆 Achievements', '🏆 Succès', '🏆 Logros', '🏆 Conquistas', '🏆 Erfolge'],
   ['menu.settings', '⚙ Settings', '⚙ Réglages', '⚙ Ajustes', '⚙ Opções', '⚙ Einstellungen'],
   ['rider.you', 'You', 'Vous', 'Tú', 'Você', 'Du'],

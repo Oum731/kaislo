@@ -80,6 +80,40 @@
   .daily-box b{color:#ffd84d}
   input.txt{font:inherit;font-size:18px;font-weight:700;background:#000a;color:#fff;border:2px solid #fff6;border-radius:10px;padding:8px 12px;width:min(220px,60vw);text-align:center;pointer-events:auto;user-select:text;-webkit-user-select:text}
   #nameBox{display:none;margin:6px 0}
+  /* ----- accueil visuel ----- */
+  #menu.home{padding:0;gap:0;justify-content:flex-end;align-items:center;overflow:hidden;background:linear-gradient(180deg,#0007 0,#0000 22%,#0000 52%,#000c 100%)}
+  .homeLogo{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:clamp(24px,4.6vw,50px);font-weight:900;color:#ff9d2e;text-shadow:0 3px 0 #6a2d00,0 6px 16px #000;letter-spacing:2px;white-space:nowrap}
+  .lvlRing{position:absolute;top:46px;right:14px;width:46px;height:46px}
+  .lvlRing svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .lvlRing circle{fill:#0009;stroke-width:4}
+  .lvlRing .bg{stroke:#fff3}
+  .lvlRing .fg{fill:none;stroke:#ffd84d;stroke-linecap:round;stroke-dasharray:119.4;stroke-dashoffset:119.4;transition:stroke-dashoffset .6s}
+  .lvlRing b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:17px;text-shadow:0 1px 3px #000}
+  .chips{display:flex;gap:10px;margin-bottom:12px;align-items:stretch}
+  .chip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 12px;min-width:92px;background:#000b;color:#fff;border:2px solid #fff4;border-radius:16px;font-size:12px;font-weight:700}
+  .chip:hover:not(:disabled){background:#222c;border-color:#ff9d2e}
+  .chip small{font-size:12px;font-weight:700;opacity:.9;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip .ico{font-size:28px;line-height:34px}
+  .chip .thumb{width:34px;height:34px;border-radius:50%;border:2px solid #fff;position:relative;overflow:hidden;display:block}
+  .chip .thumb i{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-style:normal;font-size:16px;background:#000a}
+  .chip .stars{color:#ffd84d;font-size:11px;letter-spacing:1px;min-height:12px}
+  .chip .dots{display:flex;gap:5px;height:34px;align-items:center}
+  .chip .dots i{width:12px;height:12px;border-radius:50%;background:#fff3}
+  .chip .swatch{width:30px;height:30px;border-radius:50%;border:3px solid #fff;display:block;margin:2px 0}
+  .bigplay{display:flex;align-items:center;gap:14px;margin:0 0 16px;padding:10px 56px;font-size:clamp(24px,4vw,40px);border-radius:60px;box-shadow:0 6px 0 #a35a00,0 12px 26px #000a;animation:pulse 1.8s ease-in-out infinite}
+  .bigplay:disabled{animation:none;box-shadow:none}
+  .bigplay .tri{font-size:.8em}
+  @keyframes pulse{50%{transform:scale(1.045)}}
+  .dock{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:8px}
+  .dockbtn{width:46px;height:46px;padding:0;border-radius:50%;font-size:20px;background:#000b;color:#fff;border:2px solid #fff5;display:flex;align-items:center;justify-content:center}
+  .dockbtn:hover:not(:disabled){background:#222c;border-color:#ff9d2e}
+  #infoCard{position:absolute;left:50%;bottom:200px;transform:translateX(-50%);text-align:left;z-index:3}
+  .keys{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .key{min-width:40px;height:40px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;background:#eee;color:#222;border-radius:8px;border-bottom:4px solid #999;font-weight:900;font-size:18px}
+  .key.wide{min-width:72px}
+  #garageScreen{align-items:flex-end;justify-content:safe center;padding-right:clamp(10px,5vw,60px);background:linear-gradient(90deg,#0000 38%,#000c 100%)}
+  #garageScreen > *{max-width:min(440px,92vw)}
+  @media (max-aspect-ratio:1/1){#garageScreen{align-items:center;padding-right:12px;background:linear-gradient(#0000,#000c 55%);justify-content:flex-end}}
   #loading{position:fixed;inset:0;z-index:50;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-size:28px;font-weight:900;color:#ff9d2e;letter-spacing:2px}
   #loading .spin{width:46px;height:46px;border:6px solid #ff9d2e33;border-top-color:#ff9d2e;border-radius:50%;animation:sp 0.9s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
@@ -106,6 +140,7 @@
     .earn{font-size:14px;line-height:1.35}.screen h2{font-size:22px}
     .objs{font-size:12px;padding:3px 10px}.goal{font-size:11px}.lvl{font-size:13px}#hint{bottom:70px;font-size:14px}table.st{font-size:13px}.achvgrid div{font-size:12px;padding:4px 8px}.achvgrid b{font-size:13px}.setrow{font-size:15px}
     .small{font-size:14px;padding:5px 12px}
+    .homeLogo{top:4px;font-size:24px}.chips{gap:6px;margin-bottom:6px}.chip{min-width:70px;padding:3px 7px}.chip .ico{font-size:21px;line-height:26px}.chip .thumb{width:26px;height:26px}.chip .dots{height:26px}.chip .swatch{width:22px;height:22px}.chip small{font-size:10px;max-width:84px}.bigplay{padding:5px 38px;font-size:22px;margin-bottom:8px}.dockbtn{width:38px;height:38px;font-size:17px}.dock{gap:5px;right:8px;bottom:8px}.lvlRing{width:38px;height:38px;top:40px}#infoCard{bottom:130px}
     .daily-box{font-size:12px;padding:4px 10px;line-height:1.4}.lbtable{font-size:13px}.lbtable td,.lbtable th{padding:1px 10px}input.txt{font-size:15px;padding:5px 8px}
   }
 </style>
@@ -134,23 +169,44 @@
   <div id="tB" style="right:120px">N</div><div id="tG" style="right:20px">▲</div><div id="tD" style="right:20px;bottom:140px">▼</div>
 </div>
 
-<div id="menu" class="screen">
-  <h1>MOTO CROSS</h1>
-  <div class="lvl"><span id="lvlTxt"></span><div class="xpbar"><i id="xpFill"></i></div><small id="xpTxt" style="opacity:.75;font-weight:600"></small></div>
-  <div class="sel"><span class="lab" data-i18n="menu.mode">Mode</span><button class="arr" id="modeP">◀</button><div class="val" id="modeName"></div><button class="arr" id="modeN">▶</button></div>
-  <div class="sel"><span class="lab" id="trkLab" data-i18n="menu.track">Track</span><button class="arr" id="trkP">◀</button><div class="val" id="trkName"></div><button class="arr" id="trkN">▶</button></div>
-  <div class="objs" id="objs"></div>
-  <div class="sel"><span class="lab" data-i18n="menu.diff">Level</span><button class="arr" id="difP">◀</button><div class="val" id="difName"></div><button class="arr" id="difN">▶</button></div>
-  <div class="sel"><span class="lab" data-i18n="menu.bike">Bike</span><div class="val" id="bkName" style="min-width:0;margin:0 8px"></div></div>
-  <div class="goal" id="goal"></div>
-  <div class="row"><button id="play">PLAY</button><button id="garage" class="alt" data-i18n="menu.garage">🔧 GARAGE</button></div>
-  <div class="row"><button id="bSignIn" class="alt small" style="display:none" data-i18n="menu.signin">👤 Sign in</button></div>
-  <div class="row"><button id="bLb" class="alt small" style="display:none" data-i18n="menu.leaderboard">🏅 Ranking</button><button id="bAchv" class="alt small" data-i18n="menu.achv">🏆</button><button id="bSet" class="alt small" data-i18n="menu.settings">⚙</button></div>
-  <p class="help" style="margin-top:6px;font-size:13px" data-i18n-html="menu.help"></p>
+<div id="menu" class="screen home">
+  <div class="homeLogo">MOTO CROSS</div>
+  <div class="lvlRing" id="lvlRing"><svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" id="ringFg" cx="22" cy="22" r="19"/></svg><b id="lvlNum">1</b></div>
+  <div id="infoCard" class="daily-box" style="display:none"></div>
+  <div class="chips">
+    <button class="chip" id="chipMode"><span class="ico" id="chipModeIco"></span><small id="chipModeTxt"></small></button>
+    <button class="chip" id="chipTrack"><span class="thumb" id="chipThumb"><i id="chipLock">🔒</i></span><small id="chipTrackTxt"></small><span class="stars" id="chipStars"></span></button>
+    <button class="chip" id="chipDiff"><span class="dots" id="chipDots"><i></i><i></i><i></i></span><small id="chipDiffTxt"></small></button>
+    <button class="chip" id="chipBike"><span class="swatch" id="chipSwatch"></span><small id="chipBikeTxt"></small></button>
+  </div>
+  <button id="play" class="bigplay"><span class="tri">▶</span><span id="playLbl">PLAY</span></button>
+  <div class="dock">
+    <button class="dockbtn" id="bSignIn" style="display:none">👤</button>
+    <button class="dockbtn" id="bLb" style="display:none">🏅</button>
+    <button class="dockbtn" id="garage">🔧</button>
+    <button class="dockbtn" id="bAchv">🏆</button>
+    <button class="dockbtn" id="bInfo">ℹ</button>
+    <button class="dockbtn" id="bHelp">?</button>
+    <button class="dockbtn" id="bSet">⚙</button>
+  </div>
+  <!-- anciens contrôles : gardés cachés, le code s'en sert pour changer de mode / piste / niveau -->
+  <div id="legacy" style="display:none">
+    <button id="modeP"></button><button id="modeN"></button><span id="modeName"></span>
+    <button id="trkP"></button><button id="trkN"></button><span id="trkLab"></span><span id="trkName"></span>
+    <button id="difP"></button><button id="difN"></button><span id="difName"></span>
+    <span id="bkName"></span><div id="objs"></div><div id="goal"></div>
+    <span id="lvlTxt"></span><i id="xpFill"></i><small id="xpTxt"></small>
+  </div>
 </div>
 
-<div id="garageScreen" class="screen" style="display:none;background:linear-gradient(#0000,#000c 55%)">
-  <div style="flex:1"></div>
+<div id="helpScreen" class="screen" style="display:none">
+  <h2 data-i18n="help.title">Controls</h2>
+  <div class="keys"><span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span><span class="key wide">Shift</span><span class="key">R</span><span class="key">M</span><span class="key">N</span></div>
+  <div class="daily-box" style="text-align:left;max-width:min(640px,94vw)" data-i18n-html="menu.help"></div>
+  <button id="helpBack" data-i18n="common.back">BACK</button>
+</div>
+
+<div id="garageScreen" class="screen" style="display:none">
   <h2 id="gName"></h2>
   <div class="row"><button class="arr" id="gP">◀</button><div id="gStatus" style="min-width:220px;font-weight:800;font-size:18px"></div><button class="arr" id="gN">▶</button></div>
   <div class="stats" id="gStats"></div>
