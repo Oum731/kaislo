@@ -20,7 +20,7 @@ async function overlay(page, kind) {
     d.style.cssText = `position:fixed;inset:0;display:flex;flex-direction:column;justify-content:${kind === 'wide' ? 'flex-end' : 'flex-start'};align-items:${kind === 'wide' ? 'flex-start' : 'center'};padding:${kind === 'wide' ? '0 0 6% 5%' : '8% 4% 0'};box-sizing:border-box;font-family:system-ui,Segoe UI,Arial;pointer-events:none;background:linear-gradient(${kind === 'wide' ? '90deg,#000a,#0000 55%' : '180deg,#000b,#0000 45%'})`;
     const w = innerWidth;
     d.innerHTML = `<div style="font-size:${kind === 'wide' ? w * 0.075 : w * 0.17}px;font-weight:900;line-height:.95;color:#ff9d2e;text-shadow:0 ${w * 0.006}px 0 #6a2d00,0 ${w * 0.01}px ${w * 0.02}px #000;letter-spacing:2px;text-align:${kind === 'wide' ? 'left' : 'center'}">MOTO<br>CROSS</div>
-      <div style="margin-top:${w * 0.012}px;font-size:${kind === 'wide' ? w * 0.026 : w * 0.06}px;font-weight:800;color:#fff;text-shadow:0 2px 8px #000;text-align:${kind === 'wide' ? 'left' : 'center'}">RACING 3D · 3 pistes · 4 motos · figures</div>`;
+      <div style="margin-top:${w * 0.012}px;font-size:${kind === 'wide' ? w * 0.026 : w * 0.06}px;font-weight:800;color:#fff;text-shadow:0 2px 8px #000;text-align:${kind === 'wide' ? 'left' : 'center'}">${kind === 'wide' ? 'RACING 3D · 3 pistes · 4 motos · figures' : 'RACING 3D<br>3 pistes · 4 motos · figures'}</div>`;
     document.body.appendChild(d);
   }, kind);
 }
@@ -59,6 +59,7 @@ async function groundShot(page) {
     await race(page);
     await page.setViewportSize({ width: w, height: h }); await page.waitForTimeout(500);
     if (mode === 'jump') await jumpShot(page, track === 1 ? 2 : 0, ang); else await groundShot(page);
+    await page.evaluate(() => window.__g.coins.forEach((c) => { c.on = false; })); await page.waitForTimeout(100);
     await hideUI(page); if (ov) await overlay(page, ov);
     await page.waitForTimeout(150);
     await page.screenshot({ path: OUT + file });
