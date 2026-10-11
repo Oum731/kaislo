@@ -1,0 +1,41 @@
+name: Moto Cross — build prêt à publier
+
+# À chaque commit touchant le jeu : tests, build et zip prêt à envoyer sur CrazyGames
+# (Actions ▸ cette exécution ▸ Artifacts ▸ moto-cross-crazygames). Aucun site ni serveur n'est modifié.
+on:
+  push:
+    paths: ['moto-cross/**', '.github/workflows/moto-cross-build.yml']
+  pull_request:
+    paths: ['moto-cross/**', '.github/workflows/moto-cross-build.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: moto-cross
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: moto-cross/package-lock.json
+      - run: npm ci
+      - name: Tests du serveur de classement
+        run: npm run test:server
+      - name: Construction du jeu
+        run: npm run build
+        env:
+          # Facultatif : Settings ▸ Secrets and variables ▸ Actions ▸ Variables ▸ LEADERBOARD_URL
+          VITE_LEADERBOARD_URL: ${{ vars.LEADERBOARD_URL }}
+      - name: Vérifier que le SDK CrazyGames est présent dans la page
+        run: grep -q "sdk.crazygames.com/crazygames-sdk-v3.js" dist/index.html
+      - name: Créer le zip (index.html à la racine)
+        run: cd dist && zip -r -q ../moto-cross.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moto-cross-crazygames
+          path: moto-cross/moto-cross.zip
+          retention-days: 30

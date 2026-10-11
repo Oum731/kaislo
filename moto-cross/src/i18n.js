@@ -36,6 +36,7 @@ const ROWS = [
   ['toast.cupLocked', '🔒 Inferno Cup: finish top 3 on Alpine Glacier to unlock it', '🔒 Coupe Inferno : finissez top 3 sur le Glacier Alpin pour la débloquer', '🔒 Copa Inferno: termina en el top 3 del Glaciar Alpino para desbloquearla', '🔒 Copa Inferno: termine no top 3 da Geleira Alpina para desbloquear', '🔒 Inferno-Cup: Top 3 auf dem Alpengletscher zum Freischalten'],
   ['menu.trialInfo', 'Race your own ghost!', 'Affrontez votre propre fantôme !', '¡Compite contra tu propio fantasma!', 'Corra contra o seu próprio fantasma!', 'Fahre gegen deinen eigenen Geist!'],
   ['menu.noStars', 'Stars count on Normal or Hard only', 'Les étoiles comptent en Normal ou Difficile', 'Las estrellas cuentan en Normal o Difícil', 'As estrelas contam em Normal ou Difícil', 'Sterne zählen nur bei Normal oder Schwer'],
+  ['menu.signin', '👤 Sign in to sync progress', '👤 Se connecter pour synchroniser', '👤 Inicia sesión para sincronizar', '👤 Entrar para sincronizar', '👤 Anmelden zum Synchronisieren'],
   ['menu.achv', '🏆 Achievements', '🏆 Succès', '🏆 Logros', '🏆 Conquistas', '🏆 Erfolge'],
   ['menu.settings', '⚙ Settings', '⚙ Réglages', '⚙ Ajustes', '⚙ Opções', '⚙ Einstellungen'],
   ['rider.you', 'You', 'Vous', 'Tú', 'Você', 'Du'],
@@ -112,6 +113,9 @@ const ROWS = [
   ['end.levelup', '⬆ LEVEL UP! Level {n} reached (+{c} 🪙)', '⬆ NIVEAU SUPÉRIEUR ! Niveau {n} atteint (+{c} 🪙)', '⬆ ¡SUBES DE NIVEL! Nivel {n} (+{c} 🪙)', '⬆ NOVO NÍVEL! Nível {n} (+{c} 🪙)', '⬆ LEVEL-UP! Level {n} erreicht (+{c} 🪙)'],
   ['end.achv', '🏅 {name} (+{n} 🪙)', '🏅 {name} (+{n} 🪙)', '🏅 {name} (+{n} 🪙)', '🏅 {name} (+{n} 🪙)', '🏅 {name} (+{n} 🪙)'],
   ['end.xp', '+{n} XP', '+{n} XP', '+{n} XP', '+{n} XP', '+{n} XP'],
+  ['end.adBonus', '▶ Watch an ad: +{n} 🪙', '▶ Regarder une pub : +{n} 🪙', '▶ Ver un anuncio: +{n} 🪙', '▶ Assistir a um anúncio: +{n} 🪙', '▶ Werbung ansehen: +{n} 🪙'],
+  ['end.adThanks', 'Thanks! +{n} 🪙 added', 'Merci ! +{n} 🪙 ajoutées', '¡Gracias! +{n} 🪙 añadidas', 'Obrigado! +{n} 🪙 adicionadas', 'Danke! +{n} 🪙 gutgeschrieben'],
+  ['end.adFail', 'No ad available right now. Try again later.', 'Aucune pub disponible pour le moment. Réessayez plus tard.', 'No hay anuncios disponibles ahora. Inténtalo más tarde.', 'Nenhum anúncio disponível agora. Tente mais tarde.', 'Gerade keine Werbung verfügbar. Versuche es später.'],
   ['end.again', 'PLAY AGAIN', 'REJOUER', 'JUGAR DE NUEVO', 'JOGAR NOVAMENTE', 'NOCHMAL'],
   ['end.menu', 'MENU', 'MENU', 'MENÚ', 'MENU', 'MENÜ'],
   ['end.next', 'NEXT RACE ▶', 'COURSE SUIVANTE ▶', 'SIGUIENTE CARRERA ▶', 'PRÓXIMA CORRIDA ▶', 'NÄCHSTES RENNEN ▶'],
@@ -237,8 +241,9 @@ for (const row of ROWS) for (const l in IDX) DICT[l][row[0]] = row[IDX[l]];
 let lang = 'en';
 const listeners = [];
 export const getLang = () => lang;
-export function detect(saved) {
+export function detect(saved, hint) {
   if (saved && DICT[saved]) return saved;
+  const h = String(hint || '').slice(0, 2).toLowerCase(); if (DICT[h]) return h;   // langue fournie par la plateforme
   for (const l of (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language])) {
     const c = String(l || '').slice(0, 2).toLowerCase(); if (DICT[c]) return c;
   }

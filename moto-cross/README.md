@@ -26,10 +26,9 @@ npm run dev
 |---|---|
 | `npm run dev` | Serveur de développement (rechargement automatique) |
 | `npm run build` | Version finale dans `dist/` (hébergement libre : itch.io, GitHub Pages…) |
-| `npm run build:crazygames` | Version finale avec le SDK CrazyGames injecté |
 | `npm run server` | Serveur de classement local (port 8787) |
 | `npm run test:server` | Tests du serveur de classement |
-| `npm run zip` | Construit puis crée `moto-cross.zip` prêt à envoyer sur une plateforme |
+| `npm run zip` | Construit puis crée `moto-cross.zip` prêt à envoyer sur CrazyGames (le SDK CrazyGames est déjà intégré) |
 
 ## Commandes en jeu
 
@@ -69,7 +68,7 @@ src/leaderboard.js client du classement en ligne (facultatif)
 shared/daily.js    défi du jour, médailles, règles (jeu + serveur)
 server/            serveur de classement (Cloudflare Workers) + tests
 src/quality.js     niveaux de qualité graphique
-src/platform.js    pont vers le SDK des plateformes (CrazyGames…)
+src/platform.js    SDK CrazyGames v3 (init, chargement, pubs, sauvegarde cloud, compte)
 scripts/           zip et génération des visuels
 store/             visuels et textes de publication
 ```

@@ -8,6 +8,8 @@
 <meta name="description" content="Course de moto-cross 3D : 3 pistes, 4 motos, figures, nitro, améliorations. Jouable gratuitement dans le navigateur." />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff9d2e'/><text x='32' y='46' font-size='38' text-anchor='middle'>🏍️</text></svg>" />
 <title>Moto Cross Racing</title>
+<!-- SDK CrazyGames v3 : chargé avant le code du jeu. Hors CrazyGames/localhost il est inactif (le jeu l'ignore). -->
+<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
 <style>
   html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
   canvas{display:block}
@@ -78,6 +80,9 @@
   .daily-box b{color:#ffd84d}
   input.txt{font:inherit;font-size:18px;font-weight:700;background:#000a;color:#fff;border:2px solid #fff6;border-radius:10px;padding:8px 12px;width:min(220px,60vw);text-align:center;pointer-events:auto;user-select:text;-webkit-user-select:text}
   #nameBox{display:none;margin:6px 0}
+  #loading{position:fixed;inset:0;z-index:50;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-size:28px;font-weight:900;color:#ff9d2e;letter-spacing:2px}
+  #loading .spin{width:46px;height:46px;border:6px solid #ff9d2e33;border-top-color:#ff9d2e;border-radius:50%;animation:sp 0.9s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
   #ghostTag{position:absolute;top:70px;right:16px;font-size:16px;font-weight:700;opacity:.85}
   .upg{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;text-align:left;margin:6px 0}
   .pips{letter-spacing:3px;color:#ff9d2e}
@@ -106,6 +111,7 @@
 </style>
 </head>
 <body>
+<div id="loading"><div class="spin"></div><div>MOTO CROSS</div></div>
 <div class="wallet" id="wallet" style="display:none"></div>
 <div class="iconbtn"><select id="langSel" aria-label="Language"></select><button id="bMusic" title="Music (N)">🎵</button><button id="bSfx" title="Sound (M)">🔊</button></div>
 <div class="toast" id="toast"></div>
@@ -138,6 +144,7 @@
   <div class="sel"><span class="lab" data-i18n="menu.bike">Bike</span><div class="val" id="bkName" style="min-width:0;margin:0 8px"></div></div>
   <div class="goal" id="goal"></div>
   <div class="row"><button id="play">PLAY</button><button id="garage" class="alt" data-i18n="menu.garage">🔧 GARAGE</button></div>
+  <div class="row"><button id="bSignIn" class="alt small" style="display:none" data-i18n="menu.signin">👤 Sign in</button></div>
   <div class="row"><button id="bLb" class="alt small" style="display:none" data-i18n="menu.leaderboard">🏅 Ranking</button><button id="bAchv" class="alt small" data-i18n="menu.achv">🏆</button><button id="bSet" class="alt small" data-i18n="menu.settings">⚙</button></div>
   <p class="help" style="margin-top:6px;font-size:13px" data-i18n-html="menu.help"></p>
 </div>
@@ -182,6 +189,7 @@
   <div class="earn" id="endExtra"></div>
   <div id="nameBox"><div style="font-size:13px;opacity:.85" data-i18n="lb.nameHint">Choose a name</div><div class="row" style="gap:8px"><input class="txt" id="nameInput" maxlength="14" autocomplete="off" /><button class="small" id="nameOk" data-i18n="lb.save">OK</button></div><div id="nameErr" style="color:#ff7a6b;font-size:13px;min-height:16px"></div></div>
   <div id="standings"></div>
+  <button id="adBonus" style="display:none;background:#7dff3a"></button>
   <div class="row"><button id="again">PLAY AGAIN</button><button id="endLb" class="alt" style="display:none" data-i18n="menu.leaderboard">🏅</button><button id="toMenu" class="alt" data-i18n="end.menu">MENU</button></div>
 </div>
 <script type="module" src="/src/main.js"></script>

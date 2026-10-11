@@ -1,5 +1,6 @@
 // Sauvegarde locale (localStorage) avec valeurs par défaut et migration douce.
 const KEY = 'motocross_save_v2';
+export const SAVE_KEY = KEY;
 const defaults = () => ({
   coins: 0,
   owned: [0],
@@ -19,13 +20,36 @@ const defaults = () => ({
   challenge: { best: {}, paid: {}, history: {}, streak: { last: '', count: 0 }, pending: null },   // défi quotidien
 });
 let data = defaults();
-try {
-  const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
-  if (raw && typeof raw === 'object') {
-    const d = defaults();
-    data = { ...d, ...raw, settings: { ...d.settings, ...(raw.settings || {}) }, stats: { ...d.stats, ...(raw.stats || {}) }, daily: { ...d.daily, ...(raw.daily || {}) } };
-  }
-} catch (e) {}
+function normalize(raw) {
+  const d = defaults();
+  const out = raw && typeof raw === 'object' ? { ...d, ...raw, settings: { ...d.settings, ...(raw.settings || {}) }, stats: { ...d.stats, ...(raw.stats || {}) }, daily: { ...d.daily, ...(raw.daily || {}) } } : d;
+  if (!out.challenge || typeof out.challenge !== 'object') out.challenge = d.challenge;
+  for (const k of ['best', 'paid', 'history']) if (!out.challenge[k]) out.challenge[k] = {};
+  if (!out.challenge.streak) out.challenge.streak = { last: '', count: 0 };
+  return out;
+}
+try { data = normalize(JSON.parse(localStorage.getItem(KEY) || 'null')); } catch (e) { data = normalize(null); }
+let hook = null;
+export const setSaveHook = (f) => { hook = f; };      // appelé après chaque sauvegarde (synchro cloud)
+export const save = () => {
+  data.savedAt = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+  if (hook) hook();
+};
+export const get = () => data;
+// Fusionne une sauvegarde venue du cloud si elle est plus récente. Les réglages propres à l'appareil (qualité) sont gardés.
+export function mergeCloud(raw) {
+  try {
+    const c = normalize(JSON.parse(raw));
+    if (!(c.savedAt > (data.savedAt || 0))) return false;
+    c.settings.quality = data.settings.quality;
+    for (const k of Object.keys(data)) delete data[k];
+    Object.assign(data, c);
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+    return true;
+  } catch (e) { return false; }
+}
+
 // Identifiant anonyme du joueur (pour le classement) — généré une fois
 export function playerId() {
   if (!data.playerId) {
@@ -34,11 +58,6 @@ export function playerId() {
   }
   return data.playerId;
 }
-export const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} };
-if (!data.challenge || typeof data.challenge !== 'object') data.challenge = defaults().challenge;
-for (const k of ['best', 'paid', 'history']) if (!data.challenge[k]) data.challenge[k] = {};
-if (!data.challenge.streak) data.challenge.streak = { last: '', count: 0 };
-export const get = () => data;
 
 export const PAINTS = [null, 0xe8212b, 0xffd400, 0x00b7ff, 0x7dff3a, 0xff5fd2, 0xf5f5f5, 0x1b1b1f];
 export const PAINT_COST = 250;

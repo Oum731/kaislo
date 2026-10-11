@@ -11,6 +11,7 @@ export function confetti(n = 140) {
   for (let i = 0; i < n; i++) parts.push({ x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * 0.4, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 4, s: 5 + Math.random() * 7, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3, c: colors[(Math.random() * colors.length) | 0] });
   if (!raf) tick();
 }
+export function clearConfetti() { parts = []; }
 function tick() {
   ctx.clearRect(0, 0, cv.width, cv.height);
   parts = parts.filter((p) => p.y < cv.height + 30);

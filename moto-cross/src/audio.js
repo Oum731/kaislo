@@ -1,7 +1,8 @@
 // Audio 100 % généré par le code : moteur, effets et musique (aucun fichier à charger).
 let ctx, master, musicBus, sfxBus, noiseBuf;
 let eng = null;
-let musicOn = true, sfxOn = true, adMuted = false;
+let musicOn = true, sfxOn = true, adMuted = false, platMuted = false;
+const silenced = () => adMuted || platMuted;
 
 export function initAudio() {
   if (ctx) { ctx.resume && ctx.resume(); return; }
@@ -10,8 +11,8 @@ export function initAudio() {
     master = ctx.createGain(); master.gain.value = 0.9;
     const comp = ctx.createDynamicsCompressor();
     master.connect(comp); comp.connect(ctx.destination);
-    musicBus = ctx.createGain(); musicBus.gain.value = musicOn ? 0.5 : 0; musicBus.connect(master);
-    sfxBus = ctx.createGain(); sfxBus.gain.value = sfxOn ? 1 : 0; sfxBus.connect(master);
+    musicBus = ctx.createGain(); musicBus.gain.value = musicOn && !silenced() ? 0.5 : 0; musicBus.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = sfxOn && !silenced() ? 1 : 0; sfxBus.connect(master);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 1.5, ctx.sampleRate);
     const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     buildEngine();
@@ -19,9 +20,11 @@ export function initAudio() {
 }
 const now = () => ctx.currentTime;
 const ok = () => !!ctx;
-export function setMusicOn(v) { musicOn = v; if (ctx) musicBus.gain.setTargetAtTime(v && !adMuted ? 0.5 : 0, now(), 0.05); }
-export function setSfxOn(v) { sfxOn = v; if (ctx) sfxBus.gain.setTargetAtTime(v && !adMuted ? 1 : 0, now(), 0.05); }
+export function setMusicOn(v) { musicOn = v; if (ctx) musicBus.gain.setTargetAtTime(v && !silenced() ? 0.5 : 0, now(), 0.05); }
+export function setSfxOn(v) { sfxOn = v; if (ctx) sfxBus.gain.setTargetAtTime(v && !silenced() ? 1 : 0, now(), 0.05); }
 export function muteForAd(v) { adMuted = v; setMusicOn(musicOn); setSfxOn(sfxOn); }
+// Réglage « couper le son » de la plateforme : prioritaire sur les réglages du jeu
+export function setPlatformMute(v) { platMuted = !!v; setMusicOn(musicOn); setSfxOn(sfxOn); }
 export const isMusicOn = () => musicOn;
 export const isSfxOn = () => sfxOn;
 document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });

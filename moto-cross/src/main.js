@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import { TRACKS, createTrack, disposeGroup } from './track.js';
 import { BIKES, createMoto } from './moto.js';
 import { createParticles } from './particles.js';
-import { initAudio, setEngine, stopEngine, startMusic, setMusicIntensity, setMusicOn, setSfxOn, isMusicOn, isSfxOn, sfx } from './audio.js';
+import { setPlatformMute, initAudio, setEngine, stopEngine, startMusic, setMusicIntensity, setMusicOn, setSfxOn, isMusicOn, isSfxOn, sfx } from './audio.js';
 import { platform } from './platform.js';
 import * as store from './save.js';
 import * as prog from './progress.js';
-import { confetti } from './confetti.js';
+import { confetti, clearConfetti } from './confetti.js';
 import { t as tr, ord, LANGS, detect, setLang, getLang, onLang } from './i18n.js';
 import { LEVELS, autoLevel, isMobile } from './quality.js';
 import * as lb from './leaderboard.js';
@@ -214,6 +214,7 @@ function recordGhost(h) {
 }
 
 function startRace() {
+  clearConfetti();
   if (sel.mode !== 'cup' && sel.mode !== 'daily' && !trackUnlocked(sel.track)) { toast(tr('toast.locked')); sfx.error(); return; }
   if (garageOpen) closeGarage();
   const daily = sel.mode === 'daily', solo = daily || sel.mode === 'trial';
@@ -238,7 +239,7 @@ function startRace() {
   readBest(TRACKS[sel.track].id); if (daily) best = store.get().challenge.best[dailyInfo().day] || 0;
   setupGhost();
   $('menu').style.display = $('end').style.display = 'none'; $('standings').innerHTML = '';
-  $('nameBox').style.display = 'none'; $('endLb').style.display = 'none';
+  $('nameBox').style.display = 'none'; $('endLb').style.display = 'none'; $('adBonus').style.display = 'none';
   $('hud').style.display = 'block';
   $('trick').style.opacity = 0;
   $('wallet').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'none';
@@ -511,7 +512,7 @@ function endRace() {
   $('endExtra').innerHTML = extra.join('<br>');
   $('standings').innerHTML = sel.mode === 'cup' && cup ? standingsHTML() : '';
   $('again').textContent = sel.mode === 'cup' && cup ? (cup.done ? tr('cup.new') : tr('end.next')) : tr('end.again');
-  showWallet();
+  showWallet(); offerAd(total + cupReward);
   $('touch').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'flex';
   $('hud').style.display = 'none'; $('end').style.display = 'flex';
   if (winish) { confetti(place === 1 || cupPos === 1 ? 180 : 100); platform.happytime(); }
@@ -558,7 +559,7 @@ function endDaily() {
   $('endExtra').innerHTML = extra.join('<br>');
   $('standings').innerHTML = '';
   $('again').textContent = tr('end.retry'); $('endLb').style.display = '';
-  showWallet();
+  showWallet(); offerAd(coins);
   $('touch').style.display = 'none'; document.querySelector('.iconbtn').style.display = 'flex';
   $('hud').style.display = 'none'; $('end').style.display = 'flex';
   if (medal >= 2) { confetti(medal === 3 ? 180 : 90); platform.happytime(); sfx.win(); } else if (medal === 1) sfx.win(); else sfx.lose();
@@ -945,10 +946,11 @@ onLang(() => {
 
 // ---------- Boutons principaux ----------
 $('play').onclick = startRace;
-$('again').onclick = async () => { await platform.showMidgameAd(); if (sel.mode === 'cup' && cup && cup.done) cup = newCup(); startRace(); };
+$('again').onclick = async () => { if (!skipMidgame) await platform.showMidgameAd(); skipMidgame = false; if (sel.mode === 'cup' && cup && cup.done) cup = newCup(); startRace(); };
 $('toMenu').onclick = async () => {
-  await platform.showMidgameAd();
+  if (!skipMidgame) await platform.showMidgameAd(); skipMidgame = false;
   if (cup && cup.done) cup = null;
+  clearConfetti();
   state = 'menu'; $('end').style.display = 'none'; $('hud').style.display = 'none'; $('touch').style.display = 'none';
   showScreen('menu'); document.querySelector('.iconbtn').style.display = 'flex';
   ais.forEach((a) => { a.mesh.visible = true; }); if (ghostMesh) ghostMesh.visible = false;
@@ -961,15 +963,73 @@ const firstGesture = () => { if (audioStarted) return; audioStarted = true; init
 addEventListener('pointerdown', firstGesture); addEventListener('keydown', firstGesture);
 document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('button')) sfx.click(); });
 
+// ---------- Pub avec récompense (bouton de l'écran de fin) ----------
+let adAmount = 0, adBusy = false, skipMidgame = false;   // règle CrazyGames : pas de pub midgame après une pub récompensée dans la même pause
+function offerAd(earned) {
+  const btn = $('adBonus'); skipMidgame = false;
+  adAmount = clamp(Math.max(Math.round(earned), 100), 100, 2000);
+  if (!platform.ready) { btn.style.display = 'none'; return; }
+  btn.textContent = tr('end.adBonus', { n: adAmount }); btn.disabled = false; btn.style.display = '';
+  platform.hasAdblock().then((blocked) => { if (blocked) btn.style.display = 'none'; });
+}
+$('adBonus').onclick = async () => {
+  if (adBusy) return;
+  adBusy = true; $('adBonus').disabled = true;
+  const ok = await platform.showRewardedAd();
+  adBusy = false;
+  if (ok) { skipMidgame = true; store.addCoins(adAmount); showWallet(); $('adBonus').style.display = 'none'; sfx.buy(); toast(tr('end.adThanks', { n: adAmount })); }
+  else { $('adBonus').disabled = false; toast(tr('end.adFail')); }
+};
+// Le jeu est mis en pause côté plateforme quand l'onglet est caché
+document.addEventListener('visibilitychange', () => { if (state === 'racing') { if (document.hidden) platform.gameplayStop(); else platform.gameplayStart(); } });
+
+// ---------- Synchronisation avec la plateforme (sauvegarde cloud, compte, langue) ----------
+let cloudTimer = 0, platformBound = false;
+async function syncPlatform() {
+  if (!platform.ready) return;
+  const raw = await platform.cloudGet(store.SAVE_KEY);
+  if (raw) store.mergeCloud(raw);
+  else platform.cloudSet(store.SAVE_KEY, JSON.stringify(store.get()));            // première connexion : on envoie la sauvegarde locale
+  store.setSaveHook(() => { clearTimeout(cloudTimer); cloudTimer = setTimeout(() => platform.cloudSet(store.SAVE_KEY, JSON.stringify(store.get())), 1500); });
+  const st = store.get(), name = await platform.username();
+  if (name && !st.playerName) { const n = cleanName(name); if (n) { st.playerName = n; store.save(); } }
+  setLang(detect(st.settings.lang, platform.locale()));
+  // la sauvegarde cloud peut avoir changé la moto/piste possédées, le son…
+  if (!store.owns(sel.bike)) sel.bike = 0;
+  if (!trackUnlocked(sel.track)) sel.track = 0;
+  baseTrack = sel.track;
+  setMusicOn(st.settings.music); setSfxOn(st.settings.sfx);
+  if (!platformBound) {
+    platformBound = true;
+    // « Couper le son » demandé par la plateforme : prioritaire sur le son du jeu
+    setPlatformMute(platform.muteAudio);
+    platform.onSettingsChange((s) => setPlatformMute(s && typeof s === 'object' && 'muteAudio' in s ? s.muteAudio : platform.muteAudio));
+    // Connexion / déconnexion au compte CrazyGames : on recharge la sauvegarde du compte
+    platform.onAuthChange(async () => { await syncPlatform(); setPlayerBike(); placeGrid(); renderMenu(); renderIcons(); updateSignIn(); });
+  }
+}
+async function updateSignIn() { $('bSignIn').style.display = platform.accountAvailable && !(await platform.getUser()) ? '' : 'none'; }
+$('bSignIn').onclick = () => platform.showAuth();
+
 // ---------- Démarrage ----------
-const sdk = platform.init();
-fillLangSelects();
-loadTrack(sel.track); setPlayerBike(); placeGrid(); renderMenu(); renderIcons();
-const bonus = store.claimDaily();
-if (bonus) { toast(tr('toast.daily', { n: bonus, s: store.get().daily.streak }), 4500); renderMenu(); }
-toastAchv();
-if (!store.get().challenge.best[dailyInfo().day]) toast(tr('daily.ready'), 3500);
-lb.flushPending();
-sdk.then(() => { platform.loadingStart(); platform.loadingStop(); });
-if (import.meta.env.DEV) window.__g = { lb, dailyInfo, setRaceTime: (v) => { raceTime = v; }, player, ais, keys, fx, store, prog, sel, get cup() { return cup; }, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
-requestAnimationFrame(frame);
+// Ordre imposé par le SDK : init → loadingStart → chargement du jeu → loadingStop
+async function boot() {
+  await platform.init();
+  platform.loadingStart();
+  await syncPlatform();
+  fillLangSelects();
+  loadTrack(sel.track); setPlayerBike(); placeGrid(); renderMenu(); renderIcons();
+  const bonus = store.claimDaily();
+  if (bonus) { toast(tr('toast.daily', { n: bonus, s: store.get().daily.streak }), 4500); renderMenu(); }
+  toastAchv();
+  if (!store.get().challenge.best[dailyInfo().day]) toast(tr('daily.ready'), 3500);
+  lb.flushPending();
+  updateSignIn();
+  if (import.meta.env.DEV) window.__g = { lb, platform, dailyInfo, setRaceTime: (v) => { raceTime = v; }, player, ais, keys, fx, store, prog, sel, get cup() { return cup; }, get state() { return state; }, get track() { return track; }, get coins() { return coinList; }, get level() { return level; } };
+  requestAnimationFrame(frame);
+  const ld = $('loading'); if (ld) ld.remove();
+  platform.loadingStop();
+  // Nouveau joueur sur CrazyGames : on l'amène directement en course (pas d'écran « Jouer » à cliquer)
+  if (platform.ready && store.get().stats.races === 0 && sel.mode === 'race') startRace();
+}
+boot();
