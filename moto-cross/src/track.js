@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { detailTexture, trackTexture } from './textures.js';
+import { detailTexture, trackTexture, barrierTexture } from './textures.js';
 
 const hash2 = (i, j) => { const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return s - Math.floor(s); };
 function vnoise(a, b) { const ia = Math.floor(a), ib = Math.floor(b), fa = a - ia, fb = b - ib, sa = fa * fa * (3 - 2 * fa), sb = fb * fb * (3 - 2 * fb); return (hash2(ia, ib) * (1 - sa) + hash2(ia + 1, ib) * sa) * (1 - sb) + (hash2(ia, ib + 1) * (1 - sa) + hash2(ia + 1, ib + 1) * sa) * sb; }
@@ -164,7 +164,9 @@ export function createTrack(def) {
       pos.setY(q, h);
       c.copy(dirt).lerp(grass, smooth(width * 0.5, width * 0.9, d));
       if (h > 12) c.lerp(rock, Math.min(1, (h - 12) / 8));
-      c.multiplyScalar(0.86 + 0.26 * (vnoise(x * 0.018, z * 0.018) * 0.6 + vnoise(x * 0.08, z * 0.08) * 0.4) + (Math.random() - 0.5) * 0.04);
+      const patch = vnoise(x * 0.035 + 40, z * 0.035 - 17);
+      if (d > width * 0.9) { c.r *= 0.88 + patch * 0.3; c.g *= 0.84 + patch * 0.42; c.b *= 0.92 + patch * 0.12; c.multiplyScalar(1 - 0.22 * (1 - smooth(width * 0.9, width * 2.6, d))); }
+      c.multiplyScalar(0.84 + 0.3 * (vnoise(x * 0.018, z * 0.018) * 0.6 + vnoise(x * 0.08, z * 0.08) * 0.4) + (Math.random() - 0.5) * 0.05);
       colors.set([c.r, c.g, c.b], q * 3);
     }
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -225,6 +227,66 @@ export function createTrack(def) {
       meshes.forEach((im) => { im.count = n; im.castShadow = q.shadowSize >= 2048; im.receiveShadow = false; if (im.instanceColor) im.instanceColor.needsUpdate = true; group.add(im); });
     }
 
+
+    // Bandes de sécurité rouge/blanc de chaque côté de la piste (un seul ruban par côté)
+    {
+      const bt = barrierTexture(), off = width * 0.72, hgt = 0.95, rows = SAMPLES + 1;
+      for (const side of [-1, 1]) {
+        const bp = new Float32Array(rows * 2 * 3), bu = new Float32Array(rows * 2 * 2), bi = [];
+        let acc = 0;
+        for (let r = 0; r < rows; r++) {
+          const i = r % SAMPLES, p = samples[i], nv = normalAt(i);
+          if (r > 0) { const q0 = samples[(i - 1 + SAMPLES) % SAMPLES]; acc += Math.hypot(p.x - q0.x, p.z - q0.z); }
+          const x = p.x + nv.x * side * off, z = p.z + nv.z * side * off, y = heightAt(x, z, i);
+          bp.set([x, y + 0.12, z, x, y + 0.12 + hgt, z], r * 6); bu.set([acc / 4, 0, acc / 4, 1], r * 4);
+          if (r < rows - 1) { const a = r * 2; bi.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+        }
+        const bg = new THREE.BufferGeometry();
+        bg.setAttribute('position', new THREE.BufferAttribute(bp, 3)); bg.setAttribute('uv', new THREE.BufferAttribute(bu, 2)); bg.setIndex(bi); bg.computeVertexNormals();
+        const bm = new THREE.Mesh(bg, new THREE.MeshStandardMaterial({ map: bt, roughness: 0.6, side: THREE.DoubleSide }));
+        bm.castShadow = false; bm.receiveShadow = true; group.add(bm);
+        // piquets
+        const pg = new THREE.CylinderGeometry(0.07, 0.07, hgt + 0.3, 5), pi = new THREE.InstancedMesh(pg, new THREE.MeshStandardMaterial({ color: 0x2a2a2e, roughness: 0.7 }), Math.ceil(SAMPLES / 6));
+        let k = 0;
+        for (let i = 0; i < SAMPLES; i += 6) { const p = samples[i], nv = normalAt(i), x = p.x + nv.x * side * off, z = p.z + nv.z * side * off; dummy.position.set(x, heightAt(x, z, i) + (hgt + 0.3) / 2, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); pi.setMatrixAt(k++, dummy.matrix); }
+        pi.count = k; group.add(pi);
+      }
+    }
+
+    // Touffes d'herbe autour de la piste
+    if (def.ground !== undefined && q.trees > 0.3 && hex(def.ground).r < 0.75) {
+      const blade = (() => { const gs = []; for (let a = 0; a < 3; a++) { const g = new THREE.PlaneGeometry(0.3, 0.55, 1, 2); g.translate(0, 0.275, 0); g.rotateY((a * Math.PI) / 3); const pp = g.attributes.position, cc = new Float32Array(pp.count * 3); for (let v = 0; v < pp.count; v++) { const hh = pp.getY(v) / 0.55; if (hh > 0.99) pp.setX(v, pp.getX(v) * 0.2); cc.set([0.55 + hh * 0.55, 0.55 + hh * 0.55, 0.55 + hh * 0.5], v * 3); } g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); gs.push(g.toNonIndexed()); } return mergeGeometries(gs); })();
+      const total = Math.round(4200 * q.trees), im = new THREE.InstancedMesh(blade, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide }), total);
+      const base = hex(def.ground).multiplyScalar(1.25);
+      let n = 0, tries = 0;
+      while (n < total && tries++ < total * 6) {
+        const i = Math.floor(Math.random() * SAMPLES), p = samples[i], nv = normalAt(i), lat = (Math.random() < 0.5 ? -1 : 1) * (width * 0.78 + Math.random() * width * 2.2);
+        const x = p.x + nv.x * lat + (Math.random() - 0.5) * 3, z = p.z + nv.z * lat + (Math.random() - 0.5) * 3, dd = nearest(x, z, i);
+        if (dd.d < width * 0.76) continue;
+        const sc = 0.55 + Math.random() * 0.8; dummy.position.set(x, blend(dd.th, dd.d, x, z), z); dummy.rotation.set(0, Math.random() * 6.28, 0); dummy.scale.set(sc, sc * (0.7 + Math.random() * 0.8), sc); dummy.updateMatrix();
+        im.setMatrixAt(n, dummy.matrix); const k = 0.8 + Math.random() * 0.45; im.setColorAt(n, tmpC.copy(base).multiplyScalar(k)); n++;
+      }
+      im.count = n; if (im.instanceColor) im.instanceColor.needsUpdate = true; group.add(im);
+    }
+
+    // Spectateurs près de la ligne de départ et des sauts
+    {
+      const hots = [0, ...def.jumps.map((j) => j), ...[0.5]].map((j) => Math.round(j * SAMPLES) % SAMPLES);
+      const bodyG = new THREE.CapsuleGeometry(0.28, 0.75, 3, 6); bodyG.translate(0, 0.85, 0);
+      const headG = new THREE.SphereGeometry(0.2, 8, 6); headG.translate(0, 1.7, 0);
+      const per = Math.round(26 * Math.max(0.4, q.trees)), total = per * hots.length;
+      const bi = new THREE.InstancedMesh(bodyG, new THREE.MeshStandardMaterial({ roughness: 0.8 }), total), hi = new THREE.InstancedMesh(headG, new THREE.MeshStandardMaterial({ color: 0xd9a77a, roughness: 0.7 }), total);
+      const pal = [0xe84a3c, 0x3c7be8, 0xf2c230, 0x2fb872, 0xffffff, 0x8a4ee0, 0xff7a1a, 0x1b1b1f];
+      let n = 0;
+      for (const c0 of hots) for (let k = 0; k < per; k++) {
+        const i = (c0 + Math.round((Math.random() - 0.5) * 36) + SAMPLES) % SAMPLES, p = samples[i], nv = normalAt(i), lat = (Math.random() < 0.5 ? -1 : 1) * (width * 0.9 + Math.random() * 2.4);
+        const x = p.x + nv.x * lat, z = p.z + nv.z * lat, y = heightAt(x, z, i), sc = 0.9 + Math.random() * 0.2;
+        dummy.position.set(x, y, z); dummy.rotation.set(0, Math.atan2(-nv.x * Math.sign(lat), -nv.z * Math.sign(lat)) + (Math.random() - 0.5) * 0.6, 0); dummy.scale.set(sc, sc, sc); dummy.updateMatrix();
+        bi.setMatrixAt(n, dummy.matrix); hi.setMatrixAt(n, dummy.matrix); bi.setColorAt(n, tmpC.setHex(pal[Math.floor(Math.random() * pal.length)])); n++;
+      }
+      bi.count = hi.count = n; bi.instanceColor.needsUpdate = true; group.add(bi, hi);
+    }
+
     // Ligne et arche de départ
     const p0 = samples[0], p1 = samples[3];
     const dir = new THREE.Vector3().subVectors(p1, p0).normalize();
@@ -239,7 +301,9 @@ export function createTrack(def) {
       post.position.set(p0.x + side.x * s, trackH[0] + 4.5, p0.z + side.z * s);
       group.add(post);
     }
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(width * 1.4, 1.6, 0.8), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+    const bn = document.createElement('canvas'); bn.width = 1024; bn.height = 96; { const g = bn.getContext('2d'); g.fillStyle = '#16161c'; g.fillRect(0, 0, 1024, 96); g.fillStyle = '#ff9d2e'; g.fillRect(0, 0, 1024, 8); g.fillRect(0, 88, 1024, 8); g.font = '900 64px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ff9d2e'; g.fillText('MOTO CROSS RACING', 512, 50); }
+    const bnt = new THREE.CanvasTexture(bn); bnt.colorSpace = THREE.SRGBColorSpace; bnt.anisotropy = 4;
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(width * 1.4, 1.6, 0.8), new THREE.MeshBasicMaterial({ map: bnt }));
     beam.position.set(p0.x, trackH[0] + 9, p0.z);
     beam.lookAt(p0.x + dir.x, trackH[0] + 9, p0.z + dir.z);
     group.add(beam);

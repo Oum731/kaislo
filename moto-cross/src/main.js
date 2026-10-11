@@ -682,14 +682,14 @@ function frame(now) {
   camera.clearViewOffset();
   let dh = player.heading - camHeading; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
   camHeading += dh * Math.min(1, 4 * dt);
-  const back = 9 + player.speed * 0.04;
+  const back = 6.4 + player.speed * 0.03;
   const cx = player.x - Math.sin(camHeading) * back, cz = player.z - Math.cos(camHeading) * back;
-  const cy = Math.max(player.y + 4.2, track.heightAt(cx, cz, lastIdx) + 2);
+  const cy = Math.max(player.y + 2.7, track.heightAt(cx, cz, lastIdx) + 1.6);
   camera.position.lerp(camTarget.set(cx, cy, cz), Math.min(1, 10 * dt));
   shake = Math.max(0, shake - dt * 2.5);
   if (shake > 0) camera.position.add(camTarget.set((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake));
-  camera.lookAt(player.x + Math.sin(camHeading) * 6, player.y + 1.8, player.z + Math.cos(camHeading) * 6);
-  camera.fov += ((68 + player.speed * 0.4 + (player.nitroOn ? 10 : 0)) - camera.fov) * Math.min(1, 4 * dt);
+  camera.lookAt(player.x + Math.sin(camHeading) * 7, player.y + 1.3, player.z + Math.cos(camHeading) * 6);
+  camera.fov += ((58 + player.speed * 0.3 + (player.nitroOn ? 10 : 0)) - camera.fov) * Math.min(1, 4 * dt);
   camera.updateProjectionMatrix();
   if (import.meta.env.DEV && window.__closeup !== undefined) { // caméra cinématique (outils de capture)
     const a = window.__closeup, d = window.__closeDist || 3.6, hh = window.__closeH ?? 1.5;

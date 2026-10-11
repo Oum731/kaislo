@@ -42,3 +42,14 @@ export function trackTexture() {
   x.putImageData(img, 0, 0);
   const t = new THREE.CanvasTexture(c); t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
+
+// Bande de sécurité rouge et blanche (barrière de bord de piste)
+export function barrierTexture() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 32;
+  const g = c.getContext('2d');
+  for (let i = 0; i < 4; i++) { g.fillStyle = i % 2 ? '#f4f4f0' : '#d8231b'; g.fillRect(i * 32, 0, 32, 32); }
+  g.fillStyle = 'rgba(0,0,0,0.28)'; g.fillRect(0, 0, 128, 3); g.fillRect(0, 29, 128, 3);
+  g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(0, 8, 128, 4);
+  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
