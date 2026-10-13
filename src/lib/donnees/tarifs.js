@@ -81,6 +81,16 @@ export function prixAbonnement({ formule, devise, postes = 1, mois = 1, fondateu
   return { base, supplement, remise: fondateur ? regles.remiseFondateur : 0, parMois, total: arrondir(parMois * moisFactures, devise) };
 }
 
+/**
+ * Les jours offerts (parrainage) comptent dans le mois : le client ne paie que les jours restants (30 jours par mois).
+ * Identique à prixApresJoursOfferts (api/lib/tarifs.php). Renvoie { deduits, joursPayes, montant }.
+ */
+export function prixApresJoursOfferts(total, mois, joursOfferts, devise) {
+  const jours = mois * 30;
+  const deduits = Math.max(0, Math.min(Number(joursOfferts) || 0, jours - 1));
+  return { deduits, joursPayes: jours - deduits, montant: deduits ? arrondir(total * (jours - deduits) / jours, devise) : total };
+}
+
 /** Prix catalogue d'un montant de la grille : montant ÷ (1 − remise parrain), arrondi au pas supérieur. */
 export function prixCatalogue(montant, devise, remise = REGLES_TARIFS.remiseParrain) {
   if (!(montant > 0) || !(remise > 0)) return montant || 0;

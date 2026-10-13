@@ -17,7 +17,7 @@ import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnee
 import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
-import { prixAbonnement, prixCatalogue } from '@/lib/donnees/tarifs';
+import { prixAbonnement, prixApresJoursOfferts, prixCatalogue } from '@/lib/donnees/tarifs';
 import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
@@ -704,7 +704,12 @@ function FicheCommerce({ c, ctx, fermer }) {
   const [postes, setPostes] = useState(c.tarif.postes);
   const [mois, setMois] = useState(1);
   // Montant proposé : formule + postes supplémentaires, 12 mois = mois offerts, remise fondateur
-  const calcul = (f = formule, p = postes, m = mois) => prixAbonnement({ formule: ctx.formules.find((x) => x.id === f), devise: dev, postes: p, mois: m, fondateur: c.commerce.fondateur, regles: ctx.regles, mode: c.tarif.mode });
+  const calcul = (f = formule, p = postes, m = mois) => {
+    const prix = prixAbonnement({ formule: ctx.formules.find((x) => x.id === f), devise: dev, postes: p, mois: m, fondateur: c.commerce.fondateur, regles: ctx.regles, mode: c.tarif.mode });
+    // Jours offerts (parrainage) : ils comptent dans le mois, le client ne paie que les jours restants
+    const reste = prixApresJoursOfferts(prix.total, m, c.joursOfferts || 0, dev);
+    return { ...prix, totalPlein: prix.total, total: reste.montant, joursOfferts: reste.deduits, joursPayes: reste.joursPayes };
+  };
   const [montant, setMontant] = useState(calcul().total);
   const choisir = (x) => { const n = { formule, postes, mois, ...x }; if ('formule' in x) setFormule(x.formule); if ('postes' in x) setPostes(x.postes); if ('mois' in x) setMois(x.mois); setMontant(calcul(n.formule, n.postes, n.mois).total); };
   const [commerciaux, setCommerciaux] = useState(null);
@@ -860,6 +865,7 @@ function FicheCommerce({ c, ctx, fermer }) {
                 </label>
               </div>
               <p className="tres-petit muet">Prix calculé : {formatPrix(calcul().parMois, dev)}/mois{c.commerce.fondateur ? ' avec la remise fondateur' : ''}{c.tarif.mode === 'catalogue' ? ' (prix catalogue, sans code parrain)' : c.commerce.commercialId ? ' (avec code parrain)' : ''} → <b>{formatPrix(calcul().total, dev)}</b> pour {mois} mois. Saisissez le montant réellement reçu.</p>
+              {calcul().joursOfferts > 0 && <p className="tres-petit info-verte">{calcul().joursOfferts} jours offerts (parrainage) comptent dans le mois : le client paie seulement {calcul().joursPayes} jours sur {mois * 30} ({formatPrix(calcul().totalPlein, dev)} → {formatPrix(calcul().total, dev)}).</p>}
               <div className="grille-2">
                 <label className="champ"><span>Montant reçu ({symbole(dev)})</span><ChampMontant valeur={montant} surChanger={setMontant} /></label>
                 <label className="champ"><span>Moyen de paiement</span>
@@ -941,11 +947,11 @@ function CatalogueCommerce({ c, ctx, fermer }) {
 
 // Un seul paiement pour tous les commerces d'un même gérant : chaque commerce reçoit son propre paiement
 function PaiementGroupe({ c, ctx, fermer, surMessage }) {
-  const lignes = [{ id: c.id, nom: c.commerce.nom, devise: c.commerce.devise, tarif: c.tarif }, ...c.autresCommerces.filter((x) => x.devise === c.commerce.devise)];
+  const lignes = [{ id: c.id, nom: c.commerce.nom, devise: c.commerce.devise, tarif: c.tarif, joursOfferts: c.joursOfferts }, ...c.autresCommerces.filter((x) => x.devise === c.commerce.devise)];
   const [mois, setMois] = useState(1);
   const [moyen, setMoyen] = useState(MOYENS[0]);
   const [coches, setCoches] = useState(() => Object.fromEntries(lignes.map((l) => [l.id, true])));
-  const calcul = (l) => prixAbonnement({ formule: ctx.formules.find((f) => f.id === l.tarif.formule), devise: l.devise, postes: l.tarif.postes, mois, fondateur: l.tarif.fondateur, regles: ctx.regles, mode: l.tarif.mode, multi: l.tarif.remiseMulti > 0 }).total;
+  const calcul = (l) => prixApresJoursOfferts(prixAbonnement({ formule: ctx.formules.find((f) => f.id === l.tarif.formule), devise: l.devise, postes: l.tarif.postes, mois, fondateur: l.tarif.fondateur, regles: ctx.regles, mode: l.tarif.mode, multi: l.tarif.remiseMulti > 0 }).total, mois, l.joursOfferts, l.devise).montant;
   const [montants, setMontants] = useState({});
   const montantDe = (l) => (montants[l.id] ?? calcul(l));
   const choisies = lignes.filter((l) => coches[l.id]);

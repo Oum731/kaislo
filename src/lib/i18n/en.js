@@ -1351,7 +1351,7 @@ export const EN = {
   "Comment ça marche": "How it works",
   "1. Envoyez votre code à un commerçant qui ne connaît pas encore Kaislo.": "1. Send your code to a shopkeeper who does not know Kaislo yet.",
   "2. Il s’inscrit avec votre code : il a {0} jours d’essai gratuit en plus ({1} au total).": "2. They sign up with your code: they get {0} extra days of free trial ({1} in total).",
-  "3. Quand il fait son premier paiement, vous gagnez {0} jours offerts sur votre abonnement.": "3. When they make their first payment, you get {0} free days on your subscription.",
+  "3. Quand il fait son premier paiement, vous gagnez {0} jours offerts : ils comptent dans votre mois, vous ne payez que les jours restants.": "3. When they make their first payment, you get {0} free days: they count within your month, so you only pay for the remaining days.",
   "Le commerce doit appartenir à une autre personne que vous. Maximum {0} récompenses par commerce.": "The shop must belong to someone other than you. Up to {0} rewards per shop.",
   "Vos filleuls": "Your referrals",
   "{0} jours gagnés": "{0} days earned",
