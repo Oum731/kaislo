@@ -347,7 +347,7 @@ function LigneCommerce({ c, ctx }) {
             {c.autresCommerces?.length ? <span className="badge">{c.autresCommerces.length + 1} commerces</span> : null}
           </span>
         )}
-        <span className="tres-petit muet tronque bloc-texte">{paysParId(c.commerce.pays).nom} · {c.commerce.ville} · {c.gerant} · {c.commerce.telephone}</span>
+        <span className="tres-petit muet tronque bloc-texte">{paysParId(c.commerce.pays).nom} · {c.commerce.ville}{c.commerce.quartier ? ' (' + c.commerce.quartier + ')' : ''} · {c.gerant} · {c.commerce.telephone}</span>
       </span>
       <span style={{ textAlign: 'right' }}>
         <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}{c.etat.statut === 'actif' ? ' · ' + c.tarif.nom : ''}</span>
@@ -364,7 +364,7 @@ function VueCommerces({ commerces, ctx }) {
   const chiffres = r.replace(/\D/g, '');
   const liste = commerces
     .filter((c) => (filtre === 'tous' || (filtre === 'verifier' ? c.signaux?.length > 0 : c.etat.statut === filtre)) && (!r
-      || [c.commerce.nom, c.commerce.ville, c.commerce.code, c.gerant].some((x) => (x || '').toLowerCase().includes(r))
+      || [c.commerce.nom, c.commerce.ville, c.commerce.quartier, c.commerce.code, c.gerant].some((x) => (x || '').toLowerCase().includes(r))
       || (chiffres.length >= 4 && [c.commerce.telephone, c.gerantTelephone].some((x) => (x || '').replace(/\D/g, '').includes(chiffres)))))
     .sort((a, b) => (b.derniereActivite || '').localeCompare(a.derniereActivite || ''));
   return (
@@ -753,7 +753,7 @@ function FicheCommerce({ c, ctx, fermer }) {
           <div className="carte pile">
             <h3>Informations</h3>
             <p className="petit"><b>Gérant :</b> {c.gerant}{c.gerantTelephone ? ' · ' + c.gerantTelephone : ''}</p>
-            <p className="petit"><b>Pays :</b> {pays.nom} · {c.commerce.ville} · {symbole(dev)}</p>
+            <p className="petit"><b>Pays :</b> {pays.nom} · {c.commerce.ville}{c.commerce.quartier ? ' · quartier ' + c.commerce.quartier : ''} · {symbole(dev)}</p>
             <p className="petit"><b>Adresse :</b> {c.commerce.adresse || '—'}</p>
             <p className="petit"><b>Inscrit le :</b> {c.commerce.creeLe ? formatDate(c.commerce.creeLe) : '—'}</p>
             {c.parrainCommerce && <p className="petit"><b>Parrainé par :</b> {c.parrainCommerce} <span className="muet">(jours offerts à son parrain au 1er paiement)</span></p>}

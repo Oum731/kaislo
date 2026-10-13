@@ -119,7 +119,7 @@ function clientsCommercial(string $commercialId, bool $pourEquipe): array
         $controle = controleValidation($c);
         $abonnement = versCommerce($c)['abonnement'];
         $ligne = [
-            'id' => $c['id'], 'nom' => $c['nom'], 'type' => $c['type'], 'ville' => $c['ville'], 'pays' => $c['pays'], 'devise' => $c['devise'],
+            'id' => $c['id'], 'nom' => $c['nom'], 'type' => $c['type'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'pays' => $c['pays'], 'devise' => $c['devise'],
             'inscritLe' => $c['cree_le'], 'statut' => $abonnement['statut'], 'essaiFin' => $abonnement['essaiFin'], 'periodeFin' => $abonnement['periodeFin'],
             'controle' => $controle,
             'commissions' => array_map(fn ($m) => ['id' => $m['id'], 'rang' => (int) $m['rang'], 'montant' => (float) $m['montant'], 'devise' => $m['devise'], 'statut' => $m['statut'], 'payeLe' => $m['paye_le']],
@@ -203,7 +203,7 @@ function versCommercial(array $c): array
 {
     $nb = requete("SELECT COUNT(*) AS n, SUM(CASE WHEN commission_validee_le IS NOT NULL THEN 1 ELSE 0 END) AS v, SUM(CASE WHEN statut = 'actif' THEN 1 ELSE 0 END) AS a FROM commerces WHERE commercial_id = ?", [$c['id']])->fetch();
     return [
-        'id' => $c['id'], 'nom' => $c['nom'], 'telephone' => $c['telephone'], 'email' => $c['email'], 'pays' => $c['pays'], 'code' => $c['code'],
+        'id' => $c['id'], 'nom' => $c['nom'], 'telephone' => $c['telephone'], 'email' => $c['email'], 'pays' => $c['pays'], 'ville' => $c['ville'] ?? '', 'quartier' => $c['quartier'] ?? '', 'code' => $c['code'],
         'taux' => (float) $c['taux'], 'actif' => (bool) $c['actif'], 'enAttente' => empty($c['valide_le']) && !$c['actif'], 'valideLe' => $c['valide_le'] ?? null,
         'notes' => $c['notes'], 'creeLe' => $c['cree_le'], 'vuLe' => $c['vu_le'],
         'clients' => (int) $nb['n'], 'clientsAbonnes' => (int) $nb['a'], 'clientsValides' => (int) $nb['v'], 'totaux' => totauxCommissions($c['id']),
@@ -255,7 +255,7 @@ function routeAdminCommercial(): never
     repondre(['ok' => true, 'commercial' => versCommercial($c), 'clients' => clientsCommercial($c['id'], true), 'primes' => primesCommercial($c['id']), 'bonusHebdo' => bonusHebdoCommercial($c)]);
 }
 
-// { id?, nom, telephone, pays, email, code, taux, actif, notes, pin? }
+// { id?, nom, telephone, pays, ville?, quartier?, email, code, taux, actif, notes, pin? }
 function routeAdminCommercialEnregistrer(): never
 {
     $admin = adminConnecte(true);
@@ -284,15 +284,17 @@ function routeAdminCommercialEnregistrer(): never
     if ((!$id || $pin !== '') && !preg_match('/^\d{6}$/', $pin)) throw new ErreurApi('Code PIN du commercial : 6 chiffres');
     $actif = array_key_exists('actif', $e) ? ((bool) $e['actif'] ? 1 : 0) : 1;
     $notes = mb_substr((string) ($e['notes'] ?? ''), 0, 2000);
+    $ville = texte($e, 'ville', 'la ville', false, 80);
+    $quartier = texte($e, 'quartier', 'le quartier', false, 80);
     if ($id) {
-        requete('UPDATE commerciaux SET nom = ?, telephone = ?, cle_telephone = ?, email = ?, pays = ?, code = ?, taux = ?, actif = ?, notes = ? WHERE id = ?',
-            [$nom, $num['affichage'], $num['cle'], $email, $pays, $code, $taux, $actif, $notes, $id]);
+        requete('UPDATE commerciaux SET nom = ?, telephone = ?, cle_telephone = ?, email = ?, pays = ?, ville = ?, quartier = ?, code = ?, taux = ?, actif = ?, notes = ? WHERE id = ?',
+            [$nom, $num['affichage'], $num['cle'], $email, $pays, $ville, $quartier, $code, $taux, $actif, $notes, $id]);
         if ($pin !== '') requete('UPDATE commerciaux SET pin_hash = ? WHERE id = ?', [password_hash($pin, PASSWORD_DEFAULT), $id]);
         if ($pin !== '' || !$actif) requete('DELETE FROM jetons_commerciaux WHERE commercial_id = ?', [$id]);
     } else {
         $id = nouvelId('co');
-        requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $code, password_hash($pin, PASSWORD_DEFAULT), $taux, $actif, $notes, maintenant(), maintenant()]);
+        requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, ville, quartier, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $ville, $quartier, $code, password_hash($pin, PASSWORD_DEFAULT), $taux, $actif, $notes, maintenant(), maintenant()]);
     }
     journaliser(null, $admin['id'], 'amorac-commercial', ['commercial' => $nom, 'code' => $code, 'par' => $admin['email']]);
     repondre(['ok' => true, 'commercial' => versCommercial(requete('SELECT * FROM commerciaux WHERE id = ?', [$id])->fetch())]);
@@ -419,6 +421,8 @@ function routeCommercialInscription(): never
         noterEchec($cleIp, 10);
         throw new ErreurApi('Ce numéro a déjà un compte commercial : connectez-vous, ou attendez la validation de l’équipe.', 409);
     }
+    $ville = texte($e, 'ville', 'votre ville', true, 80);
+    $quartier = texte($e, 'quartier', 'votre quartier', true, 80);
     $email = trim((string) ($e['email'] ?? ''));
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) throw new ErreurApi('Adresse e-mail invalide');
     $pin = (string) ($e['pin'] ?? '');
@@ -427,8 +431,8 @@ function routeCommercialInscription(): never
     if (noterEchec($cleIp, 6)) throw new ErreurApi('Trop de demandes : réessayez plus tard.', 429);
     $id = nouvelId('co');
     $code = genererCodeParrain($nom);
-    requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NULL)',
-        [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $code, password_hash($pin, PASSWORD_DEFAULT), (float) programme()['taux'], 'Inscription faite par le commercial lui-même', maintenant()]);
+    requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, ville, quartier, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NULL)',
+        [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $ville, $quartier, $code, password_hash($pin, PASSWORD_DEFAULT), (float) programme()['taux'], 'Inscription faite par le commercial lui-même', maintenant()]);
     journaliser(null, null, 'commercial-inscription', ['commercial' => $nom, 'code' => $code]);
     envoyerEmail(
         lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',

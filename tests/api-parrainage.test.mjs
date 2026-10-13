@@ -22,7 +22,7 @@ async function api(methode, chemin, corps, jeton) {
   return { statut: r.status, ...(await r.json()) };
 }
 const inscrire = (nom, tel, extra = {}) => api('POST', '/inscription', {
-  commerce: { nom, type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: tel }, gerant: { nom: 'Gérant ' + nom, telephone: tel, pin: '1234' }, conditionsAcceptees: true, ...extra,
+  commerce: { nom, type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: tel }, gerant: { nom: 'Gérant ' + nom, telephone: tel, pin: '1234' }, conditionsAcceptees: true, ...extra,
 });
 const jours = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
 
@@ -68,6 +68,7 @@ test('inscription avec un code inconnu refusée ; avec le bon code, 15 jours d\'
   const liste = (await api('GET', '/admin/commerces', null, admin)).commerces;
   assert.equal(liste.find((c) => c.commerce.nom === 'Boutique Moussa').parrainCommerce, 'Épicerie Awa');
   assert.equal(liste.find((c) => c.commerce.nom === 'Épicerie Awa').nbFilleuls, 1);
+  assert.equal(liste.find((c) => c.commerce.nom === 'Boutique Moussa').commerce.quartier, 'Cocody');
 });
 
 test('premier paiement du filleul : le parrain gagne 15 jours, une seule fois', async () => {
