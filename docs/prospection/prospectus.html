@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Prospectus Kaislo</title>
+<style>
+@page { size: 148mm 210mm; margin: 0 }
+:root { --vert:#1e5b43; --vert2:#164633; --clair:#e8f1ec; --safran:#e9a23b; --creme:#f6f5f1; --encre:#14211c }
+* { box-sizing: border-box; margin: 0 }
+body { font-family: "Helvetica Neue", Arial, sans-serif; color: var(--encre); -webkit-print-color-adjust: exact; print-color-adjust: exact }
+.page { width: 148mm; height: 210mm; position: relative; overflow: hidden; page-break-after: always; padding: 11mm 11mm 9mm }
+.recto { background: var(--vert2); color: #fff }
+.marque { display: flex; align-items: center; gap: 3mm; font-weight: 800; font-size: 6mm; letter-spacing: .3px }
+.marque svg { width: 9mm; height: 9mm }
+h1 { max-width: 82mm; font-size: 9.6mm; line-height: 1.04; margin: 9mm 0 4mm; font-weight: 800 }
+h1 em { font-style: normal; color: var(--safran) }
+.sous { font-size: 4.3mm; line-height: 1.4; color: #dcebe3; max-width: 90mm }
+.tel { position: absolute; right: -9mm; bottom: 36mm; width: 56mm; transform: rotate(7deg); border-radius: 7mm; box-shadow: 0 4mm 9mm rgba(0,0,0,.45); border: 1.6mm solid #0c1b15 }
+.points { position: absolute; left: 11mm; bottom: 40mm; width: 66mm; list-style: none; padding: 0 }
+.points li { font-size: 4.2mm; font-weight: 700; margin-bottom: 3.2mm; padding-left: 7mm; position: relative; line-height: 1.25 }
+.points li::before { content: "✓"; position: absolute; left: 0; color: var(--safran); font-weight: 800 }
+.offre { position: absolute; left: 11mm; right: 11mm; bottom: 9mm; background: var(--safran); color: var(--encre); border-radius: 4mm; padding: 4mm 5mm; display: flex; align-items: center; justify-content: space-between; gap: 4mm }
+.offre b { font-size: 6mm; line-height: 1.05 }
+.offre span { font-size: 3.5mm; text-align: right; line-height: 1.3; font-weight: 600 }
+.verso { background: var(--creme) }
+.verso h2 { font-size: 7mm; color: var(--vert); margin: 0 0 4mm }
+.bloc { background: #fff; border: .3mm solid #e3e0d8; border-radius: 3.5mm; padding: 3mm 4.5mm; margin-bottom: 2.5mm }
+.bloc h3 { font-size: 4.4mm; color: var(--vert); margin-bottom: 1.2mm }
+.bloc p { font-size: 3.7mm; line-height: 1.35 }
+.grille { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm }
+.prix { background: var(--clair); border-radius: 3.5mm; padding: 4mm 5mm; margin-bottom: 3mm; display: flex; justify-content: space-between; align-items: center }
+.prix b { font-size: 8mm; color: var(--vert2); line-height: 1 }
+.prix small { display: block; font-size: 3.3mm; color: #3a4d44; margin-top: 1mm }
+.prix p { font-size: 3.8mm; font-weight: 700; text-align: right; line-height: 1.3 }
+.action { display: flex; gap: 5mm; align-items: center; margin-top: 4mm }
+.action img { width: 30mm; height: 30mm; border: .3mm solid #e3e0d8; border-radius: 2mm }
+.action p { font-size: 4mm; line-height: 1.4 }
+.action b { color: var(--vert) }
+.code { margin-top: 3mm; border: .4mm dashed var(--vert); border-radius: 2.5mm; padding: 2.5mm 4mm; font-size: 3.4mm; font-weight: 700; line-height: 1.9 }
+.pied { position: absolute; left: 11mm; right: 11mm; bottom: 5mm; font-size: 3.2mm; color: #5a6a62; text-align: center }
+</style></head><body>
+
+<section class="page recto">
+  <div class="marque">
+    <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#1e5b43"/><g fill="none" stroke="#f6f5f1" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v34"/><path d="M42 15L24 33l11 10"/></g><rect x="35.5" y="38.5" width="13" height="13" rx="2.8" fill="#e8a317"/></svg>
+    Kaislo
+  </div>
+  <h1>Sachez où va <em>votre argent</em>.</h1>
+  <p class="sous">La caisse et le stock de votre commerce, simples, sur votre téléphone. Même sans internet.</p>
+  <img class="tel" src="img/epicerie-mobile-600.webp" alt="">
+  <ul class="points">
+    <li>Ventes et reçus WhatsApp</li>
+    <li>Stock et alertes de rupture</li>
+    <li>Crédits clients et rappels</li>
+    <li>Marche sans connexion</li>
+  </ul>
+  <div class="offre"><b>30 jours<br>gratuits</b><span>Sans carte, sans engagement.<br>Je vous inscris en 1 minute.</span></div>
+</section>
+
+<section class="page verso">
+  <h2>Pourquoi les commerçants choisissent Kaislo</h2>
+  <div class="bloc"><h3>📒 Fini le cahier qui se perd</h3><p>Chaque vente est notée en quelques secondes. Le soir, vous voyez votre chiffre d’affaires et votre bénéfice.</p></div>
+  <div class="bloc"><h3>📦 Plus de mauvaise surprise sur le stock</h3><p>Le stock baisse à chaque vente et vous êtes prévenu avant la rupture.</p></div>
+  <div class="bloc"><h3>🤝 Les crédits ne s’oublient plus</h3><p>Qui vous doit combien, et un message WhatsApp de rappel en un clic.</p></div>
+  <div class="bloc"><h3>📱 Simple et sans réseau</h3><p>Appuyez sur le produit, validez. Les données se synchronisent quand le réseau revient.</p></div>
+  <div class="prix">
+    <div><b>9 000 FCFA</b><small>par mois, à partir de</small></div>
+    <p>Après les 30 jours<br>d’essai gratuits</p>
+  </div>
+  <div class="action">
+    <img src="img/qr.svg" alt="QR code">
+    <p><b>Scannez</b> pour essayer gratuitement, ou demandez-moi de vous inscrire tout de suite.<br><b>kaislo.com</b></p>
+  </div>
+  <div class="code">Mon conseiller Kaislo : ______________________________<br>Code : ______________ &nbsp;&nbsp; Tél : ____________________</div>
+  <div class="pied">Kaislo · caisse et gestion de stock · kaislo.com</div>
+</section>
+</body></html>
