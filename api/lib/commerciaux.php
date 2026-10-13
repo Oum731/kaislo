@@ -24,11 +24,13 @@
 //     POST /api/admin/commissions                 { action: valider | annuler | payer | prime, … }
 //     POST /api/admin/programme                   règles du programme
 //     POST /api/admin/commercial-validation       { id, action: valider | refuser } : inscription faite par le commercial lui-même
+//     POST /api/admin/commercial-contrat          { id } : met le contrat à disposition du commercial (numéro, règles figées)
 //   Espace commercial (/commercial/) :
 //     POST /api/commercial/inscription            { nom, telephone, pays, email?, pin, conditionsAcceptees } : compte « en attente », code parrain automatique
 //     POST /api/commercial/connexion              { telephone, pays, pin }
 //     GET  /api/commercial/moi                    son code, ses clients, ses commissions, ses primes
 //     POST /api/commercial/pin                    { ancien, nouveau }
+//     POST /api/commercial/contrat-accepter       : « lu et approuvé » (date enregistrée)
 //     POST /api/commercial/deconnexion
 // ------------------------------------------------------------
 
@@ -199,11 +201,22 @@ function primesCommercial(string $commercialId): array
     ], programme()['primes']);
 }
 
+// Contrat du commercial : numéro, dates et règles figées au moment de l'envoi (le PDF est fabriqué dans l'application)
+function contratCommercial(array $c): ?array
+{
+    if (empty($c['contrat_envoye_le'])) return null;
+    return [
+        'numero' => $c['contrat_numero'], 'envoyeLe' => $c['contrat_envoye_le'], 'accepteLe' => $c['contrat_accepte_le'] ?: null,
+        'conditions' => json_decode((string) ($c['contrat_conditions'] ?? ''), true) ?: [],
+    ];
+}
+
 function versCommercial(array $c): array
 {
     $nb = requete("SELECT COUNT(*) AS n, SUM(CASE WHEN commission_validee_le IS NOT NULL THEN 1 ELSE 0 END) AS v, SUM(CASE WHEN statut = 'actif' THEN 1 ELSE 0 END) AS a FROM commerces WHERE commercial_id = ?", [$c['id']])->fetch();
     return [
         'id' => $c['id'], 'nom' => $c['nom'], 'telephone' => $c['telephone'], 'email' => $c['email'], 'pays' => $c['pays'], 'ville' => $c['ville'] ?? '', 'quartier' => $c['quartier'] ?? '', 'code' => $c['code'],
+        'contratEnvoyeLe' => $c['contrat_envoye_le'] ?: null, 'contratAccepteLe' => $c['contrat_accepte_le'] ?: null,
         'taux' => (float) $c['taux'], 'actif' => (bool) $c['actif'], 'enAttente' => empty($c['valide_le']) && !$c['actif'], 'valideLe' => $c['valide_le'] ?? null,
         'notes' => $c['notes'], 'creeLe' => $c['cree_le'], 'vuLe' => $c['vu_le'],
         'clients' => (int) $nb['n'], 'clientsAbonnes' => (int) $nb['a'], 'clientsValides' => (int) $nb['v'], 'totaux' => totauxCommissions($c['id']),
@@ -252,7 +265,7 @@ function routeAdminCommercial(): never
     adminConnecte(true);
     $c = requete('SELECT * FROM commerciaux WHERE id = ?', [(string) ($_GET['id'] ?? '')])->fetch();
     if (!$c) throw new ErreurApi('Commercial introuvable', 404);
-    repondre(['ok' => true, 'commercial' => versCommercial($c), 'clients' => clientsCommercial($c['id'], true), 'primes' => primesCommercial($c['id']), 'bonusHebdo' => bonusHebdoCommercial($c)]);
+    repondre(['ok' => true, 'commercial' => versCommercial($c), 'clients' => clientsCommercial($c['id'], true), 'primes' => primesCommercial($c['id']), 'bonusHebdo' => bonusHebdoCommercial($c), 'contrat' => contratCommercial($c)]);
 }
 
 // { id?, nom, telephone, pays, ville?, quartier?, email, code, taux, actif, notes, pin? }
@@ -498,7 +511,45 @@ function routeCommercialMoi(): never
     $c = commercialConnecte();
     $infos = versCommercial($c);
     unset($infos['notes']); // notes internes de l'équipe
-    repondre(['ok' => true, 'commercial' => $infos, 'clients' => clientsCommercial($c['id'], false), 'primes' => primesCommercial($c['id']), 'bonusHebdo' => bonusHebdoCommercial($c), 'programme' => programme() + ['remiseParrain' => (float) reglesTarifs()['remiseParrain']]]);
+    repondre(['ok' => true, 'commercial' => $infos, 'clients' => clientsCommercial($c['id'], false), 'primes' => primesCommercial($c['id']), 'bonusHebdo' => bonusHebdoCommercial($c), 'contrat' => contratCommercial($c), 'programme' => programme() + ['remiseParrain' => (float) reglesTarifs()['remiseParrain']]]);
+}
+
+// POST /api/admin/commercial-contrat { id } : le contrat devient disponible dans l'espace du commercial (compte validé uniquement).
+// Les règles du programme sont figées à cet instant. Plus de changement possible une fois le contrat accepté.
+function routeAdminCommercialContrat(): never
+{
+    $admin = adminConnecte(true);
+    $e = entree();
+    $c = requete('SELECT * FROM commerciaux WHERE id = ?', [(string) ($e['id'] ?? '')])->fetch();
+    if (!$c) throw new ErreurApi('Commercial introuvable', 404);
+    if (empty($c['valide_le']) || !$c['actif']) throw new ErreurApi('Le compte doit d’abord être validé et actif');
+    if (!empty($c['contrat_accepte_le'])) throw new ErreurApi('Le contrat a déjà été accepté par le commercial');
+    $p = programme();
+    $conditions = [
+        'taux' => (float) $c['taux'], 'dureeMois' => (int) $p['dureeMois'], 'moisValidation' => (int) $p['moisValidation'],
+        'bonusHebdo' => $p['bonusHebdo'], 'primes' => $p['primes'],
+    ];
+    $numero = $c['contrat_numero'] ?: ('KC-' . gmdate('Y') . '-' . sprintf('%04d', 1 + (int) requete('SELECT COUNT(*) AS n FROM commerciaux WHERE contrat_numero IS NOT NULL')->fetch()['n']));
+    requete('UPDATE commerciaux SET contrat_numero = ?, contrat_envoye_le = ?, contrat_conditions = ? WHERE id = ?', [$numero, maintenant(), json_encode($conditions, JSON_UNESCAPED_UNICODE), $c['id']]);
+    journaliser(null, $admin['id'], 'amorac-contrat-envoye', ['commercial' => $c['nom'], 'numero' => $numero, 'par' => $admin['email']]);
+    $c = requete('SELECT * FROM commerciaux WHERE id = ?', [$c['id']])->fetch();
+    if (!empty($c['email'])) {
+        envoyerEmail($c['email'], 'Kaislo — votre contrat de commercial', "Bonjour {$c['nom']},\n\nVotre contrat de commercial Kaislo ($numero) est disponible dans votre espace : https://" . (domaineSite() ?: 'kaislo.com') . "/commercial/\nOuvrez-le, lisez-le, puis appuyez sur « J'ai lu et j'accepte ».\n\nL'équipe Kaislo");
+    }
+    repondre(['ok' => true, 'contrat' => contratCommercial($c)]);
+}
+
+// POST /api/commercial/contrat-accepter : « lu et approuvé » (la date est enregistrée)
+function routeCommercialContratAccepter(): never
+{
+    $c = commercialConnecte();
+    if (empty($c['contrat_envoye_le'])) throw new ErreurApi('Aucun contrat à accepter pour le moment', 400);
+    if (empty($c['contrat_accepte_le'])) {
+        requete('UPDATE commerciaux SET contrat_accepte_le = ? WHERE id = ?', [maintenant(), $c['id']]);
+        journaliser(null, null, 'commercial-contrat-accepte', ['commercial' => $c['nom'], 'numero' => $c['contrat_numero']]);
+    }
+    $c = requete('SELECT * FROM commerciaux WHERE id = ?', [$c['id']])->fetch();
+    repondre(['ok' => true, 'contrat' => contratCommercial($c)]);
 }
 
 function routeCommercialPin(): never
