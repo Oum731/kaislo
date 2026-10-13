@@ -49,7 +49,7 @@ Hypothèse retenue : « 10 » = **10 000 FCFA par semaine**. Si c'est un autre m
 ## 3. Fiche de prospection (scripts)
 
 ### Avant de partir
-- Téléphone chargé, **kaislo.com/app/?inscription=1&ref=VOTRE_CODE** en favori, la démo ouverte (kaislo.com/demo).
+- Téléphone chargé, **kaislo.com/app/?inscription=1&ref=VOTRE_CODE** en favori, la démo ouverte (kaislo.com/app/?demo=chez-sentinelle).
 - Horaires : 9h–11h et 15h–17h (évitez les heures de rush du commerçant).
 - Objectif : **10 commerçants rencontrés par jour**, 1 à 2 inscrits.
 
