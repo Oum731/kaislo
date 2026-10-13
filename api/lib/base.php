@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 8;
+const VERSION_BASE = 9;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -25,6 +25,8 @@ const STRUCTURE = [
             'commercial_id' => 'ID', // commercial Kaislo qui a apporté le commerce (code parrain)
             'fondateur' => 'ENTIER', // 1 = tarif fondateur (remise à vie, 20 premiers clients)
             'commission_validee_le' => 'DATE', // 6 mois payés et utilisés : commissions du commercial débloquées
+            'parrain_commerce_id' => 'ID', // commerce (d'un autre gérant) dont le code de parrainage a été saisi à l'inscription
+            'parrain_recompense_le' => 'DATE', // date où le mois offert au parrain a été accordé (au 1er paiement de ce commerce)
         ],
         // Le numéro d'un commerce n'est plus unique : un gérant peut avoir plusieurs commerces avec le même numéro
         // (l'unicité entre personnes différentes est vérifiée dans le code : voir numeroPrisAilleurs et numeroLibrePourGerant)
@@ -237,6 +239,12 @@ function migrer(PDO $pdo, string $driver): void
         $essayer('ALTER TABLE admins ADD COLUMN role VARCHAR(20) NULL');
         $essayer('ALTER TABLE admins ADD COLUMN actif INTEGER NULL');
         $essayer('ALTER TABLE admins ADD COLUMN vu_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 8 : parrainage entre commerçants
+    if ($version >= 1 && $version < 9) {
+        $essayer('ALTER TABLE commerces ADD COLUMN parrain_commerce_id VARCHAR(32) NULL');
+        $essayer('ALTER TABLE commerces ADD COLUMN parrain_recompense_le VARCHAR(30) NULL');
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur

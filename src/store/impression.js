@@ -15,6 +15,9 @@ import {
   ticketTest,
 } from '@/lib/impression/index.js';
 import { numeroWhatsApp } from '@/lib/donnees/modeles.js';
+import { signatureKaislo, resumeJourneeTexte, lienWhatsApp } from '@/lib/donnees/whatsapp.js';
+import { totalCreditEnCours } from '@/lib/donnees/credit.js';
+import { formatJourLong } from '@/lib/utils/format';
 import { imprimerSysteme } from '@/lib/impression/systeme.js';
 import { lireLocal, ecrireLocal } from '@/lib/donnees/stockage.js';
 import { estServeur } from '@/lib/donnees/synchro.js';
@@ -108,8 +111,23 @@ export const trancheImpression = (set, get) => ({
     if (telephone !== vente.telephoneClient) {
       get().majDonnees((x) => ({ ventes: x.ventes.map((v) => (v.id === vente.id ? { ...v, telephoneClient: telephone } : v)) }));
     }
-    const texte = ticketEnTexteWhatsApp(get().lignesVente(vente), d.commerce);
+    const texte = ticketEnTexteWhatsApp(get().lignesVente(vente), d.commerce, get().signatureWhatsApp());
     return 'https://wa.me/' + numero + '?text=' + encodeURIComponent(texte);
+  },
+
+  // « Fait avec Kaislo · kaislo.com » à la fin des reçus et des rappels envoyés aux clients (réglage de l'appareil, activé par défaut)
+  signatureWhatsApp() {
+    return get().prefs.signatureKaislo === false ? '' : signatureKaislo();
+  },
+
+  // Résumé du soir que le gérant s'envoie sur son propre WhatsApp après la fermeture de la caisse
+  lienResumeJournee(cloture) {
+    const { d, utilisateur } = get();
+    const gerant = d.utilisateurs.find((u) => u.role === 'gerant' && u.actif !== false) || utilisateur;
+    const texte = resumeJourneeTexte({
+      cloture, commerce: d.commerce, creditTotal: totalCreditEnCours(d), prix: (n) => get().prix(n), date: formatJourLong(new Date(cloture.date)),
+    });
+    return lienWhatsApp(gerant.telephone, d.commerce.pays, texte);
   },
 
   // Commerce en ligne, appareil sans imprimante : le ticket part sur l'imprimante de son poste

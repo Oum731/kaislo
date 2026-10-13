@@ -485,9 +485,12 @@ export function FeuilleTicketCloture({ cloture }) {
   return (
     <Feuille titre={tr('Résumé de la journée de vente')} sousTitre={tr('Fermée le {0} à {1} · {2}', [formatDate(cloture.date), formatHeure(cloture.date), cloture.utilisateurNom])} surFermer={s.fermer} pleine large
       pied={
-        <div className="grille-2">
-          <button className="btn secondaire" onClick={() => s.imprimerCloture(cloture)} disabled={s.impressionEnCours}><Icone nom="imprimante" /> {tr('Imprimer')}</button>
-          <button className="btn" onClick={s.fermer}>{tr('Terminer')}</button>
+        <div className="pile" style={{ gap: 8 }}>
+          <a className="btn secondaire bloc" href={s.lienResumeJournee(cloture)} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> {tr('M’envoyer le résumé sur WhatsApp')}</a>
+          <div className="grille-2">
+            <button className="btn secondaire" onClick={() => s.imprimerCloture(cloture)} disabled={s.impressionEnCours}><Icone nom="imprimante" /> {tr('Imprimer')}</button>
+            <button className="btn" onClick={s.fermer}>{tr('Terminer')}</button>
+          </div>
         </div>
       }>
       <div className="grille-ecran deux">
