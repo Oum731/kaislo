@@ -52,7 +52,7 @@ export function FeuilleParrainage() {
               <p><b>{tr('Comment ça marche')}</b></p>
               <p>{tr('1. Envoyez votre code à un commerçant qui ne connaît pas encore Kaislo.')}</p>
               <p>{tr('2. Il s’inscrit avec votre code : il a {0} jours d’essai gratuit en plus ({1} au total).', [p.joursFilleul, 30 + p.joursFilleul])}</p>
-              <p>{tr('3. Quand il fait son premier paiement, vous gagnez {0} jours offerts sur votre abonnement.', [p.joursParrain])}</p>
+              <p>{tr('3. Quand il fait son premier paiement, vous gagnez {0} jours offerts : ils comptent dans votre mois, vous ne payez que les jours restants.', [p.joursParrain])}</p>
               <p className="tres-petit muet">{tr('Le commerce doit appartenir à une autre personne que vous. Maximum {0} récompenses par commerce.', [p.maximum])}</p>
             </div>
             <div className="carte pile">

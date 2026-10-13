@@ -85,6 +85,40 @@ test('premier paiement du filleul : le parrain gagne 15 jours, une seule fois', 
   assert.equal(p.filleuls[0].gagne, true);
 });
 
+test('les jours offerts comptent dans le mois : le client paie seulement les jours restants', async () => {
+  const vue = async (id) => (await api('GET', '/admin/commerces', null, admin)).commerces.find((c) => c.commerce.id === id);
+  // Le parrain a gagné 15 jours (sur son essai) : son premier paiement ne couvre que les 15 jours restants du mois
+  const p0 = await vue(parrain.commerce.id);
+  assert.equal(p0.joursOfferts, 15);
+  const r = await api('POST', '/admin/paiement', { commerceId: parrain.commerce.id, montant: 4500, mois: 1, moyen: 'Wave' }, admin);
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const p1 = await vue(parrain.commerce.id);
+  assert.equal(jours(p0.commerce.abonnement.essaiFin, p1.commerce.abonnement.periodeFin), 15);
+  assert.equal(p1.joursOfferts, 0);
+  assert.equal(p1.commerce.abonnement.paiements[0].details.joursOfferts, 15);
+  // Le mois suivant se paie normalement : 30 jours de plus
+  await api('POST', '/admin/paiement', { commerceId: parrain.commerce.id, montant: 9000, mois: 1, moyen: 'Wave' }, admin);
+  const p2 = await vue(parrain.commerce.id);
+  assert.equal(jours(p1.commerce.abonnement.periodeFin, p2.commerce.abonnement.periodeFin), 30);
+  // Un filleul : 15 jours d'essai offerts, payés en moins sur son premier mois
+  const f = await inscrire('Boutique Binta', '0712345806', { codeParrain: 'P' + parrain.commerce.code });
+  const f0 = await vue(f.commerce.id);
+  assert.equal(f0.joursOfferts, 15);
+  await api('POST', '/admin/paiement', { commerceId: f.commerce.id, montant: 4500, mois: 1, moyen: 'Wave' }, admin);
+  const f1 = await vue(f.commerce.id);
+  assert.equal(jours(f0.commerce.abonnement.essaiFin, f1.commerce.abonnement.periodeFin), 15);
+  assert.equal(f1.joursOfferts, 0);
+});
+
+test('prix des jours restants : identique côté serveur et côté application', async () => {
+  const js = await import('../src/lib/donnees/tarifs.js');
+  assert.deepEqual(js.prixApresJoursOfferts(9000, 1, 15, 'FCFA'), { deduits: 15, joursPayes: 15, montant: 4500 });
+  assert.deepEqual(js.prixApresJoursOfferts(9000, 1, 0, 'FCFA'), { deduits: 0, joursPayes: 30, montant: 9000 });
+  assert.equal(js.prixApresJoursOfferts(25000, 3, 15, 'EUR').montant, Math.round(25000 * 75 / 90));
+  const php = fs.readFileSync('api/lib/tarifs.php', 'utf8');
+  assert.match(php, /function prixApresJoursOfferts/);
+});
+
 test('un vendeur ne voit pas le parrainage, et un code de commercial ne peut pas ressembler à un code de commerce', async () => {
   const sans = await inscrire('Autre', '0712345805');
   const v = await api('POST', '/utilisateurs', { nom: 'Vendeur', telephone: '0712345899', pin: '5555', role: 'vendeur' }, sans.jeton);

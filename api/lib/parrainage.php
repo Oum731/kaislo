@@ -54,9 +54,9 @@ function recompenserParrain(array $filleul): ?array
     if ($dejaGagnes >= RECOMPENSES_PARRAINAGE_MAX) return null;
     // Les jours offerts s'ajoutent à l'abonnement s'il en a un, sinon à l'essai ; un commerce suspendu reste suspendu
     if (!empty($parrain['periode_fin'])) {
-        requete("UPDATE commerces SET periode_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'actif' END, modifie_le = ? WHERE id = ?", [prolongerDate($parrain['periode_fin'], JOURS_BONUS_PARRAIN), maintenant(), $parrain['id']]);
+        requete("UPDATE commerces SET jours_offerts = COALESCE(jours_offerts, 0) + ?, periode_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'actif' END, modifie_le = ? WHERE id = ?", [JOURS_BONUS_PARRAIN, prolongerDate($parrain['periode_fin'], JOURS_BONUS_PARRAIN), maintenant(), $parrain['id']]);
     } else {
-        requete("UPDATE commerces SET essai_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'essai' END, modifie_le = ? WHERE id = ?", [prolongerDate($parrain['essai_fin'], JOURS_BONUS_PARRAIN), maintenant(), $parrain['id']]);
+        requete("UPDATE commerces SET jours_offerts = COALESCE(jours_offerts, 0) + ?, essai_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'essai' END, modifie_le = ? WHERE id = ?", [JOURS_BONUS_PARRAIN, prolongerDate($parrain['essai_fin'], JOURS_BONUS_PARRAIN), maintenant(), $parrain['id']]);
     }
     requete('UPDATE commerces SET parrain_recompense_le = ?, modifie_le = ? WHERE id = ?', [maintenant(), maintenant(), $filleul['id']]);
     journaliser($parrain['id'], null, 'parrainage-recompense', ['filleul' => $filleul['nom'], 'jours' => JOURS_BONUS_PARRAIN]);

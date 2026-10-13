@@ -179,3 +179,13 @@ function routeAdminTarifs(): never
     journaliser(null, $admin['id'], 'amorac-tarifs', ['par' => $admin['email']]);
     repondre(['ok' => true, 'formules' => $propres, 'regles' => $regles]);
 }
+
+// Les jours offerts comptent dans le mois : on ne paie que les jours restants (30 jours par mois).
+// Renvoie [jours déduits, jours à payer, montant proportionnel].
+function prixApresJoursOfferts(float $total, int $mois, int $joursOfferts, string $devise): array
+{
+    $jours = $mois * 30;
+    $deduits = max(0, min($joursOfferts, $jours - 1));
+    $pas = $devise === 'GNF' ? 1000 : ($devise === 'FCFA' ? 100 : 1);
+    return [$deduits, $jours - $deduits, $deduits ? round($total * ($jours - $deduits) / $jours / $pas) * $pas : $total];
+}

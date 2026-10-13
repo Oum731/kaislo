@@ -217,10 +217,10 @@ function routeInscription(): never
         $idCommerce = nouvelId('com');
         // Le filleul d'un commerçant reçoit des jours d'essai en plus
         $joursEssai = DUREE_ESSAI_JOURS + ($parrainCommerce ? JOURS_BONUS_FILLEUL : 0);
-        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur, parrain_commerce_id)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)', [
+        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur, parrain_commerce_id, jours_offerts)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)', [
             $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $numCommerce['affichage'], $numCommerce['cle'],
-            'essai', 'essai', maintenant($joursEssai * 86400), null, maintenant(), maintenant(), maintenant(), $commercial['id'] ?? null, $parrainCommerce['id'] ?? null,
+            'essai', 'essai', maintenant($joursEssai * 86400), null, maintenant(), maintenant(), maintenant(), $commercial['id'] ?? null, $parrainCommerce['id'] ?? null, $parrainCommerce ? JOURS_BONUS_FILLEUL : 0,
         ]);
         $utilisateur = [
             'id' => nouvelId('u'), 'commerce_id' => $idCommerce, 'nom' => $nomGerant, 'telephone' => $telGerant,
