@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 12;
+const VERSION_BASE = 13;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -139,6 +139,8 @@ const STRUCTURE = [
             'id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)', 'cle_telephone' => 'VARCHAR(20)', 'email' => 'TEXTE',
             'pays' => 'VARCHAR(4)', 'ville' => 'TEXTE', 'quartier' => 'TEXTE', 'code' => 'VARCHAR(20)', 'pin_hash' => 'TEXTE', 'taux' => 'MONTANT', 'actif' => 'ENTIER',
             'notes' => 'LONG', 'cree_le' => 'DATE', 'vu_le' => 'DATE',
+            'contrat_numero' => 'VARCHAR(30)', 'contrat_envoye_le' => 'DATE', 'contrat_accepte_le' => 'DATE',
+            'contrat_conditions' => 'LONG', // règles du programme au moment de l'envoi du contrat (JSON) : le PDF reste identique ensuite
             'valide_le' => 'DATE', // NULL + inactif = inscription en attente de validation par l'équipe Amorac
         ],
         'cle' => ['id'], 'uniques' => [['code'], ['cle_telephone']], 'index' => [],
@@ -266,6 +268,14 @@ function migrer(PDO $pdo, string $driver): void
         $essayer('ALTER TABLE commerces ADD COLUMN quartier TEXT NULL');
         $essayer('ALTER TABLE commerciaux ADD COLUMN ville TEXT NULL');
         $essayer('ALTER TABLE commerciaux ADD COLUMN quartier TEXT NULL');
+    }
+
+    // Bases en version 1 à 12 : contrat du commercial
+    if ($version >= 1 && $version < 13) {
+        $essayer('ALTER TABLE commerciaux ADD COLUMN contrat_numero VARCHAR(30) NULL');
+        $essayer('ALTER TABLE commerciaux ADD COLUMN contrat_envoye_le VARCHAR(30) NULL');
+        $essayer('ALTER TABLE commerciaux ADD COLUMN contrat_accepte_le VARCHAR(30) NULL');
+        $essayer("ALTER TABLE commerciaux ADD COLUMN contrat_conditions $texteLong NULL");
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur

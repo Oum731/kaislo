@@ -10,7 +10,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { paysParId, PAYS, typeCommerce } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, initiales, NOMS_DEVISES } from '@/lib/utils/format';
 import { Icone, Feuille, ChampMontant, ChampTelephone } from '@/components/ui';
-import { SITE_URL } from '@/config';
+import { SITE_URL, SOCIETE } from '@/config';
+import { livrerFichier, MIME_PDF } from '@/lib/export/livrer';
 
 const MOYENS_VERSEMENT = ['Wave', 'Orange Money', 'MTN MoMo', 'Moov Money', 'Virement', 'Espèces'];
 const LIBELLES = { attente: 'En attente', a_payer: 'À payer', payee: 'Payée', annulee: 'Annulée' };
@@ -153,7 +154,7 @@ function FicheCommercial({ id, ctx, fermer, modifier }) {
     }
   };
   if (!f) return <Feuille titre="Commercial" surFermer={fermer}><p className="muet">Chargement…</p></Feuille>;
-  const { commercial: c, clients, primes, bonusHebdo } = f;
+  const { commercial: c, clients, primes, bonusHebdo, contrat } = f;
   const aPayer = clients.flatMap((cl) => cl.commissions.filter((m) => m.statut === 'a_payer').map((m) => ({ ...m, client: cl.nom })));
   const coches = aPayer.filter((m) => choix[m.id]);
   const totalCoche = {};
@@ -202,6 +203,7 @@ function FicheCommercial({ id, ctx, fermer, modifier }) {
               </>
             )}
           </div>
+          <CarteContrat commercial={c} contrat={contrat} surMettre={async () => { await ctx.api('POST', '/admin/commercial-contrat', { id: c.id }); await charger(); setMessage({ ok: true, texte: 'Contrat mis à disposition' }); }} />
           <BonusHebdo semaines={bonusHebdo} action={(semaine) => action({ action: 'bonus', commercialId: c.id, semaine, moyen }, 'Bonus versé')} />
           <div className="carte pile">
             <h3>Primes par palier</h3>
@@ -231,6 +233,59 @@ function FicheCommercial({ id, ctx, fermer, modifier }) {
         </div>
       </div>
     </Feuille>
+  );
+}
+
+// Contrat du commercial : le PDF est fabriqué ici à partir des règles figées à l'envoi (identique pour l'équipe et le commercial)
+export function CarteContrat({ commercial, contrat, surMettre = null, surAccepter = null }) {
+  const [occupe, setOccupe] = useState(false);
+  const [message, setMessage] = useState(null);
+  const pdf = async () => {
+    setOccupe(true);
+    setMessage(null);
+    try {
+      const { creerPdfContrat, nomFichierContrat } = await import('@/lib/export/contrat-commercial');
+      const doc = await creerPdfContrat({ commercial, contrat, societe: SOCIETE });
+      const r = await livrerFichier(doc.output('arraybuffer'), nomFichierContrat(contrat), MIME_PDF);
+      if (r !== 'annule') setMessage({ ok: true, texte: r === 'partage' ? 'Contrat prêt : choisissez où l’envoyer ou l’enregistrer.' : 'Contrat téléchargé.' });
+    } catch (e) { console.error(e); setMessage({ ok: false, texte: 'Impossible de créer le PDF.' }); }
+    setOccupe(false);
+  };
+  const lancer = async (fn) => { setOccupe(true); setMessage(null); try { await fn(); } catch (e) { setMessage({ ok: false, texte: e.message }); } setOccupe(false); };
+  const lien = SITE_URL + '/commercial/';
+  const texteWhatsApp = contrat ? 'Bonjour ' + commercial.nom + ', votre contrat de commercial Kaislo (' + contrat.numero + ') est disponible dans votre espace : ' + lien + ' . Ouvrez-le, lisez-le puis appuyez sur « J’ai lu et j’accepte ». Merci !' : '';
+  const tel = String(commercial.telephone || '').replace(/\D/g, '');
+  return (
+    <div className="carte pile">
+      <h3>Contrat</h3>
+      {message && <p className={message.ok ? 'info-verte' : 'alerte'}>{message.texte}</p>}
+      {!contrat && surMettre && (
+        <>
+          <p className="petit muet">Le contrat n’est pas encore envoyé. Il se fabrique avec les règles du programme actuelles (commission {commercial.taux} %, bonus de la semaine, primes) et apparaît dans l’espace du commercial.</p>
+          {commercial.enAttente || !commercial.actif
+            ? <p className="tres-petit muet">Validez d’abord le compte du commercial.</p>
+            : <button className="btn bloc" disabled={occupe} onClick={() => lancer(surMettre)}>Mettre le contrat à disposition</button>}
+        </>
+      )}
+      {!contrat && !surMettre && <p className="petit muet">Votre contrat sera disponible ici après la validation de votre compte par l’équipe.</p>}
+      {contrat && (
+        <>
+          <p className="petit"><b>N° {contrat.numero}</b> · mis à disposition le {formatDate(contrat.envoyeLe)}</p>
+          {contrat.accepteLe ? <span className="badge">Accepté le {formatDate(contrat.accepteLe)}</span> : <span className="badge safran">En attente d’acceptation</span>}
+          <div className="grille-2">
+            <button className="btn secondaire" disabled={occupe} onClick={pdf}><Icone nom="carnet" /> PDF</button>
+            {surMettre && !contrat.accepteLe && tel && <a className="btn" href={'https://wa.me/' + tel + '?text=' + encodeURIComponent(texteWhatsApp)} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> Prévenir</a>}
+          </div>
+          {surMettre && !contrat.accepteLe && <button className="btn fantome petit" disabled={occupe} onClick={() => lancer(surMettre)}>Mettre à jour avec les règles actuelles</button>}
+          {surAccepter && !contrat.accepteLe && (
+            <>
+              <p className="tres-petit muet">Lisez le PDF, puis acceptez. La date est enregistrée et vaut signature.</p>
+              <button className="btn bloc" disabled={occupe} onClick={() => lancer(surAccepter)}>J’ai lu et j’accepte</button>
+            </>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 

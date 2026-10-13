@@ -112,3 +112,32 @@ test('le bonus d\'une semaine terminée se verse une seule fois', async () => {
   assert.ok(apres.payeLe);
   assert.equal((await api('POST', '/admin/commissions', { action: 'bonus', commercialId: commercial.id, semaine: passee.semaine }, admin)).statut, 400);
 });
+
+test('contrat du commercial : mis à disposition après validation, accepté par le commercial', async () => {
+  // Compte en attente : pas de contrat
+  const ins = await api('POST', '/commercial/inscription', { nom: 'Koffi Contrat', telephone: '0712349911', pays: 'CI', ville: 'Abidjan', quartier: 'Marcory', pin: '654321', conditionsAcceptees: true });
+  assert.equal(ins.statut, 201, JSON.stringify(ins));
+  const liste = (await api('GET', '/admin/commerciaux', null, admin)).commerciaux;
+  const k = liste.find((c) => c.nom === 'Koffi Contrat');
+  assert.equal((await api('POST', '/admin/commercial-contrat', { id: k.id }, admin)).statut, 400);
+  assert.equal((await api('POST', '/admin/commercial-validation', { id: k.id, action: 'valider' }, admin)).ok, true);
+  const conn = await api('POST', '/commercial/connexion', { telephone: '0712349911', pays: 'CI', pin: '654321' });
+  assert.equal((await api('GET', '/commercial/moi', null, conn.jeton)).contrat, null);
+  assert.equal((await api('POST', '/commercial/contrat-accepter', null, conn.jeton)).statut, 400);
+  // L'équipe met le contrat à disposition : numéro, règles figées
+  const m = await api('POST', '/admin/commercial-contrat', { id: k.id }, admin);
+  assert.equal(m.ok, true, JSON.stringify(m));
+  assert.match(m.contrat.numero, /^KC-\d{4}-\d{4}$/);
+  assert.equal(m.contrat.conditions.taux, 25);
+  assert.equal(m.contrat.accepteLe, null);
+  const vu = (await api('GET', '/commercial/moi', null, conn.jeton)).contrat;
+  assert.equal(vu.numero, m.contrat.numero);
+  // Le commercial accepte ; ensuite l'équipe ne peut plus le changer
+  const ok = await api('POST', '/commercial/contrat-accepter', null, conn.jeton);
+  assert.equal(ok.ok, true);
+  assert.ok(ok.contrat.accepteLe);
+  assert.equal((await api('POST', '/admin/commercial-contrat', { id: k.id }, admin)).statut, 400);
+  const fiche = await api('GET', '/admin/commercial?id=' + k.id, null, admin);
+  assert.ok(fiche.contrat.accepteLe);
+  assert.ok(fiche.commercial.contratAccepteLe);
+});

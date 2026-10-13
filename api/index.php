@@ -104,6 +104,8 @@ try {
         'GET /pays' => routePays(),
         'POST /commercial/inscription' => routeCommercialInscription(),
         'POST /admin/commercial-validation' => routeAdminCommercialValidation(),
+        'POST /admin/commercial-contrat' => routeAdminCommercialContrat(),
+        'POST /commercial/contrat-accepter' => routeCommercialContratAccepter(),
         'POST /commercial/connexion' => routeCommercialConnexion(),
         'GET /commercial/moi' => routeCommercialMoi(),
         'POST /commercial/pin' => routeCommercialPin(),
