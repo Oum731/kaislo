@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 9;
+const VERSION_BASE = 10;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -26,6 +26,7 @@ const STRUCTURE = [
             'fondateur' => 'ENTIER', // 1 = tarif fondateur (remise à vie, 20 premiers clients)
             'commission_validee_le' => 'DATE', // 6 mois payés et utilisés : commissions du commercial débloquées
             'parrain_commerce_id' => 'ID', // commerce (d'un autre gérant) dont le code de parrainage a été saisi à l'inscription
+            'jours_offerts' => 'ENTIER', // jours offerts (parrainage) comptés dans le 1er mois payé : le client ne paie que les jours restants
             'parrain_recompense_le' => 'DATE', // date où le mois offert au parrain a été accordé (au 1er paiement de ce commerce)
         ],
         // Le numéro d'un commerce n'est plus unique : un gérant peut avoir plusieurs commerces avec le même numéro
@@ -245,6 +246,11 @@ function migrer(PDO $pdo, string $driver): void
     if ($version >= 1 && $version < 9) {
         $essayer('ALTER TABLE commerces ADD COLUMN parrain_commerce_id VARCHAR(32) NULL');
         $essayer('ALTER TABLE commerces ADD COLUMN parrain_recompense_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 9 : jours offerts déduits du premier paiement
+    if ($version >= 1 && $version < 10) {
+        $essayer('ALTER TABLE commerces ADD COLUMN jours_offerts INTEGER NULL');
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur

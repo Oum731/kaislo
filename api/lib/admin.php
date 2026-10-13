@@ -169,10 +169,11 @@ function resumesCommerces(?string $seulId = null): array
             'derniereActivite' => $derniere[$id] ?? $c['cree_le'], 'nbProduits' => (int) ($nbProduits[$id] ?? 0),
             'nbVendeurs' => (int) ($nbVendeurs[$id] ?? 0), 'messagesNonLus' => (int) ($nonLus[$id] ?? 0),
             // Autres commerces du même gérant (paiement groupé) et activité à vérifier (voir signauxActivite)
-            'autresCommerces' => array_values(array_map(fn ($autre) => ['id' => $autre, 'nom' => $identite[$autre]['nom'], 'type' => $identite[$autre]['type'], 'statut' => $identite[$autre]['statut'], 'devise' => $identite[$autre]['devise'], 'tarif' => tarifCommerce($identite[$autre])], array_filter($groupes[$gerants[$id]['cle_telephone'] ?? ''] ?? [], fn ($autre) => $autre !== $id && isset($identite[$autre])))),
+            'autresCommerces' => array_values(array_map(fn ($autre) => ['id' => $autre, 'nom' => $identite[$autre]['nom'], 'type' => $identite[$autre]['type'], 'statut' => $identite[$autre]['statut'], 'devise' => $identite[$autre]['devise'], 'tarif' => tarifCommerce($identite[$autre]), 'joursOfferts' => debutPeriodePayee($identite[$autre]) ? (int) ($identite[$autre]['jours_offerts'] ?? 0) : 0], array_filter($groupes[$gerants[$id]['cle_telephone'] ?? ''] ?? [], fn ($autre) => $autre !== $id && isset($identite[$autre])))),
             'signaux' => signauxActivite($c, $produitsDe[$id] ?? [], $reglages),
             'parrainCommerce' => !empty($c['parrain_commerce_id']) ? ($identite[$c['parrain_commerce_id']]['nom'] ?? null) : null,
             'nbFilleuls' => $nbFilleuls[$id] ?? 0,
+            'joursOfferts' => debutPeriodePayee($c) ? (int) ($c['jours_offerts'] ?? 0) : 0,
         ];
     }, $commerces);
 }
@@ -276,6 +277,14 @@ function routeAdminActionCommerce(): never
 // { commerceId, formule, postes, mois, montant, moyen, note }
 // Le montant proposé est calculé (formule + postes supplémentaires, 12 mois = 2 offerts, tarif fondateur) ;
 // l'équipe saisit le montant réellement reçu.
+// Date à partir de laquelle court la période payée : la fin de l'abonnement en cours ; pour un essai qui a des jours offerts,
+// la fin de l'essai (ces jours ne sont pas perdus) ; sinon null = maintenant. Toujours null si cette date est passée.
+function debutPeriodePayee(array $c): ?string
+{
+    $fin = $c['statut'] === 'actif' ? ($c['periode_fin'] ?? null) : ($c['statut'] === 'essai' && (int) ($c['jours_offerts'] ?? 0) > 0 ? ($c['essai_fin'] ?? null) : null);
+    return $fin && $fin > maintenant() ? $fin : null;
+}
+
 // Enregistre un paiement d'abonnement (sans gérer la transaction : l'appelant s'en occupe). Renvoie les informations utiles.
 function enregistrerPaiement(array $admin, array $e): array
 {
@@ -289,21 +298,24 @@ function enregistrerPaiement(array $admin, array $e): array
     $postes = max(1, min(50, (int) ($e['postes'] ?? nombrePostes($c['id']))));
     $multi = rangCommerceDuGerant($c) > 0;
     $calcul = prixAbonnement($formule, $c['devise'], $postes, $mois, (bool) $c['fondateur'], modeTarif($c), $multi);
+    // Jours offerts (parrainage) encore à venir : ils comptent dans le mois, le client ne paie que les jours restants
+    $debut = debutPeriodePayee($c);
+    [$joursOfferts, $joursPayes, $prixAttendu] = prixApresJoursOfferts((float) $calcul['total'], $mois, $debut ? (int) ($c['jours_offerts'] ?? 0) : 0, $c['devise']);
     $moyen = mb_substr((string) ($e['moyen'] ?? 'Espèces'), 0, 30);
     $idPaiement = nouvelId('pa');
-    $details = ['formule' => $formule['id'], 'prixCalcule' => $calcul['total'], 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur'], 'mode' => modeTarif($c), 'multiCommerce' => $multi];
+    $details = ['formule' => $formule['id'], 'prixCalcule' => $prixAttendu, 'joursOfferts' => $joursOfferts, 'joursPayes' => $joursPayes, 'parMois' => $calcul['parMois'], 'fondateur' => (bool) $c['fondateur'], 'mode' => modeTarif($c), 'multiCommerce' => $multi];
     if (!empty($e['groupe'])) $details['groupe'] = (string) $e['groupe'];
     requete('INSERT INTO paiements (id, commerce_id, date, montant, devise, mois, moyen, note, cree_par, postes, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
         $idPaiement, $c['id'], maintenant(), $montant, $c['devise'], $mois, $moyen, mb_substr((string) ($e['note'] ?? ''), 0, 200), $admin['email'], $postes,
         json_encode($details, JSON_UNESCAPED_UNICODE),
     ]);
     // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
-    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, modifie_le = ? WHERE id = ?", [
-        $formule['id'], prolongerDate($c['statut'] === 'actif' ? $c['periode_fin'] : null, $mois * 30), maintenant(), $c['id'],
+    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, jours_offerts = 0, modifie_le = ? WHERE id = ?", [
+        $formule['id'], prolongerDate($debut, $joursPayes), maintenant(), $c['id'],
     ]);
     // Commissions du commercial qui a apporté ce commerce
     if (!empty($c['commercial_id'])) creerCommissions($c, $idPaiement, $montant, $mois);
-    // Parrainage entre commerçants : au premier paiement du filleul, le parrain gagne 30 jours
+    // Parrainage entre commerçants : au premier paiement du filleul, le parrain gagne ses jours offerts
     recompenserParrain($c);
     return ['commerce' => $c, 'montant' => $montant, 'mois' => $mois, 'postes' => $postes, 'formule' => $formule];
 }
