@@ -251,7 +251,7 @@ function CommerceSuspendu() {
 function Inscription() {
   const s = useKaislo();
   const [etape, setEtape] = useState(1);
-  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false, codeParrain: s.prefs.codeParrain || '' });
+  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', quartier: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false, codeParrain: s.prefs.codeParrain || '' });
   const paysTouche = useRef(false);
   const maj = (champ) => (e) => { if (champ === 'pays') paysTouche.current = true; setF({ ...f, [champ]: e.target.value }); };
   // Pays pré-rempli : choix déjà fait, sinon adresse IP / fuseau horaire (sauf si la personne a déjà choisi elle-même)
@@ -262,6 +262,7 @@ function Inscription() {
   const continuer = () => {
     if (!f.nom.trim()) return s.message(tr('Indiquez le nom de votre commerce'), 'erreur');
     if (!f.ville.trim()) return s.message(tr('Indiquez la ville'), 'erreur');
+    if (!f.quartier.trim()) return s.message(tr('Indiquez le quartier'), 'erreur');
     // Le numéro du commerce est obligatoire : il identifie le commerce (unique dans tout Kaislo)
     const n = normaliserTelephone(f.telephone, f.pays);
     if (!n.ok) return s.message(tr('Téléphone du commerce : {0}', [n.erreur.toLowerCase()]), 'erreur');
@@ -278,7 +279,7 @@ function Inscription() {
     if (f.gerantPin !== f.gerantPin2) return s.message(tr('Les deux codes PIN ne sont pas identiques'), 'erreur');
     if (!f.accepte) return s.message(tr('Merci d’accepter les conditions d’utilisation pour continuer'), 'erreur');
     // En ligne : le commerce est créé sur le serveur (le numéro y est vérifié dans tout Kaislo)
-    const err = await s.inscrire({ ...f, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), telephone: numeroCommerce.affichage, gerantNom: f.gerantNom.trim(), gerantTelephone: numero.affichage });
+    const err = await s.inscrire({ ...f, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), quartier: f.quartier.trim(), telephone: numeroCommerce.affichage, gerantNom: f.gerantNom.trim(), gerantTelephone: numero.affichage });
     if (err) s.message(err, 'erreur');
   };
   const pays = paysParId(f.pays);
@@ -315,6 +316,7 @@ function Inscription() {
             </label>
             <label className="champ"><span>{tr('Ville')}</span><input value={f.ville} onChange={maj('ville')} placeholder={pays.ville ? tr('Ex : {0}', [pays.ville]) : tr('Votre ville')} /></label>
           </div>
+          <label className="champ"><span>{tr('Quartier')}</span><input value={f.quartier} onChange={maj('quartier')} placeholder={tr('Ex : Yopougon, Adjamé, Cocody')} /></label>
           <ChampTelephone libelle={tr('Téléphone du commerce')} pays={f.pays} valeur={f.telephone} surChanger={(v) => setF({ ...f, telephone: v })}
             aide={tr('Il identifie votre commerce chez Kaislo et s’imprime sur le ticket. Ce peut être votre numéro personnel.')} />
           <p className="astuce">{tr('Devise :')} <b>{tr(NOMS_DEVISES[pays.devise] || pays.devise)}</b>{tr('. Paiements proposés : {0} et crédit client.', [pays.paiements.join(', ')])}</p>

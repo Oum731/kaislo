@@ -175,7 +175,7 @@ function versCommerce(array $c): array
 {
     return [
         'id' => $c['id'], 'code' => $c['code'], 'nom' => $c['nom'], 'type' => $c['type'], 'pays' => $c['pays'],
-        'devise' => $c['devise'], 'ville' => $c['ville'], 'telephone' => $c['telephone'],
+        'devise' => $c['devise'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'telephone' => $c['telephone'],
         'creeLe' => $c['cree_le'], 'conditionsAccepteesLe' => $c['conditions_acceptees_le'],
         'abonnement' => [
             'offre' => $c['offre'], 'statut' => $c['statut'], 'essaiFin' => $c['essai_fin'], 'periodeFin' => $c['periode_fin'],

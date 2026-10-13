@@ -51,7 +51,7 @@ before(async () => {
     await new Promise((r) => setTimeout(r, 100));
   }
   const ins = await api('POST', '/inscription', {
-    commerce: { nom: 'Chez Test', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345601' },
+    commerce: { nom: 'Chez Test', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345601' },
     gerant: { nom: 'Gérant Test', telephone: '0712345602', pin: '1234' },
     conditionsAcceptees: true,
   });
@@ -192,12 +192,12 @@ test('pays du visiteur : en-tête du serveur reconnu, adresse locale sans résul
 
 test('commercial : inscription libre, code automatique, validation par l’équipe, remise du code parrain', async () => {
   // 1. Le commercial s'inscrit lui-même : compte en attente, code généré
-  const ins = await api('POST', '/commercial/inscription', { nom: 'Awa Traoré', telephone: '0712340000', pays: 'CI', pin: '123456', conditionsAcceptees: true });
+  const ins = await api('POST', '/commercial/inscription', { nom: 'Awa Traoré', telephone: '0712340000', pays: 'CI', ville: 'Abidjan', quartier: 'Yopougon', pin: '123456', conditionsAcceptees: true });
   assert.equal(ins.ok, true, JSON.stringify(ins));
   assert.match(ins.code, /^AWA\d{2,}$/);
-  const sansAccord = await api('POST', '/commercial/inscription', { nom: 'Autre', telephone: '0712340001', pays: 'CI', pin: '123456' });
+  const sansAccord = await api('POST', '/commercial/inscription', { nom: 'Autre', telephone: '0712340001', pays: 'CI', ville: 'Abidjan', quartier: 'Yopougon', pin: '123456' });
   assert.equal(sansAccord.ok, false);
-  const doublon = await api('POST', '/commercial/inscription', { nom: 'Awa bis', telephone: '0712340000', pays: 'CI', pin: '654321', conditionsAcceptees: true });
+  const doublon = await api('POST', '/commercial/inscription', { nom: 'Awa bis', telephone: '0712340000', pays: 'CI', ville: 'Abidjan', quartier: 'Yopougon', pin: '654321', conditionsAcceptees: true });
   assert.equal(doublon.statut, 409);
 
   // 2. En attente : ni connexion, ni code parrain accepté
@@ -205,7 +205,7 @@ test('commercial : inscription libre, code automatique, validation par l’équi
   assert.equal(attente.statut, 403);
   assert.match(attente.erreur, /validation/);
   const codeRefuse = await api('POST', '/inscription', {
-    commerce: { nom: 'Chez Avant', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345611' },
+    commerce: { nom: 'Chez Avant', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345611' },
     gerant: { nom: 'G Avant', telephone: '0712345612', pin: '1234' }, codeParrain: ins.code, conditionsAcceptees: true,
   });
   assert.equal(codeRefuse.ok, false);
@@ -222,12 +222,12 @@ test('commercial : inscription libre, code automatique, validation par l’équi
 
   // 4. Un commerce inscrit avec le code paie le tarif actuel ; sans code, le prix catalogue (plus élevé, jamais plus bas)
   const avecCode = await api('POST', '/inscription', {
-    commerce: { nom: 'Chez Code', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345621' },
+    commerce: { nom: 'Chez Code', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345621' },
     gerant: { nom: 'G Code', telephone: '0712345622', pin: '1234' }, codeParrain: ins.code, conditionsAcceptees: true,
   });
   assert.equal(avecCode.ok, true, JSON.stringify(avecCode));
   const sansCode = await api('POST', '/inscription', {
-    commerce: { nom: 'Chez Sans Code', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345631' },
+    commerce: { nom: 'Chez Sans Code', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345631' },
     gerant: { nom: 'G Sans', telephone: '0712345632', pin: '1234' }, conditionsAcceptees: true,
   });
   const regles = (await api('GET', '/tarifs')).regles;
@@ -251,7 +251,7 @@ test('commercial : inscription libre, code automatique, validation par l’équi
   assert.ok(t['Chez Sans Code'].annuel > t['Chez Code'].annuel);
 
   // 5. Refuser une demande en attente la supprime
-  const autre = await api('POST', '/commercial/inscription', { nom: 'Zoé', telephone: '0712340002', pays: 'CI', pin: '111111', conditionsAcceptees: true });
+  const autre = await api('POST', '/commercial/inscription', { nom: 'Zoé', telephone: '0712340002', pays: 'CI', ville: 'Abidjan', quartier: 'Yopougon', pin: '111111', conditionsAcceptees: true });
   const l2 = await api('GET', '/admin/commerciaux', null, install.jeton);
   const zoe = l2.commerciaux.find((c) => c.code === autre.code);
   assert.equal((await api('POST', '/admin/commercial-validation', { id: zoe.id, action: 'refuser' }, install.jeton)).ok, true);

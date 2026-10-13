@@ -73,7 +73,7 @@ export function FeuilleCommerces() {
 // ---------- Ajouter un commerce ----------
 export function FeuilleAjoutCommerce() {
   const s = useKaislo();
-  const [f, setF] = useState({ nom: '', type: 'epicerie', ville: s.d.commerce.ville || '', pin: '', accepte: false });
+  const [f, setF] = useState({ nom: '', type: 'epicerie', ville: s.d.commerce.ville || '', quartier: '', pin: '', accepte: false });
   const [erreur, setErreur] = useState('');
   const demo = s.estDemoActuel();
   const devise = s.d.commerce.devise;
@@ -107,6 +107,7 @@ export function FeuilleAjoutCommerce() {
           </label>
           <label className="champ"><span>{tr('Ville')}</span><input value={f.ville} onChange={(e) => setF({ ...f, ville: e.target.value })} /></label>
         </div>
+        <label className="champ"><span>{tr('Quartier')}</span><input value={f.quartier} onChange={(e) => setF({ ...f, quartier: e.target.value })} placeholder={tr('Ex : Yopougon, Adjamé, Cocody')} /></label>
         <div className="prix-commerce">
           <span className="petit-titre">{tr('Abonnement de ce commerce')}</span>
           <div className="montant"><b>{formatPrix(prix, devise)}</b><span>{tr('par mois, environ')}</span></div>

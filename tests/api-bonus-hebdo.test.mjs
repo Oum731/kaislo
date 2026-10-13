@@ -40,7 +40,7 @@ before(async () => {
 after(() => { serveur?.kill(); fs.rmSync(dossier, { recursive: true, force: true }); });
 
 const inscrire = (nom, tel) => api('POST', '/inscription', {
-  commerce: { nom, type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: tel }, gerant: { nom: 'Gérant ' + nom, telephone: tel, pin: '1234' }, conditionsAcceptees: true, codeParrain: commercial.code,
+  commerce: { nom, type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: tel }, gerant: { nom: 'Gérant ' + nom, telephone: tel, pin: '1234' }, conditionsAcceptees: true, codeParrain: commercial.code,
 });
 const maintenant = () => new Date().toISOString();
 const demarrer = async (c, articles = 3, ventes = 1) => {

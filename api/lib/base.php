@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 11;
+const VERSION_BASE = 12;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -17,7 +17,7 @@ const STRUCTURE = [
     'commerces' => [
         'colonnes' => [
             'id' => 'ID', 'code' => 'VARCHAR(10)', 'nom' => 'TEXTE', 'type' => 'VARCHAR(20)',
-            'pays' => 'VARCHAR(4)', 'devise' => 'VARCHAR(6)', 'ville' => 'TEXTE', 'telephone' => 'VARCHAR(40)',
+            'pays' => 'VARCHAR(4)', 'devise' => 'VARCHAR(6)', 'ville' => 'TEXTE', 'quartier' => 'TEXTE', 'telephone' => 'VARCHAR(40)',
             'offre' => 'VARCHAR(20)', 'statut' => 'VARCHAR(20)', 'essai_fin' => 'DATE', 'periode_fin' => 'DATE',
             'conditions_acceptees_le' => 'DATE', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
             'cle_telephone' => 'VARCHAR(20)', // numéro du commerce (chiffres du format international) : unique
@@ -137,7 +137,7 @@ const STRUCTURE = [
     'commerciaux' => [
         'colonnes' => [
             'id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)', 'cle_telephone' => 'VARCHAR(20)', 'email' => 'TEXTE',
-            'pays' => 'VARCHAR(4)', 'code' => 'VARCHAR(20)', 'pin_hash' => 'TEXTE', 'taux' => 'MONTANT', 'actif' => 'ENTIER',
+            'pays' => 'VARCHAR(4)', 'ville' => 'TEXTE', 'quartier' => 'TEXTE', 'code' => 'VARCHAR(20)', 'pin_hash' => 'TEXTE', 'taux' => 'MONTANT', 'actif' => 'ENTIER',
             'notes' => 'LONG', 'cree_le' => 'DATE', 'vu_le' => 'DATE',
             'valide_le' => 'DATE', // NULL + inactif = inscription en attente de validation par l'équipe Amorac
         ],
@@ -259,6 +259,13 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 9 : jours offerts déduits du premier paiement
     if ($version >= 1 && $version < 10) {
         $essayer('ALTER TABLE commerces ADD COLUMN jours_offerts INTEGER NULL');
+    }
+
+    // Bases en version 1 à 11 : ville et quartier des commerces et des commerciaux
+    if ($version >= 1 && $version < 12) {
+        $essayer('ALTER TABLE commerces ADD COLUMN quartier TEXT NULL');
+        $essayer('ALTER TABLE commerciaux ADD COLUMN ville TEXT NULL');
+        $essayer('ALTER TABLE commerciaux ADD COLUMN quartier TEXT NULL');
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur

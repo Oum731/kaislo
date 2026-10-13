@@ -83,7 +83,7 @@ function ConnexionCommercial({ surConnexion }) {
 
 // Inscription d'un commercial : demande « en attente », l'équipe Amorac la valide ; le code parrain est créé automatiquement
 function FormulaireInscription() {
-  const [f, setF] = useState({ pays: 'CI', nom: '', telephone: '', email: '', pin: '', pin2: '', accepte: false });
+  const [f, setF] = useState({ pays: 'CI', nom: '', telephone: '', ville: '', quartier: '', email: '', pin: '', pin2: '', accepte: false });
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [envoye, setEnvoye] = useState(null);
@@ -92,12 +92,14 @@ function FormulaireInscription() {
     e.preventDefault();
     setErreur('');
     if (!f.nom.trim()) return setErreur('Indiquez votre nom');
+    if (!f.ville.trim()) return setErreur('Indiquez votre ville');
+    if (!f.quartier.trim()) return setErreur('Indiquez votre quartier');
     if (!/^\d{6}$/.test(f.pin)) return setErreur('Le code PIN doit contenir 6 chiffres');
     if (f.pin !== f.pin2) return setErreur('Les deux codes PIN ne sont pas identiques');
     if (!f.accepte) return setErreur('Merci d’accepter les conditions du programme');
     setEnCours(true);
     try {
-      const rep = await appelApi('POST', '/commercial/inscription', { nom: f.nom, telephone: f.telephone, pays: f.pays, email: f.email, pin: f.pin, conditionsAcceptees: true });
+      const rep = await appelApi('POST', '/commercial/inscription', { nom: f.nom, telephone: f.telephone, pays: f.pays, ville: f.ville.trim(), quartier: f.quartier.trim(), email: f.email, pin: f.pin, conditionsAcceptees: true });
       setEnvoye(rep);
     } catch (err) { setErreur(err.message); }
     setEnCours(false);
@@ -121,6 +123,10 @@ function FormulaireInscription() {
           <select value={f.pays} onChange={maj('pays')}>{PAYS.filter((p) => p.indicatif).map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}</select>
         </label>
         <ChampTelephone libelle="Votre numéro (WhatsApp de préférence)" pays={f.pays} valeur={f.telephone} surChanger={(v) => setF({ ...f, telephone: v })} />
+        <div className="grille-2">
+          <label className="champ"><span>Ville</span><input value={f.ville} onChange={maj('ville')} placeholder="Ex : Abidjan" autoComplete="address-level2" /></label>
+          <label className="champ"><span>Quartier</span><input value={f.quartier} onChange={maj('quartier')} placeholder="Ex : Yopougon" /></label>
+        </div>
         <label className="champ"><span>E-mail (facultatif)</span><input type="email" value={f.email} onChange={maj('email')} autoComplete="email" /></label>
         <label className="champ"><span>Choisissez un code PIN (6 chiffres)</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={6} value={f.pin} onChange={maj('pin')} placeholder="••••••" autoComplete="new-password" /></label>
         <label className="champ"><span>Confirmez le code PIN</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={6} value={f.pin2} onChange={maj('pin2')} placeholder="••••••" autoComplete="new-password" /></label>

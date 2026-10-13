@@ -35,7 +35,7 @@ before(async () => {
     await new Promise((r) => setTimeout(r, 100));
   }
   const ins = await api('POST', '/inscription', {
-    commerce: { nom: 'Épicerie Awa', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345701' },
+    commerce: { nom: 'Épicerie Awa', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345701' },
     gerant: { nom: 'Awa Koné', telephone: '0712345702', pin: '1234' }, conditionsAcceptees: true,
   });
   assert.equal(ins.ok, true, JSON.stringify(ins));
@@ -48,7 +48,7 @@ before(async () => {
 after(() => { serveur?.kill(); fs.rmSync(dossier, { recursive: true, force: true }); });
 
 test('ajouter un commerce : le code PIN est redemandé, puis le second commerce apparaît avec son propre abonnement', async () => {
-  const corps = { commerce: { nom: 'Chez Awa Maquis', type: 'maquis', ville: 'Abidjan' }, conditionsAcceptees: true };
+  const corps = { commerce: { nom: 'Chez Awa Maquis', type: 'maquis', ville: 'Abidjan', quartier: 'Cocody' }, conditionsAcceptees: true };
   assert.equal((await api('POST', '/ajouter-commerce', { ...corps, pin: '0000' }, epicerie.jeton)).statut, 401);
   assert.equal((await api('POST', '/ajouter-commerce', { ...corps, pin: '1234', conditionsAcceptees: false }, epicerie.jeton)).statut, 400);
   await new Promise((r) => setTimeout(r, 1100)); // les dates ont une précision d'une seconde : le 2e commerce doit être créé après le 1er
@@ -97,25 +97,25 @@ test('un vendeur ne peut ni ajouter ni changer de commerce, et ne peut pas prend
   assert.equal(cree.ok, true, JSON.stringify(cree));
   const conn = await api('POST', '/connexion', { telephone: '0712345703', pays: 'CI', pin: '5678' });
   assert.equal(conn.commerces.length, 0);
-  assert.equal((await api('POST', '/ajouter-commerce', { commerce: { nom: 'X', type: 'epicerie', ville: 'Abidjan' }, pin: '5678', conditionsAcceptees: true }, conn.jeton)).statut, 403);
+  assert.equal((await api('POST', '/ajouter-commerce', { commerce: { nom: 'X', type: 'epicerie', ville: 'Abidjan', quartier: 'Cocody' }, pin: '5678', conditionsAcceptees: true }, conn.jeton)).statut, 403);
   assert.equal((await api('POST', '/changer-commerce', { commerceId: resto.commerce.id }, conn.jeton)).statut, 403);
   // Le numéro du gérant est déjà pris dans les deux commerces : refusé pour un vendeur
   assert.equal((await api('POST', '/utilisateurs', { nom: 'Autre', telephone: '0712345702', pin: '9999', actif: true }, resto.jeton)).statut, 409);
   // Une autre personne ne peut pas s'inscrire avec le numéro d'un gérant
-  const ins = await api('POST', '/inscription', { commerce: { nom: 'Intrus', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345799' }, gerant: { nom: 'Intrus', telephone: '0712345702', pin: '1111' }, conditionsAcceptees: true });
+  const ins = await api('POST', '/inscription', { commerce: { nom: 'Intrus', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345799' }, gerant: { nom: 'Intrus', telephone: '0712345702', pin: '1111' }, conditionsAcceptees: true });
   assert.equal(ins.statut, 409);
 });
 
 test('le numéro d’un commerce qui appartient à quelqu’un d’autre est refusé', async () => {
-  const autreGerant = await api('POST', '/inscription', { commerce: { nom: 'Chez Moussa', type: 'boutique', pays: 'CI', ville: 'Abidjan', telephone: '0712345710' }, gerant: { nom: 'Moussa', telephone: '0712345711', pin: '2222' }, conditionsAcceptees: true });
+  const autreGerant = await api('POST', '/inscription', { commerce: { nom: 'Chez Moussa', type: 'boutique', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345710' }, gerant: { nom: 'Moussa', telephone: '0712345711', pin: '2222' }, conditionsAcceptees: true });
   assert.equal(autreGerant.ok, true);
-  const r = await api('POST', '/ajouter-commerce', { commerce: { nom: 'Pirate', type: 'epicerie', ville: 'Abidjan', telephone: '0712345710' }, pin: '1234', conditionsAcceptees: true }, epicerie.jeton);
+  const r = await api('POST', '/ajouter-commerce', { commerce: { nom: 'Pirate', type: 'epicerie', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345710' }, pin: '1234', conditionsAcceptees: true }, epicerie.jeton);
   assert.equal(r.statut, 409);
 });
 
 test('une épicerie qui vend des plats à la portion est signalée, une vraie épicerie non', async () => {
   const plats = ['Attiéké poisson', 'Riz sauce', 'Foutou', 'Poulet braisé', 'Garba', 'Alloco'].map((nom, i) => produit('plat' + i, nom, { unite: 'portion', groupes: [{ id: 'g', nom: 'Accompagnement', obligatoire: true, options: [{ id: 'o', nom: 'Alloco', prix: 0 }] }] }));
-  const faux = await api('POST', '/inscription', { commerce: { nom: 'Fausse Épicerie', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345720' }, gerant: { nom: 'Faux', telephone: '0712345721', pin: '3333' }, conditionsAcceptees: true });
+  const faux = await api('POST', '/inscription', { commerce: { nom: 'Fausse Épicerie', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345720' }, gerant: { nom: 'Faux', telephone: '0712345721', pin: '3333' }, conditionsAcceptees: true });
   assert.equal((await api('POST', '/donnees', { elements: plats }, faux.jeton)).ok, true);
   const vraie = ['Huile', 'Riz', 'Sucre', 'Lait', 'Savon'].map((nom, i) => produit('e' + i, nom));
   assert.equal((await api('POST', '/donnees', { elements: vraie }, epicerie.jeton)).ok, true);
@@ -201,4 +201,16 @@ test('avis : un gérant donne son avis, rien n’est public avant validation, le
     const cx = await api('POST', '/connexion', { telephone: '0712345799', pin: '5555' });
     if (cx.jeton) assert.equal((await api('POST', '/avis', { note: 5, texte, autorisation: true }, cx.jeton)).statut, 403);
   }
+});
+
+test('le quartier est obligatoire à l\'inscription d\'un commerce et d\'un commercial', async () => {
+  const sans = await api('POST', '/inscription', { commerce: { nom: 'Sans quartier', type: 'epicerie', pays: 'CI', ville: 'Abidjan', telephone: '0712345790' }, gerant: { nom: 'Gérant', telephone: '0712345791', pin: '1234' }, conditionsAcceptees: true });
+  assert.equal(sans.statut, 400);
+  assert.match(sans.erreur || sans.message || '', /quartier/i);
+  const sansVille = await api('POST', '/commercial/inscription', { nom: 'Sans ville', telephone: '0712345792', pays: 'CI', quartier: 'Yopougon', pin: '123456', conditionsAcceptees: true });
+  assert.equal(sansVille.statut, 400);
+  const sansQuartier = await api('POST', '/commercial/inscription', { nom: 'Sans quartier', telephone: '0712345793', pays: 'CI', ville: 'Abidjan', pin: '123456', conditionsAcceptees: true });
+  assert.equal(sansQuartier.statut, 400);
+  const ok = await api('POST', '/commercial/inscription', { nom: 'Avec lieu', telephone: '0712345794', pays: 'CI', ville: 'Abidjan', quartier: 'Yopougon', pin: '123456', conditionsAcceptees: true });
+  assert.equal(ok.statut, 201, JSON.stringify(ok));
 });

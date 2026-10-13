@@ -382,14 +382,15 @@ export const trancheSession = (set, get) => ({
   },
 
   /** Crée un nouveau commerce pour le gérant (même numéro, même code PIN) et l'ouvre. Renvoie un message d'erreur, ou null. */
-  async ajouterCommerce({ nom, type, ville, pin }) {
+  async ajouterCommerce({ nom, type, ville, quartier = '', pin }) {
     if (!nom.trim()) return tr('Entrez le nom du commerce');
     if (!ville.trim()) return tr('Entrez la ville');
+    if (!quartier.trim()) return tr('Entrez le quartier');
     if (estDemo(get().d?.commerce.id)) {
       // Démo : on montre le résultat sans rien créer sur le serveur
       const formule = formuleDuType(type);
       const tarif = prixAbonnement({ formule, devise: get().d.commerce.devise, multi: true, mode: catalogueEnVigueur() ? 'catalogue' : 'base' });
-      set({ commercesDemo: [...get().commercesDemo, { commerceId: 'demo-' + (get().commercesDemo.length + 1), nom: nom.trim(), type, ville: ville.trim(), tarif: { parMois: tarif.parMois, devise: get().d.commerce.devise, remiseMulti: REGLES_TARIFS.remiseMultiCommerce }, abonnement: { offre: null, statut: 'essai', essaiFin: new Date(Date.now() + DUREE_ESSAI_JOURS * 86400000).toISOString(), periodeFin: null } }] });
+      set({ commercesDemo: [...get().commercesDemo, { commerceId: 'demo-' + (get().commercesDemo.length + 1), nom: nom.trim(), type, ville: ville.trim(), quartier: quartier.trim(), tarif: { parMois: tarif.parMois, devise: get().d.commerce.devise, remiseMulti: REGLES_TARIFS.remiseMultiCommerce }, abonnement: { offre: null, statut: 'essai', essaiFin: new Date(Date.now() + DUREE_ESSAI_JOURS * 86400000).toISOString(), periodeFin: null } }] });
       get().fermer();
       get().message(tr('Démo : « {0} » est ajouté pour l’exemple. Avec un vrai compte, il aurait son propre stock et ses propres ventes.', [nom.trim()]));
       return null;
@@ -398,7 +399,7 @@ export const trancheSession = (set, get) => ({
     set({ connexionEnCours: true });
     try {
       const rep = await appelApi('POST', '/ajouter-commerce', {
-        commerce: { nom: nom.trim(), type, ville: ville.trim() }, pin: String(pin), conditionsAcceptees: true, appareil: nomAppareil(),
+        commerce: { nom: nom.trim(), type, ville: ville.trim(), quartier: quartier.trim() }, pin: String(pin), conditionsAcceptees: true, appareil: nomAppareil(),
       }, get().jetonServeur());
       if (estServeur(get().d)) await get().synchroniser().catch(() => {});
       get().fermer();
@@ -444,7 +445,7 @@ export const trancheSession = (set, get) => ({
     set({ connexionEnCours: true });
     try {
       const rep = await appelApi('POST', '/inscription', {
-        commerce: { nom: infos.nom, type: infos.type, pays: infos.pays, ville: infos.ville, telephone: infos.telephone },
+        commerce: { nom: infos.nom, type: infos.type, pays: infos.pays, ville: infos.ville, quartier: infos.quartier, telephone: infos.telephone },
         gerant: { nom: infos.gerantNom, telephone: infos.gerantTelephone, pin: infos.gerantPin },
         conditionsAcceptees: !!infos.conditionsAccepteesLe,
         codeParrain: infos.codeParrain || '', // commercial Kaislo qui a présenté l'application

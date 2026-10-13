@@ -44,7 +44,7 @@ export default function VueCommerciaux({ ctx, EnTeteAdmin }) {
       <EnTeteAdmin surTitre={commerciaux.length + ' commercial' + (commerciaux.length > 1 ? 'aux' : '') + ' · ' + programme.taux + ' % pendant ' + programme.dureeMois + ' mois'} titre="Commerciaux">
         <div className="ligne">
           <button className="btn secondaire" onClick={() => setRegles(true)}>Règles</button>
-          <button className="btn" onClick={() => setEdition({ nom: '', telephone: '', pays: 'CI', email: '', code: '', taux: programme.taux, actif: true, notes: '', pin: '' })}><Icone nom="plus" /><span className="cache-mobile"> Commercial</span></button>
+          <button className="btn" onClick={() => setEdition({ nom: '', telephone: '', pays: 'CI', ville: '', quartier: '', email: '', code: '', taux: programme.taux, actif: true, notes: '', pin: '' })}><Icone nom="plus" /><span className="cache-mobile"> Commercial</span></button>
         </div>
       </EnTeteAdmin>
       <div className="contenu" style={{ maxWidth: 1000 }}>
@@ -65,7 +65,7 @@ export default function VueCommerciaux({ ctx, EnTeteAdmin }) {
               <div key={c.id} className="ligne espace" style={{ gap: 10, flexWrap: 'wrap', borderTop: '1px solid var(--bordure)', paddingTop: 10 }}>
                 <span>
                   <b className="bloc-texte">{c.nom} <span className="badge">{c.code}</span></b>
-                  <span className="tres-petit muet bloc-texte">{c.telephone} · {c.pays}{c.email ? ' · ' + c.email : ''} · demandé le {formatDate(c.creeLe)}</span>
+                  <span className="tres-petit muet bloc-texte">{c.telephone} · {c.pays}{c.ville ? ' · ' + c.ville + (c.quartier ? ' (' + c.quartier + ')' : '') : ''}{c.email ? ' · ' + c.email : ''} · demandé le {formatDate(c.creeLe)}</span>
                 </span>
                 <span className="ligne" style={{ gap: 8 }}>
                   <button className="btn petit" onClick={() => decider(c, 'valider')}>Valider</button>
@@ -114,6 +114,10 @@ function EditionCommercial({ b, setB, ctx, surFin }) {
         <div className="grille-2">
           <label className="champ"><span>Code parrain</span><input value={b.code} onChange={(e) => setB({ ...b, code: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) })} placeholder={b.id ? 'Ex : AWA25' : 'Automatique si vide'} /></label>
           <label className="champ"><span>Commission (%)</span><input type="number" min="0" max="60" value={b.taux} onChange={maj('taux')} /></label>
+        </div>
+        <div className="grille-2">
+          <label className="champ"><span>Ville</span><input value={b.ville || ''} onChange={maj('ville')} /></label>
+          <label className="champ"><span>Quartier</span><input value={b.quartier || ''} onChange={maj('quartier')} /></label>
         </div>
         <label className="champ"><span>E-mail (facultatif)</span><input type="email" value={b.email || ''} onChange={maj('email')} /></label>
         <label className="champ"><span>{b.id ? 'Nouveau code PIN (6 chiffres, laisser vide pour le garder)' : 'Code PIN de son espace (6 chiffres)'}</span>
@@ -165,6 +169,7 @@ function FicheCommercial({ id, ctx, fermer, modifier }) {
           <div className="carte pile">
             <h3>Commercial</h3>
             <p className="petit"><b>Téléphone :</b> {c.telephone}{c.email ? ' · ' + c.email : ''}</p>
+            <p className="petit"><b>Ville · quartier :</b> {c.ville || '—'} · {c.quartier || '—'}</p>
             <p className="petit"><b>Lien à partager :</b> <span className="tres-petit">{lien}</span></p>
             <p className="petit"><b>Dernière connexion :</b> {c.vuLe ? formatDate(c.vuLe) : '—'}</p>
             {c.notes && <p className="petit muet" style={{ whiteSpace: 'pre-wrap' }}>{c.notes}</p>}
@@ -263,7 +268,7 @@ export function CarteClient({ cl, action = null }) {
         <b>{cl.nom}</b>
         <span className={`badge ${{ essai: 'safran', actif: '', suspendu: 'rouge' }[cl.statut] ?? 'gris'}`}>{{ essai: 'Essai', actif: 'Abonné', suspendu: 'Suspendu' }[cl.statut] || cl.statut}</span>
       </div>
-      <p className="tres-petit muet">{typeCommerce(cl.type).nom} · {cl.ville} · inscrit le {formatDate(cl.inscritLe)}{cl.telephone ? ' · ' + cl.telephone : ''}</p>
+      <p className="tres-petit muet">{typeCommerce(cl.type).nom} · {cl.ville}{cl.quartier ? ' (' + cl.quartier + ')' : ''} · inscrit le {formatDate(cl.inscritLe)}{cl.telephone ? ' · ' + cl.telephone : ''}</p>
       <p className="petit">
         Mois payés : <b>{k.moisPayes}/{k.moisRequis}</b> · semaines avec des ventes : <b>{k.semainesActives}/{k.semaines || '—'}</b>
         {k.valideLe ? <span className="badge" style={{ marginLeft: 6 }}>validé le {formatDate(k.valideLe)}</span> : null}
