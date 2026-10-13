@@ -8,7 +8,7 @@
 //
 //   GET  /api/mes-commerces      les commerces de ce gérant, leurs abonnements et le total à payer
 //   POST /api/changer-commerce   { commerceId, appareil } : ouvre un autre de ses commerces
-//   POST /api/ajouter-commerce   { commerce: { nom, type, ville, pays?, telephone? }, pin, conditionsAcceptees }
+//   POST /api/ajouter-commerce   { commerce: { nom, type, ville, quartier, pays?, telephone? }, pin, conditionsAcceptees }
 //
 // Côté équipe Amorac : signauxActivite() repère les commerces dont le contenu ne correspond pas à l'activité déclarée
 // (voir plus bas) et routeAdminCatalogue() permet de voir les produits d'un commerce SANS aucun chiffre.
@@ -28,7 +28,7 @@ function versCommerceGerant(array $c): array
     $t = tarifCommerce($c);
     return [
         'commerceId' => $c['id'], 'utilisateurId' => $c['utilisateur_id'], 'nom' => $c['nom'], 'type' => $c['type'], 'pays' => $c['pays'],
-        'devise' => $c['devise'], 'ville' => $c['ville'], 'abonnement' => ['offre' => $c['offre'], 'statut' => $c['statut'], 'essaiFin' => $c['essai_fin'], 'periodeFin' => $c['periode_fin']],
+        'devise' => $c['devise'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'abonnement' => ['offre' => $c['offre'], 'statut' => $c['statut'], 'essaiFin' => $c['essai_fin'], 'periodeFin' => $c['periode_fin']],
         'tarif' => ['formule' => $t['formule'], 'nom' => $t['nom'], 'postes' => $t['postes'], 'parMois' => $t['parMois'], 'annuel' => $t['annuel'], 'devise' => $t['devise'], 'remiseMulti' => $t['remiseMulti'], 'parMoisSansRemiseMulti' => $t['remiseMulti'] > 0 ? (int) round($t['parMois'] / (1 - $t['remiseMulti'] / 100)) : $t['parMois']],
     ];
 }
@@ -120,6 +120,7 @@ function routeAjouterCommerce(): never
     $pays = strtoupper((string) ($c['pays'] ?? $actuel['pays']));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Pays non pris en charge');
     $ville = texte($c, 'ville', 'la ville');
+    $quartier = texte($c, 'quartier', 'le quartier');
     // Numéro du commerce : le sien par défaut, ou un autre numéro qui n'appartient à personne d'autre
     $telSaisi = trim((string) ($c['telephone'] ?? ''));
     if ($telSaisi === '') {
@@ -134,9 +135,9 @@ function routeAjouterCommerce(): never
     try {
         do { $code = (string) random_int(100000, 999999); } while (requete('SELECT 1 FROM commerces WHERE code = ?', [$code])->fetch());
         $idCommerce = nouvelId('com');
-        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)', [
-            $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $numCommerce['affichage'], $numCommerce['cle'],
+        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, quartier, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)', [
+            $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $quartier, $numCommerce['affichage'], $numCommerce['cle'],
             'essai', 'essai', maintenant(DUREE_ESSAI_JOURS * 86400), null, maintenant(), maintenant(), maintenant(), null,
         ]);
         $idUtilisateur = nouvelId('u');
