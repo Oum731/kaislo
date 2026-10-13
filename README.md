@@ -250,6 +250,9 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   Ensuite : mois 1 à 6 « à payer » d'un coup, puis chaque mois. « Client arrêté » annule les commissions en attente.
 - Versements : cocher les commissions → « Marquer comme versé ». Primes par palier (10 et 25 clients validés),
   montants à définir dans « Règles ».
+- **Bonus hebdomadaire** : 10 000 FCFA la semaine (lundi → dimanche, selon la date d'inscription) où au moins 5 clients ont
+  *démarré* (3 articles et 1 vente dans les 7 jours qui suivent l'inscription). Nombre et montants dans « Règles » ; le suivi
+  des 8 dernières semaines est dans la fiche du commercial (bouton « Verser » une fois la semaine terminée) et dans son espace.
 - Le commercial suit tout dans son espace : `https://kaislo.com/commercial/` (numéro + code PIN).
 - Page de recrutement : `/devenir-commercial/`.
 

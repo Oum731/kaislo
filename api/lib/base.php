@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 10;
+const VERSION_BASE = 11;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -165,6 +165,14 @@ const STRUCTURE = [
             'paye_le' => 'DATE', 'paye_par' => 'TEXTE', 'moyen' => 'VARCHAR(30)',
         ],
         'cle' => ['id'], 'uniques' => [['commercial_id', 'palier']], 'index' => [],
+    ],
+    // Bonus hebdomadaire des commerciaux (clients envoyés dans la semaine), enregistré quand il est versé
+    'bonus_hebdo' => [
+        'colonnes' => [
+            'id' => 'ID', 'commercial_id' => 'ID', 'semaine' => 'VARCHAR(10)', 'clients' => 'ENTIER', 'montant' => 'MONTANT', 'devise' => 'VARCHAR(6)',
+            'paye_le' => 'DATE', 'paye_par' => 'TEXTE', 'moyen' => 'VARCHAR(30)',
+        ],
+        'cle' => ['id'], 'uniques' => [['commercial_id', 'semaine']], 'index' => [],
     ],
     // Autorisations données par le gérant (code PIN saisi sur l'appareil d'un vendeur : annuler une vente)
     'autorisations' => [
