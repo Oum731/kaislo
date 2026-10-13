@@ -215,8 +215,8 @@ function routeInscription(): never
         // Code du commerce : 6 chiffres, unique
         do { $code = (string) random_int(100000, 999999); } while (requete('SELECT 1 FROM commerces WHERE code = ?', [$code])->fetch());
         $idCommerce = nouvelId('com');
-        // Le filleul d'un commerçant reçoit un mois d'essai en plus
-        $joursEssai = DUREE_ESSAI_JOURS + ($parrainCommerce ? JOURS_OFFERTS_PARRAINAGE : 0);
+        // Le filleul d'un commerçant reçoit des jours d'essai en plus
+        $joursEssai = DUREE_ESSAI_JOURS + ($parrainCommerce ? JOURS_BONUS_FILLEUL : 0);
         requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur, parrain_commerce_id)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)', [
             $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $numCommerce['affichage'], $numCommerce['cle'],

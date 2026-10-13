@@ -63,7 +63,7 @@ export function texteRelance(code, v) {
     case 'expire':
       return `${salut} ici ${signe}. L’essai de « ${v.commerce} » est terminé, mais vos données sont conservées : vous pouvez reprendre quand vous voulez (${v.prix} par mois). Si le prix ou une fonction vous a freiné, dites-le-moi, on peut trouver une solution.`;
     case 'merci-avis':
-      return `${salut} merci d’utiliser Kaislo pour « ${v.commerce} » 🙏 Si vous êtes satisfait, deux petits services : 1) laissez votre avis dans l’application (menu Compte → Donner mon avis), 2) parlez de Kaislo à un autre commerçant : avec votre code parrain, vous gagnez chacun un mois offert (menu Compte → Parrainer un commerçant).`;
+      return `${salut} merci d’utiliser Kaislo pour « ${v.commerce} » 🙏 Si vous êtes satisfait, deux petits services : 1) laissez votre avis dans l’application (menu Compte → Donner mon avis), 2) parlez de Kaislo à un autre commerçant : avec votre code de parrainage, il a des jours d’essai en plus et vous gagnez des jours offerts à son premier paiement (menu Compte → Parrainer un commerçant).`;
     default:
       return '';
   }

@@ -3,16 +3,18 @@
 // PARRAINAGE ENTRE COMMERÇANTS
 // Chaque commerce a un code de parrainage : « P » + son code à 6 chiffres (ex : P357459). Un commerçant qui le donne à un autre
 // commerçant gagne avec lui :
-//   - le nouveau commerce (le filleul) reçoit 30 jours d'essai en plus (60 jours au total) ;
-//   - le commerce qui parraine (le parrain) reçoit 30 jours offerts quand le filleul fait son premier paiement.
+//   - le nouveau commerce (le filleul) reçoit des jours d'essai en plus (JOURS_BONUS_FILLEUL) ;
+//   - le commerce qui parraine (le parrain) reçoit des jours offerts (JOURS_BONUS_PARRAIN) quand le filleul fait son premier paiement.
 // Règles contre les abus : le parrain et le filleul doivent avoir des gérants différents (numéros différents), une seule
 // récompense par filleul, 12 récompenses au plus par commerce parrain. Le code d'un commercial Kaislo (lettres + chiffres,
 // ex : AWA42) reste un autre système : remise sur l'abonnement et commission du commercial.
 //
-//   GET /api/parrainage   (gérant connecté)   { code, lien, joursOfferts, filleuls: [{ nom, creeLe, gagne }], moisGagnes, maximum }
+//   GET /api/parrainage   (gérant connecté)   { code, lien, joursFilleul, joursParrain, filleuls: [{ nom, creeLe, gagne }], recompenses, joursGagnes, maximum }
 // ------------------------------------------------------------
 
-const JOURS_OFFERTS_PARRAINAGE = 30;
+// Jours offerts : pour changer le bonus, modifier ces deux nombres ET src/lib/donnees/parrainage.js (un test vérifie qu'ils sont identiques)
+const JOURS_BONUS_FILLEUL = 15; // jours d'essai en plus pour le commerce parrainé
+const JOURS_BONUS_PARRAIN = 15; // jours offerts au parrain quand le filleul fait son premier paiement
 const RECOMPENSES_PARRAINAGE_MAX = 12;
 
 function codeParrainageDuCommerce(array $c): string
@@ -50,14 +52,14 @@ function recompenserParrain(array $filleul): ?array
     if (array_intersect(clesGerantsDuCommerce($parrain['id']), clesGerantsDuCommerce($filleul['id']))) return null;
     $dejaGagnes = (int) requete('SELECT COUNT(*) AS n FROM commerces WHERE parrain_commerce_id = ? AND parrain_recompense_le IS NOT NULL', [$parrain['id']])->fetch()['n'];
     if ($dejaGagnes >= RECOMPENSES_PARRAINAGE_MAX) return null;
-    // Les 30 jours s'ajoutent à l'abonnement s'il en a un, sinon à l'essai ; un commerce suspendu reste suspendu
+    // Les jours offerts s'ajoutent à l'abonnement s'il en a un, sinon à l'essai ; un commerce suspendu reste suspendu
     if (!empty($parrain['periode_fin'])) {
-        requete("UPDATE commerces SET periode_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'actif' END, modifie_le = ? WHERE id = ?", [prolongerDate($parrain['periode_fin'], JOURS_OFFERTS_PARRAINAGE), maintenant(), $parrain['id']]);
+        requete("UPDATE commerces SET periode_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'actif' END, modifie_le = ? WHERE id = ?", [prolongerDate($parrain['periode_fin'], JOURS_BONUS_PARRAIN), maintenant(), $parrain['id']]);
     } else {
-        requete("UPDATE commerces SET essai_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'essai' END, modifie_le = ? WHERE id = ?", [prolongerDate($parrain['essai_fin'], JOURS_OFFERTS_PARRAINAGE), maintenant(), $parrain['id']]);
+        requete("UPDATE commerces SET essai_fin = ?, statut = CASE WHEN statut = 'suspendu' THEN statut ELSE 'essai' END, modifie_le = ? WHERE id = ?", [prolongerDate($parrain['essai_fin'], JOURS_BONUS_PARRAIN), maintenant(), $parrain['id']]);
     }
     requete('UPDATE commerces SET parrain_recompense_le = ?, modifie_le = ? WHERE id = ?', [maintenant(), maintenant(), $filleul['id']]);
-    journaliser($parrain['id'], null, 'parrainage-recompense', ['filleul' => $filleul['nom'], 'jours' => JOURS_OFFERTS_PARRAINAGE]);
+    journaliser($parrain['id'], null, 'parrainage-recompense', ['filleul' => $filleul['nom'], 'jours' => JOURS_BONUS_PARRAIN]);
     journaliser($filleul['id'], null, 'parrainage-premier-paiement', ['parrain' => $parrain['nom']]);
     return $parrain;
 }
@@ -73,6 +75,7 @@ function routeParrainage(): never
     $gagnes = count(array_filter($liste, fn ($f) => $f['gagne']));
     repondre([
         'ok' => true, 'code' => $code, 'lien' => 'https://' . (domaineSite() ?: 'kaislo.com') . '/app/?ref=' . $code,
-        'joursOfferts' => JOURS_OFFERTS_PARRAINAGE, 'filleuls' => $liste, 'moisGagnes' => $gagnes, 'maximum' => RECOMPENSES_PARRAINAGE_MAX,
+        'joursFilleul' => JOURS_BONUS_FILLEUL, 'joursParrain' => JOURS_BONUS_PARRAIN, 'filleuls' => $liste,
+        'recompenses' => $gagnes, 'joursGagnes' => $gagnes * JOURS_BONUS_PARRAIN, 'maximum' => RECOMPENSES_PARRAINAGE_MAX,
     ]);
 }

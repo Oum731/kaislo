@@ -751,7 +751,7 @@ function FicheCommerce({ c, ctx, fermer }) {
             <p className="petit"><b>Pays :</b> {pays.nom} · {c.commerce.ville} · {symbole(dev)}</p>
             <p className="petit"><b>Adresse :</b> {c.commerce.adresse || '—'}</p>
             <p className="petit"><b>Inscrit le :</b> {c.commerce.creeLe ? formatDate(c.commerce.creeLe) : '—'}</p>
-            {c.parrainCommerce && <p className="petit"><b>Parrainé par :</b> {c.parrainCommerce} <span className="muet">(30 jours offerts à son parrain au 1er paiement)</span></p>}
+            {c.parrainCommerce && <p className="petit"><b>Parrainé par :</b> {c.parrainCommerce} <span className="muet">(jours offerts à son parrain au 1er paiement)</span></p>}
             {c.nbFilleuls > 0 && <p className="petit"><b>Commerces parrainés :</b> {c.nbFilleuls}</p>}
             {lienWhatsApp && <a className="btn secondaire petit" href={lienWhatsApp} target="_blank" rel="noreferrer"><Icone nom="whatsapp" taille="sm" /> Contacter sur WhatsApp</a>}
           </div>

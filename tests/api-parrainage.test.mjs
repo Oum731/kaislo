@@ -1,4 +1,4 @@
-// Parrainage entre commerçants : essai prolongé pour le filleul, mois offert au parrain au 1er paiement du filleul, règles anti-abus.
+// Parrainage entre commerçants : essai prolongé pour le filleul, jours offerts au parrain au 1er paiement du filleul, règles anti-abus.
 // Lancer : npm test (PHP 8.1 ou plus doit être installé)
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -45,11 +45,13 @@ test('le parrain a un code « P » + son code à 6 chiffres et un lien de partag
   assert.equal(p.code, 'P' + parrain.commerce.code);
   assert.match(p.lien, /\/app\/\?ref=P\d{6}$/);
   assert.deepEqual(p.filleuls, []);
-  assert.equal(p.moisGagnes, 0);
+  assert.equal(p.recompenses, 0);
+  assert.equal(p.joursFilleul, 15);
+  assert.equal(p.joursParrain, 15);
   assert.equal((await api('GET', '/parrainage')).statut, 401);
 });
 
-test('inscription avec un code inconnu refusée ; avec le bon code, 30 jours d\'essai en plus', async () => {
+test('inscription avec un code inconnu refusée ; avec le bon code, 15 jours d\'essai en plus', async () => {
   assert.equal((await inscrire('Chez Moussa', '0712345802', { codeParrain: 'P000000' })).statut, 400);
   filleul = await inscrire('Boutique Moussa', '0712345803', { codeParrain: 'P' + parrain.commerce.code });
   assert.equal(filleul.statut, 201, JSON.stringify(filleul));
@@ -57,7 +59,7 @@ test('inscription avec un code inconnu refusée ; avec le bon code, 30 jours d\'
   const dureeFilleul = jours(filleul.commerce.creeLe, filleul.commerce.abonnement.essaiFin);
   const dureeSans = jours(sans.commerce.creeLe, sans.commerce.abonnement.essaiFin);
   assert.equal(dureeSans, 30);
-  assert.equal(dureeFilleul, 60);
+  assert.equal(dureeFilleul, 45);
   const p = await api('GET', '/parrainage', null, parrain.jeton);
   assert.equal(p.filleuls.length, 1);
   assert.equal(p.filleuls[0].nom, 'Boutique Moussa');
@@ -68,17 +70,18 @@ test('inscription avec un code inconnu refusée ; avec le bon code, 30 jours d\'
   assert.equal(liste.find((c) => c.commerce.nom === 'Épicerie Awa').nbFilleuls, 1);
 });
 
-test('premier paiement du filleul : le parrain gagne 30 jours, une seule fois', async () => {
+test('premier paiement du filleul : le parrain gagne 15 jours, une seule fois', async () => {
   const avant = (await api('GET', '/moi', null, parrain.jeton)).commerce.abonnement.essaiFin;
   const paye = (n) => api('POST', '/admin/paiement', { commerceId: filleul.commerce.id, montant: 9000, mois: 1, moyen: 'Wave' }, admin);
   assert.equal((await paye()).ok, true);
   const apres = (await api('GET', '/moi', null, parrain.jeton)).commerce.abonnement.essaiFin;
-  assert.equal(jours(avant, apres), 30);
+  assert.equal(jours(avant, apres), 15);
   // 2e paiement du filleul : pas de nouvelle récompense
   assert.equal((await paye()).ok, true);
   assert.equal((await api('GET', '/moi', null, parrain.jeton)).commerce.abonnement.essaiFin, apres);
   const p = await api('GET', '/parrainage', null, parrain.jeton);
-  assert.equal(p.moisGagnes, 1);
+  assert.equal(p.recompenses, 1);
+  assert.equal(p.joursGagnes, 15);
   assert.equal(p.filleuls[0].gagne, true);
 });
 
@@ -91,4 +94,11 @@ test('un vendeur ne voit pas le parrainage, et un code de commercial ne peut pas
   }
   const r = await api('POST', '/admin/commercial', { nom: 'Commercial', telephone: '0712345890', pays: 'CI', code: 'P123456', taux: 10, actif: true, pin: '123456' }, admin);
   assert.equal(r.statut, 400);
+});
+
+test('les jours offerts affichés dans l\'application sont ceux du serveur', async () => {
+  const php = fs.readFileSync('api/lib/parrainage.php', 'utf8');
+  const js = await import('../src/lib/donnees/parrainage.js');
+  assert.equal(Number(/const JOURS_BONUS_FILLEUL = (\d+);/.exec(php)[1]), js.JOURS_BONUS_FILLEUL);
+  assert.equal(Number(/const JOURS_BONUS_PARRAIN = (\d+);/.exec(php)[1]), js.JOURS_BONUS_PARRAIN);
 });

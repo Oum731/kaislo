@@ -455,7 +455,7 @@ export function FeuilleCompte() {
           <button className="liste-item" onClick={() => s.ouvrir('parrainage')}>
             <span className="mini-emoji teinte-vert"><Icone nom="clients" /></span>
             <b className="grandit">{tr('Parrainer un commerçant')}</b>
-            <span className="petit muet">{tr('1 mois offert')}</span>
+            <span className="petit muet">{tr('Jours offerts')}</span>
             <Icone nom="droite" className="muet" />
           </button>
           <button className="liste-item" onClick={() => s.ouvrir('avis')}>
