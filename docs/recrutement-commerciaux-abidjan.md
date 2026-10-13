@@ -42,7 +42,7 @@ Hypothèse retenue : « 10 » = **10 000 FCFA par semaine**. Si c'est un autre m
 | Primes | Paliers à 10 et 25 clients validés (montants à fixer dans Règles). |
 | Paiement | Mobile money (Wave, Orange Money, MTN), chaque lundi pour la semaine passée. |
 
-À noter : le bonus de 10 000 FCFA par semaine **n'est pas calculé par l'application** (elle gère la commission de 25 %). Il se vérifie à la main dans l'espace Amorac → Commerciaux → fiche du commercial (liste de ses clients, dates d'inscription et d'activité). Dites-moi si vous voulez que je l'ajoute au système.
+Le bonus hebdomadaire est calculé par l'application : fiche du commercial (espace Amorac → Commerciaux) → carte « Bonus de la semaine », avec le bouton « Verser » une fois la semaine terminée. Le commercial voit la même carte dans son espace. Le nombre de clients et le montant se changent dans Commerciaux → Règles. Un client compte s'il a au moins 3 articles et 1 vente dans les 7 jours après son inscription ; la semaine est celle de l'inscription (lundi → dimanche). Les clients d'une semaine peuvent encore démarrer pendant 7 jours : attendez le mardi pour verser la semaine passée.
 
 ---
 

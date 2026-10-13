@@ -11,7 +11,9 @@
 //  - à la validation, les mois 1 à 6 deviennent payables d'un coup, puis chaque mois
 //    du 7e au 12e devient payable dès que le client le paie ;
 //  - si le client arrête avant 6 mois, aucune commission (lignes annulées par l'équipe) ;
-//  - primes par palier de clients validés (10 et 25 par défaut, montants à définir).
+//  - primes par palier de clients validés (10 et 25 par défaut, montants à définir) ;
+//  - bonus hebdomadaire : une somme fixe la semaine où le commercial envoie au moins 5 clients qui ont vraiment démarré
+//    (3 articles et 1 vente dans les 7 jours après l'inscription). Semaine = du lundi au dimanche, selon la date d'inscription.
 //
 // Une ligne de commission par mois payé : statut attente → a_payer → payee (ou annulee).
 //
@@ -40,7 +42,11 @@ const PROGRAMME_DEFAUT = [
         ['clients' => 10, 'montant' => ['MAD' => 0, 'FCFA' => 0]],
         ['clients' => 25, 'montant' => ['MAD' => 0, 'FCFA' => 0]],
     ],
+    'bonusHebdo' => ['clients' => 5, 'montant' => ['MAD' => 0, 'FCFA' => 10000]], // 5 clients démarrés dans la semaine → 10 000 FCFA
 ];
+
+const CLIENT_DEMARRE_ARTICLES = 3; // un client « démarré » a au moins 3 articles et 1 vente dans les 7 jours qui suivent son inscription
+const SEMAINES_BONUS = 8;          // nombre de semaines affichées
 
 function programme(): array { return reglageAmorac('programme', PROGRAMME_DEFAUT) + PROGRAMME_DEFAUT; }
 
@@ -125,6 +131,61 @@ function clientsCommercial(string $commercialId, bool $pourEquipe): array
     return $clients;
 }
 
+// Lundi (date AAAA-MM-JJ) de la semaine qui contient l'instant donné
+function lundiDeLaSemaine(int $t): string
+{
+    return gmdate('Y-m-d', $t - ((int) gmdate('N', $t) - 1) * 86400);
+}
+
+// Un client a « démarré » s'il a au moins 3 articles et une vente (non annulée) dans les 7 jours après son inscription
+function clientDemarre(array $commerce): bool
+{
+    $articles = (int) requete("SELECT COUNT(*) AS n FROM elements WHERE commerce_id = ? AND type = 'produits' AND supprime = 0", [$commerce['id']])->fetch()['n'];
+    if ($articles < CLIENT_DEMARRE_ARTICLES) return false;
+    $debut = strtotime((string) $commerce['cree_le']);
+    foreach (requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'ventes' AND supprime = 0", [$commerce['id']])->fetchAll() as $l) {
+        $v = json_decode($l['contenu'], true) ?: [];
+        $t = strtotime((string) ($v['date'] ?? ''));
+        if ($t && $t >= $debut && $t <= $debut + 7 * 86400 && empty($v['annulee'])) return true;
+    }
+    return false;
+}
+
+// Bonus hebdomadaire : les dernières semaines, du lundi au dimanche (la plus récente d'abord).
+// Une semaine est « payable » quand elle est terminée, que le nombre de clients démarrés est atteint et qu'elle n'est pas déjà versée.
+function bonusHebdoCommercial(array $commercial): array
+{
+    $regle = programme()['bonusHebdo'];
+    $devise = PAYS[$commercial['pays']] ?? 'FCFA';
+    $montant = (float) ($regle['montant'][$devise] ?? 0);
+    $lundi = strtotime(lundiDeLaSemaine(time()) . ' 00:00:00 UTC');
+    $depuis = gmdate('Y-m-d', $lundi - (SEMAINES_BONUS - 1) * 7 * 86400);
+    $parSemaine = [];
+    foreach (requete('SELECT * FROM commerces WHERE commercial_id = ? AND cree_le >= ?', [$commercial['id'], $depuis])->fetchAll() as $c) {
+        $s = lundiDeLaSemaine(strtotime((string) $c['cree_le']));
+        $parSemaine[$s]['inscrits'] = ($parSemaine[$s]['inscrits'] ?? 0) + 1;
+        if (clientDemarre($c)) $parSemaine[$s]['demarres'] = ($parSemaine[$s]['demarres'] ?? 0) + 1;
+    }
+    $versees = [];
+    foreach (requete('SELECT * FROM bonus_hebdo WHERE commercial_id = ?', [$commercial['id']])->fetchAll() as $b) $versees[$b['semaine']] = $b;
+    $semaines = [];
+    for ($i = 0; $i < SEMAINES_BONUS; $i++) {
+        $debut = gmdate('Y-m-d', $lundi - $i * 7 * 86400);
+        $fin = gmdate('Y-m-d', $lundi - $i * 7 * 86400 + 6 * 86400);
+        $demarres = (int) ($parSemaine[$debut]['demarres'] ?? 0);
+        $atteint = $demarres >= (int) $regle['clients'] && $montant > 0;
+        $terminee = $i > 0;
+        $b = $versees[$debut] ?? null;
+        $semaines[] = [
+            'semaine' => $debut, 'fin' => $fin, 'inscrits' => (int) ($parSemaine[$debut]['inscrits'] ?? 0), 'clients' => $demarres,
+            'requis' => (int) $regle['clients'], 'atteint' => $atteint, 'terminee' => $terminee, 'montant' => $montant, 'devise' => $devise,
+            'payable' => $atteint && $terminee && !$b, 'payeLe' => $b['paye_le'] ?? null,
+            'montantVerse' => $b ? ['montant' => (float) $b['montant'], 'devise' => $b['devise']] : null,
+        ];
+    }
+    return $semaines;
+}
+
 // Primes : paliers atteints (clients validés) et primes déjà versées
 function primesCommercial(string $commercialId): array
 {
@@ -191,7 +252,7 @@ function routeAdminCommercial(): never
     adminConnecte(true);
     $c = requete('SELECT * FROM commerciaux WHERE id = ?', [(string) ($_GET['id'] ?? '')])->fetch();
     if (!$c) throw new ErreurApi('Commercial introuvable', 404);
-    repondre(['ok' => true, 'commercial' => versCommercial($c), 'clients' => clientsCommercial($c['id'], true), 'primes' => primesCommercial($c['id'])]);
+    repondre(['ok' => true, 'commercial' => versCommercial($c), 'clients' => clientsCommercial($c['id'], true), 'primes' => primesCommercial($c['id']), 'bonusHebdo' => bonusHebdoCommercial($c)]);
 }
 
 // { id?, nom, telephone, pays, email, code, taux, actif, notes, pin? }
@@ -286,6 +347,20 @@ function routeAdminCommissions(): never
                 nouvelId('pr'), $cid, $palier, $montant, substr((string) ($e['devise'] ?? 'FCFA'), 0, 6), maintenant(), $admin['email'], mb_substr((string) ($e['moyen'] ?? 'Mobile money'), 0, 30),
             ]);
             break;
+        case 'bonus':
+            // Versement du bonus d'une semaine terminée : { commercialId, semaine, moyen }
+            $c = requete('SELECT * FROM commerciaux WHERE id = ?', [(string) ($e['commercialId'] ?? '')])->fetch();
+            if (!$c) throw new ErreurApi('Commercial introuvable', 404);
+            $s = array_values(array_filter(bonusHebdoCommercial($c), fn ($x) => $x['semaine'] === (string) ($e['semaine'] ?? '')))[0] ?? null;
+            if (!$s) throw new ErreurApi('Semaine introuvable');
+            if ($s['payeLe']) throw new ErreurApi('Bonus déjà versé pour cette semaine');
+            if (!$s['terminee']) throw new ErreurApi('La semaine n’est pas terminée');
+            if (!$s['atteint']) throw new ErreurApi('Il faut ' . $s['requis'] . ' clients démarrés (' . $s['clients'] . ' pour le moment)');
+            requete('INSERT INTO bonus_hebdo (id, commercial_id, semaine, clients, montant, devise, paye_le, paye_par, moyen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                nouvelId('bh'), $c['id'], $s['semaine'], $s['clients'], $s['montant'], $s['devise'], maintenant(), $admin['email'], mb_substr((string) ($e['moyen'] ?? 'Mobile money'), 0, 30),
+            ]);
+            journaliser(null, $admin['id'], 'amorac-bonus-hebdo', ['commercial' => $c['nom'], 'semaine' => $s['semaine'], 'par' => $admin['email']]);
+            break;
         default:
             throw new ErreurApi('Action inconnue');
     }
@@ -307,6 +382,8 @@ function routeAdminProgramme(): never
         'dureeMois' => max(1, min(36, (int) ($e['dureeMois'] ?? 12))),
         'moisValidation' => max(1, min(12, (int) ($e['moisValidation'] ?? 6))),
         'primes' => $primes,
+        'bonusHebdo' => ['clients' => max(1, min(50, (int) ($e['bonusHebdo']['clients'] ?? 5))), 'montant' => array_filter(
+            array_map(fn ($m) => is_numeric($m) && $m >= 0 ? (float) $m : null, array_slice((array) ($e['bonusHebdo']['montant'] ?? []), 0, 8)), fn ($m) => $m !== null)],
     ];
     enregistrerReglageAmorac('programme', $programme);
     journaliser(null, $admin['id'], 'amorac-programme', ['par' => $admin['email']]);
@@ -417,7 +494,7 @@ function routeCommercialMoi(): never
     $c = commercialConnecte();
     $infos = versCommercial($c);
     unset($infos['notes']); // notes internes de l'équipe
-    repondre(['ok' => true, 'commercial' => $infos, 'clients' => clientsCommercial($c['id'], false), 'primes' => primesCommercial($c['id']), 'programme' => programme() + ['remiseParrain' => (float) reglesTarifs()['remiseParrain']]]);
+    repondre(['ok' => true, 'commercial' => $infos, 'clients' => clientsCommercial($c['id'], false), 'primes' => primesCommercial($c['id']), 'bonusHebdo' => bonusHebdoCommercial($c), 'programme' => programme() + ['remiseParrain' => (float) reglesTarifs()['remiseParrain']]]);
 }
 
 function routeCommercialPin(): never

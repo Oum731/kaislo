@@ -149,7 +149,7 @@ function FicheCommercial({ id, ctx, fermer, modifier }) {
     }
   };
   if (!f) return <Feuille titre="Commercial" surFermer={fermer}><p className="muet">Chargement…</p></Feuille>;
-  const { commercial: c, clients, primes } = f;
+  const { commercial: c, clients, primes, bonusHebdo } = f;
   const aPayer = clients.flatMap((cl) => cl.commissions.filter((m) => m.statut === 'a_payer').map((m) => ({ ...m, client: cl.nom })));
   const coches = aPayer.filter((m) => choix[m.id]);
   const totalCoche = {};
@@ -197,6 +197,7 @@ function FicheCommercial({ id, ctx, fermer, modifier }) {
               </>
             )}
           </div>
+          <BonusHebdo semaines={bonusHebdo} action={(semaine) => action({ action: 'bonus', commercialId: c.id, semaine, moyen }, 'Bonus versé')} />
           <div className="carte pile">
             <h3>Primes par palier</h3>
             {primes.map((p) => (
@@ -225,6 +226,31 @@ function FicheCommercial({ id, ctx, fermer, modifier }) {
         </div>
       </div>
     </Feuille>
+  );
+}
+
+// Bonus hebdomadaire : clients démarrés (3 articles + 1 vente dans les 7 jours) par semaine d'inscription, du lundi au dimanche
+export function BonusHebdo({ semaines = [], action = null }) {
+  const un = semaines[0];
+  if (!un) return null;
+  const jour = (d) => formatDate(d + 'T12:00:00Z');
+  return (
+    <div className="carte pile">
+      <h3>Bonus de la semaine</h3>
+      <p className="tres-petit muet">{un.montant > 0 ? formatPrix(un.montant, un.devise) : 'Montant à définir dans Règles'} chaque semaine où {un.requis} clients ou plus ont démarré (3 articles et 1 vente dans les 7 jours qui suivent l’inscription).</p>
+      {semaines.slice(0, 6).map((s) => (
+        <div key={s.semaine} className="pile" style={{ gap: 4 }}>
+          <div className="ligne espace petit">
+            <span>{jour(s.semaine)} → {jour(s.fin)}{!s.terminee ? ' (en cours)' : ''}</span>
+            {s.payeLe ? <span className="badge gris">versé le {formatDate(s.payeLe)}</span>
+              : s.payable ? (action ? <button className="btn petit" onClick={() => action(s.semaine)}>Verser</button> : <span className="badge">gagné</span>)
+              : <span className={'badge ' + (s.atteint ? '' : 'safran')}>{s.clients}/{s.requis}</span>}
+          </div>
+          <div className="jauge"><div style={{ width: Math.min(100, (s.clients / s.requis) * 100) + '%' }} /></div>
+          <p className="tres-petit muet">{s.inscrits} inscrit{s.inscrits > 1 ? 's' : ''} · {s.clients} démarré{s.clients > 1 ? 's' : ''}</p>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -273,6 +299,17 @@ function ReglesProgramme({ programme, ctx, fermer }) {
           <label className="champ"><span>Validation après (mois)</span><input type="number" value={p.moisValidation} onChange={(e) => setP({ ...p, moisValidation: e.target.value })} /></label>
         </div>
         <p className="tres-petit muet">Le taux s’applique aux nouveaux commerciaux ; celui de chaque commercial se change dans sa fiche.</p>
+        <p className="section-titre">Bonus hebdomadaire</p>
+        <div className="carte pile">
+          <label className="champ"><span>Clients démarrés dans la semaine</span><input type="number" value={p.bonusHebdo?.clients ?? 5} onChange={(e) => setP({ ...p, bonusHebdo: { ...p.bonusHebdo, clients: e.target.value } })} /></label>
+          <div className="grille-2">
+            {['MAD', 'FCFA'].map((dev) => (
+              <label key={dev} className="champ"><span>Bonus en {NOMS_DEVISES[dev] || dev}</span>
+                <ChampMontant valeur={p.bonusHebdo?.montant?.[dev] ?? null} surChanger={(v) => setP({ ...p, bonusHebdo: { ...p.bonusHebdo, montant: { ...p.bonusHebdo?.montant, [dev]: v } } })} />
+              </label>
+            ))}
+          </div>
+        </div>
         <p className="section-titre">Primes par palier de clients validés</p>
         {p.primes.map((pr, i) => (
           <div key={i} className="carte pile">
