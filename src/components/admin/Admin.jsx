@@ -18,6 +18,7 @@ import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
 import { prixAbonnement, prixCatalogue } from '@/lib/donnees/tarifs';
+import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
 
@@ -227,9 +228,11 @@ function VueTableau({ commerces, ctx }) {
   debutMois.setHours(0, 0, 0, 0);
   const duMois = paiementsDe(commerces).filter((p) => new Date(p.date) >= debutMois);
   const actifsSemaine = commerces.filter((c) => c.derniereActivite && Date.now() - new Date(c.derniereActivite) < 7 * JOUR).length;
+  // Chaque commerce à relancer avec l'étape conseillée (bienvenue, pas démarré, fin d'essai…) : les essais qui se terminent d'abord
   const aRelancer = commerces
-    .filter((c) => c.etat.statut === 'expire' || (c.etat.statut === 'essai' && c.etat.joursRestants <= 7))
-    .sort((a, b) => (a.etat.joursRestants ?? 0) - (b.etat.joursRestants ?? 0));
+    .map((c) => ({ c, etape: etapeRelance(c) }))
+    .filter((x) => x.etape)
+    .sort((a, b) => (a.c.etat.joursRestants ?? 0) - (b.c.etat.joursRestants ?? 0));
   const repartition = (cle) => {
     const m = {};
     for (const c of commerces) m[cle(c)] = (m[cle(c)] || 0) + 1;
@@ -250,9 +253,9 @@ function VueTableau({ commerces, ctx }) {
         <div className="grille-ecran deux" style={{ marginTop: 16 }}>
           <div className="carte">
             <h3>À relancer</h3>
-            <p className="tres-petit muet">Essais qui se terminent dans 7 jours ou moins, et abonnements expirés.</p>
+            <p className="tres-petit muet">Le bon message au bon moment : bienvenue, aide au démarrage, conseil, fin d’essai, essai terminé. WhatsApp s’ouvre avec le texte prêt à envoyer.</p>
             <div className="liste" style={{ marginTop: 12 }}>
-              {aRelancer.map((c) => <LigneCommerce key={c.id} c={c} ctx={ctx} />)}
+              {aRelancer.map(({ c, etape }) => <LigneARelancer key={c.id} c={c} ctx={ctx} etape={etape} />)}
               {!aRelancer.length && <p className="muet petit" style={{ padding: 16 }}>Personne à relancer pour le moment.</p>}
             </div>
           </div>
@@ -278,6 +281,54 @@ function Repartition({ titre, lignes, total }) {
           </div>
         ))}
         {!lignes.length && <p className="muet petit">Aucun commerce pour le moment.</p>}
+      </div>
+    </div>
+  );
+}
+
+// Message de relance WhatsApp d'un commerce pour une étape donnée (texte modifiable avant l'envoi)
+function messageRelance(c, code, equipe) {
+  return texteRelance(code, {
+    prenom: prenomDe(c.gerant), commerce: c.commerce.nom, equipe: prenomDe(equipe), joursRestants: c.etat.joursRestants ?? 0,
+    prix: formatPrix(c.tarif.parMois, c.commerce.devise),
+  });
+}
+const lienRelance = (c, texte) => {
+  const tel = c.gerantTelephone || c.commerce.telephone;
+  return tel ? 'https://wa.me/' + numeroWhatsApp(tel, c.commerce.pays) + '?text=' + encodeURIComponent(texte) : null;
+};
+
+// Carte « Relance WhatsApp » de la fiche : l'étape conseillée est choisie d'avance, le texte reste modifiable avant l'envoi
+function RelanceFiche({ c, ctx }) {
+  const conseillee = etapeRelance(c);
+  const [etape, setEtape] = useState(conseillee || (c.etat.statut === 'actif' ? 'merci-avis' : 'conseil'));
+  const [texte, setTexte] = useState(() => messageRelance(c, etape, ctx.admin.nom));
+  const choisir = (code) => { setEtape(code); setTexte(messageRelance(c, code, ctx.admin.nom)); };
+  const lien = lienRelance(c, texte);
+  return (
+    <div className="carte pile">
+      <h3>Relance WhatsApp</h3>
+      <p className="tres-petit muet">{conseillee ? `Étape conseillée maintenant : ${ETAPES[conseillee].titre}.` : 'Aucune relance urgente. Vous pouvez quand même écrire au commerçant.'}</p>
+      <label className="champ"><span>Message</span>
+        <select value={etape} onChange={(e) => choisir(e.target.value)}>
+          {Object.entries(ETAPES).map(([code, e]) => <option key={code} value={code}>{e.titre}{code === conseillee ? ' (conseillé)' : ''}</option>)}
+        </select>
+      </label>
+      <label className="champ"><textarea rows={7} style={{ minHeight: 170 }} value={texte} onChange={(e) => setTexte(e.target.value)} aria-label="Texte du message" /></label>
+      {lien ? <a className="btn bloc" href={lien} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> Ouvrir WhatsApp avec ce message</a> : <p className="alerte">Aucun numéro de téléphone pour ce commerce.</p>}
+    </div>
+  );
+}
+
+// Ligne « à relancer » : le commerce, l'étape conseillée et un bouton qui ouvre WhatsApp avec le message prêt
+function LigneARelancer({ c, ctx, etape }) {
+  const lien = lienRelance(c, messageRelance(c, etape, ctx.admin.nom));
+  return (
+    <div>
+      <LigneCommerce c={c} ctx={ctx} />
+      <div className="ligne" style={{ gap: 8, flexWrap: 'wrap', padding: '0 14px 12px', alignItems: 'center' }}>
+        <span className="badge safran">{ETAPES[etape].titre}</span>
+        {lien && <a className="btn petit" href={lien} target="_blank" rel="noreferrer"><Icone nom="whatsapp" taille="sm" /> Relancer sur WhatsApp</a>}
       </div>
     </div>
   );
@@ -700,6 +751,8 @@ function FicheCommerce({ c, ctx, fermer }) {
             <p className="petit"><b>Pays :</b> {pays.nom} · {c.commerce.ville} · {symbole(dev)}</p>
             <p className="petit"><b>Adresse :</b> {c.commerce.adresse || '—'}</p>
             <p className="petit"><b>Inscrit le :</b> {c.commerce.creeLe ? formatDate(c.commerce.creeLe) : '—'}</p>
+            {c.parrainCommerce && <p className="petit"><b>Parrainé par :</b> {c.parrainCommerce} <span className="muet">(30 jours offerts à son parrain au 1er paiement)</span></p>}
+            {c.nbFilleuls > 0 && <p className="petit"><b>Commerces parrainés :</b> {c.nbFilleuls}</p>}
             {lienWhatsApp && <a className="btn secondaire petit" href={lienWhatsApp} target="_blank" rel="noreferrer"><Icone nom="whatsapp" taille="sm" /> Contacter sur WhatsApp</a>}
           </div>
           <div className="carte pile">
@@ -710,6 +763,7 @@ function FicheCommerce({ c, ctx, fermer }) {
             </div>
             <p className="tres-petit muet">Format du pays accepté ; le numéro doit être libre dans tout Kaislo.</p>
           </div>
+          <RelanceFiche c={c} ctx={ctx} />
           {c.signaux?.length > 0 && (
             <div className="carte pile" style={{ borderColor: 'var(--rouge, #C8402F)' }}>
               <h3>⚠ Activité à vérifier</h3>

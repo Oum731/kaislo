@@ -342,7 +342,7 @@ function Inscription() {
           <label className="champ"><span>{tr('Code parrain (facultatif)')}</span>
             <input value={f.codeParrain} onChange={(e) => setF({ ...f, codeParrain: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) })} placeholder={tr('Ex : AWA25')} autoCapitalize="characters" />
           </label>
-          <p className="tres-petit muet">{tr('Avec un code parrain valide, vous bénéficiez d’environ {0} % de remise sur l’abonnement.', [REGLES_TARIFS.remiseParrain])}</p>
+          <p className="tres-petit muet">{tr('Avec un code parrain valide, vous bénéficiez d’environ {0} % de remise sur l’abonnement.', [REGLES_TARIFS.remiseParrain])} {tr('Si c’est le code d’un autre commerçant (il commence par P), vous avez 30 jours d’essai en plus.')}</p>
           <label className="case-accord">
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
             <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('et la')} <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">{tr('politique de confidentialité')}</a> {tr('de Kaislo.')}</span>

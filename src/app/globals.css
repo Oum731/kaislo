@@ -1006,6 +1006,7 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 
 /* ---- Bandeau de mesure des inscriptions (Google Ads) ---- */
 .bandeau-mesure { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 350; max-width: 560px; margin: 0 auto; background: var(--encre); color: var(--creme); border-radius: var(--rayon); padding: 14px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.45; }
+.bandeau-mesure.dans-app { z-index: 45; } /* sous les fenêtres de l'application (voile à 50), au-dessus du menu */
 .bandeau-mesure p { margin: 0; }
 .bandeau-mesure a { color: var(--safran, #E8A317); }
 .bandeau-mesure-actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -1057,3 +1058,8 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .carte-avis { margin: 0; padding: 20px; background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon); display: grid; gap: 10px; align-content: start; min-width: 0; }
 .carte-avis blockquote { margin: 0; color: var(--encre); line-height: 1.55; overflow-wrap: anywhere; }
 .carte-avis figcaption { font-size: 13.5px; color: var(--encre-2); }
+
+/* Parrainage : code en grand */
+.code-parrainage { display: grid; gap: 8px; justify-items: center; text-align: center; padding: 18px 16px; border: 1px dashed #9cc4af; background: var(--vert-clair); border-radius: var(--rayon); }
+.code-parrainage .petit-titre { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--vert); }
+.code-parrainage b { font-family: 'Bricolage Grotesque', Arial, sans-serif; font-size: 36px; letter-spacing: 0.08em; color: var(--encre); overflow-wrap: anywhere; }

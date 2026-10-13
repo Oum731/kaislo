@@ -14,6 +14,7 @@
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
 //   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
+//   GET /api/parrainage     parrainage entre commerçants : code, filleuls, mois gagnés (voir lib/parrainage.php)
 //   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
 //   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
 //   GET  /api/pays          pays du visiteur d'après son adresse IP (voir lib/pays.php)
@@ -36,6 +37,7 @@ require __DIR__ . '/lib/messages.php';
 require __DIR__ . '/lib/admin.php';
 require __DIR__ . '/lib/contact.php';
 require __DIR__ . '/lib/avis.php';
+require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
 require __DIR__ . '/lib/commerciaux.php';
@@ -74,6 +76,7 @@ try {
         'GET /messages' => routeMessagesLire(),
         'POST /messages' => routeMessagesEcrire(),
         'POST /contact' => routeContact(),
+        'GET /parrainage' => routeParrainage(),
         'GET /avis' => routeAvisPublics(),
         'GET /mon-avis' => routeMonAvis(),
         'POST /avis' => routeAvisEnvoyer(),
@@ -188,8 +191,13 @@ function routeInscription(): never
     $pin = (string) ($gerant['pin'] ?? '');
     if (!preg_match('/^\d{4}$/', $pin)) throw new ErreurApi('Le code PIN doit contenir 4 chiffres');
     if (($e['conditionsAcceptees'] ?? false) !== true) throw new ErreurApi('Merci d’accepter les conditions d’utilisation');
-    // Code parrain du commercial Kaislo qui a présenté l'application (facultatif)
-    $commercial = commercialParCode((string) ($e['codeParrain'] ?? ''));
+    // Code parrain (facultatif) : celui d'un commercial Kaislo, ou le code de parrainage d'un autre commerçant (« P » + 6 chiffres)
+    $codeSaisi = codeParrainPropre((string) ($e['codeParrain'] ?? ''));
+    $parrainCommerce = estCodeParrainageCommerce($codeSaisi) ? commerceParCodeParrainage($codeSaisi) : null;
+    $commercial = $parrainCommerce ? null : commercialParCode($codeSaisi);
+    if ($parrainCommerce && in_array($cle, clesGerantsDuCommerce($parrainCommerce['id']), true)) {
+        throw new ErreurApi('Ce code est celui de votre propre commerce : il est fait pour parrainer un autre commerçant.');
+    }
 
     if (numeroPrisAilleurs($cle, null)) {
         noterEchec($cleIp, 20);
@@ -207,10 +215,12 @@ function routeInscription(): never
         // Code du commerce : 6 chiffres, unique
         do { $code = (string) random_int(100000, 999999); } while (requete('SELECT 1 FROM commerces WHERE code = ?', [$code])->fetch());
         $idCommerce = nouvelId('com');
-        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)', [
+        // Le filleul d'un commerçant reçoit un mois d'essai en plus
+        $joursEssai = DUREE_ESSAI_JOURS + ($parrainCommerce ? JOURS_OFFERTS_PARRAINAGE : 0);
+        requete('INSERT INTO commerces (id, code, nom, type, pays, devise, ville, telephone, cle_telephone, offre, statut, essai_fin, periode_fin, conditions_acceptees_le, cree_le, modifie_le, commercial_id, fondateur, parrain_commerce_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)', [
             $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $numCommerce['affichage'], $numCommerce['cle'],
-            'essai', 'essai', maintenant(DUREE_ESSAI_JOURS * 86400), null, maintenant(), maintenant(), maintenant(), $commercial['id'] ?? null,
+            'essai', 'essai', maintenant($joursEssai * 86400), null, maintenant(), maintenant(), maintenant(), $commercial['id'] ?? null, $parrainCommerce['id'] ?? null,
         ]);
         $utilisateur = [
             'id' => nouvelId('u'), 'commerce_id' => $idCommerce, 'nom' => $nomGerant, 'telephone' => $telGerant,
@@ -221,7 +231,7 @@ function routeInscription(): never
             $utilisateur['id'], $idCommerce, $nomGerant, $telGerant, $cle, password_hash($pin, PASSWORD_DEFAULT), 'gerant', maintenant(), maintenant(),
         ]);
         $jeton = creerJeton($utilisateur, (string) ($e['appareil'] ?? ''));
-        journaliser($idCommerce, $utilisateur['id'], 'inscription', ['commerce' => $nom, 'pays' => $pays, 'parrain' => $commercial['code'] ?? null]);
+        journaliser($idCommerce, $utilisateur['id'], 'inscription', ['commerce' => $nom, 'pays' => $pays, 'parrain' => $commercial['code'] ?? null, 'parrainCommerce' => $parrainCommerce['code'] ?? null]);
         $pdo->commit();
         noterEchec($cleIp, 10); // au-delà de 10 inscriptions d'affilée depuis la même adresse : pause de 15 min
     } catch (Throwable $err) {

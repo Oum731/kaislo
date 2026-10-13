@@ -286,7 +286,7 @@ export function FeuilleFicheClient({ clientId }) {
       pied={
         <div className="grille-2">
           {client.telephone && solde > 0 ? (
-            <a className="btn secondaire" href={lienRappelWhatsApp(client, solde, s.d.commerce, s.prix(solde))} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> {tr('Rappel WhatsApp')}</a>
+            <a className="btn secondaire" href={lienRappelWhatsApp(client, solde, s.d.commerce, s.prix(solde), s.signatureWhatsApp())} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> {tr('Rappel WhatsApp')}</a>
           ) : (
             <button className="btn secondaire" onClick={() => s.ouvrir('client', { client })}>{tr('Modifier')}</button>
           )}
@@ -450,6 +450,12 @@ export function FeuilleCompte() {
             <span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>
             <b className="grandit">{(s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length) > 1 ? tr('Mes commerces ({0})', [s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length]) : tr('Mes commerces')}</b>
             <span className="petit muet">{tr('Ajouter un commerce')}</span>
+            <Icone nom="droite" className="muet" />
+          </button>
+          <button className="liste-item" onClick={() => s.ouvrir('parrainage')}>
+            <span className="mini-emoji teinte-vert"><Icone nom="clients" /></span>
+            <b className="grandit">{tr('Parrainer un commerçant')}</b>
+            <span className="petit muet">{tr('1 mois offert')}</span>
             <Icone nom="droite" className="muet" />
           </button>
           <button className="liste-item" onClick={() => s.ouvrir('avis')}>

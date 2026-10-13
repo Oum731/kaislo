@@ -25,6 +25,7 @@ const TEXTES = {
 
 export default function BandeauMesure() {
   const [visible, setVisible] = useState(false);
+  const [dansApp, setDansApp] = useState(false); // dans l'application, les fenêtres (reçu, clôture…) passent au-dessus du bandeau
   const [t, setT] = useState(() => TEXTES.fr());
   useEffect(() => {
     if (!mesureActive() || pageSansMesure(window.location.pathname)) return;
@@ -32,13 +33,14 @@ export default function BandeauMesure() {
     if (choix === 'oui') return chargerBaliseAuRepos();
     if (choix === 'non') return;
     const anglais = window.location.pathname.startsWith('/en/') || (window.location.pathname.startsWith('/app') && /^en/i.test(navigator.language || ''));
+    setDansApp(window.location.pathname.startsWith('/app'));
     setT(anglais ? TEXTES.en() : TEXTES.fr());
     setVisible(true);
   }, []);
   if (!visible) return null;
   const choisir = (accepte) => { (accepte ? accepterMesure : refuserMesure)(); setVisible(false); };
   return (
-    <div className="bandeau-mesure" role="dialog" aria-live="polite" aria-label={t.titre}>
+    <div className={'bandeau-mesure' + (dansApp ? ' dans-app' : '')} role="dialog" aria-live="polite" aria-label={t.titre}>
       <p><b>{t.titre}</b> {t.texte} <Link href={t.lien}>{t.plus}</Link></p>
       <div className="bandeau-mesure-actions">
         <button className="btn secondaire petit" onClick={() => choisir(false)}>{t.refuser}</button>

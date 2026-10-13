@@ -136,6 +136,7 @@ function InfosCommerce() {
         />
         <p className="tres-petit muet">{tr('Le logo s’affiche sur votre profil : écran de connexion, tableau de bord et liste des commerces.')}</p>
         <Reglage titre={tr('L’imprimer aussi sur les reçus')} aide={tr('Facultatif. Imprimé en noir et blanc en haut du ticket (impression un peu plus lente).')} actif={b.logoSurTicket === true} surChanger={(v) => setB({ ...b, logoSurTicket: v })} />
+        <Reglage titre={tr('Ajouter « Fait avec Kaislo » aux messages WhatsApp')} aide={tr('Une ligne discrète à la fin des reçus et des rappels de crédit envoyés à vos clients. Elle aide d’autres commerçants à découvrir Kaislo. Réglage de cet appareil.')} actif={s.prefs.signatureKaislo !== false} surChanger={(v) => s.sauverPrefs({ signatureKaislo: v })} />
       </div>
 
       <p className="section-titre">{tr('Coordonnées (sur le profil et les reçus)')}</p>

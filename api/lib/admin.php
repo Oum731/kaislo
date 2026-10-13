@@ -147,9 +147,11 @@ function resumesCommerces(?string $seulId = null): array
     }
     $identite = [];
     foreach (requete('SELECT * FROM commerces')->fetchAll() as $x) $identite[$x['id']] = $x;
+    $nbFilleuls = []; // commerce parrain -> nombre de commerces parrainés
+    foreach ($identite as $x) if (!empty($x['parrain_commerce_id'])) $nbFilleuls[$x['parrain_commerce_id']] = ($nbFilleuls[$x['parrain_commerce_id']] ?? 0) + 1;
     $produitsDe = produitsParCommerce($seulId);
 
-    return array_map(function ($c) use ($nbProduits, $derniere, $nbVendeurs, $nonLus, $ca, $paiements, $gerants, $groupes, $identite, $produitsDe) {
+    return array_map(function ($c) use ($nbProduits, $derniere, $nbVendeurs, $nonLus, $ca, $paiements, $gerants, $groupes, $identite, $produitsDe, $nbFilleuls) {
         $id = $c['id'];
         $reglages = reglagesCommerce($id);
         $commerce = versCommerce($c);
@@ -169,6 +171,8 @@ function resumesCommerces(?string $seulId = null): array
             // Autres commerces du même gérant (paiement groupé) et activité à vérifier (voir signauxActivite)
             'autresCommerces' => array_values(array_map(fn ($autre) => ['id' => $autre, 'nom' => $identite[$autre]['nom'], 'type' => $identite[$autre]['type'], 'statut' => $identite[$autre]['statut'], 'devise' => $identite[$autre]['devise'], 'tarif' => tarifCommerce($identite[$autre])], array_filter($groupes[$gerants[$id]['cle_telephone'] ?? ''] ?? [], fn ($autre) => $autre !== $id && isset($identite[$autre])))),
             'signaux' => signauxActivite($c, $produitsDe[$id] ?? [], $reglages),
+            'parrainCommerce' => !empty($c['parrain_commerce_id']) ? ($identite[$c['parrain_commerce_id']]['nom'] ?? null) : null,
+            'nbFilleuls' => $nbFilleuls[$id] ?? 0,
         ];
     }, $commerces);
 }
@@ -299,6 +303,8 @@ function enregistrerPaiement(array $admin, array $e): array
     ]);
     // Commissions du commercial qui a apporté ce commerce
     if (!empty($c['commercial_id'])) creerCommissions($c, $idPaiement, $montant, $mois);
+    // Parrainage entre commerçants : au premier paiement du filleul, le parrain gagne 30 jours
+    recompenserParrain($c);
     return ['commerce' => $c, 'montant' => $montant, 'mois' => $mois, 'postes' => $postes, 'formule' => $formule];
 }
 

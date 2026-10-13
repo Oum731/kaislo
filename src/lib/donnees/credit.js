@@ -43,10 +43,11 @@ export function totalCreditEnCours(d) {
 }
 
 // Lien WhatsApp avec un message de rappel tout prêt
-export function lienRappelWhatsApp(client, solde, commerce, montantFormate) {
+export function lienRappelWhatsApp(client, solde, commerce, montantFormate, signature = '') {
   const tel = numeroWhatsApp(client.telephone, commerce.pays); // format international
   const texte =
     tr('Bonjour {0}, ici {1}. ', [client.nom, commerce.nom]) +
-    tr('Petit rappel : votre crédit chez nous est de {0}. Merci et bonne journée !', [montantFormate]);
+    tr('Petit rappel : votre crédit chez nous est de {0}. Merci et bonne journée !', [montantFormate]) +
+    (signature ? '\n_' + signature + '_' : '');
   return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(texte);
 }

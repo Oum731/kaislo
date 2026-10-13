@@ -15,6 +15,7 @@ import {
 import { FeuilleRapport } from './FeuilleRapport';
 import { FeuilleCommerces, FeuilleAjoutCommerce } from './FeuillesCommerces';
 import { FeuilleAvis } from './FeuilleAvis';
+import { FeuilleParrainage } from './FeuilleParrainage';
 
 const FEUILLES = {
   rapport: FeuilleRapport,
@@ -46,6 +47,7 @@ const FEUILLES = {
   commerces: FeuilleCommerces,
   ajoutCommerce: FeuilleAjoutCommerce,
   avis: FeuilleAvis,
+  parrainage: FeuilleParrainage,
 };
 
 export default function Feuilles() {

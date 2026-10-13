@@ -245,7 +245,7 @@ export function ticketTest(commerce, largeurPapier = 58) {
  * Reçu à envoyer par WhatsApp : les mêmes lignes que le ticket imprimé,
  * dans un bloc ``` (police à chasse fixe dans WhatsApp, colonnes alignées).
  */
-export function ticketEnTexteWhatsApp(lignes, commerce) {
+export function ticketEnTexteWhatsApp(lignes, commerce, signature = '') {
   const texte = lignes.filter((l) => !l.logo).map((l) => l.texte.replace(/\s+$/, '')).join('\n');
-  return tr('Bonjour, voici votre reçu de *{0}* :', [commerce.nom]) + '\n```\n' + texte + '\n```\n' + tr('Merci pour votre confiance !');
+  return tr('Bonjour, voici votre reçu de *{0}* :', [commerce.nom]) + '\n```\n' + texte + '\n```\n' + tr('Merci pour votre confiance !') + (signature ? '\n_' + signature + '_' : '');
 }

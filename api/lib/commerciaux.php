@@ -212,6 +212,7 @@ function routeAdminCommercialEnregistrer(): never
     if ($code === '' && !$id) $code = genererCodeParrain($nom); // nouveau commercial : code automatique si on n'en saisit pas
     if ($code === '' && $id) $code = (string) $avant['code'];
     if (strlen($code) < 4 || strlen($code) > 12) throw new ErreurApi('Code parrain : 4 à 12 lettres ou chiffres');
+    if (preg_match('/^P\d{6}$/', $code)) throw new ErreurApi('Ce code ressemble à un code de parrainage de commerce : choisissez-en un autre');
     $autre = requete('SELECT id FROM commerciaux WHERE code = ?', [$code])->fetch();
     if ($autre && $autre['id'] !== $id) throw new ErreurApi('Ce code parrain est déjà pris', 409);
     $taux = (float) ($e['taux'] ?? programme()['taux']);
