@@ -254,6 +254,11 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   *démarré* (3 articles et 1 vente dans les 7 jours qui suivent l'inscription). Nombre et montants dans « Règles » ; le suivi
   des 8 dernières semaines est dans la fiche du commercial (bouton « Verser » une fois la semaine terminée) et dans son espace.
 - Le commercial suit tout dans son espace : `https://kaislo.com/commercial/` (numéro + code PIN).
+- **Contrat** : après validation du compte, fiche du commercial → carte « Contrat » → « Mettre le contrat à disposition ». Le contrat
+  (numéro `KC-AAAA-NNNN`, règles figées à cet instant : commission, bonus, primes) apparaît dans l'espace du commercial, qui le lit
+  en PDF puis appuie sur « J'ai lu et j'accepte » (date enregistrée, visible dans sa fiche). Le PDF est fabriqué dans le navigateur
+  (`src/lib/export/contrat-commercial.js`) ; la société (nom, adresse, immatriculation) vient de `SOCIETE` dans `src/config.js`.
+  Le modèle de contrat est un point de départ : à faire relire par un juriste local avant usage.
 - Page de recrutement : `/devenir-commercial/`.
 
 ## Numéros de téléphone

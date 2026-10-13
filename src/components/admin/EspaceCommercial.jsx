@@ -14,7 +14,7 @@ import { API_ACTIVE, appelApi } from '@/lib/api';
 import { PAYS } from '@/lib/donnees/modeles';
 import { SITE_URL, CONTACT_WHATSAPP } from '@/config';
 import { Icone, ChampTelephone } from '@/components/ui';
-import { BonusHebdo, CarteClient, totalDevises } from './Commerciaux';
+import { BonusHebdo, CarteClient, CarteContrat, totalDevises } from './Commerciaux';
 import BulleChat from '@/components/BulleChat';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 
@@ -170,7 +170,7 @@ function FormulaireConnexion({ surConnexion }) {
 }
 
 function Tableau({ infos, sortir, actualiser }) {
-  const { commercial: c, clients, primes, programme, bonusHebdo } = infos;
+  const { commercial: c, clients, primes, programme, bonusHebdo, contrat } = infos;
   const [copie, setCopie] = useState(false);
   const lien = SITE_URL + '/app/?inscription=1&ref=' + c.code;
   const remise = Math.round(programme.remiseParrain || 0);
@@ -223,6 +223,7 @@ function Tableau({ infos, sortir, actualiser }) {
               <p className="petit muet">Si le client arrête avant {programme.moisValidation} mois, aucune commission n’est due.</p>
               <p className="tres-petit muet">Exemple : un restaurant à Abidjan avec 2 postes paie 12 000 + 4 000 = 16 000 FCFA par mois → {c.taux} % = {Math.round(16000 * c.taux / 100).toLocaleString('fr-FR')} FCFA par mois pour vous.</p>
             </div>
+            <CarteContrat commercial={c} contrat={contrat} surAccepter={async () => { await appelApi('POST', '/commercial/contrat-accepter', null, lireJeton()); await actualiser(); }} />
             <BonusHebdo semaines={bonusHebdo} />
             <div className="carte pile">
               <h3>Primes</h3>
