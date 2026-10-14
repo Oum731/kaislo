@@ -45,6 +45,32 @@ function guide(seo) {
   const comEn = seo.commerces.map((c) => COMMERCES_EN[c] || c);
   const detailFr = mobile.length ? `mobile money (${ET_FR(mobile)})` : modesFr;
   const detailEn = mobile.length ? `mobile money (${ET_EN(mobile)})` : modesEn;
+  // Belgique : sections, questions et description propres aux recherches locales (Wallonie, Liège, prix, gratuit, caisse certifiée)
+  const loc = seo.local;
+  const villesFr = loc ? ET_FR(loc.villes) : '';
+  const villesEn = loc ? ET_EN(loc.villes) : '';
+  const supFr = loc ? {
+    sections: [
+      { h: `Un logiciel de caisse à ${villesFr}`, p: [`Que vous teniez un commerce à ${villesFr} ou ailleurs en Wallonie et à Bruxelles, les besoins sont les mêmes : encaisser vite en euros, noter ${modesFr}, suivre le stock et savoir le soir ce que la journée a rapporté.`, `Kaislo s’installe en deux minutes sur le téléphone ou la tablette que vous avez déjà, sans matériel à acheter. Essai gratuit de 30 jours, puis à partir de ${prixFr} par mois selon votre métier.`] },
+      { h: 'Restaurants et cafés : la caisse enregistreuse certifiée', p: [loc.avertissementHoreca] },
+    ],
+    faq: [
+      ['Existe-t-il un logiciel de caisse gratuit en Belgique ?', `Kaislo est gratuit pendant 30 jours, sans carte bancaire ni engagement, puis payant à partir de ${prixFr} par mois. Avant de choisir un logiciel présenté comme gratuit, vérifiez ses limites (nombre de ventes, stock, publicité, export de vos données) en le testant quelques jours.`],
+      ['Quel est le prix d’un logiciel de caisse en Belgique ?', `Chez Kaislo, à partir de ${prixFr} par mois selon le métier, avec 1 poste et 5 vendeurs inclus, et 2 mois offerts à l’année.`],
+      ['Quel logiciel de caisse en Wallonie ou à Liège ?', 'Un logiciel qui marche sur votre téléphone ou votre tablette, accepte vos moyens de paiement, continue sans internet et vous laisse exporter vos données. Kaislo réunit ces points : testez-le 30 jours gratuitement.'],
+    ],
+  } : { sections: [], faq: [] };
+  const supEn = loc ? {
+    sections: [
+      { h: `POS software in ${villesEn}`, p: [`Whether your shop is in ${villesEn} or elsewhere in Wallonia and Brussels, the needs are the same: check out fast in euros, record ${modesEn}, track stock and know in the evening what the day earned.`, `Kaislo installs in two minutes on the phone or tablet you already have, with no hardware to buy. 30-day free trial, then from ${prixEn} per month depending on your business.`] },
+      { h: 'Restaurants and cafes: the certified cash register', p: ['Restaurants, cafes and caterers: in Belgium, the hospitality sector (Horeca) must use a certified cash register system (with a fiscal control module, the “black box”). Kaislo is a tool for managing sales, stock and customer credit: it is not that certified system. Check your obligations with the FPS Finance or your accountant; Kaislo suits businesses that are not concerned (grocery stores, shops, neighbourhood shops) and can complement your certified till for stock.'] },
+    ],
+    faq: [
+      ['Is there free POS software in Belgium?', `Kaislo is free for 30 days, with no card and no commitment, then paid from ${prixEn} per month. Before choosing software advertised as free, check its limits (number of sales, stock, ads, exporting your data) by testing it for a few days.`],
+      ['How much does POS software cost in Belgium?', `With Kaislo, from ${prixEn} per month depending on the business, with 1 till and 5 sellers included, and 2 months free on the yearly plan.`],
+      ['Which POS software in Wallonia or Liège?', 'One that works on your phone or tablet, accepts your payment methods, keeps working without internet and lets you export your data. Kaislo covers these points: try it free for 30 days.'],
+    ],
+  } : { sections: [], faq: [] };
   return {
     cle: 'caisse-' + seo.id.toLowerCase(),
     groupe: 'caisse-pays',
@@ -55,19 +81,21 @@ function guide(seo) {
       seo: `Logiciel de caisse ${lieuFr} : le guide`,
       titre: `Logiciel de caisse ${lieuFr} : comment choisir et bien l’utiliser`,
       court: `Logiciel de caisse ${lieuFr}`,
-      description: `Logiciel de caisse ${lieuFr} : ${detailFr}, ${p.devise}, hors ligne et prix. Points à vérifier avant de choisir.`,
+      description: loc ? `Logiciel de caisse en Belgique (Wallonie, Bruxelles, Liège) : carte, Payconiq, espèces, euros, hors ligne et prix. Points à vérifier avant de choisir.` : `Logiciel de caisse ${lieuFr} : ${detailFr}, ${p.devise}, hors ligne et prix. Points à vérifier avant de choisir.`,
       chapo: `Choisir un logiciel de caisse ${lieuFr}${ville ? ' (à ' + ville + ' comme ailleurs)' : ''} demande de vérifier quelques points : les moyens de paiement de vos clients, le fonctionnement sans internet, le prix en ${p.devise} et les règles locales. Voici une méthode simple pour comparer.`,
       sections: [
         { h: `Ce qu’une caisse doit faire pour un commerce ${lieuFr}`, p: [`Que vous teniez ${ET_FR(comFr)}, la caisse doit encaisser vite, rendre la monnaie juste, garder la trace de chaque vente avec son moyen de paiement et mettre le stock à jour.`, conseil.fr] },
         { h: `Les paiements à prendre en charge ${lieuFr}`, p: [`Vos clients peuvent payer en ${modesFr}. Un bon logiciel de caisse vous laisse noter le mode de chaque vente et affiche le soir le total de chacun.`], l: p.paiements.map(MODE_FR) },
         { h: 'Travailler sans internet', p: ['Une caisse qui s’arrête quand le réseau coupe fait perdre des ventes. Choisissez un logiciel qui continue d’encaisser hors connexion et qui envoie les ventes dès que le réseau revient : c’est le cas de Kaislo.', 'Gardez le téléphone chargé et, si possible, une batterie externe : la caisse dépend de l’appareil.'] },
         { h: `Cinq vérifications avant de choisir ${lieuFr}`, l: [`Le prix est-il affiché en ${p.devise}, sans mauvaise surprise de change ?`, `Les moyens de paiement de vos clients (${modesFr}) peuvent-ils tous être notés ?`, 'Le logiciel marche-t-il sans internet ?', 'Pouvez-vous exporter vos données (Excel, PDF) et les emporter si vous partez ?', `Quelles obligations existent ${lieuFr} pour un matériel ou un logiciel de caisse ? Renseignez-vous auprès de l’administration fiscale ou d’un comptable local.`] },
+        ...supFr.sections,
         { h: `Kaislo comme logiciel de caisse ${lieuFr}`, p: [`Kaislo fonctionne en ${p.devise}, propose ${modesFr}, marche sans internet et gère le stock et le crédit de vos clients. Essai gratuit de 30 jours, puis à partir de ${prixFr} par mois selon votre métier.`, 'Kaislo est un outil de gestion des ventes et du stock : si votre pays impose un matériel fiscal certifié, vérifiez ce point avant de remplacer votre caisse.'] },
       ],
       faq: [
         [`Quel logiciel de caisse choisir ${ville ? 'à ' + ville : lieuFr} ?`, `Choisissez-en un qui accepte les moyens de paiement de vos clients (${modesFr}), marche sans internet, affiche les prix en ${p.devise} et vous laisse exporter vos données. Testez-le trois jours avant de vous engager.`],
         [`Faut-il une caisse enregistreuse ${lieuFr} ?`, 'Cela dépend de votre activité et des règles locales : renseignez-vous auprès de l’administration fiscale ou d’un comptable. Pour la gestion des ventes et du stock, une application sur téléphone suffit dans la plupart des petits commerces.'],
         ['Peut-on encaisser sans internet ?', 'Oui avec Kaislo : les ventes sont gardées dans l’appareil et envoyées dès que le réseau revient.'],
+        ...supFr.faq,
       ],
     },
     en: {
@@ -75,19 +103,21 @@ function guide(seo) {
       seo: `POS software ${lieuEn}: the guide`,
       titre: `POS software ${lieuEn}: how to choose and use it well`,
       court: `POS software ${lieuEn}`,
-      description: `POS software ${lieuEn}: ${detailEn}, ${p.devise}, offline and price. Points to check before choosing.`,
+      description: loc ? 'POS software in Belgium (Wallonia, Brussels, Liège): card, Payconiq, cash, euros, offline and price. Points to check before choosing.' : `POS software ${lieuEn}: ${detailEn}, ${p.devise}, offline and price. Points to check before choosing.`,
       chapo: `Choosing POS software ${lieuEn}${ville ? ' (in ' + ville + ' as elsewhere)' : ''} means checking a few points: your customers’ payment methods, working without internet, the price in ${p.devise} and local rules. Here is a simple method to compare.`,
       sections: [
         { h: `What a till must do for a business ${lieuEn}`, p: [`Whether you run ${ET_EN(comEn)}, the till must check out fast, give the right change, keep a record of every sale with its payment method and update the stock.`, conseil.en] },
         { h: `Payments to support ${lieuEn}`, p: [`Your customers can pay by ${modesEn}. Good POS software lets you record the method of each sale and shows the total of each in the evening.`], l: p.paiements.map(MODE_EN) },
         { h: 'Working without internet', p: ['A till that stops when the network drops loses sales. Choose software that keeps taking payments offline and sends the sales as soon as the network returns: Kaislo does.', 'Keep the phone charged and, if possible, a power bank: the till depends on the device.'] },
         { h: `Five checks before choosing ${lieuEn}`, l: [`Is the price shown in ${p.devise}, with no exchange-rate surprise?`, `Can all your customers’ payment methods (${modesEn}) be recorded?`, 'Does the software work without internet?', 'Can you export your data (Excel, PDF) and take it with you if you leave?', `What requirements exist ${lieuEn} for cash register hardware or software? Ask the tax authority or a local accountant.`] },
+        ...supEn.sections,
         { h: `Kaislo as POS software ${lieuEn}`, p: [`Kaislo works in ${p.devise}, offers ${modesEn}, works without internet and manages stock and customer credit. 30-day free trial, then from ${prixEn} per month depending on your business.`, 'Kaislo is a sales and stock management tool: if your country requires certified fiscal hardware, check that point before replacing your register.'] },
       ],
       faq: [
         [`Which POS software should I choose ${ville ? 'in ' + ville : lieuEn}?`, `Pick one that accepts your customers’ payment methods (${modesEn}), works offline, shows prices in ${p.devise} and lets you export your data. Test it for three days before committing.`],
         [`Do I need a cash register ${lieuEn}?`, 'It depends on your activity and local rules: ask the tax authority or an accountant. For managing sales and stock, a phone app is enough in most small businesses.'],
         ['Can I take payments without internet?', 'Yes with Kaislo: sales are kept on the device and sent as soon as the network returns.'],
+        ...supEn.faq,
       ],
     },
   };
