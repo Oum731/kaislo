@@ -32,6 +32,14 @@ RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 # Page d'erreur
 ErrorDocument 404 /404.html
 
+# Plan du site : toujours servi comme du XML (Search Console refuse « un fichier HTML »)
+<IfModule mod_mime.c>
+  AddType application/xml .xml
+  <FilesMatch "\.xml$">
+    ForceType application/xml
+  </FilesMatch>
+</IfModule>
+
 # Mise en cache des fichiers qui ne changent jamais (noms uniques)
 <IfModule mod_headers.c>
   # Fichiers de Next.js (nom unique à chaque version) : gardés 1 an
@@ -45,6 +53,11 @@ ErrorDocument 404 /404.html
     Header set Cache-Control "public, max-age=2592000" env=!fichier_fixe
   </FilesMatch>
   # Manifestes de l'application : 1 heure
+  # Plan du site : jamais en cache serveur (une ancienne page HTML ne doit jamais être servie à la place du XML)
+  <FilesMatch "\.xml$">
+    Header set Cache-Control "no-cache"
+    Header set X-LiteSpeed-Cache-Control "no-cache"
+  </FilesMatch>
   <FilesMatch "\.webmanifest$">
     Header set Cache-Control "public, max-age=3600" env=!fichier_fixe
   </FilesMatch>
