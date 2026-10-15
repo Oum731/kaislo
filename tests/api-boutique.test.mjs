@@ -97,6 +97,10 @@ test('la commande est recalculée par le serveur et refuse les demandes incorrec
   assert.equal((await api('POST', '/public/commande', { ...base, lignes: [{ produitId: 'p2', quantite: 0 }] })).statut, 400);
   assert.equal((await api('POST', '/public/commande', { ...base, client: { nom: 'K', telephone: '12' }, lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 400);
   assert.equal((await api('POST', '/public/commande', { ...base, lignes: [] })).statut, 400);
+  // Nom et adresse de livraison obligatoires
+  assert.equal((await api('POST', '/public/commande', { ...base, client: { nom: 'Koffi', telephone: '0701020304' }, lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 400);
+  assert.equal((await api('POST', '/public/commande', { ...base, client: { nom: 'Koffi', telephone: '0701020304', adresse: '  ' }, lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 400);
+  assert.equal((await api('POST', '/public/commande', { ...base, client: { nom: '', telephone: '0701020304', adresse: 'Cocody' }, lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 400);
   assert.equal((await api('POST', '/public/commande', { ...base, b: 'inconnu', lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 404);
   const piege = await api('POST', '/public/commande', { ...base, site: 'robot', lignes: [{ produitId: 'p2', quantite: 1 }] });
   assert.equal(piege.ok, true);
@@ -111,6 +115,9 @@ test('la commande est recalculée par le serveur et refuse les demandes incorrec
   assert.equal(r.commande.whatsapp, '2250712345603');
   assert.deepEqual(r.commande.lignes[0].options, ['Grand', 'Glace']);
   assert.deepEqual(r.commande.lignes[0].optionIds, ['o2', 'o3']);
+  // Photo de l'article : adresse publique de l'image (jamais pour un article sans photo)
+  assert.match(r.commande.lignes[0].photo, /\/api\/public\/boutique-image\?b=chez-awa&i=img_abc$/);
+  assert.equal(r.commande.lignes[1].photo, null);
   const r2 = await api('POST', '/public/commande', { ...base, lignes: [{ produitId: 'p2', quantite: 1 }] });
   assert.equal(r2.commande.numero, 2);
 });
