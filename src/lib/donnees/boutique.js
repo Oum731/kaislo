@@ -31,14 +31,25 @@ export function erreurOptions(produit, optionIds) {
   return null;
 }
 
-/** Texte de la commande envoyé sur le WhatsApp du commerçant (réponse du serveur : commande enregistrée). */
-export function messageCommande(c) {
+/**
+ * Texte de la commande envoyé sur le WhatsApp du commerçant (réponse du serveur : commande enregistrée).
+ * Un lien WhatsApp ne peut pas joindre de fichier : la photo de chaque article est donnée par son adresse (WhatsApp en affiche un aperçu).
+ * liensPhotos: false quand les photos sont jointes pour de vrai (partage avec fichiers).
+ */
+export const PHOTOS_MAX_DANS_LE_MESSAGE = 8;
+export function messageCommande(c, { liensPhotos = true } = {}) {
   const lignes = [];
   lignes.push(`Bonjour ${c.boutique}, je souhaite passer la commande n° ${c.numero} :`);
   lignes.push('');
   for (const l of c.lignes) {
     const options = l.options?.length ? ` (${l.options.join(', ')})` : '';
     lignes.push(`• ${l.quantite} × ${l.nom}${options} : ${formatPrix(l.total, c.devise)}`);
+  }
+  const photos = liensPhotos ? c.lignes.filter((l) => l.photo).slice(0, PHOTOS_MAX_DANS_LE_MESSAGE) : [];
+  if (photos.length) {
+    lignes.push('');
+    lignes.push('Photos des articles :');
+    for (const l of photos) lignes.push(`📷 ${l.nom} : ${l.photo}`);
   }
   lignes.push('');
   lignes.push(`*Total : ${formatPrix(c.total, c.devise)}*`);
@@ -53,6 +64,9 @@ export function messageCommande(c) {
 }
 
 export const lienCommandeWhatsApp = (c) => 'https://wa.me/' + c.whatsapp + '?text=' + encodeURIComponent(messageCommande(c));
+
+/** Adresses des photos de la commande (une par article, sans doublon). */
+export const photosCommande = (c) => [...new Set(c.lignes.map((l) => l.photo).filter(Boolean))];
 
 /** Choix d'options d'une ligne de commande reçue, au format de la caisse : { groupeId: [optionId, …] }. */
 export function choixDepuisCommande(produit, optionIds = []) {

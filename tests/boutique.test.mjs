@@ -1,7 +1,7 @@
 // Boutique en ligne : panier du client, texte de la commande WhatsApp, reprise dans la caisse.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, messageCommande, lienCommandeWhatsApp, choixDepuisCommande } from '../src/lib/donnees/boutique.js';
+import { photosCommande, prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, messageCommande, lienCommandeWhatsApp, choixDepuisCommande } from '../src/lib/donnees/boutique.js';
 
 const jus = { id: 'p1', nom: 'Jus', prix: 1000, promo: null, groupes: [
   { id: 'g1', nom: 'Taille', type: 'unique', obligatoire: true, options: [{ id: 'o1', nom: 'Petit', prix: 0 }, { id: 'o2', nom: 'Grand', prix: 500 }] },
@@ -43,6 +43,7 @@ test('le message WhatsApp reprend les articles, le total et les coordonnées du 
   assert.match(t, /Nom : Koffi/);
   assert.match(t, /Adresse : Cocody Angré/);
   assert.match(t, /Note : Sans sucre/);
+  assert.doesNotMatch(t, /Photos des articles/); // aucune photo dans cette commande
   const lien = lienCommandeWhatsApp(commande);
   assert.ok(lien.startsWith('https://wa.me/2250712345603?text='));
   assert.equal(decodeURIComponent(lien.split('?text=')[1]), t);
@@ -51,4 +52,15 @@ test('le message WhatsApp reprend les articles, le total et les coordonnées du 
 test('les options d\'une commande reçue redeviennent le choix de la caisse', () => {
   assert.deepEqual(choixDepuisCommande(jus, ['o2', 'o3']), { g1: ['o2'], g2: ['o3'] });
   assert.deepEqual(choixDepuisCommande(jus, []), {});
+});
+
+test('les photos des articles sont données par leur adresse, ou jointes sans lien', () => {
+  const avecPhotos = { ...commande, lignes: [{ ...commande.lignes[0], photo: 'https://kaislo.com/api/public/boutique-image?b=chez-awa&i=img_abc' }, commande.lignes[1]] };
+  const t = messageCommande(avecPhotos);
+  assert.match(t, /Photos des articles :/);
+  assert.match(t, /📷 Jus : https:\/\/kaislo\.com\/api\/public\/boutique-image\?b=chez-awa&i=img_abc/);
+  assert.equal(messageCommande(avecPhotos, { liensPhotos: false }).includes('📷'), false);
+  assert.equal(messageCommande(avecPhotos, { liensPhotos: false }).includes('boutique-image'), false);
+  assert.deepEqual(photosCommande(avecPhotos), ['https://kaislo.com/api/public/boutique-image?b=chez-awa&i=img_abc']);
+  assert.deepEqual(photosCommande(commande), []);
 });

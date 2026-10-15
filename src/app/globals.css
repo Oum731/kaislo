@@ -1089,3 +1089,8 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .vitrine-quantite { display: flex; gap: 10px; align-items: center; }
 .vitrine-total { font-size: 18px; text-align: right; }
 .vitrine-piege { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+/* Commandes en ligne (côté commerçant) : photo de l'article à côté de chaque ligne */
+.ligne-commande-photo { display: flex; gap: 10px; align-items: center; }
+.mini-photo { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex: none; }
+.mini-photo-vide { display: grid; place-items: center; background: var(--vert-tres-clair); font-size: 22px; }

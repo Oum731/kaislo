@@ -7,7 +7,7 @@
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
-import { Feuille, Icone, ChampTelephone } from '@/components/ui';
+import { Feuille, Icone, ChampTelephone, ImageStockee } from '@/components/ui';
 import { appelApi } from '@/lib/api';
 import { tr } from '@/lib/i18n';
 import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
@@ -149,8 +149,16 @@ export function FeuilleCommandesEnLigne() {
             </div>
             <p className="tres-petit muet">{formatDate(c.creeLe)} {formatHeure(c.creeLe)}</p>
             <p className="petit"><b>{c.client.nom}</b> · {c.client.telephone}{c.client.adresse ? ' · ' + c.client.adresse : ''}</p>
-            <ul className="petit" style={{ paddingLeft: 18 }}>
-              {c.lignes.map((l, i) => <li key={i}>{l.quantite} × {l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} : {formatPrix(l.total, dev)}</li>)}
+            <ul className="petit" style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
+              {c.lignes.map((l, i) => {
+                const produit = s.d.produits.find((p) => p.id === l.produitId);
+                return (
+                  <li key={i} className="ligne-commande-photo">
+                    <ImageStockee reference={produit?.image} className="mini-photo" alt={l.nom} secours={<span className="mini-photo mini-photo-vide" aria-hidden="true">{produit?.emoji || '🛍️'}</span>} />
+                    <span>{l.quantite} × {l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} : {formatPrix(l.total, dev)}</span>
+                  </li>
+                );
+              })}
             </ul>
             {c.note && <p className="petit muet">{tr('Note : {0}', [c.note])}</p>}
             <p><b>{tr('Total : {0}', [formatPrix(c.total, c.devise)])}</b></p>

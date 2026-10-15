@@ -12,7 +12,7 @@ import { appelApi } from '@/lib/api';
 import { chemin } from '@/config';
 import { formatPrix } from '@/lib/utils/format';
 import { normaliserTelephone } from '@/lib/donnees/telephone';
-import { prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, lienCommandeWhatsApp } from '@/lib/donnees/boutique';
+import { prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, lienCommandeWhatsApp, messageCommande, photosCommande } from '@/lib/donnees/boutique';
 
 const cleStockage = (slug) => 'kaislo-panier-' + slug;
 const lirePanier = (slug) => { try { return JSON.parse(localStorage.getItem(cleStockage(slug))) || []; } catch { return []; } };
@@ -40,6 +40,22 @@ export default function Boutique() {
       .then((r) => setBoutique(r.boutique))
       .catch((e) => setErreur(e.statut === 404 ? 'Cette boutique n’existe pas ou est fermée pour le moment.' : (e.horsLigne ? 'Pas de connexion internet.' : e.message)));
   }, []);
+
+  // Partage avec les vraies photos jointes (téléphones qui le permettent) : le client choisit le contact WhatsApp du vendeur
+  const peutPartagerPhotos = typeof navigator !== 'undefined' && !!navigator.share && !!navigator.canShare;
+  const partagerAvecPhotos = async () => {
+    setMessage('');
+    try {
+      const fichiers = await Promise.all(photosCommande(envoi.commande).slice(0, 6).map(async (u, i) => {
+        const blob = await (await fetch(u)).blob();
+        return new File([blob], 'article-' + (i + 1) + '.jpg', { type: blob.type || 'image/jpeg' });
+      }));
+      if (!navigator.canShare({ files: fichiers })) return setMessage('Votre téléphone ne permet pas d’envoyer les photos : utilisez « Ouvrir WhatsApp ».');
+      await navigator.share({ files: fichiers, text: messageCommande(envoi.commande, { liensPhotos: false }) });
+    } catch (e) {
+      if (e?.name !== 'AbortError') setMessage('Impossible d’envoyer les photos : utilisez « Ouvrir WhatsApp ».');
+    }
+  };
 
   const majPanier = (liste) => { setPanier(liste); garderPanier(slug, liste); };
   const devise = boutique?.devise;
@@ -72,6 +88,7 @@ export default function Boutique() {
     e.preventDefault();
     setMessage('');
     if (form.nom.trim().length < 2) return setMessage('Indiquez votre nom.');
+    if (form.adresse.trim().length < 3) return setMessage('Indiquez votre adresse de livraison (quartier, rue ou repère).');
     const n = normaliserTelephone(form.telephone, boutique.pays);
     if (!n.ok) return setMessage(n.erreur);
     setOccupe(true);
@@ -102,6 +119,10 @@ export default function Boutique() {
           <h1>Commande n° {envoi.commande.numero}</h1>
           <p>Il reste une étape : <b>envoyez la commande sur WhatsApp</b> à {boutique.nom}. Le message est déjà écrit, appuyez sur « Envoyer ».</p>
           <a className="btn grand" href={envoi.lien}>Ouvrir WhatsApp</a>
+          {peutPartagerPhotos && photosCommande(envoi.commande).length > 0 && (
+            <button className="btn secondaire" onClick={partagerAvecPhotos}>Envoyer avec les photos des articles</button>
+          )}
+          {message && <p className="alerte">{message}</p>}
           <p className="petit muet">Total : {formatPrix(envoi.commande.total, devise)}. Vous payez {boutique.nom} directement, à la livraison ou comme convenu avec le vendeur.</p>
           <button className="btn secondaire" onClick={() => setEnvoi(null)}>Retour à la boutique</button>
         </div>
@@ -190,7 +211,7 @@ export default function Boutique() {
             <p className="vitrine-total">Total : <b>{formatPrix(total, devise)}</b></p>
             <label className="champ"><span>Votre nom</span><input value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} autoComplete="name" /></label>
             <ChampTelephone libelle="Votre numéro (WhatsApp)" pays={boutique.pays} valeur={form.telephone} surChanger={(v) => setForm({ ...form, telephone: v })} />
-            <label className="champ"><span>Adresse de livraison (facultatif)</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>
+            <label className="champ"><span>Adresse de livraison</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>
             <label className="champ"><span>Note pour le vendeur (facultatif)</span><input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} maxLength={300} /></label>
             <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} />
             {message && <p className="alerte">{message}</p>}
