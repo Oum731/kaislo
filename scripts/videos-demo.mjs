@@ -926,9 +926,10 @@ for (const lang of ['fr', 'en']) {
 // ============================================================
 // VIDÉO DE PROSPECTION « COMMERCE + CLIENTS » (restaurants, fast-foods) : npm run videos -- promo-commande
 // Le client commande sur son téléphone, la commande arrive chez le commerçant, la vente et le stock suivent.
-// Sans voix (sous-titres seulement) : se regarde sans le son, sur WhatsApp ou Instagram. Écrite dans outils/videos-pub/.
+// Voix off + sous-titres (se regarde aussi sans le son, sur WhatsApp ou Instagram). Écrite dans outils/videos-pub/.
 // ============================================================
-const leg = async (p, html, ms = 2200) => { await p.evaluate((h) => { document.getElementById('v-titre').innerHTML = h; }, html); await pause(ms); };
+// Sous-titre + phrase dite par la voix (l'action continue pendant qu'elle parle ; la phrase suivante attend la fin de la précédente)
+const leg = async (p, html, ms = 600, parole = '') => { if (parole) await titre(p, html, parole); else { await p.evaluate((h) => { document.getElementById('v-titre').innerHTML = h; }, html); } await pause(ms); };
 // Ajoute le n-ième article de la vitrine (en choisissant la première option si elle est obligatoire)
 async function ajouterVitrine(p, n) {
   await toucher(p, null, await nieme(p, '.vitrine-article button', n), 900);
@@ -950,50 +951,56 @@ await enregistrer('promo-commande-fastfood', { largeur: 390, hauteur: 780, mobil
   await preparer(p, true);
   await carte(p, INTRO('Commandes, ventes et stock de votre restaurant<br>sur un seul téléphone.', 'Démo Kaislo · restaurants et fast-foods'));
   const film = await demarrer();
-  await pause(1700);
+  await pause(500);
+  await dire('Vous avez un restaurant ou un fast-food ? Voici comment Kaislo vous fait gagner du temps.');
+  await attendreVoix();
   await carte(p, `<div class="sk ancien"><div class="sk-badge">Aujourd’hui</div><div class="sk-rangee">💬📝😩</div><div class="sk-bulle sk-pop">Commandes éparpillées, stock au pif, comptes du soir à refaire…</div></div>`);
-  await pause(2200);
+  await dire('Aujourd’hui : des commandes éparpillées, un stock au jugé, et des comptes à refaire le soir.');
+  await attendreVoix();
   await carte(p, `<div class="sk kaislo"><div class="sk-badge">Avec Kaislo 😎</div><div class="sk-rangee">📲✅📦</div><div class="sk-bulle sk-pop">Le client commande, vous encaissez, le stock suit.</div></div>`);
-  await pause(2000);
+  await dire('Avec Kaislo : le client commande, vous encaissez, et le stock suit.');
+  await attendreVoix();
   await masquerCarte(p);
 
   // 1. Le client
-  await leg(p, '👤 <b>Le client</b> ouvre votre boutique sur son téléphone', 1500);
+  await leg(p, '👤 <b>Le client</b> ouvre votre boutique sur son téléphone', 300, 'Votre client ouvre votre boutique sur son téléphone.');
   await ajouterVitrine(p, 1);
   await ajouterVitrine(p, 2);
-  await leg(p, 'Il choisit ses plats en <b>quelques touches</b>', 700);
+  await leg(p, 'Il choisit ses plats en <b>quelques touches</b>', 300, 'Il choisit ses plats en quelques touches.');
   await toucher(p, null, '.vitrine-barre', 1000);
-  await leg(p, 'Son <b>nom</b> et son <b>adresse</b> de livraison', 600);
+  await leg(p, 'Son <b>nom</b> et son <b>adresse</b> de livraison', 300, 'Il indique son nom et son adresse de livraison.');
   await taper(p, await champ(p, 'Votre nom'), 'Aminata K.');
   await taper(p, await champ(p, 'Adresse de livraison'), 'Cocody Riviera 2');
-  await leg(p, 'Il touche <b>Confirmer la commande</b>', 700);
+  await leg(p, 'Il touche <b>Confirmer la commande</b>', 300, 'Il touche : confirmer la commande.');
   await toucher(p, 'Confirmer la commande', 'button[type=submit]', 1800);
-  await leg(p, '📲 La commande part <b>sur votre WhatsApp</b>, déjà écrite', 2200);
+  await leg(p, '📲 La commande part <b>sur votre WhatsApp</b>, déjà écrite', 300, 'Sa commande part directement sur votre WhatsApp, déjà écrite.');
 
   // 2. Le commerçant
   await p.goto(`${U}/app/?demo=resto-ivoire`, { waitUntil: 'networkidle0' });
   await p.evaluate(() => document.fonts.ready);
   await preparer(p, true);
-  await leg(p, '🏪 <b>Vous</b> : la commande est aussi dans Kaislo', 1100);
+  await leg(p, '🏪 <b>Vous</b> : la commande est aussi dans Kaislo', 300, 'Et vous, vous la retrouvez aussi dans Kaislo.');
   await seConnecter(p, '06 00 00 00 01');
   await toucher(p, null, '.avatar', 900);
   await toucher(p, 'Commandes en ligne', '.liste-item', 1600);
-  await leg(p, 'Nom, adresse, plats, total : <b>tout est là</b>', 2200);
+  await leg(p, 'Nom, adresse, plats, total : <b>tout est là</b>', 300, 'Nom, adresse, plats, total : tout est là.');
   await toucher(p, 'Ouvrir dans la caisse', 'button', 1500);
-  await leg(p, 'Un clic : la commande passe <b>en caisse</b>', 1500);
+  await leg(p, 'Un clic : la commande passe <b>en caisse</b>', 300, 'Un clic, et la commande passe en caisse.');
 
   // 3. Vente, stock, comptes
-  await leg(p, 'Le client paie : vous <b>validez</b>, le stock baisse tout seul', 600);
+  await leg(p, 'Le client paie : vous <b>validez</b>, le stock baisse tout seul', 300, 'Le client paie, vous validez, et le stock baisse tout seul.');
   await toucher(p, 'Valider', '.barre-panier button, .panneau-panier button.grand', 1200).catch(() => {});
   await toucher(p, 'Espèces', '.feuille .choix-grille button, .panneau-panier .choix-grille button', 800).catch(() => {});
   await toucher(p, 'Valider', '.feuille button.grand, .panneau-panier button.grand', 1800).catch(() => {});
-  await leg(p, 'Ticket imprimé ou envoyé par <b>WhatsApp</b>', 1500);
+  await leg(p, 'Ticket imprimé ou envoyé par <b>WhatsApp</b>', 300, 'Le ticket s’imprime, ou part sur WhatsApp.');
   await toucher(p, 'Nouvelle vente', '.feuille-pied button', 700).catch(() => {});
   await toucher(p, 'Accueil', '.menu-lien', 1500);
-  await leg(p, '📊 Le soir : <b>chiffre du jour</b>, marge et dépenses, sans calculer', 2400);
+  await leg(p, '📊 Le soir : <b>chiffre du jour</b>, marge et dépenses, sans calculer', 300, 'Le soir : votre chiffre du jour, votre marge et vos dépenses, sans rien calculer.');
   await leg(p, '');
   await carte(p, `<div class="k">K</div><div class="marque">Kaislo</div><h1>Essayez gratuitement<br>pendant 30 jours.</h1><p>Sans carte, sans engagement. Je vous inscris à distance en 2 minutes.</p><div class="bouton">kaislo.com</div>`);
-  await pause(2600);
+  await dire('Essayez Kaislo gratuitement pendant trente jours, sans carte et sans engagement. Je vous inscris à distance, en deux minutes.');
+  await attendreVoix();
+  await pause(1500);
   await film.stop();
 });
 
