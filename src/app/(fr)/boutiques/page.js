@@ -16,6 +16,7 @@ export const metadata = metaPage({
 const QUESTIONS = [
   ['Comment commander ?', 'Ouvrez une boutique, ajoutez les articles à votre panier, indiquez votre nom, votre numéro et votre adresse de livraison, puis confirmez : WhatsApp s’ouvre avec votre commande déjà écrite, à envoyer à la boutique.'],
   ['Pourquoi ne vois-je que les boutiques de mon pays ?', 'Pour que vous trouviez des boutiques qui livrent près de chez vous et affichent leurs prix dans votre devise. Votre pays est déduit de votre adresse IP (sans la conserver) ou de votre fuseau horaire ; vous pouvez le changer avec la liste ou « Utiliser ma position ».'],
+  ['Kaislo est-il responsable de ce que vendent les boutiques ?', 'Non. Kaislo est un outil, un pont entre les boutiques et leurs clients : chaque boutique est un commerçant indépendant, seul responsable de ses articles, de ses prix, de sa livraison et de sa vente. Kaislo n’est pas le vendeur et n’encaisse aucun paiement. Confirmez le prix et la disponibilité avec la boutique avant de payer.'],
   ['Qui reçoit ma commande ?', 'Uniquement la boutique que vous avez choisie : la commande part directement sur son numéro WhatsApp. Kaislo ne la lit pas et ne la revend à personne.'],
   ['Comment je paie ?', 'Vous payez la boutique directement, à la livraison ou comme convenu avec le vendeur. Kaislo n’encaisse jamais l’argent.'],
   ['Qui livre ?', 'La boutique. Chaque commerçant indique ses conditions de livraison sur sa page ; confirmez-les avec lui sur WhatsApp avant de payer.'],
@@ -37,6 +38,7 @@ export default function PageBoutiques() {
         <section className="section">
           <div className="site-largeur">
             <Annuaire />
+            <p className="tres-petit muet annuaire-avertissement">Les boutiques sont tenues par des commerçants indépendants. Kaislo est un outil qui relie les boutiques et leurs clients : il n’est pas le vendeur et n’est pas responsable des articles, des prix, de la livraison ni des ventes. <Link href="/conditions-utilisation/#boutiques-en-ligne">En savoir plus</Link></p>
           </div>
         </section>
         <section className="section claire">

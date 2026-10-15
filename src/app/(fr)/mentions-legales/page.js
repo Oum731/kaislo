@@ -36,6 +36,13 @@ const SECTIONS = [
     ),
   },
   {
+    id: 'role',
+    titre: 'Rôle de Kaislo',
+    contenu: (
+      <p>Kaislo est un outil de gestion (ventes, stock, inventaire) et un pont entre les boutiques et leurs clients. {SOCIETE.nom} n’est pas vendeur des articles présentés dans les boutiques en ligne : ils sont proposés par des commerçants indépendants, seuls responsables de leurs articles, de leurs prix, de leur livraison et de leurs ventes. {SOCIETE.nom} n’encaisse aucun paiement de ces ventes. Voir les <a href="/conditions-utilisation/#boutiques-en-ligne">conditions d’utilisation</a>.</p>
+    ),
+  },
+  {
     id: 'hebergeur',
     titre: 'Hébergeur',
     contenu: (

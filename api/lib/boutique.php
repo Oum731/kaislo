@@ -52,6 +52,7 @@ function versBoutique(?array $b, array $commerce): array
         'suggestion' => $b ? '' : slugBoutique($commerce['nom']),
         'whatsapp' => $b['whatsapp'] ?? '',
         'publique' => $b ? ($b['publique'] === null ? true : (bool) $b['publique']) : true,
+        'conditionsAcceptees' => !empty($b['conditions_le']),
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
         'lien' => $b ? lienBoutique($b['slug']) : '',
@@ -114,15 +115,21 @@ function routeBoutiqueEnregistrer(): never
     if ($autre && $autre['commerce_id'] !== $c['id']) throw new ErreurApi('Cette adresse est déjà prise : choisissez-en une autre', 409);
     $num = telephoneValide(texte($e, 'whatsapp', 'le numéro WhatsApp qui reçoit les commandes', true, 40), $c['pays'], 'numéro WhatsApp');
     $actif = !empty($e['actif']) ? 1 : 0;
+    // Kaislo est un outil, un pont entre les boutiques et leurs clients : le commerçant est seul responsable de ses articles et de ses ventes
+    $accepteLe = $avant['conditions_le'] ?? null;
+    if ($actif && !$accepteLe) {
+        if (empty($e['conditionsAcceptees'])) throw new ErreurApi('Pour activer votre boutique, acceptez les conditions : Kaislo est un outil, vous restez seul responsable de vos articles, de vos prix, de la livraison et de vos ventes.');
+        $accepteLe = maintenant();
+    }
     $publique = array_key_exists('publique', $e) ? (!empty($e['publique']) ? 1 : 0) : ($avant && $avant['publique'] !== null ? (int) $avant['publique'] : 1);
     $description = texte($e, 'description', 'la description', false, 300);
     $livraison = texte($e, 'livraison', 'la livraison', false, 300);
     if ($avant) {
-        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
-            [$slug, $actif, $publique, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
+        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
+            [$slug, $actif, $publique, $accepteLe, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
     } else {
-        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$c['id'], $slug, $actif, $publique, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
+        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$c['id'], $slug, $actif, $publique, $accepteLe, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
     }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();

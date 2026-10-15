@@ -16,7 +16,7 @@ import { CATEGORIES_ANNUAIRE, categorieAnnuaire, grouperBoutiques } from '@/lib/
 const lienBoutique = (b) => '/boutique/?b=' + encodeURIComponent(b.slug);
 const photo = (b, e) => (e.image ? chemin('/api/public/boutique-image?b=' + encodeURIComponent(b.slug) + '&i=' + encodeURIComponent(e.image)) : null);
 
-function CarteBoutique({ b }) {
+export function CarteBoutique({ b }) {
   const lieu = [b.quartier, b.ville].filter(Boolean).join(', ');
   return (
     <Link href={lienBoutique(b)} className="annuaire-carte">

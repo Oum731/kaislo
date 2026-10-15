@@ -138,6 +138,24 @@ const SECTIONS = [
     ),
   },
   {
+    id: 'boutiques-en-ligne',
+    titre: 'Boutiques en ligne : le rôle de Kaislo',
+    contenu: (
+      <>
+        <p><b>Kaislo est un outil, un pont entre les boutiques et leurs clients.</b> Il aide les commerçants à gérer leurs ventes, leur stock et leurs inventaires, et, avec la boutique en ligne, à présenter leurs articles et à recevoir les commandes de leurs clients sur WhatsApp. Kaislo n’est ni vendeur, ni acheteur, ni marché, ni intermédiaire commercial.</p>
+        <ul>
+          <li><b>Les ventes sont conclues entre le client et la boutique.</b> Kaislo n’est partie à aucune vente, ne détient aucune marchandise et n’encaisse aucun paiement : le client paie la boutique directement.</li>
+          <li><b>Chaque boutique est seule responsable</b> de ses articles, de leur description, de leurs photos, de leurs prix, de leur disponibilité, de leur qualité et de leur conformité (y compris les autorisations de vente), ainsi que de la livraison, des garanties, des remboursements et des éventuels litiges avec ses clients.</li>
+          <li><b>Kaislo n’est nullement responsable</b> de ce que les boutiques vendent ni de la manière dont elles le vendent, ni des échanges entre une boutique et ses clients. Kaislo ne contrôle pas les articles avant leur publication ; les boutiques sont des commerçants indépendants.</li>
+          <li><b>Articles interdits :</b> les boutiques s’engagent à ne publier que des articles qu’elles ont le droit de vendre. Tout article illégal ou dangereux est interdit ; nous pouvons retirer un article ou fermer une boutique après signalement, à l’adresse <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</li>
+          <li><b>Les clients</b> commandent librement : avant de payer, confirmez avec la boutique (par WhatsApp) la disponibilité, le prix final et les conditions de livraison.</li>
+          <li><b>Annuaire des boutiques :</b> la présence d’une boutique sur la page « Boutiques » n’est ni une recommandation, ni une garantie de Kaislo.</li>
+        </ul>
+        <p>Le commerçant qui active sa boutique en ligne accepte cette section (case à cocher dans l’application) et la date de son acceptation est conservée.</p>
+      </>
+    ),
+  },
+  {
     id: 'responsabilite',
     titre: 'Responsabilité',
     contenu: (
