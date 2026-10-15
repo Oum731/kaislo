@@ -15,7 +15,8 @@
 //     GET  /api/commandes-en-ligne       commandes reçues et nombre de nouvelles
 //     POST /api/commandes-en-ligne       { id, statut }
 //   Public :
-//     GET  /api/public/boutiques         annuaire : boutiques actives qui acceptent d'y figurer, avec quelques articles en exemple
+//     GET  /api/public/boutiques?pays=CI annuaire : boutiques actives qui acceptent d'y figurer, avec quelques articles en exemple.
+//                                        Seules les boutiques du pays du visiteur sont renvoyées (pays choisi, sinon déduit de l'adresse IP : voir pays.php).
 //     GET  /api/public/boutique?b=slug   boutique, catégories et articles publiés
 //     GET  /api/public/boutique-image?b=slug&i=img_…
 //     POST /api/public/commande          { b, client: { nom, telephone, adresse? }, note?, lignes: [{ produitId, quantite, options? }] }
@@ -51,6 +52,7 @@ function versBoutique(?array $b, array $commerce): array
         'suggestion' => $b ? '' : slugBoutique($commerce['nom']),
         'whatsapp' => $b['whatsapp'] ?? '',
         'publique' => $b ? ($b['publique'] === null ? true : (bool) $b['publique']) : true,
+        'conditionsAcceptees' => !empty($b['conditions_le']),
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
         'lien' => $b ? lienBoutique($b['slug']) : '',
@@ -113,15 +115,21 @@ function routeBoutiqueEnregistrer(): never
     if ($autre && $autre['commerce_id'] !== $c['id']) throw new ErreurApi('Cette adresse est déjà prise : choisissez-en une autre', 409);
     $num = telephoneValide(texte($e, 'whatsapp', 'le numéro WhatsApp qui reçoit les commandes', true, 40), $c['pays'], 'numéro WhatsApp');
     $actif = !empty($e['actif']) ? 1 : 0;
+    // Kaislo est un outil, un pont entre les boutiques et leurs clients : le commerçant est seul responsable de ses articles et de ses ventes
+    $accepteLe = $avant['conditions_le'] ?? null;
+    if ($actif && !$accepteLe) {
+        if (empty($e['conditionsAcceptees'])) throw new ErreurApi('Pour activer votre boutique, acceptez les conditions : Kaislo est un outil, vous restez seul responsable de vos articles, de vos prix, de la livraison et de vos ventes.');
+        $accepteLe = maintenant();
+    }
     $publique = array_key_exists('publique', $e) ? (!empty($e['publique']) ? 1 : 0) : ($avant && $avant['publique'] !== null ? (int) $avant['publique'] : 1);
     $description = texte($e, 'description', 'la description', false, 300);
     $livraison = texte($e, 'livraison', 'la livraison', false, 300);
     if ($avant) {
-        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
-            [$slug, $actif, $publique, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
+        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
+            [$slug, $actif, $publique, $accepteLe, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
     } else {
-        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$c['id'], $slug, $actif, $publique, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
+        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$c['id'], $slug, $actif, $publique, $accepteLe, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
     }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();
@@ -200,12 +208,17 @@ function routeBoutiquePublique(): never
 // GET /api/public/boutiques : annuaire pour les clients (sans numéro WhatsApp : il n'apparaît que sur la page de la boutique)
 function routeBoutiquesAnnuaire(): never
 {
+    $demande = codePaysValide($_GET['pays'] ?? null); // pays choisi par le visiteur
+    $pays = $demande ?? paysDeLAdresse(adresseIp());
     $liste = [];
+    $disponibles = [];
     $lignes = requete("SELECT b.slug, b.description, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu' ORDER BY b.modifie_le DESC LIMIT 300")->fetchAll();
     foreach ($lignes as $c) {
         if (abonnementExpire($c)) continue;
         $articles = array_values(articlesPublies($c['id']));
         if (!$articles) continue;
+        $disponibles[$c['pays']] = ($disponibles[$c['pays']] ?? 0) + 1;
+        if ($pays !== $c['pays']) continue; // un client ne voit que les boutiques de son pays
         // Exemples : les articles avec photo d'abord, quatre au plus
         usort($articles, fn ($x, $y) => (int) !empty($y['image']) <=> (int) !empty($x['image']));
         $exemples = array_map(fn ($p) => [
@@ -217,8 +230,8 @@ function routeBoutiquesAnnuaire(): never
             'devise' => $c['devise'], 'description' => (string) $c['description'], 'nbArticles' => count($articles), 'exemples' => $exemples,
         ];
     }
-    header('Cache-Control: public, max-age=120');
-    repondre(['ok' => true, 'boutiques' => $liste]);
+    header('Cache-Control: private, max-age=60');
+    repondre(['ok' => true, 'pays' => $pays, 'paysDisponibles' => $disponibles, 'boutiques' => $liste]);
 }
 
 function routeBoutiqueImage(): never

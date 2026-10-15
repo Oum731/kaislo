@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 15;
+const VERSION_BASE = 16;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -179,7 +179,8 @@ const STRUCTURE = [
     // Boutique en ligne d'un commerce (une vitrine : kaislo.com/b/<slug>) et commandes reçues par WhatsApp
     'boutiques' => [
         'colonnes' => [
-            'commerce_id' => 'ID', 'slug' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'whatsapp' => 'VARCHAR(40)', 'whatsapp_cle' => 'VARCHAR(20)', 'publique' => 'ENTIER', // 1 = affichée sur kaislo.com/boutiques/ (annuaire pour les clients)
+            'commerce_id' => 'ID', 'slug' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'whatsapp' => 'VARCHAR(40)', 'whatsapp_cle' => 'VARCHAR(20)', 'conditions_le' => 'DATE', // date d'acceptation du rôle de Kaislo (pont, pas vendeur) par le gérant
+            'publique' => 'ENTIER', // 1 = affichée sur kaislo.com/boutiques/ (annuaire pour les clients)
             'description' => 'LONG', 'livraison' => 'LONG', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
         ],
         'cle' => ['commerce_id'], 'uniques' => [['slug']], 'index' => [],
@@ -297,6 +298,11 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 14 : boutique visible dans l'annuaire des boutiques
     if ($version >= 1 && $version < 15) {
         $essayer('ALTER TABLE boutiques ADD COLUMN publique INTEGER NULL');
+    }
+
+    // Bases en version 1 à 15 : acceptation du rôle de Kaislo pour la boutique en ligne
+    if ($version >= 1 && $version < 16) {
+        $essayer('ALTER TABLE boutiques ADD COLUMN conditions_le VARCHAR(30) NULL');
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur
