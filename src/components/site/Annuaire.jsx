@@ -10,6 +10,7 @@ import { appelApi } from '@/lib/api';
 import { chemin } from '@/config';
 import { formatPrix } from '@/lib/utils/format';
 import { PAYS } from '@/lib/donnees/modeles';
+import { trouverPays, choisirPays, paysParGps } from '@/lib/pays-visiteur';
 import { CATEGORIES_ANNUAIRE, categorieAnnuaire, grouperBoutiques } from '@/lib/donnees/boutique';
 
 const lienBoutique = (b) => '/boutique/?b=' + encodeURIComponent(b.slug);
@@ -40,42 +41,89 @@ function CarteBoutique({ b }) {
   );
 }
 
+// « Boutiques en Côte d'Ivoire » : l'article change selon le pays
+const AVEC_ARTICLE = { CI: 'en', SN: 'au', ML: 'au', BF: 'au', BJ: 'au', TG: 'au', NE: 'au', GN: 'en', CM: 'au', GA: 'au', CG: 'au', MA: 'au', FR: 'en', BE: 'en', CA: 'au' };
+const lieuPays = (p) => `${AVEC_ARTICLE[p.id] || 'en'} ${p.nom}`;
+
 export default function Annuaire() {
-  const [boutiques, setBoutiques] = useState(null);
+  const [pays, setPays] = useState(null); // pays du visiteur : choisi, sinon déduit (fuseau, puis adresse IP), 'XX' si inconnu
+  const [donnees, setDonnees] = useState(null);
   const [erreur, setErreur] = useState('');
   const [texte, setTexte] = useState('');
-  const [pays, setPays] = useState('');
   const [rayon, setRayon] = useState('');
+  const [gps, setGps] = useState('');
 
+  useEffect(() => { trouverPays(setPays); }, []);
   useEffect(() => {
-    appelApi('GET', '/public/boutiques').then((r) => setBoutiques(r.boutiques)).catch((e) => setErreur(e.horsLigne ? 'Pas de connexion internet : réessayez dans un instant.' : 'Les boutiques ne se sont pas chargées : réessayez dans un instant.'));
-  }, []);
+    if (!pays) return undefined;
+    let actif = true;
+    setDonnees(null);
+    setErreur('');
+    setRayon('');
+    // Le serveur ne renvoie que les boutiques de ce pays ('ZZ' : pays inconnu, aucune boutique, seulement la liste des pays disponibles)
+    appelApi('GET', '/public/boutiques?pays=' + (pays === 'XX' ? 'ZZ' : pays)).then((r) => actif && setDonnees(r)).catch((e) => actif && setErreur(e.horsLigne ? 'Pas de connexion internet : réessayez dans un instant.' : 'Les boutiques ne se sont pas chargées : réessayez dans un instant.'));
+    return () => { actif = false; };
+  }, [pays]);
 
-  const paysPresents = useMemo(() => PAYS.filter((p) => (boutiques || []).some((b) => b.pays === p.id)), [boutiques]);
-  const rayonsPresents = useMemo(() => CATEGORIES_ANNUAIRE.filter((c) => (boutiques || []).some((b) => categorieAnnuaire(b.type).id === c.id && (!pays || b.pays === pays))), [boutiques, pays]);
-  const groupes = useMemo(() => grouperBoutiques(boutiques || [], { texte, pays, categorie: rayon }), [boutiques, texte, pays, rayon]);
+  const changer = (id) => { choisirPays(id); setGps(''); setPays(id); };
+  const utiliserPosition = async () => {
+    setGps('Recherche de votre position…');
+    const r = await paysParGps();
+    if (r.pays) { choisirPays(r.pays); setGps(''); setPays(r.pays); } else setGps(r.erreur);
+  };
 
-  if (erreur) return <p className="alerte">{erreur}</p>;
-  if (!boutiques) return <p className="muet">Chargement des boutiques…</p>;
+  const boutiques = donnees?.boutiques || [];
+  const paysActuel = PAYS.find((p) => p.id === pays);
+  const rayonsPresents = useMemo(() => CATEGORIES_ANNUAIRE.filter((c) => boutiques.some((b) => categorieAnnuaire(b.type).id === c.id)), [boutiques]);
+  const groupes = useMemo(() => grouperBoutiques(boutiques, { texte, categorie: rayon }), [boutiques, texte, rayon]);
+  const disponibles = Object.keys(donnees?.paysDisponibles || {});
+
+  const choixPays = (
+    <p className="petit annuaire-pays">
+      {paysActuel && paysActuel.id !== 'XX' ? <>Boutiques {lieuPays(paysActuel)} · </> : <b>Choisissez votre pays pour voir les boutiques près de chez vous · </b>}
+      <label className="lien" style={{ cursor: 'pointer' }}>{paysActuel && paysActuel.id !== 'XX' ? 'ce n’est pas votre pays ?' : 'Choisir mon pays'}{' '}
+        <select value={paysActuel?.id === 'XX' ? '' : pays || ''} onChange={(e) => e.target.value && changer(e.target.value)} aria-label="Changer de pays" style={{ maxWidth: 220 }}>
+          <option value="">—</option>
+          {PAYS.filter((p) => p.id !== 'XX').map((p) => <option key={p.id} value={p.id}>{p.nom}{disponibles.includes(p.id) ? ' ●' : ''}</option>)}
+        </select>
+      </label>{' '}
+      <button type="button" className="lien" onClick={utiliserPosition}>Utiliser ma position</button>
+      {gps && <span className="muet" role="status"> {gps}</span>}
+    </p>
+  );
+
+  if (erreur) return <>{choixPays}<p className="alerte">{erreur}</p></>;
+  if (!pays || !donnees) return <>{pays && choixPays}<p className="muet">Chargement des boutiques…</p></>;
   if (!boutiques.length) {
+    const autres = disponibles.map((id) => PAYS.find((p) => p.id === id)).filter(Boolean);
     return (
-      <div className="annuaire-vide">
-        <h2>Les premières boutiques arrivent bientôt</h2>
-        <p className="muet">Les commerçants qui utilisent Kaislo ouvrent leur boutique en ligne : elles apparaîtront ici dès qu’elles seront prêtes.</p>
-        <p><Link className="btn" href="/app/?inscription=1">Vous êtes commerçant ? Ouvrez la vôtre</Link></p>
+      <div className="annuaire">
+        {choixPays}
+        <div className="annuaire-vide">
+          {paysActuel && paysActuel.id !== 'XX' ? (
+            <>
+              <h2>Pas encore de boutique {lieuPays(paysActuel)}</h2>
+              <p className="muet">Les commerçants {lieuPays(paysActuel)} qui utilisent Kaislo ouvrent leur boutique en ligne : elles apparaîtront ici dès qu’elles seront prêtes.</p>
+            </>
+          ) : (
+            <>
+              <h2>Choisissez votre pays</h2>
+              <p className="muet">Nous n’avons pas pu deviner votre pays : indiquez-le avec la liste ci-dessus ou « Utiliser ma position ».</p>
+            </>
+          )}
+          {autres.length > 0 && (
+            <p className="petit">Boutiques disponibles : {autres.map((p, i) => <span key={p.id}>{i ? ', ' : ''}<button type="button" className="lien" onClick={() => changer(p.id)}>{p.nom}</button></span>)}</p>
+          )}
+          <p><Link className="btn" href="/app/?inscription=1">Vous êtes commerçant ? Ouvrez votre boutique</Link></p>
+        </div>
       </div>
     );
   }
   return (
     <div className="annuaire">
+      {choixPays}
       <div className="annuaire-filtres">
         <input type="search" className="saisie" value={texte} onChange={(e) => setTexte(e.target.value)} placeholder="Chercher une boutique, un article, une ville…" aria-label="Chercher une boutique" />
-        {paysPresents.length > 1 && (
-          <select className="saisie" value={pays} onChange={(e) => { setPays(e.target.value); setRayon(''); }} aria-label="Pays">
-            <option value="">Tous les pays</option>
-            {paysPresents.map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}
-          </select>
-        )}
       </div>
       {rayonsPresents.length > 1 && (
         <div className="vitrine-categories">

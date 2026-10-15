@@ -137,7 +137,22 @@ test('le commerçant voit les commandes et change leur statut', async () => {
 });
 
 test('l\'annuaire des boutiques montre les boutiques actives et publiques, sans numéro WhatsApp', async () => {
-  const a = await api('GET', '/public/boutiques');
+  // Un visiteur ne voit que les boutiques de son pays : choisi (?pays=), sinon déduit de l'adresse IP (en-tête du serveur ou du CDN)
+  assert.equal((await api('GET', '/public/boutiques')).boutiques.length, 0); // pays inconnu : rien à montrer
+  const sansPays = await api('GET', '/public/boutiques');
+  assert.equal(sansPays.pays, null);
+  assert.deepEqual(sansPays.paysDisponibles, { CI: 1 }); // sert à proposer le choix du pays
+  assert.equal((await api('GET', '/public/boutiques?pays=MA')).boutiques.length, 0);
+  assert.equal((await api('GET', '/public/boutiques?pays=ma')).pays, 'MA');
+  const parEntete = await (await fetch(`http://127.0.0.1:${PORT}/api/public/boutiques`, { headers: { 'CF-IPCountry': 'CI' } })).json();
+  assert.equal(parEntete.pays, 'CI');
+  assert.equal(parEntete.boutiques.length, 1);
+  const autreEntete = await (await fetch(`http://127.0.0.1:${PORT}/api/public/boutiques`, { headers: { 'CF-IPCountry': 'MA' } })).json();
+  assert.equal(autreEntete.boutiques.length, 0);
+  // Le pays choisi l'emporte sur l'adresse IP
+  const choisi = await (await fetch(`http://127.0.0.1:${PORT}/api/public/boutiques?pays=CI`, { headers: { 'CF-IPCountry': 'MA' } })).json();
+  assert.equal(choisi.boutiques.length, 1);
+  const a = await api('GET', '/public/boutiques?pays=CI');
   assert.equal(a.ok, true);
   assert.equal(a.boutiques.length, 1);
   const b = a.boutiques[0];
@@ -154,10 +169,10 @@ test('l\'annuaire des boutiques montre les boutiques actives et publiques, sans 
   assert.equal(JSON.stringify(a).includes('0712345603'), false);
   // La boutique peut refuser d'y figurer, tout en restant ouverte à ceux qui ont son lien
   assert.equal((await api('POST', '/boutique', { ...reglages, publique: false }, gerant.jeton)).boutique.publique, false);
-  assert.equal((await api('GET', '/public/boutiques')).boutiques.length, 0);
+  assert.equal((await api('GET', '/public/boutiques?pays=CI')).boutiques.length, 0);
   assert.equal((await api('GET', '/public/boutique?b=chez-awa')).ok, true);
   assert.equal((await api('POST', '/boutique', { ...reglages, publique: true }, gerant.jeton)).boutique.publique, true);
-  assert.equal((await api('GET', '/public/boutiques')).boutiques.length, 1);
+  assert.equal((await api('GET', '/public/boutiques?pays=CI')).boutiques.length, 1);
 });
 
 test('une boutique désactivée ou une adresse déjà prise sont refusées', async () => {
@@ -168,6 +183,6 @@ test('une boutique désactivée ou une adresse déjà prise sont refusées', asy
   assert.equal((await api('POST', '/boutique', { ...reglages, whatsapp: '0712345613' }, autre.jeton)).statut, 409);
   assert.equal((await api('POST', '/boutique', { ...reglages, actif: false }, gerant.jeton)).ok, true);
   assert.equal((await api('GET', '/public/boutique?b=chez-awa')).statut, 404);
-  assert.equal((await api('GET', '/public/boutiques')).boutiques.length, 0);
+  assert.equal((await api('GET', '/public/boutiques?pays=CI')).boutiques.length, 0);
   assert.equal((await api('POST', '/public/commande', { b: 'chez-awa', client: { nom: 'K', telephone: '0701020304' }, lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 404);
 });

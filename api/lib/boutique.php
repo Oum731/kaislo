@@ -15,7 +15,8 @@
 //     GET  /api/commandes-en-ligne       commandes reçues et nombre de nouvelles
 //     POST /api/commandes-en-ligne       { id, statut }
 //   Public :
-//     GET  /api/public/boutiques         annuaire : boutiques actives qui acceptent d'y figurer, avec quelques articles en exemple
+//     GET  /api/public/boutiques?pays=CI annuaire : boutiques actives qui acceptent d'y figurer, avec quelques articles en exemple.
+//                                        Seules les boutiques du pays du visiteur sont renvoyées (pays choisi, sinon déduit de l'adresse IP : voir pays.php).
 //     GET  /api/public/boutique?b=slug   boutique, catégories et articles publiés
 //     GET  /api/public/boutique-image?b=slug&i=img_…
 //     POST /api/public/commande          { b, client: { nom, telephone, adresse? }, note?, lignes: [{ produitId, quantite, options? }] }
@@ -200,12 +201,17 @@ function routeBoutiquePublique(): never
 // GET /api/public/boutiques : annuaire pour les clients (sans numéro WhatsApp : il n'apparaît que sur la page de la boutique)
 function routeBoutiquesAnnuaire(): never
 {
+    $demande = codePaysValide($_GET['pays'] ?? null); // pays choisi par le visiteur
+    $pays = $demande ?? paysDeLAdresse(adresseIp());
     $liste = [];
+    $disponibles = [];
     $lignes = requete("SELECT b.slug, b.description, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu' ORDER BY b.modifie_le DESC LIMIT 300")->fetchAll();
     foreach ($lignes as $c) {
         if (abonnementExpire($c)) continue;
         $articles = array_values(articlesPublies($c['id']));
         if (!$articles) continue;
+        $disponibles[$c['pays']] = ($disponibles[$c['pays']] ?? 0) + 1;
+        if ($pays !== $c['pays']) continue; // un client ne voit que les boutiques de son pays
         // Exemples : les articles avec photo d'abord, quatre au plus
         usort($articles, fn ($x, $y) => (int) !empty($y['image']) <=> (int) !empty($x['image']));
         $exemples = array_map(fn ($p) => [
@@ -217,8 +223,8 @@ function routeBoutiquesAnnuaire(): never
             'devise' => $c['devise'], 'description' => (string) $c['description'], 'nbArticles' => count($articles), 'exemples' => $exemples,
         ];
     }
-    header('Cache-Control: public, max-age=120');
-    repondre(['ok' => true, 'boutiques' => $liste]);
+    header('Cache-Control: private, max-age=60');
+    repondre(['ok' => true, 'pays' => $pays, 'paysDisponibles' => $disponibles, 'boutiques' => $liste]);
 }
 
 function routeBoutiqueImage(): never

@@ -277,8 +277,10 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
 - **Annuaire pour les clients** : `kaislo.com/boutiques/` (lien dans le menu, le pied de page et un bandeau de l'accueil français) liste les
   boutiques actives, rangées par rayon (restauration, alimentation, mode et beauté, téléphonie, maison, papeterie), avec 4 articles en
   exemple, une recherche (boutique, article, ville) et un filtre par pays. Un clic ouvre la boutique : la commande part ensuite
-  directement sur le WhatsApp de CETTE boutique. Le gérant choisit d'y figurer (case dans Compte → Boutique en ligne, cochée par défaut) ;
-  le numéro WhatsApp n'apparaît pas dans la liste. API : `GET /api/public/boutiques`. La page est dans le sitemap.
+  directement sur le WhatsApp de CETTE boutique. **Seules les boutiques du pays du visiteur sont affichées** (et envoyées par l'API) : pays
+  choisi (cookie `kaislo_pays`), sinon fuseau horaire puis adresse IP (même détection que les tarifs, `api/lib/pays.php`) ; liste de pays et
+  « Utiliser ma position » pour changer ; sans pays connu, la page demande de choisir. Le gérant choisit d'y figurer (case dans Compte → Boutique en ligne, cochée par défaut) ;
+  le numéro WhatsApp n'apparaît pas dans la liste. API : `GET /api/public/boutiques?pays=CI`. La page est dans le sitemap.
 - Code : `api/lib/boutique.php`, `src/components/site/Boutique.jsx`, `src/components/app/feuilles/FeuillesBoutique.jsx`,
   `src/lib/donnees/boutique.js` ; tests `tests/api-boutique.test.mjs` et `tests/boutique.test.mjs`.
 

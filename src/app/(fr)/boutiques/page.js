@@ -15,6 +15,7 @@ export const metadata = metaPage({
 
 const QUESTIONS = [
   ['Comment commander ?', 'Ouvrez une boutique, ajoutez les articles à votre panier, indiquez votre nom, votre numéro et votre adresse de livraison, puis confirmez : WhatsApp s’ouvre avec votre commande déjà écrite, à envoyer à la boutique.'],
+  ['Pourquoi ne vois-je que les boutiques de mon pays ?', 'Pour que vous trouviez des boutiques qui livrent près de chez vous et affichent leurs prix dans votre devise. Votre pays est déduit de votre adresse IP (sans la conserver) ou de votre fuseau horaire ; vous pouvez le changer avec la liste ou « Utiliser ma position ».'],
   ['Qui reçoit ma commande ?', 'Uniquement la boutique que vous avez choisie : la commande part directement sur son numéro WhatsApp. Kaislo ne la lit pas et ne la revend à personne.'],
   ['Comment je paie ?', 'Vous payez la boutique directement, à la livraison ou comme convenu avec le vendeur. Kaislo n’encaisse jamais l’argent.'],
   ['Qui livre ?', 'La boutique. Chaque commerçant indique ses conditions de livraison sur sa page ; confirmez-les avec lui sur WhatsApp avant de payer.'],
@@ -30,7 +31,7 @@ export default function PageBoutiques() {
           <div className="site-largeur">
             <span className="etiquette">Boutiques</span>
             <h1>Boutiques en ligne près de chez vous</h1>
-            <p className="chapo">Restaurants, épiceries, boutiques, téléphonie… Choisissez une boutique, composez votre panier et envoyez la commande directement sur son WhatsApp. Vous payez le commerçant, comme d’habitude.</p>
+            <p className="chapo">Restaurants, épiceries, boutiques, téléphonie… Les boutiques de votre pays : choisissez-en une, composez votre panier et envoyez la commande directement sur son WhatsApp. Vous payez le commerçant, comme d’habitude.</p>
           </div>
         </section>
         <section className="section">
