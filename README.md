@@ -261,6 +261,19 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   Le modèle de contrat est un point de départ : à faire relire par un juriste local avant usage.
 - Page de recrutement : `/devenir-commercial/`.
 
+## Boutique en ligne (vitrine par commerçant)
+
+- Le gérant active sa boutique dans **Compte → Boutique en ligne** (adresse `kaislo.com/boutique/?b=nom`, WhatsApp qui reçoit les commandes,
+  présentation, livraison) et coche **« Vendre en ligne »** dans la fiche des articles à publier.
+- Le client choisit ses articles (options comprises), saisit son nom et son numéro, puis **WhatsApp s'ouvre avec la commande déjà écrite**
+  à envoyer au commerçant. Kaislo n'encaisse rien : le client paie le commerçant comme d'habitude.
+- La commande est aussi enregistrée (table `commandes_en_ligne`) : **Compte → Commandes en ligne** (statuts, WhatsApp au client,
+  « Ouvrir dans la caisse » qui reprend les articles dans le panier pour que ventes et stock restent justes).
+- Le serveur recalcule les prix (jamais ceux du navigateur) ; seuls les articles cochés sont visibles, sans prix d'achat ni stock ;
+  limite d'envois par adresse IP et champ piège contre les robots. La page n'a ni suivi publicitaire ni référencement Google.
+- Code : `api/lib/boutique.php`, `src/components/site/Boutique.jsx`, `src/components/app/feuilles/FeuillesBoutique.jsx`,
+  `src/lib/donnees/boutique.js` ; tests `tests/api-boutique.test.mjs` et `tests/boutique.test.mjs`.
+
 ## Numéros de téléphone
 
 Chaque commerce et chaque utilisateur est identifié par son numéro, enregistré au **format international**
