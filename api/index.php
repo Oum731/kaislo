@@ -42,6 +42,7 @@ require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
 require __DIR__ . '/lib/commerciaux.php';
 require __DIR__ . '/lib/commerces.php';
+require __DIR__ . '/lib/boutique.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -77,6 +78,13 @@ try {
         'POST /messages' => routeMessagesEcrire(),
         'POST /contact' => routeContact(),
         'GET /parrainage' => routeParrainage(),
+        'GET /boutique' => routeBoutiqueLire(),
+        'POST /boutique' => routeBoutiqueEnregistrer(),
+        'GET /commandes-en-ligne' => routeCommandesEnLigneLire(),
+        'POST /commandes-en-ligne' => routeCommandesEnLigneStatut(),
+        'GET /public/boutique' => routeBoutiquePublique(),
+        'GET /public/boutique-image' => routeBoutiqueImage(),
+        'POST /public/commande' => routeCommandePublique(),
         'GET /avis' => routeAvisPublics(),
         'GET /mon-avis' => routeMonAvis(),
         'POST /avis' => routeAvisEnvoyer(),

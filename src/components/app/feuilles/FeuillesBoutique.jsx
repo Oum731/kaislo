@@ -1,0 +1,169 @@
+'use client';
+// ------------------------------------------------------------
+// BOUTIQUE EN LIGNE (côté commerçant) :
+//  - « Boutique en ligne » : activer la vitrine, choisir son adresse et le WhatsApp qui reçoit les commandes, partager le lien ;
+//  - « Commandes en ligne » : commandes envoyées par les clients (statut, WhatsApp au client, reprise dans la caisse).
+// Les articles à publier se choisissent dans leur fiche (case « Vendre en ligne »).
+// ------------------------------------------------------------
+import { useEffect, useState } from 'react';
+import { useKaislo } from '@/store/kaislo';
+import { Feuille, Icone, ChampTelephone } from '@/components/ui';
+import { appelApi } from '@/lib/api';
+import { tr } from '@/lib/i18n';
+import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
+import { lienWhatsApp } from '@/lib/donnees/whatsapp';
+import { choixDepuisCommande, STATUTS_COMMANDE } from '@/lib/donnees/boutique';
+
+const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
+
+const messageErreur = (e) => (e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message);
+
+export function FeuilleBoutique() {
+  const s = useKaislo();
+  const demo = s.estDemoActuel();
+  const [b, setB] = useState(null);
+  const [erreur, setErreur] = useState('');
+  const [message, setMessage] = useState('');
+  const [occupe, setOccupe] = useState(false);
+
+  useEffect(() => {
+    if (demo) return;
+    appelApi('GET', '/boutique', null, s.jetonServeur())
+      .then((r) => setB({ ...r.boutique, slug: r.boutique.slug || r.boutique.suggestion, whatsapp: r.boutique.whatsapp || s.d.commerce.telephone || '' }))
+      .catch((e) => setErreur(messageErreur(e)));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const maj = (x) => setB({ ...b, ...x });
+  const enregistrer = async () => {
+    setOccupe(true);
+    setErreur('');
+    setMessage('');
+    try {
+      const r = await appelApi('POST', '/boutique', { actif: b.actif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison }, s.jetonServeur());
+      setB({ ...r.boutique });
+      setMessage(r.boutique.actif ? tr('Boutique enregistrée : elle est en ligne.') : tr('Boutique enregistrée (désactivée).'));
+    } catch (e) { setErreur(messageErreur(e)); }
+    setOccupe(false);
+  };
+  const copier = async () => {
+    try { await navigator.clipboard.writeText(b.lien); setMessage(tr('Lien copié.')); } catch { setErreur(tr('Copie impossible : utilisez le bouton WhatsApp.')); }
+  };
+
+  return (
+    <Feuille titre={tr('Boutique en ligne')} surFermer={s.fermer}
+      pied={b && <button className="btn grand bloc" disabled={occupe} onClick={enregistrer}>{occupe ? tr('Enregistrement…') : tr('Enregistrer')}</button>}>
+      <div className="pile">
+        {demo && <p className="info-verte petit">{tr('La boutique en ligne n’est pas disponible dans la démo : créez votre commerce pour l’essayer.')}</p>}
+        {erreur && <p className="alerte">{erreur}</p>}
+        {message && <p className="info-verte">{message}</p>}
+        {!b && !erreur && !demo && <p className="muet petit">{tr('Chargement…')}</p>}
+        {b && (
+          <>
+            <p className="petit muet">{tr('Vos clients choisissent leurs articles sur une page à votre nom, puis la commande s’ouvre sur WhatsApp : ils vous l’envoient, vous la recevez aussi dans Compte → Commandes en ligne. Vous êtes payé comme d’habitude, Kaislo n’encaisse rien.')}</p>
+            <label className="case-accord"><input type="checkbox" checked={!!b.actif} onChange={(e) => maj({ actif: e.target.checked })} /><span>{tr('Boutique en ligne activée')}</span></label>
+            <label className="champ"><span>{tr('Adresse de la boutique')}</span>
+              <input value={b.slug} onChange={(e) => maj({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })} placeholder="chez-awa" />
+              <p className="aide">kaislo.com/boutique/?b={b.slug || '…'}</p>
+            </label>
+            <ChampTelephone libelle={tr('Numéro WhatsApp qui reçoit les commandes')} pays={s.d.commerce.pays} valeur={b.whatsapp} surChanger={(v) => maj({ whatsapp: v })} />
+            <label className="champ"><span>{tr('Présentation (facultatif)')}</span><textarea value={b.description} onChange={(e) => maj({ description: e.target.value })} maxLength={300} placeholder={tr('Ex : Boissons fraîches et jus naturels à Cocody')} /></label>
+            <label className="champ"><span>{tr('Livraison (facultatif)')}</span><textarea value={b.livraison} onChange={(e) => maj({ livraison: e.target.value })} maxLength={300} placeholder={tr('Ex : Livraison à Cocody et Marcory, 1 000 FCFA')} /></label>
+            <p className="petit">{tr('{0} article(s) publié(s) en ligne. Pour en publier d’autres : ouvrez la fiche de l’article et cochez « Vendre en ligne ».', [b.articlesPublies])}</p>
+            {b.lien && (
+              <div className="carte pile">
+                <b>{tr('Votre lien')}</b>
+                <p className="petit" style={{ wordBreak: 'break-all' }}>{b.lien}</p>
+                <div className="grille-2">
+                  <button className="btn secondaire" onClick={copier}><Icone nom="ok" /> {tr('Copier le lien')}</button>
+                  <a className="btn" target="_blank" rel="noreferrer" href={'https://wa.me/?text=' + encodeURIComponent(tr('Commandez chez {0} : {1}', [s.d.commerce.nom, b.lien]))}><Icone nom="whatsapp" /> {tr('Partager')}</a>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </Feuille>
+  );
+}
+
+const TEXTE_STATUT = {
+  nouvelle: (c, boutique) => tr('Bonjour {0}, c’est {1}. Nous avons bien reçu votre commande n° {2}. Nous revenons vers vous très vite.', [c.client.nom, boutique, c.numero]),
+  confirmee: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est confirmée. Merci !', [c.client.nom, boutique, c.numero]),
+  prete: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est prête.', [c.client.nom, boutique, c.numero]),
+  livree: (c, boutique) => tr('Bonjour {0}, c’est {1}. Merci pour votre commande n° {2} !', [c.client.nom, boutique, c.numero]),
+  annulee: (c, boutique) => tr('Bonjour {0}, c’est {1}. Nous ne pouvons pas honorer votre commande n° {2}. Désolé, écrivez-nous pour en parler.', [c.client.nom, boutique, c.numero]),
+};
+
+export function FeuilleCommandesEnLigne() {
+  const s = useKaislo();
+  const demo = s.estDemoActuel();
+  const [liste, setListe] = useState(null);
+  const [erreur, setErreur] = useState('');
+  const [message, setMessage] = useState('');
+
+  const charger = () => appelApi('GET', '/commandes-en-ligne', null, s.jetonServeur()).then((r) => setListe(r.commandes)).catch((e) => setErreur(messageErreur(e)));
+  useEffect(() => { if (!demo) charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const changer = async (c, statut) => {
+    setErreur('');
+    try {
+      const r = await appelApi('POST', '/commandes-en-ligne', { id: c.id, statut }, s.jetonServeur());
+      setListe((l) => l.map((x) => (x.id === c.id ? r.commande : x)));
+    } catch (e) { setErreur(messageErreur(e)); }
+  };
+
+  // Reprend les articles dans la caisse : le vendeur encaisse comme d'habitude (stock et comptes du soir restent justes)
+  const ouvrirDansCaisse = (c) => {
+    const manquants = [];
+    s.viderPanier();
+    for (const l of c.lignes) {
+      const produit = s.d.produits.find((p) => p.id === l.produitId);
+      if (!produit) { manquants.push(l.nom); continue; }
+      s.ajouterAuPanier(produit, choixDepuisCommande(produit, l.optionIds || []), l.quantite);
+    }
+    useKaislo.setState({ aDistance: true, telephoneDistance: c.client.telephone });
+    if (c.statut === 'nouvelle') changer(c, 'confirmee');
+    s.allerA('caisse');
+    if (manquants.length) s.message(tr('Article(s) introuvable(s) dans votre catalogue : {0}', [manquants.join(', ')]), 'erreur');
+    else setMessage('');
+  };
+
+  const nom = s.d.commerce.nom;
+  const pays = s.d.commerce.pays;
+  const dev = s.d.commerce.devise;
+
+  return (
+    <Feuille titre={tr('Commandes en ligne')} surFermer={s.fermer} pleine large
+      avant={<span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>}
+      pied={<button className="btn secondaire bloc" onClick={() => { setErreur(''); charger(); }}>{tr('Actualiser')}</button>}>
+      <div className="pile">
+        {demo && <p className="info-verte petit">{tr('Les commandes en ligne ne sont pas disponibles dans la démo.')}</p>}
+        {erreur && <p className="alerte">{erreur}</p>}
+        {message && <p className="info-verte">{message}</p>}
+        {liste && !liste.length && <p className="astuce">{tr('Aucune commande pour le moment. Partagez le lien de votre boutique (Compte → Boutique en ligne).')}</p>}
+        {(liste || []).map((c) => (
+          <div key={c.id} className="carte pile">
+            <div className="ligne espace">
+              <b>{tr('Commande n° {0}', [c.numero])}</b>
+              <span className={'badge' + (c.statut === 'nouvelle' ? ' safran' : c.statut === 'annulee' ? ' gris' : '')}>{libelleStatut(c.statut)}</span>
+            </div>
+            <p className="tres-petit muet">{formatDate(c.creeLe)} {formatHeure(c.creeLe)}</p>
+            <p className="petit"><b>{c.client.nom}</b> · {c.client.telephone}{c.client.adresse ? ' · ' + c.client.adresse : ''}</p>
+            <ul className="petit" style={{ paddingLeft: 18 }}>
+              {c.lignes.map((l, i) => <li key={i}>{l.quantite} × {l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} : {formatPrix(l.total, dev)}</li>)}
+            </ul>
+            {c.note && <p className="petit muet">{tr('Note : {0}', [c.note])}</p>}
+            <p><b>{tr('Total : {0}', [formatPrix(c.total, c.devise)])}</b></p>
+            <div className="grille-2">
+              <a className="btn secondaire" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, TEXTE_STATUT[c.statut](c, nom))}><Icone nom="whatsapp" /> {tr('Écrire au client')}</a>
+              <button className="btn" onClick={() => ouvrirDansCaisse(c)}><Icone nom="caisse" /> {tr('Ouvrir dans la caisse')}</button>
+            </div>
+            <div className="puces enveloppe">
+              {STATUTS_COMMANDE.map(([id]) => <button key={id} className={'puce' + (c.statut === id ? ' actif' : '')} onClick={() => c.statut !== id && changer(c, id)}>{libelleStatut(id)}</button>)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Feuille>
+  );
+}

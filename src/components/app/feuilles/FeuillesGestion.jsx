@@ -17,6 +17,7 @@ import { liensMenu } from '../Coque';
 import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
 import { cleTelephone } from '@/lib/donnees/modeles';
 import { estServeur } from '@/lib/donnees/synchro';
+import { appelApi } from '@/lib/api';
 import { tr, tt } from '@/lib/i18n';
 
 // ---------- Produit ----------
@@ -100,6 +101,10 @@ export function FeuilleProduit({ produit, categorieId }) {
             </div>
           )}
         </div>
+        <label className="case-accord">
+          <input type="checkbox" checked={!!b.enLigne} onChange={(e) => maj({ enLigne: e.target.checked })} />
+          <span>{tr('Vendre en ligne')}<br /><span className="tres-petit muet">{tr('L’article apparaît dans votre boutique en ligne (Compte → Boutique en ligne).')}</span></span>
+        </label>
         <div className="grille-3">
           <label className="champ"><span>{tr('Prix ({0})', [dev])}</span><ChampMontant valeur={b.prix} surChanger={(v) => maj({ prix: v })} /></label>
           <label className="champ"><span>{tr('Prix promo')}</span><ChampMontant valeur={b.promo} surChanger={(v) => maj({ promo: v })} placeholder="—" /></label>
@@ -413,6 +418,12 @@ export function FeuilleCompte() {
   const enLigne = estServeur(s.d);
   const [biometrie, setBiometrie] = useState(false); // l'appareil a-t-il une empreinte / Face ID ?
   useEffect(() => { if (enLigne) biometrieDisponible().then(setBiometrie); }, [enLigne]);
+  // Commandes en ligne à traiter (pastille)
+  const [nouvellesCommandes, setNouvellesCommandes] = useState(0);
+  useEffect(() => {
+    if (!enLigne || !s.estGerant() || s.estDemoActuel()) return;
+    appelApi('GET', '/commandes-en-ligne', null, s.jetonServeur()).then((r) => setNouvellesCommandes(r.nouvelles || 0)).catch(() => {});
+  }, [enLigne]); // eslint-disable-line react-hooks/exhaustive-deps
   const empreinteActive = !!s.prefs.biometrie?.[cleTelephone(s.utilisateur.telephone)];
   const confirmerDeconnexion = () =>
     confirm(tr('Déconnecter cet appareil de « {0} » ?{1}', [s.d.commerce.nom, enLigne
@@ -450,6 +461,18 @@ export function FeuilleCompte() {
             <span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>
             <b className="grandit">{(s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length) > 1 ? tr('Mes commerces ({0})', [s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length]) : tr('Mes commerces')}</b>
             <span className="petit muet">{tr('Ajouter un commerce')}</span>
+            <Icone nom="droite" className="muet" />
+          </button>
+          <button className="liste-item" onClick={() => s.ouvrir('boutique')}>
+            <span className="mini-emoji teinte-safran"><Icone nom="produits" /></span>
+            <b className="grandit">{tr('Boutique en ligne')}</b>
+            <span className="petit muet">{tr('Vendre sur WhatsApp')}</span>
+            <Icone nom="droite" className="muet" />
+          </button>
+          <button className="liste-item" onClick={() => s.ouvrir('commandesEnLigne')}>
+            <span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>
+            <b className="grandit">{tr('Commandes en ligne')}</b>
+            {nouvellesCommandes > 0 ? <span className="badge safran">{nouvellesCommandes}</span> : <span className="petit muet">{tr('Reçues par WhatsApp')}</span>}
             <Icone nom="droite" className="muet" />
           </button>
           <button className="liste-item" onClick={() => s.ouvrir('parrainage')}>

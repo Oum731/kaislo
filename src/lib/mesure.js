@@ -10,7 +10,7 @@
 import { GOOGLE_ADS_ID, GOOGLE_ADS_INSCRIPTION, FACEBOOK_PIXEL_ID } from '../config.js';
 
 const CLE = 'kaislo-mesure'; // 'oui' | 'non' (absent = pas encore répondu)
-const PAGES_SANS_MESURE = /^\/(admin|commercial)(\/|$)/;
+const PAGES_SANS_MESURE = /^\/(admin|commercial|boutique)(\/|$)/;
 
 export const mesureActive = () => !!(GOOGLE_ADS_ID || FACEBOOK_PIXEL_ID);
 export const pageSansMesure = (chemin) => PAGES_SANS_MESURE.test(chemin || '');
