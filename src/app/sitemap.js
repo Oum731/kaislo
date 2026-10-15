@@ -13,7 +13,7 @@ export default function sitemap() {
   const pages = [
     '/', '/gestion-restaurant/', '/gestion-epicerie/', '/gestion-stock/',
     ...Object.values(ACTIVITES()).map((a) => a.lien),
-    '/tarifs/', '/tutoriels/', '/guides/', ...GUIDES.map((g) => `/guides/${g.fr.slug}/`), ...PAYS_SEO.map(lienPays), '/devenir-commercial/',
+    '/tarifs/', '/boutiques/', '/tutoriels/', '/guides/', ...GUIDES.map((g) => `/guides/${g.fr.slug}/`), ...PAYS_SEO.map(lienPays), '/devenir-commercial/',
     ...PAGES_LEGALES().map(([lien]) => lien),
   ];
   // Pages avec version anglaise : chacune indique son équivalent (hreflang) pour Google

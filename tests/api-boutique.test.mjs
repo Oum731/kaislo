@@ -136,6 +136,30 @@ test('le commerçant voit les commandes et change leur statut', async () => {
   assert.equal((await api('GET', '/commandes-en-ligne')).statut, 401);
 });
 
+test('l\'annuaire des boutiques montre les boutiques actives et publiques, sans numéro WhatsApp', async () => {
+  const a = await api('GET', '/public/boutiques');
+  assert.equal(a.ok, true);
+  assert.equal(a.boutiques.length, 1);
+  const b = a.boutiques[0];
+  assert.equal(b.slug, 'chez-awa');
+  assert.equal(b.nom, 'Chez Awa Boutique');
+  assert.equal(b.type, 'epicerie');
+  assert.equal(b.pays, 'CI');
+  assert.equal(b.nbArticles, 2);
+  // Exemples : l'article avec photo d'abord, sans prix d'achat ni numéro
+  assert.equal(b.exemples[0].nom, 'Jus de bissap');
+  assert.equal(b.exemples[0].image, 'img_abc');
+  assert.equal(JSON.stringify(a).includes('prixAchat'), false);
+  assert.equal(JSON.stringify(a).includes('2250712345603'), false);
+  assert.equal(JSON.stringify(a).includes('0712345603'), false);
+  // La boutique peut refuser d'y figurer, tout en restant ouverte à ceux qui ont son lien
+  assert.equal((await api('POST', '/boutique', { ...reglages, publique: false }, gerant.jeton)).boutique.publique, false);
+  assert.equal((await api('GET', '/public/boutiques')).boutiques.length, 0);
+  assert.equal((await api('GET', '/public/boutique?b=chez-awa')).ok, true);
+  assert.equal((await api('POST', '/boutique', { ...reglages, publique: true }, gerant.jeton)).boutique.publique, true);
+  assert.equal((await api('GET', '/public/boutiques')).boutiques.length, 1);
+});
+
 test('une boutique désactivée ou une adresse déjà prise sont refusées', async () => {
   const autre = await api('POST', '/inscription', {
     commerce: { nom: 'Autre commerce', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Marcory', telephone: '0712345611' },
@@ -144,5 +168,6 @@ test('une boutique désactivée ou une adresse déjà prise sont refusées', asy
   assert.equal((await api('POST', '/boutique', { ...reglages, whatsapp: '0712345613' }, autre.jeton)).statut, 409);
   assert.equal((await api('POST', '/boutique', { ...reglages, actif: false }, gerant.jeton)).ok, true);
   assert.equal((await api('GET', '/public/boutique?b=chez-awa')).statut, 404);
+  assert.equal((await api('GET', '/public/boutiques')).boutiques.length, 0);
   assert.equal((await api('POST', '/public/commande', { b: 'chez-awa', client: { nom: 'K', telephone: '0701020304' }, lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 404);
 });

@@ -274,6 +274,11 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
 - **Démo** : la boutique est activée dans les deux commerces de démo (`/boutique/?demo=chez-sentinelle`, articles cochés « Vendre en ligne »).
   La commande du visiteur reste dans l'appareil et apparaît dans Compte → Commandes en ligne de la démo (avec deux commandes d'exemple) ;
   le message WhatsApp s'ouvre sans destinataire. Code : `src/lib/donnees/boutique-demo.js`.
+- **Annuaire pour les clients** : `kaislo.com/boutiques/` (lien dans le menu, le pied de page et un bandeau de l'accueil français) liste les
+  boutiques actives, rangées par rayon (restauration, alimentation, mode et beauté, téléphonie, maison, papeterie), avec 4 articles en
+  exemple, une recherche (boutique, article, ville) et un filtre par pays. Un clic ouvre la boutique : la commande part ensuite
+  directement sur le WhatsApp de CETTE boutique. Le gérant choisit d'y figurer (case dans Compte → Boutique en ligne, cochée par défaut) ;
+  le numéro WhatsApp n'apparaît pas dans la liste. API : `GET /api/public/boutiques`. La page est dans le sitemap.
 - Code : `api/lib/boutique.php`, `src/components/site/Boutique.jsx`, `src/components/app/feuilles/FeuillesBoutique.jsx`,
   `src/lib/donnees/boutique.js` ; tests `tests/api-boutique.test.mjs` et `tests/boutique.test.mjs`.
 

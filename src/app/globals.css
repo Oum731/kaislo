@@ -1095,3 +1095,24 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .mini-photo { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex: none; }
 .mini-photo-vide { display: grid; place-items: center; background: var(--vert-tres-clair); font-size: 22px; }
 .vitrine-demo { background: var(--safran-clair); color: var(--safran-fonce); text-align: center; padding: 8px 16px; }
+
+/* Annuaire des boutiques (/boutiques/) */
+.bandeau-boutiques { background: var(--vert-clair); border-bottom: 1px solid var(--bordure); }
+.bandeau-boutiques .site-largeur { display: flex; gap: 12px 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; }
+.annuaire-filtres { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.annuaire-filtres input { flex: 1 1 260px; min-width: 0; }
+.annuaire-rayon { margin-top: 26px; }
+.annuaire-rayon h2 { margin-bottom: 12px; font-size: 22px; }
+.annuaire-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.annuaire-carte { background: var(--surface); border: 1px solid var(--bordure); border-radius: 16px; padding: 14px; display: grid; gap: 12px; align-content: start; color: inherit; text-decoration: none; min-width: 0; }
+.annuaire-carte:hover { border-color: var(--vert); }
+.annuaire-entete { display: grid; gap: 2px; }
+.annuaire-description { margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.annuaire-exemples { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.annuaire-exemple { display: grid; gap: 2px; min-width: 0; }
+.annuaire-vignette { aspect-ratio: 1; border-radius: 10px; background: var(--vert-tres-clair); display: grid; place-items: center; overflow: hidden; font-size: 28px; }
+.annuaire-vignette img { width: 100%; height: 100%; object-fit: cover; }
+.annuaire-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.annuaire-vide { text-align: center; max-width: 520px; margin: 0 auto; padding: 24px 0; display: grid; gap: 12px; }
+.annuaire-etapes { list-style: none; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 16px; }
+.annuaire-etapes li { background: var(--surface); border: 1px solid var(--bordure); border-radius: 14px; padding: 14px; display: grid; gap: 4px; }

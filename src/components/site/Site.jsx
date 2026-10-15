@@ -35,6 +35,7 @@ const LIENS_SITE = () => ([
   [lien('/gestion-stock/'), tr('Stock')],
   [lien('/#fonctions'), tr('Fonctions')],
   [lien('/tarifs/'), tr('Tarifs')],
+  ...(langueActive() === 'fr' ? [['/boutiques/', tr('Boutiques')]] : []),
   [lien('/tutoriels/'), tr('Tutoriels')],
   [lien('/guides/'), tr('Guides')],
   [lien('/#questions'), tr('Questions')],
@@ -88,6 +89,7 @@ export function PiedSite() {
             <Link href={lien('/gestion-epicerie/')}>{tr('Gestion pour épicerie')}</Link>
             <Link href={lien('/gestion-stock/')}>{tr('Gestion de stock et inventaire')}</Link>
             <Link href={lien('/tarifs/')}>{tr('Tarifs')}</Link>
+            {langueActive() === 'fr' && <Link href="/boutiques/">{tr('Boutiques en ligne')}</Link>}
             {langueActive() === 'fr' && <Link href="/pays/belgique/">{tr('Logiciel de caisse en Belgique')}</Link>}
             <Link href={lien('/guides/')}>{tr('Guides pratiques')}</Link>
             <Link href={lien('/guides/#modeles')}>{tr('Modèles Excel gratuits')}</Link>
