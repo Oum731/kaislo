@@ -63,7 +63,7 @@ export function messageCommande(c, { liensPhotos = true } = {}) {
   return lignes.join('\n');
 }
 
-export const lienCommandeWhatsApp = (c) => 'https://wa.me/' + c.whatsapp + '?text=' + encodeURIComponent(messageCommande(c));
+export const lienCommandeWhatsApp = (c) => 'https://wa.me/' + (c.whatsapp || '') + '?text=' + encodeURIComponent(messageCommande(c));
 
 /** Adresses des photos de la commande (une par article, sans doublon). */
 export const photosCommande = (c) => [...new Set(c.lignes.map((l) => l.photo).filter(Boolean))];

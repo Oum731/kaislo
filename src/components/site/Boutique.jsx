@@ -31,8 +31,22 @@ export default function Boutique() {
   const [form, setForm] = useState({ nom: '', telephone: '', adresse: '', note: '', site: '' });
   const [message, setMessage] = useState('');
 
+  const [demo, setDemo] = useState(null); // identifiant du commerce de démo, ou null
   useEffect(() => {
-    const s = (new URLSearchParams(window.location.search).get('b') || '').toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    // Démo : kaislo.com/boutique/?demo=resto-ivoire (articles de la démo, commande gardée dans l'appareil)
+    const idDemo = params.get('demo');
+    if (idDemo) {
+      setDemo(idDemo);
+      setSlug('demo-' + idDemo);
+      setPanier(lirePanier('demo-' + idDemo));
+      import('@/lib/donnees/boutique-demo').then(async (m) => {
+        const b = m.estDemo(idDemo) ? await m.boutiqueDemo(idDemo) : null;
+        if (b) setBoutique(b); else setErreur('Cette démonstration n’existe pas.');
+      }).catch(() => setErreur('La démonstration n’a pas pu se charger.'));
+      return;
+    }
+    const s = (params.get('b') || '').toLowerCase();
     setSlug(s);
     if (!s) { setErreur('Adresse de boutique incomplète.'); return; }
     setPanier(lirePanier(s));
@@ -90,9 +104,19 @@ export default function Boutique() {
     if (form.nom.trim().length < 2) return setMessage('Indiquez votre nom.');
     if (form.adresse.trim().length < 3) return setMessage('Indiquez votre adresse de livraison (quartier, rue ou repère).');
     const n = normaliserTelephone(form.telephone, boutique.pays);
-    if (!n.ok) return setMessage(n.erreur);
+    if (!n.ok && !demo) return setMessage(n.erreur);
     setOccupe(true);
     try {
+      if (demo) {
+        // Démonstration : la commande reste dans l'appareil (voir Compte → Commandes en ligne de l'application de démo)
+        const m = await import('@/lib/donnees/boutique-demo');
+        const commande = await m.passerCommandeDemo(demo, boutique, panier, { nom: form.nom.trim(), telephone: n.ok ? n.affichage : form.telephone, adresse: form.adresse.trim() }, form.note);
+        majPanier([]);
+        setPanierOuvert(false);
+        setEnvoi({ commande, lien: lienCommandeWhatsApp(commande) });
+        setOccupe(false);
+        return;
+      }
       const r = await appelApi('POST', '/public/commande', {
         b: slug, site: form.site, note: form.note, client: { nom: form.nom.trim(), telephone: form.telephone, adresse: form.adresse.trim() },
         lignes: panier.map((l) => ({ produitId: l.produitId, quantite: l.quantite, options: l.optionIds })),
@@ -117,7 +141,7 @@ export default function Boutique() {
       <div className="vitrine">
         <div className="vitrine-centre">
           <h1>Commande n° {envoi.commande.numero}</h1>
-          <p>Il reste une étape : <b>envoyez la commande sur WhatsApp</b> à {boutique.nom}. Le message est déjà écrit, appuyez sur « Envoyer ».</p>
+          <p>{demo ? <>Dans la vraie boutique, WhatsApp s’ouvrirait ici avec la commande déjà écrite, à envoyer au commerçant. Essayez : le message s’ouvre sans destinataire, envoyez-le à vous-même.</> : <>Il reste une étape : <b>envoyez la commande sur WhatsApp</b> à {boutique.nom}. Le message est déjà écrit, appuyez sur « Envoyer ».</>}</p>
           <a className="btn grand" href={envoi.lien}>Ouvrir WhatsApp</a>
           {peutPartagerPhotos && photosCommande(envoi.commande).length > 0 && (
             <button className="btn secondaire" onClick={partagerAvecPhotos}>Envoyer avec les photos des articles</button>
@@ -131,10 +155,11 @@ export default function Boutique() {
   }
 
   const total = totalPanier(panier);
-  const image = (p) => (p.image ? chemin('/api/public/boutique-image?b=' + encodeURIComponent(slug) + '&i=' + encodeURIComponent(p.image)) : null);
+  const image = (p) => (!p.image ? null : p.image.startsWith('/') ? chemin(p.image) : demo ? null : chemin('/api/public/boutique-image?b=' + encodeURIComponent(slug) + '&i=' + encodeURIComponent(p.image)));
 
   return (
     <div className="vitrine">
+      {demo && <p className="vitrine-demo petit">Boutique de démonstration : votre commande reste sur cet appareil. Vous la retrouvez dans l’application de démo, menu Compte → Commandes en ligne.</p>}
       <header className="vitrine-tete">
         <div className="vitrine-largeur">
           <h1>{boutique.nom}</h1>
@@ -210,7 +235,7 @@ export default function Boutique() {
             ))}
             <p className="vitrine-total">Total : <b>{formatPrix(total, devise)}</b></p>
             <label className="champ"><span>Votre nom</span><input value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} autoComplete="name" /></label>
-            <ChampTelephone libelle="Votre numéro (WhatsApp)" pays={boutique.pays} valeur={form.telephone} surChanger={(v) => setForm({ ...form, telephone: v })} />
+            <ChampTelephone libelle="Votre numéro (WhatsApp)" pays={boutique.pays} valeur={form.telephone} surChanger={(v) => setForm({ ...form, telephone: v })} verifier={!demo} />
             <label className="champ"><span>Adresse de livraison</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>
             <label className="champ"><span>Note pour le vendeur (facultatif)</span><input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} maxLength={300} /></label>
             <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} />

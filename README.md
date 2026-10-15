@@ -271,6 +271,9 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   « Ouvrir dans la caisse » qui reprend les articles dans le panier pour que ventes et stock restent justes).
 - Le serveur recalcule les prix (jamais ceux du navigateur) ; seuls les articles cochés sont visibles, sans prix d'achat ni stock ;
   limite d'envois par adresse IP et champ piège contre les robots. La page n'a ni suivi publicitaire ni référencement Google.
+- **Démo** : la boutique est activée dans les deux commerces de démo (`/boutique/?demo=chez-sentinelle`, articles cochés « Vendre en ligne »).
+  La commande du visiteur reste dans l'appareil et apparaît dans Compte → Commandes en ligne de la démo (avec deux commandes d'exemple) ;
+  le message WhatsApp s'ouvre sans destinataire. Code : `src/lib/donnees/boutique-demo.js`.
 - Code : `api/lib/boutique.php`, `src/components/site/Boutique.jsx`, `src/components/app/feuilles/FeuillesBoutique.jsx`,
   `src/lib/donnees/boutique.js` ; tests `tests/api-boutique.test.mjs` et `tests/boutique.test.mjs`.
 
