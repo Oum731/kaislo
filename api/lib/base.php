@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 13;
+const VERSION_BASE = 14;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -175,6 +175,22 @@ const STRUCTURE = [
             'paye_le' => 'DATE', 'paye_par' => 'TEXTE', 'moyen' => 'VARCHAR(30)',
         ],
         'cle' => ['id'], 'uniques' => [['commercial_id', 'semaine']], 'index' => [],
+    ],
+    // Boutique en ligne d'un commerce (une vitrine : kaislo.com/b/<slug>) et commandes reçues par WhatsApp
+    'boutiques' => [
+        'colonnes' => [
+            'commerce_id' => 'ID', 'slug' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'whatsapp' => 'VARCHAR(40)', 'whatsapp_cle' => 'VARCHAR(20)',
+            'description' => 'LONG', 'livraison' => 'LONG', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
+        ],
+        'cle' => ['commerce_id'], 'uniques' => [['slug']], 'index' => [],
+    ],
+    'commandes_en_ligne' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'numero' => 'ENTIER', 'client_nom' => 'TEXTE', 'client_telephone' => 'VARCHAR(40)',
+            'adresse' => 'TEXTE', 'note' => 'LONG', 'lignes' => 'LONG', 'total' => 'MONTANT', 'devise' => 'VARCHAR(6)',
+            'statut' => 'VARCHAR(12)', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
+        ],
+        'cle' => ['id'], 'uniques' => [['commerce_id', 'numero']], 'index' => [['commerce_id', 'cree_le']],
     ],
     // Autorisations données par le gérant (code PIN saisi sur l'appareil d'un vendeur : annuler une vente)
     'autorisations' => [
