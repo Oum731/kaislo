@@ -13,7 +13,7 @@ import { CREDIT, paysParId } from './modeles.js';
 import { symbole } from '../utils/format.js';
 
 // À augmenter quand la structure des données change : la démo est alors recréée
-export const VERSION_DONNEES = 12;
+export const VERSION_DONNEES = 13;
 
 // Raccourcis pour écrire le catalogue de façon lisible
 let compteur = 0;
@@ -530,6 +530,8 @@ export function creerDonneesDemo(commerceId, paysId = 'MA') {
     d.produits = d.produits.map((p) => (p.nom in STOCK_BOISSONS ? { ...p, suiviStock: true, stock: STOCK_BOISSONS[p.nom], seuilAlerte: 12 } : p));
   }
   adapterAuPays(d, paysId);
+  // Boutique en ligne de la démo : tous les articles sont publiés (le visiteur peut en décocher)
+  d.produits = d.produits.map((p) => ({ ...p, enLigne: true }));
   d.commerce.code = COMMERCES_DEMO.find((x) => x.id === commerceId).code;
   // Les démos ont un abonnement Pro actif (pour montrer l'espace Amorac)
   const ilYa = (j) => new Date(Date.now() - j * 86400000).toISOString();

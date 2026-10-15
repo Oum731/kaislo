@@ -13,6 +13,7 @@ import { tr } from '@/lib/i18n';
 import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
 import { lienWhatsApp } from '@/lib/donnees/whatsapp';
 import { choixDepuisCommande, STATUTS_COMMANDE } from '@/lib/donnees/boutique';
+import { chemin } from '@/config';
 
 const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
 
@@ -49,11 +50,28 @@ export function FeuilleBoutique() {
     try { await navigator.clipboard.writeText(b.lien); setMessage(tr('Lien copié.')); } catch { setErreur(tr('Copie impossible : utilisez le bouton WhatsApp.')); }
   };
 
+  if (demo) {
+    const lienDemo = chemin('/boutique/?demo=' + s.d.commerce.id);
+    const publies = s.d.produits.filter((p) => p.enLigne).length;
+    return (
+      <Feuille titre={tr('Boutique en ligne')} surFermer={s.fermer}
+        pied={<a className="btn grand bloc" href={lienDemo} target="_blank" rel="noreferrer"><Icone nom="lienExterne" /> {tr('Voir ma boutique (démo)')}</a>}>
+        <div className="pile">
+          <p className="petit muet">{tr('Vos clients choisissent leurs articles sur une page à votre nom, puis la commande s’ouvre sur WhatsApp : ils vous l’envoient, vous la recevez aussi dans Compte → Commandes en ligne. Vous êtes payé comme d’habitude, Kaislo n’encaisse rien.')}</p>
+          <p className="info-verte petit">{tr('Démo : la boutique est déjà activée avec {0} article(s) publié(s). Passez une commande, elle apparaît dans Compte → Commandes en ligne. Pour publier ou retirer un article : cochez « Vendre en ligne » dans sa fiche.', [publies])}</p>
+          <div className="carte pile">
+            <b>{tr('Votre lien')}</b>
+            <p className="petit" style={{ wordBreak: 'break-all' }}>kaislo.com{lienDemo}</p>
+          </div>
+        </div>
+      </Feuille>
+    );
+  }
+
   return (
     <Feuille titre={tr('Boutique en ligne')} surFermer={s.fermer}
       pied={b && <button className="btn grand bloc" disabled={occupe} onClick={enregistrer}>{occupe ? tr('Enregistrement…') : tr('Enregistrer')}</button>}>
       <div className="pile">
-        {demo && <p className="info-verte petit">{tr('La boutique en ligne n’est pas disponible dans la démo : créez votre commerce pour l’essayer.')}</p>}
         {erreur && <p className="alerte">{erreur}</p>}
         {message && <p className="info-verte">{message}</p>}
         {!b && !erreur && !demo && <p className="muet petit">{tr('Chargement…')}</p>}
@@ -101,11 +119,18 @@ export function FeuilleCommandesEnLigne() {
   const [erreur, setErreur] = useState('');
   const [message, setMessage] = useState('');
 
-  const charger = () => appelApi('GET', '/commandes-en-ligne', null, s.jetonServeur()).then((r) => setListe(r.commandes)).catch((e) => setErreur(messageErreur(e)));
-  useEffect(() => { if (!demo) charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const charger = () => (demo
+    ? import('@/lib/donnees/boutique-demo').then((m) => m.commandesDemo(s.d.commerce.id)).then(setListe)
+    : appelApi('GET', '/commandes-en-ligne', null, s.jetonServeur()).then((r) => setListe(r.commandes)).catch((e) => setErreur(messageErreur(e))));
+  useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const changer = async (c, statut) => {
     setErreur('');
+    if (demo) {
+      const m = await import('@/lib/donnees/boutique-demo');
+      setListe(await m.changerStatutDemo(s.d.commerce.id, c.id, statut));
+      return;
+    }
     try {
       const r = await appelApi('POST', '/commandes-en-ligne', { id: c.id, statut }, s.jetonServeur());
       setListe((l) => l.map((x) => (x.id === c.id ? r.commande : x)));
@@ -137,7 +162,7 @@ export function FeuilleCommandesEnLigne() {
       avant={<span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>}
       pied={<button className="btn secondaire bloc" onClick={() => { setErreur(''); charger(); }}>{tr('Actualiser')}</button>}>
       <div className="pile">
-        {demo && <p className="info-verte petit">{tr('Les commandes en ligne ne sont pas disponibles dans la démo.')}</p>}
+        {demo && <p className="info-verte petit">{tr('Démo : les deux premières commandes sont des exemples. Passez-en une vous-même depuis la boutique de démo : elle apparaît ici.')}</p>}
         {erreur && <p className="alerte">{erreur}</p>}
         {message && <p className="info-verte">{message}</p>}
         {liste && !liste.length && <p className="astuce">{tr('Aucune commande pour le moment. Partagez le lien de votre boutique (Compte → Boutique en ligne).')}</p>}

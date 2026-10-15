@@ -421,7 +421,11 @@ export function FeuilleCompte() {
   // Commandes en ligne à traiter (pastille)
   const [nouvellesCommandes, setNouvellesCommandes] = useState(0);
   useEffect(() => {
-    if (!enLigne || !s.estGerant() || s.estDemoActuel()) return;
+    if (s.estDemoActuel()) {
+      import('@/lib/donnees/boutique-demo').then((m) => m.commandesDemo(s.d.commerce.id)).then((l) => setNouvellesCommandes(l.filter((c) => c.statut === 'nouvelle').length)).catch(() => {});
+      return;
+    }
+    if (!enLigne || !s.estGerant()) return;
     appelApi('GET', '/commandes-en-ligne', null, s.jetonServeur()).then((r) => setNouvellesCommandes(r.nouvelles || 0)).catch(() => {});
   }, [enLigne]); // eslint-disable-line react-hooks/exhaustive-deps
   const empreinteActive = !!s.prefs.biometrie?.[cleTelephone(s.utilisateur.telephone)];
