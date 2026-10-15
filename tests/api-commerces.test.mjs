@@ -136,7 +136,8 @@ test('l’équipe voit les produits d’un commerce sans aucun chiffre, et la co
   const r = await api('GET', '/admin/catalogue?commerceId=' + resto.commerce.id, null, admin);
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.deepEqual(r.produits.map((p) => p.nom), ['Poulet braisé']);
-  const texte = JSON.stringify(r);
+  // L'identifiant du commerce est aléatoire et peut contenir « 600 » par hasard : on le retire avant de chercher les chiffres
+  const texte = JSON.stringify({ ...r, commerce: { nom: r.commerce.nom, type: r.commerce.type } });
   for (const interdit of ['prix', 'prixAchat', 'stock', 'total', '5000', '1000', '600']) assert.ok(!texte.includes(interdit), `« ${interdit} » ne doit pas apparaître : ${texte}`);
   const notees = Number(execFileSync('php', ['-r', `$p = new PDO('sqlite:${fichierBase}'); echo $p->query("SELECT COUNT(*) FROM journal WHERE action = 'amorac-catalogue' AND commerce_id = '${resto.commerce.id}'")->fetchColumn();`]).toString());
   assert.equal(notees, 1);

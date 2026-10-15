@@ -1144,3 +1144,13 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 @media (min-width: 1000px) { .tuiles-commercant { grid-template-columns: repeat(4, 1fr); } }
 .tuile-commercant h3 { margin: 10px 0 2px; font-size: 17px; }
 .tuile-commercant p { margin: 0; font-size: 14.5px; }
+
+/* Évite le débordement horizontal des cartes d'accueil (les éléments de grille/flex peuvent rétrécir) */
+.choix-cartes { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .choix-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); } .choix-cartes.une { grid-template-columns: minmax(0, 1fr); } }
+.choix-carte { min-width: 0; box-sizing: border-box; }
+.choix-carte > div { flex: 1 1 0; min-width: 0; }
+.choix-carte .btn { max-width: 100%; box-sizing: border-box; white-space: normal; text-align: center; }
+.accueil-boutiques-tete > * { min-width: 0; }
+.accueil-boutiques-tete .btn { max-width: 100%; white-space: normal; }
+@media (max-width: 520px) { .choix-carte .btn.grand { padding-left: 14px; padding-right: 14px; font-size: 16px; } }
