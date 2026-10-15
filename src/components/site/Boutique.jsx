@@ -194,8 +194,8 @@ export default function Boutique() {
             <label className="champ"><span>Note pour le vendeur (facultatif)</span><input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} maxLength={300} /></label>
             <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} />
             {message && <p className="alerte">{message}</p>}
-            <p className="tres-petit muet">En appuyant sur le bouton, WhatsApp s’ouvre avec votre commande déjà écrite : il suffit de l’envoyer à {boutique.nom}.</p>
-            <button className="btn grand bloc" type="submit" disabled={occupe}>{occupe ? 'Envoi…' : 'Envoyer ma commande sur WhatsApp'}</button>
+            <p className="tres-petit muet">Après avoir confirmé, WhatsApp s’ouvre avec votre commande déjà écrite : il suffit de l’envoyer à {boutique.nom} pour qu’elle soit prise en compte.</p>
+            <button className="btn grand bloc" type="submit" disabled={occupe}>{occupe ? 'Confirmation…' : 'Confirmer la commande'}</button>
             <button type="button" className="btn fantome bloc" onClick={() => setPanierOuvert(false)}>Continuer mes achats</button>
           </form>
         </div>
