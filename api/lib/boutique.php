@@ -223,7 +223,9 @@ function routeCommandePublique(): never
     $client = is_array($e['client'] ?? null) ? $e['client'] : [];
     $nom = texte($client, 'nom', 'votre nom', true, 60);
     $tel = telephoneValide(texte($client, 'telephone', 'votre numéro de téléphone', true, 40), $c['pays'], 'votre numéro');
-    $adresse = texte($client, 'adresse', 'l’adresse de livraison', false, 200);
+    $adresse = texte($client, 'adresse', 'l’adresse de livraison', true, 200);
+    if (mb_strlen($adresse) < 3) throw new ErreurApi('Indiquez votre adresse de livraison (quartier, rue ou repère)');
+    if (mb_strlen($nom) < 2) throw new ErreurApi('Indiquez votre nom');
     $note = texte($e, 'note', 'la note', false, 300);
     $demandes = is_array($e['lignes'] ?? null) ? array_values($e['lignes']) : [];
     if (!$demandes) throw new ErreurApi('Votre panier est vide');
@@ -249,7 +251,9 @@ function routeCommandePublique(): never
         $prix = arrondirMontant($prix, $c['devise']);
         $ligneTotal = arrondirMontant($prix * $quantite, $c['devise']);
         $total += $ligneTotal;
-        $lignes[] = ['produitId' => (string) $p['id'], 'nom' => (string) $p['nom'], 'options' => $details, 'optionIds' => $idsOptions, 'quantite' => $quantite, 'prixUnitaire' => $prix, 'total' => $ligneTotal];
+        $image = imagePublique((string) ($p['image'] ?? ''));
+        $photo = $image ? 'https://' . (domaineSite() ?: 'kaislo.com') . '/api/public/boutique-image?b=' . $b['slug'] . '&i=' . $image : null;
+        $lignes[] = ['produitId' => (string) $p['id'], 'nom' => (string) $p['nom'], 'photo' => $photo, 'options' => $details, 'optionIds' => $idsOptions, 'quantite' => $quantite, 'prixUnitaire' => $prix, 'total' => $ligneTotal];
     }
     $total = arrondirMontant($total, $c['devise']);
     if (noterEchec($cleIp, 30)) throw new ErreurApi('Trop de commandes depuis cet appareil : réessayez plus tard.', 429);
