@@ -4,7 +4,7 @@
 // Tous les numéros sont enregistrés au format international (norme E.164),
 // par exemple « +225 07 07 12 34 56 ». Le numéro identifie chaque personne et
 // chaque commerce : il est unique dans tout Kaislo.
-// Mêmes règles côté serveur : api/lib/telephone.php (à garder identiques).
+// Mêmes règles côté serveur : api/lib/telephone.php (elles lisent le même fichier, api/lib/pays.json).
 //
 //   longueurs    : nombre de chiffres du numéro national (sans l'indicatif)
 //   zeroNational : le 0 de tête disparaît en format international (Maroc, France…) ;
@@ -12,23 +12,9 @@
 //   groupes      : découpage pour l'affichage
 // ------------------------------------------------------------
 import { tr } from '../i18n/index.js';
-export const REGLES_TELEPHONE = {
-  MA: { indicatif: '212', longueurs: [9], zeroNational: true, groupes: [1, 2, 2, 2, 2], exemple: '06 12 34 56 78' },
-  CI: { indicatif: '225', longueurs: [10], zeroNational: false, groupes: [2, 2, 2, 2, 2], exemple: '07 07 12 34 56' },
-  SN: { indicatif: '221', longueurs: [9], zeroNational: false, groupes: [2, 3, 2, 2], exemple: '77 123 45 67' },
-  ML: { indicatif: '223', longueurs: [8], zeroNational: false, groupes: [2, 2, 2, 2], exemple: '76 12 34 56' },
-  BF: { indicatif: '226', longueurs: [8], zeroNational: false, groupes: [2, 2, 2, 2], exemple: '70 12 34 56' },
-  BJ: { indicatif: '229', longueurs: [10], zeroNational: false, groupes: [2, 2, 2, 2, 2], exemple: '01 97 12 34 56' },
-  TG: { indicatif: '228', longueurs: [8], zeroNational: false, groupes: [2, 2, 2, 2], exemple: '90 12 34 56' },
-  NE: { indicatif: '227', longueurs: [8], zeroNational: false, groupes: [2, 2, 2, 2], exemple: '90 12 34 56' },
-  GN: { indicatif: '224', longueurs: [9], zeroNational: false, groupes: [3, 2, 2, 2], exemple: '622 12 34 56' },
-  CM: { indicatif: '237', longueurs: [9], zeroNational: false, groupes: [1, 2, 2, 2, 2], exemple: '6 71 23 45 67' },
-  GA: { indicatif: '241', longueurs: [8, 7], zeroNational: false, groupes: [2, 2, 2, 2], exemple: '06 12 34 56' },
-  CG: { indicatif: '242', longueurs: [9], zeroNational: false, groupes: [2, 3, 2, 2], exemple: '06 612 34 56' },
-  FR: { indicatif: '33', longueurs: [9], zeroNational: true, groupes: [1, 2, 2, 2, 2], exemple: '06 12 34 56 78' },
-  BE: { indicatif: '32', longueurs: [9, 8], zeroNational: true, groupes: [3, 2, 2, 2], exemple: '0470 12 34 56' },
-  CA: { indicatif: '1', longueurs: [10], zeroNational: false, groupes: [3, 3, 4], exemple: '514 555 0123' },
-};
+import { DONNEES_PAYS } from './liste-pays.js';
+// Règles de chaque pays : api/lib/pays.json (même fichier que le serveur).
+export const REGLES_TELEPHONE = Object.fromEntries(DONNEES_PAYS.filter((p) => p.telephone).map((p) => [p.id, { indicatif: p.indicatif, ...p.telephone }]));
 
 // Découpe un numéro national en groupes lisibles (« 07 07 12 34 56 »)
 function grouper(national, groupes) {

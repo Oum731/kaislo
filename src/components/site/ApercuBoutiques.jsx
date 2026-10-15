@@ -7,11 +7,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { appelApi } from '@/lib/api';
 import { PAYS } from '@/lib/donnees/modeles';
+import { articlePays } from '@/lib/donnees/liste-pays';
 import { trouverPays } from '@/lib/pays-visiteur';
 import { CATEGORIES_ANNUAIRE } from '@/lib/donnees/boutique';
 import { CarteBoutique } from '@/components/site/Annuaire';
 
-const AVEC_ARTICLE = { CI: 'en', SN: 'au', ML: 'au', BF: 'au', BJ: 'au', TG: 'au', NE: 'au', GN: 'en', CM: 'au', GA: 'au', CG: 'au', MA: 'au', FR: 'en', BE: 'en', CA: 'au' };
 
 export default function ApercuBoutiques() {
   const [pays, setPays] = useState(null);
@@ -26,7 +26,7 @@ export default function ApercuBoutiques() {
   }, [pays]);
 
   const p = PAYS.find((x) => x.id === pays);
-  const lieu = p && p.id !== 'XX' ? `${AVEC_ARTICLE[p.id] || 'en'} ${p.nom}` : '';
+  const lieu = p && p.id !== 'XX' ? `${articlePays(p.id)} ${p.nom}` : '';
   const boutiques = (donnees?.boutiques || []).slice(0, 4);
 
   return (

@@ -1,0 +1,370 @@
+[
+ {
+  "id": "MA",
+  "nom": "Maroc",
+  "devise": "MAD",
+  "indicatif": "212",
+  "ville": "Casablanca",
+  "paiements": ["Espèces", "Carte"],
+  "telephone": {
+   "longueurs": [9],
+   "zeroNational": true,
+   "groupes": [1, 2, 2, 2, 2],
+   "exemple": "06 12 34 56 78"
+  },
+  "fuseaux": ["Africa/Casablanca", "Africa/El_Aaiun"],
+  "article": "au",
+  "seo": {
+   "slug": "maroc",
+   "commerces": ["épiceries et supérettes", "restaurants et cafés", "boutiques", "cosmétiques et beauté"]
+  },
+  "en": {
+   "nom": "Morocco",
+   "slug": "morocco"
+  }
+ },
+ {
+  "id": "CI",
+  "nom": "Côte d’Ivoire",
+  "devise": "FCFA",
+  "indicatif": "225",
+  "ville": "Abidjan",
+  "paiements": ["Espèces", "Wave", "Orange Money", "MTN MoMo", "Carte"],
+  "telephone": {
+   "longueurs": [10],
+   "zeroNational": false,
+   "groupes": [2, 2, 2, 2, 2],
+   "exemple": "07 07 12 34 56"
+  },
+  "fuseaux": ["Africa/Abidjan"],
+  "article": "en",
+  "seo": {
+   "slug": "cote-d-ivoire",
+   "commerces": ["maquis et restaurants", "alimentations et boutiques", "boulangeries", "quincailleries et dépôts"]
+  },
+  "en": {
+   "nom": "Côte d’Ivoire",
+   "slug": "cote-d-ivoire"
+  }
+ },
+ {
+  "id": "SN",
+  "nom": "Sénégal",
+  "devise": "FCFA",
+  "indicatif": "221",
+  "ville": "Dakar",
+  "paiements": ["Espèces", "Wave", "Orange Money", "Free Money", "Carte"],
+  "telephone": {
+   "longueurs": [9],
+   "zeroNational": false,
+   "groupes": [2, 3, 2, 2],
+   "exemple": "77 123 45 67"
+  },
+  "fuseaux": ["Africa/Dakar"],
+  "article": "au",
+  "seo": {
+   "slug": "senegal",
+   "commerces": ["boutiques et alimentations", "restaurants et gargotes", "boulangeries", "quincailleries"]
+  },
+  "en": {
+   "nom": "Senegal",
+   "slug": "senegal"
+  }
+ },
+ {
+  "id": "ML",
+  "nom": "Mali",
+  "devise": "FCFA",
+  "indicatif": "223",
+  "ville": "Bamako",
+  "paiements": ["Espèces", "Orange Money", "Moov Money", "Carte"],
+  "telephone": {
+   "longueurs": [8],
+   "zeroNational": false,
+   "groupes": [2, 2, 2, 2],
+   "exemple": "76 12 34 56"
+  },
+  "fuseaux": ["Africa/Bamako"],
+  "article": "au",
+  "seo": {
+   "slug": "mali",
+   "commerces": ["boutiques et alimentations", "restaurants", "téléphonie et électronique", "dépôts et grossistes"]
+  },
+  "en": {
+   "nom": "Mali",
+   "slug": "mali"
+  }
+ },
+ {
+  "id": "BF",
+  "nom": "Burkina Faso",
+  "devise": "FCFA",
+  "indicatif": "226",
+  "ville": "Ouagadougou",
+  "paiements": ["Espèces", "Orange Money", "Moov Money", "Carte"],
+  "telephone": {
+   "longueurs": [8],
+   "zeroNational": false,
+   "groupes": [2, 2, 2, 2],
+   "exemple": "70 12 34 56"
+  },
+  "fuseaux": ["Africa/Ouagadougou"],
+  "article": "au",
+  "seo": {
+   "slug": "burkina-faso",
+   "commerces": ["boutiques et alimentations", "maquis et restaurants", "téléphonie et électronique", "quincailleries"]
+  },
+  "en": {
+   "nom": "Burkina Faso",
+   "slug": "burkina-faso"
+  }
+ },
+ {
+  "id": "BJ",
+  "nom": "Bénin",
+  "devise": "FCFA",
+  "indicatif": "229",
+  "ville": "Cotonou",
+  "paiements": ["Espèces", "MTN MoMo", "Moov Money", "Carte"],
+  "telephone": {
+   "longueurs": [10],
+   "zeroNational": false,
+   "groupes": [2, 2, 2, 2, 2],
+   "exemple": "01 97 12 34 56"
+  },
+  "fuseaux": ["Africa/Porto-Novo"],
+  "article": "au",
+  "seo": {
+   "slug": "benin",
+   "commerces": ["alimentations et boutiques", "restaurants et maquis", "téléphonie et électronique", "quincailleries"]
+  },
+  "en": {
+   "nom": "Benin",
+   "slug": "benin"
+  }
+ },
+ {
+  "id": "TG",
+  "nom": "Togo",
+  "devise": "FCFA",
+  "indicatif": "228",
+  "ville": "Lomé",
+  "paiements": ["Espèces", "Flooz", "T-Money", "Carte"],
+  "telephone": {
+   "longueurs": [8],
+   "zeroNational": false,
+   "groupes": [2, 2, 2, 2],
+   "exemple": "90 12 34 56"
+  },
+  "fuseaux": ["Africa/Lome"],
+  "article": "au",
+  "seo": {
+   "slug": "togo",
+   "commerces": ["boutiques et alimentations", "restaurants et bars", "téléphonie et électronique", "quincailleries"]
+  },
+  "en": {
+   "nom": "Togo",
+   "slug": "togo"
+  }
+ },
+ {
+  "id": "NE",
+  "nom": "Niger",
+  "devise": "FCFA",
+  "indicatif": "227",
+  "ville": "Niamey",
+  "paiements": ["Espèces", "Airtel Money", "Moov Money", "Carte"],
+  "telephone": {
+   "longueurs": [8],
+   "zeroNational": false,
+   "groupes": [2, 2, 2, 2],
+   "exemple": "90 12 34 56"
+  },
+  "fuseaux": ["Africa/Niamey"],
+  "article": "au",
+  "seo": {
+   "slug": "niger",
+   "commerces": ["boutiques et alimentations", "restaurants", "téléphonie et électronique", "dépôts et grossistes"]
+  },
+  "en": {
+   "nom": "Niger",
+   "slug": "niger"
+  }
+ },
+ {
+  "id": "GN",
+  "nom": "Guinée",
+  "devise": "GNF",
+  "indicatif": "224",
+  "ville": "Conakry",
+  "paiements": ["Espèces", "Orange Money", "MTN MoMo", "Carte"],
+  "telephone": {
+   "longueurs": [9],
+   "zeroNational": false,
+   "groupes": [3, 2, 2, 2],
+   "exemple": "622 12 34 56"
+  },
+  "fuseaux": ["Africa/Conakry"],
+  "article": "en",
+  "seo": {
+   "slug": "guinee",
+   "commerces": ["boutiques et alimentations", "restaurants", "téléphonie et électronique", "quincailleries"]
+  },
+  "en": {
+   "nom": "Guinea",
+   "slug": "guinea"
+  }
+ },
+ {
+  "id": "CM",
+  "nom": "Cameroun",
+  "devise": "FCFA",
+  "indicatif": "237",
+  "ville": "Douala",
+  "paiements": ["Espèces", "Orange Money", "MTN MoMo", "Carte"],
+  "telephone": {
+   "longueurs": [9],
+   "zeroNational": false,
+   "groupes": [1, 2, 2, 2, 2],
+   "exemple": "6 71 23 45 67"
+  },
+  "fuseaux": ["Africa/Douala"],
+  "article": "au",
+  "seo": {
+   "slug": "cameroun",
+   "commerces": ["boutiques et alimentations", "bars et restaurants", "téléphonie et électronique", "quincailleries"]
+  },
+  "en": {
+   "nom": "Cameroon",
+   "slug": "cameroon"
+  }
+ },
+ {
+  "id": "GA",
+  "nom": "Gabon",
+  "devise": "FCFA",
+  "indicatif": "241",
+  "ville": "Libreville",
+  "paiements": ["Espèces", "Airtel Money", "Moov Money", "Carte"],
+  "telephone": {
+   "longueurs": [8, 7],
+   "zeroNational": false,
+   "groupes": [2, 2, 2, 2],
+   "exemple": "06 12 34 56"
+  },
+  "fuseaux": ["Africa/Libreville"],
+  "article": "au",
+  "seo": {
+   "slug": "gabon",
+   "commerces": ["boutiques et alimentations", "restaurants et bars", "téléphonie et électronique", "boulangeries"]
+  },
+  "en": {
+   "nom": "Gabon",
+   "slug": "gabon"
+  }
+ },
+ {
+  "id": "CG",
+  "nom": "Congo",
+  "devise": "FCFA",
+  "indicatif": "242",
+  "ville": "Brazzaville",
+  "paiements": ["Espèces", "MTN MoMo", "Airtel Money", "Carte"],
+  "telephone": {
+   "longueurs": [9],
+   "zeroNational": false,
+   "groupes": [2, 3, 2, 2],
+   "exemple": "06 612 34 56"
+  },
+  "fuseaux": ["Africa/Brazzaville"],
+  "article": "au",
+  "seo": {
+   "slug": "congo",
+   "commerces": ["boutiques et alimentations", "restaurants et bars", "téléphonie et électronique", "dépôts et grossistes"]
+  },
+  "en": {
+   "nom": "Congo",
+   "slug": "congo"
+  }
+ },
+ {
+  "id": "FR",
+  "nom": "France",
+  "devise": "EUR",
+  "indicatif": "33",
+  "ville": "Paris",
+  "paiements": ["Espèces", "Carte", "Ticket resto"],
+  "telephone": {
+   "longueurs": [9],
+   "zeroNational": true,
+   "groupes": [1, 2, 2, 2, 2],
+   "exemple": "06 12 34 56 78"
+  },
+  "fuseaux": ["Europe/Paris"],
+  "article": "en",
+  "seo": {
+   "slug": "france",
+   "commerces": ["épiceries et supérettes", "restaurants et cafés", "boutiques", "commerces de proximité"]
+  },
+  "en": {
+   "nom": "France",
+   "slug": "france"
+  }
+ },
+ {
+  "id": "BE",
+  "nom": "Belgique",
+  "devise": "EUR",
+  "indicatif": "32",
+  "ville": "Bruxelles",
+  "paiements": ["Espèces", "Carte", "Payconiq"],
+  "telephone": {
+   "longueurs": [9, 8],
+   "zeroNational": true,
+   "groupes": [3, 2, 2, 2],
+   "exemple": "0470 12 34 56"
+  },
+  "fuseaux": ["Europe/Brussels"],
+  "article": "en",
+  "seo": {
+   "slug": "belgique",
+   "commerces": ["épiceries", "restaurants et cafés", "boutiques", "commerces de proximité"]
+  },
+  "en": {
+   "nom": "Belgium",
+   "slug": "belgium"
+  }
+ },
+ {
+  "id": "CA",
+  "nom": "Canada",
+  "devise": "CAD",
+  "indicatif": "1",
+  "ville": "Montréal",
+  "paiements": ["Espèces", "Carte", "Interac"],
+  "telephone": {
+   "longueurs": [10],
+   "zeroNational": false,
+   "groupes": [3, 3, 4],
+   "exemple": "514 555 0123"
+  },
+  "fuseaux": ["America/Toronto", "America/Montreal", "America/Vancouver", "America/Edmonton", "America/Winnipeg", "America/Halifax", "America/St_Johns", "America/Regina"],
+  "article": "au",
+  "seo": {
+   "slug": "canada",
+   "commerces": ["épiceries", "restaurants et cafés", "boutiques", "commerces de proximité"]
+  },
+  "en": {
+   "nom": "Canada",
+   "slug": "canada"
+  }
+ },
+ {
+  "id": "XX",
+  "nom": "Autre pays (dollar US)",
+  "devise": "USD",
+  "indicatif": "",
+  "ville": "",
+  "paiements": ["Espèces", "Carte", "Mobile money"]
+ }
+]

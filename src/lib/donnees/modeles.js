@@ -42,24 +42,9 @@ export function typeCommerce(id) {
 
 // Pays proposés : la devise, les modes de paiement et l'indicatif
 // téléphonique (pour WhatsApp) en découlent. "ville" sert aux démos.
-export const PAYS = [
-  { id: 'MA', nom: 'Maroc', devise: 'MAD', indicatif: '212', ville: 'Casablanca', paiements: ['Espèces', 'Carte'] },
-  { id: 'CI', nom: 'Côte d’Ivoire', devise: 'FCFA', indicatif: '225', ville: 'Abidjan', paiements: ['Espèces', 'Wave', 'Orange Money', 'MTN MoMo', 'Carte'] },
-  { id: 'SN', nom: 'Sénégal', devise: 'FCFA', indicatif: '221', ville: 'Dakar', paiements: ['Espèces', 'Wave', 'Orange Money', 'Free Money', 'Carte'] },
-  { id: 'ML', nom: 'Mali', devise: 'FCFA', indicatif: '223', ville: 'Bamako', paiements: ['Espèces', 'Orange Money', 'Moov Money', 'Carte'] },
-  { id: 'BF', nom: 'Burkina Faso', devise: 'FCFA', indicatif: '226', ville: 'Ouagadougou', paiements: ['Espèces', 'Orange Money', 'Moov Money', 'Carte'] },
-  { id: 'BJ', nom: 'Bénin', devise: 'FCFA', indicatif: '229', ville: 'Cotonou', paiements: ['Espèces', 'MTN MoMo', 'Moov Money', 'Carte'] },
-  { id: 'TG', nom: 'Togo', devise: 'FCFA', indicatif: '228', ville: 'Lomé', paiements: ['Espèces', 'Flooz', 'T-Money', 'Carte'] },
-  { id: 'NE', nom: 'Niger', devise: 'FCFA', indicatif: '227', ville: 'Niamey', paiements: ['Espèces', 'Airtel Money', 'Moov Money', 'Carte'] },
-  { id: 'GN', nom: 'Guinée', devise: 'GNF', indicatif: '224', ville: 'Conakry', paiements: ['Espèces', 'Orange Money', 'MTN MoMo', 'Carte'] },
-  { id: 'CM', nom: 'Cameroun', devise: 'FCFA', indicatif: '237', ville: 'Douala', paiements: ['Espèces', 'Orange Money', 'MTN MoMo', 'Carte'] },
-  { id: 'GA', nom: 'Gabon', devise: 'FCFA', indicatif: '241', ville: 'Libreville', paiements: ['Espèces', 'Airtel Money', 'Moov Money', 'Carte'] },
-  { id: 'CG', nom: 'Congo', devise: 'FCFA', indicatif: '242', ville: 'Brazzaville', paiements: ['Espèces', 'MTN MoMo', 'Airtel Money', 'Carte'] },
-  { id: 'FR', nom: 'France', devise: 'EUR', indicatif: '33', ville: 'Paris', paiements: ['Espèces', 'Carte', 'Ticket resto'] },
-  { id: 'BE', nom: 'Belgique', devise: 'EUR', indicatif: '32', ville: 'Bruxelles', paiements: ['Espèces', 'Carte', 'Payconiq'] },
-  { id: 'CA', nom: 'Canada', devise: 'CAD', indicatif: '1', ville: 'Montréal', paiements: ['Espèces', 'Carte', 'Interac'] },
-  { id: 'XX', nom: 'Autre pays (dollar US)', devise: 'USD', indicatif: '', ville: '', paiements: ['Espèces', 'Carte', 'Mobile money'] },
-];
+// Liste des pays : voir liste-pays.js (un seul fichier à modifier pour ajouter un pays)
+import { DONNEES_PAYS } from './liste-pays.js';
+export const PAYS = DONNEES_PAYS.map(({ id, nom, devise, indicatif, ville, paiements }) => ({ id, nom, devise, indicatif, ville, paiements }));
 
 export function paysParId(id) {
   return PAYS.find((p) => p.id === id) || PAYS[0];

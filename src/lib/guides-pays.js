@@ -5,18 +5,13 @@
 // Même forme que les guides de guides.js : { fr: {...}, en: {...} }.
 // ------------------------------------------------------------
 import { PAYS } from './donnees/modeles.js';
+import { DONNEES_PAYS } from './donnees/liste-pays.js';
 import { PAYS_SEO } from './pays-seo.js';
 import { FORMULES } from './donnees/tarifs.js';
 import { symbole } from './utils/format.js';
 
-// Nom anglais, adresse anglaise et formulation « in … » de chaque pays
-export const EN = {
-  MA: { nom: 'Morocco', slug: 'morocco' }, CI: { nom: 'Côte d’Ivoire', slug: 'cote-d-ivoire' }, SN: { nom: 'Senegal', slug: 'senegal' },
-  ML: { nom: 'Mali', slug: 'mali' }, BF: { nom: 'Burkina Faso', slug: 'burkina-faso' }, BJ: { nom: 'Benin', slug: 'benin' },
-  TG: { nom: 'Togo', slug: 'togo' }, NE: { nom: 'Niger', slug: 'niger' }, GN: { nom: 'Guinea', slug: 'guinea' },
-  CM: { nom: 'Cameroon', slug: 'cameroon' }, GA: { nom: 'Gabon', slug: 'gabon' }, CG: { nom: 'Congo', slug: 'congo' },
-  FR: { nom: 'France', slug: 'france' }, BE: { nom: 'Belgium', slug: 'belgium' }, CA: { nom: 'Canada', slug: 'canada' },
-};
+// Nom anglais et adresse anglaise de chaque pays (api/lib/pays.json)
+export const EN = Object.fromEntries(DONNEES_PAYS.filter((p) => p.en).map((p) => [p.id, p.en]));
 // Commerces courants, en anglais (même ordre que pays-seo.js)
 export const COMMERCES_EN = {
   'maquis et restaurants': 'maquis and restaurants', 'alimentations et boutiques': 'grocery shops and boutiques',   'quincailleries et dépôts': 'hardware stores and depots', 'boutiques et alimentations': 'shops and grocery stores', 'restaurants et gargotes': 'restaurants and street kitchens',
