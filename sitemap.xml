@@ -67,6 +67,9 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/tarifs/" />
 </url>
 <url>
+<loc>https://kaislo.com/boutiques/</loc>
+</url>
+<url>
 <loc>https://kaislo.com/tutoriels/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/tutoriels/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/tutorials/" />

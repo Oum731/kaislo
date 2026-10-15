@@ -15,6 +15,7 @@
 //     GET  /api/commandes-en-ligne       commandes reçues et nombre de nouvelles
 //     POST /api/commandes-en-ligne       { id, statut }
 //   Public :
+//     GET  /api/public/boutiques         annuaire : boutiques actives qui acceptent d'y figurer, avec quelques articles en exemple
 //     GET  /api/public/boutique?b=slug   boutique, catégories et articles publiés
 //     GET  /api/public/boutique-image?b=slug&i=img_…
 //     POST /api/public/commande          { b, client: { nom, telephone, adresse? }, note?, lignes: [{ produitId, quantite, options? }] }
@@ -49,6 +50,7 @@ function versBoutique(?array $b, array $commerce): array
         'slug' => $b['slug'] ?? '',
         'suggestion' => $b ? '' : slugBoutique($commerce['nom']),
         'whatsapp' => $b['whatsapp'] ?? '',
+        'publique' => $b ? ($b['publique'] === null ? true : (bool) $b['publique']) : true,
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
         'lien' => $b ? lienBoutique($b['slug']) : '',
@@ -111,14 +113,15 @@ function routeBoutiqueEnregistrer(): never
     if ($autre && $autre['commerce_id'] !== $c['id']) throw new ErreurApi('Cette adresse est déjà prise : choisissez-en une autre', 409);
     $num = telephoneValide(texte($e, 'whatsapp', 'le numéro WhatsApp qui reçoit les commandes', true, 40), $c['pays'], 'numéro WhatsApp');
     $actif = !empty($e['actif']) ? 1 : 0;
+    $publique = array_key_exists('publique', $e) ? (!empty($e['publique']) ? 1 : 0) : ($avant && $avant['publique'] !== null ? (int) $avant['publique'] : 1);
     $description = texte($e, 'description', 'la description', false, 300);
     $livraison = texte($e, 'livraison', 'la livraison', false, 300);
     if ($avant) {
-        requete('UPDATE boutiques SET slug = ?, actif = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
-            [$slug, $actif, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
+        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
+            [$slug, $actif, $publique, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
     } else {
-        requete('INSERT INTO boutiques (commerce_id, slug, actif, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$c['id'], $slug, $actif, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
+        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$c['id'], $slug, $actif, $publique, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
     }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();
@@ -192,6 +195,30 @@ function routeBoutiquePublique(): never
         'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'],
         'categories' => array_values(array_filter($categories, fn ($x) => isset($utilisees[$x['id']]))), 'produits' => $produits,
     ]]);
+}
+
+// GET /api/public/boutiques : annuaire pour les clients (sans numéro WhatsApp : il n'apparaît que sur la page de la boutique)
+function routeBoutiquesAnnuaire(): never
+{
+    $liste = [];
+    $lignes = requete("SELECT b.slug, b.description, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu' ORDER BY b.modifie_le DESC LIMIT 300")->fetchAll();
+    foreach ($lignes as $c) {
+        if (abonnementExpire($c)) continue;
+        $articles = array_values(articlesPublies($c['id']));
+        if (!$articles) continue;
+        // Exemples : les articles avec photo d'abord, quatre au plus
+        usort($articles, fn ($x, $y) => (int) !empty($y['image']) <=> (int) !empty($x['image']));
+        $exemples = array_map(fn ($p) => [
+            'nom' => (string) $p['nom'], 'prix' => (float) $p['prix'], 'promo' => prixArticle($p) < (float) $p['prix'] ? prixArticle($p) : null,
+            'emoji' => (string) ($p['emoji'] ?? ''), 'image' => imagePublique((string) ($p['image'] ?? '')),
+        ], array_slice($articles, 0, 4));
+        $liste[] = [
+            'slug' => $c['slug'], 'nom' => $c['nom'], 'type' => $c['type'], 'pays' => $c['pays'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '',
+            'devise' => $c['devise'], 'description' => (string) $c['description'], 'nbArticles' => count($articles), 'exemples' => $exemples,
+        ];
+    }
+    header('Cache-Control: public, max-age=120');
+    repondre(['ok' => true, 'boutiques' => $liste]);
 }
 
 function routeBoutiqueImage(): never
