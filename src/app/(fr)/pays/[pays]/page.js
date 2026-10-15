@@ -110,6 +110,7 @@ export default async function PagePays({ params }) {
             <h2>Pour aller plus loin {lieu}.</h2>
             <ul className="guide-liens">
               {['pays-', 'caisse-'].map((pre) => GUIDES.find((g) => g.cle === pre + seo.id.toLowerCase())).map((g) => <li key={g.cle}><Link href={adresseGuide(g, 'fr')}>{g.fr.titre}</Link></li>)}
+              {local && GUIDES.filter((g) => g.groupe === 'belgique').map((g) => <li key={g.cle}><Link href={adresseGuide(g, 'fr')}>{g.fr.titre}</Link></li>)}
               <li><Link href="/logiciel-de-caisse/">Logiciel de caisse : toutes les fonctions</Link></li>
             </ul>
           </div>

@@ -53,7 +53,14 @@ export function Guide({ lang, slug }) {
   // Voisins dans la liste (en tournant) : chaque guide est ainsi proposé par quatre autres, au lieu de toujours les quatre premiers
   const suivants = (liste) => { const i = liste.indexOf(g); return [...liste.slice(i + 1), ...liste.slice(0, Math.max(i, 0))].filter((x) => x !== g); };
   const caissePays = GUIDES.filter((x) => x.groupe === 'caisse-pays');
-  const autres = g.groupe === 'pays'
+  const belgique = GUIDES.filter((x) => x.groupe === 'belgique');
+  // Belgique : les guides belges et les guides de pays et de caisse de la Belgique se renvoient les uns aux autres
+  const estBe = g.cle === 'pays-be' || g.cle === 'caisse-be';
+  const autres = estBe
+    ? [...belgique.slice(0, 3), GUIDES.find((x) => x.cle === (g.cle === 'pays-be' ? 'caisse-be' : 'pays-be'))]
+    : g.groupe === 'belgique'
+    ? [...suivants(belgique), ...['pays-be', 'caisse-be'].map((c) => GUIDES.find((x) => x.cle === c))].slice(0, 4)
+    : g.groupe === 'pays'
     // guide de pays : deux guides généraux, le guide de caisse du même pays et un autre pays
     ? [...['mobile-money', 'cloture'].map((c) => GUIDES.find((x) => x.cle === c)), GUIDES.find((x) => x.cle === 'caisse-' + g.cle.slice(5)), ...suivants(pays).slice(0, 1)]
     : g.groupe === 'caisse-pays'
@@ -150,6 +157,17 @@ export default function Guides({ lang }) {
           <div className="site-largeur">
             <div className="guide-grille">
               {GUIDES.filter((g) => !g.groupe).map((g) => (
+                <Link key={g.cle} href={adresseGuide(g, lang)} className="guide-carte">
+                  <b>{g[lang].titre}</b>
+                  <span className="muet">{g[lang].description}</span>
+                  <span className="guide-lire">{tr('Lire le guide')} →</span>
+                </Link>
+              ))}
+            </div>
+            <h2 id="belgique" style={{ margin: '48px 0 16px' }}>{tr('Guides pour la Belgique')}</h2>
+            <p className="chapo">{tr('Logiciel de caisse gratuit, prix en euros, système de gestion de commerce et caisse enregistreuse certifiée : les questions des commerçants belges.')}</p>
+            <div className="guide-grille" style={{ marginTop: 20 }}>
+              {GUIDES.filter((g) => g.groupe === 'belgique').map((g) => (
                 <Link key={g.cle} href={adresseGuide(g, lang)} className="guide-carte">
                   <b>{g[lang].titre}</b>
                   <span className="muet">{g[lang].description}</span>
