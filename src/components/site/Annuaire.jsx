@@ -10,6 +10,7 @@ import { appelApi } from '@/lib/api';
 import { chemin } from '@/config';
 import { formatPrix } from '@/lib/utils/format';
 import { PAYS } from '@/lib/donnees/modeles';
+import { articlePays } from '@/lib/donnees/liste-pays';
 import { trouverPays, choisirPays, paysParGps } from '@/lib/pays-visiteur';
 import { CATEGORIES_ANNUAIRE, categorieAnnuaire, grouperBoutiques } from '@/lib/donnees/boutique';
 
@@ -42,8 +43,7 @@ export function CarteBoutique({ b }) {
 }
 
 // « Boutiques en Côte d'Ivoire » : l'article change selon le pays
-const AVEC_ARTICLE = { CI: 'en', SN: 'au', ML: 'au', BF: 'au', BJ: 'au', TG: 'au', NE: 'au', GN: 'en', CM: 'au', GA: 'au', CG: 'au', MA: 'au', FR: 'en', BE: 'en', CA: 'au' };
-const lieuPays = (p) => `${AVEC_ARTICLE[p.id] || 'en'} ${p.nom}`;
+const lieuPays = (p) => `${articlePays(p.id)} ${p.nom}`;
 
 export default function Annuaire() {
   const [pays, setPays] = useState(null); // pays du visiteur : choisi, sinon déduit (fuseau, puis adresse IP), 'XX' si inconnu

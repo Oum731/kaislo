@@ -12,6 +12,7 @@
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
 import { PAYS } from '@/lib/donnees/modeles';
+import { DONNEES_PAYS } from '@/lib/donnees/liste-pays';
 import { chemin } from '@/config';
 
 // Pays affiché dans la page générée à l'avance (avant que l'appareil du visiteur ne soit consulté)
@@ -19,13 +20,8 @@ export const PAYS_PAR_DEFAUT = 'CI';
 const CLE = 'kaislo_pays';
 const AUTRE_PAYS = 'XX'; // pays hors de la liste : tarifs en dollars
 
-const FUSEAUX = {
-  'Africa/Casablanca': 'MA', 'Africa/El_Aaiun': 'MA', 'Africa/Abidjan': 'CI', 'Africa/Dakar': 'SN', 'Africa/Bamako': 'ML',
-  'Africa/Ouagadougou': 'BF', 'Africa/Porto-Novo': 'BJ', 'Africa/Lome': 'TG', 'Africa/Niamey': 'NE', 'Africa/Conakry': 'GN',
-  'Africa/Douala': 'CM', 'Africa/Libreville': 'GA', 'Africa/Brazzaville': 'CG', 'Europe/Paris': 'FR', 'Europe/Brussels': 'BE',
-  'America/Toronto': 'CA', 'America/Montreal': 'CA', 'America/Vancouver': 'CA', 'America/Edmonton': 'CA', 'America/Winnipeg': 'CA',
-  'America/Halifax': 'CA', 'America/St_Johns': 'CA', 'America/Regina': 'CA',
-};
+// Fuseau horaire → pays (api/lib/pays.json)
+const FUSEAUX = Object.fromEntries(DONNEES_PAYS.flatMap((p) => (p.fuseaux || []).map((f) => [f, p.id])));
 
 const existe = (id) => PAYS.some((p) => p.id === id);
 // Code de pays reconnu → pays de la liste, sinon « Autre pays »
