@@ -73,6 +73,15 @@ export default function Accueil({ lang }) {
           captureMobile={{ src: '/captures/vente-mobile.webp', alt: tr('Écran de vente Kaislo sur téléphone') }}
         />
 
+        {lang === 'fr' && (
+          <section className="bandeau-boutiques">
+            <div className="site-largeur">
+              <span><b>Vous cherchez à acheter ?</b> Découvrez les boutiques en ligne près de chez vous et commandez directement sur WhatsApp.</span>
+              <Link className="btn" href="/boutiques/">Voir les boutiques</Link>
+            </div>
+          </section>
+        )}
+
         <SectionVideos vedette="presentation" vignettes={["restaurant", "epicerie", "produits", "vendeurs"]} toutes />
 
         <section className="section" id="fonctions">

@@ -83,6 +83,7 @@ try {
         'GET /commandes-en-ligne' => routeCommandesEnLigneLire(),
         'POST /commandes-en-ligne' => routeCommandesEnLigneStatut(),
         'GET /public/boutique' => routeBoutiquePublique(),
+        'GET /public/boutiques' => routeBoutiquesAnnuaire(),
         'GET /public/boutique-image' => routeBoutiqueImage(),
         'POST /public/commande' => routeCommandePublique(),
         'GET /avis' => routeAvisPublics(),

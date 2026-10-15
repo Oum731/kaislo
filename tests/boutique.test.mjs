@@ -64,3 +64,18 @@ test('les photos des articles sont données par leur adresse, ou jointes sans li
   assert.deepEqual(photosCommande(avecPhotos), ['https://kaislo.com/api/public/boutique-image?b=chez-awa&i=img_abc']);
   assert.deepEqual(photosCommande(commande), []);
 });
+
+import { categorieAnnuaire, grouperBoutiques } from '../src/lib/donnees/boutique.js';
+const b = (nom, type, pays = 'CI', ville = 'Abidjan', exemples = []) => ({ slug: nom.toLowerCase(), nom, type, pays, ville, quartier: '', description: '', exemples });
+
+test('l\'annuaire range les boutiques par rayon, filtre par texte et par pays', () => {
+  const liste = [b('Chez Awa', 'epicerie', 'CI', 'Abidjan', [{ nom: 'Riz parfumé' }]), b('Maquis du Plateau', 'maquis'), b('Tech Rabat', 'telephonie', 'MA', 'Rabat'), b('Divers', 'inconnu')];
+  assert.equal(categorieAnnuaire('maquis').id, 'restauration');
+  assert.equal(categorieAnnuaire('type-inconnu').id, 'autres');
+  assert.deepEqual(grouperBoutiques(liste).map((g) => g.categorie.id), ['restauration', 'alimentation', 'telephonie', 'autres']);
+  assert.deepEqual(grouperBoutiques(liste, { pays: 'MA' }).map((g) => g.boutiques[0].nom), ['Tech Rabat']);
+  assert.deepEqual(grouperBoutiques(liste, { texte: 'RIZ' }).map((g) => g.boutiques[0].nom), ['Chez Awa']); // cherche aussi dans les articles
+  assert.deepEqual(grouperBoutiques(liste, { texte: 'rabat' }).map((g) => g.boutiques[0].nom), ['Tech Rabat']);
+  assert.deepEqual(grouperBoutiques(liste, { categorie: 'restauration' }).map((g) => g.boutiques[0].nom), ['Maquis du Plateau']);
+  assert.deepEqual(grouperBoutiques(liste, { texte: 'introuvable' }), []);
+});

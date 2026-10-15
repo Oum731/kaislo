@@ -81,3 +81,32 @@ export function choixDepuisCommande(produit, optionIds = []) {
 export const STATUTS_COMMANDE = [
   ['nouvelle', 'Nouvelle'], ['confirmee', 'Confirmée'], ['prete', 'Prête'], ['livree', 'Livrée'], ['annulee', 'Annulée'],
 ];
+
+// ---------- Annuaire des boutiques (kaislo.com/boutiques/) ----------
+// Les métiers sont regroupés en rayons que les clients comprennent. L'ordre est celui de l'affichage.
+export const CATEGORIES_ANNUAIRE = [
+  { id: 'restauration', nom: 'Restaurants, maquis et cafés', emoji: '🍽️', types: ['restaurant', 'maquis', 'bar'] },
+  { id: 'alimentation', nom: 'Alimentation et boulangeries', emoji: '🛒', types: ['epicerie', 'grossiste', 'boulangerie'] },
+  { id: 'mode', nom: 'Mode, beauté et cosmétiques', emoji: '👗', types: ['boutique', 'beaute'] },
+  { id: 'telephonie', nom: 'Téléphonie et électronique', emoji: '📱', types: ['telephonie'] },
+  { id: 'maison', nom: 'Maison, outillage et matériaux', emoji: '🔧', types: ['quincaillerie'] },
+  { id: 'papeterie', nom: 'Livres et papeterie', emoji: '📚', types: ['librairie'] },
+  { id: 'autres', nom: 'Autres boutiques', emoji: '🛍️', types: ['autre'] },
+];
+
+export const categorieAnnuaire = (type) => CATEGORIES_ANNUAIRE.find((c) => c.types.includes(type)) || CATEGORIES_ANNUAIRE[CATEGORIES_ANNUAIRE.length - 1];
+
+/** Boutiques filtrées (texte, pays) puis rangées par rayon : [{ categorie, boutiques }], rayons vides retirés. */
+export function grouperBoutiques(boutiques, { texte = '', pays = '', categorie = '' } = {}) {
+  const normalise = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const q = normalise(texte).trim();
+  const garde = boutiques.filter((b) => {
+    if (pays && b.pays !== pays) return false;
+    if (categorie && categorieAnnuaire(b.type).id !== categorie) return false;
+    if (!q) return true;
+    return [b.nom, b.ville, b.quartier, b.description, ...b.exemples.map((e) => e.nom)].some((t) => normalise(t).includes(q));
+  });
+  return CATEGORIES_ANNUAIRE
+    .map((c) => ({ categorie: c, boutiques: garde.filter((b) => categorieAnnuaire(b.type).id === c.id) }))
+    .filter((g) => g.boutiques.length);
+}
