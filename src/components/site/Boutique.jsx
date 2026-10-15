@@ -147,7 +147,7 @@ export default function Boutique() {
             <button className="btn secondaire" onClick={partagerAvecPhotos}>Envoyer avec les photos des articles</button>
           )}
           {message && <p className="alerte">{message}</p>}
-          <p className="petit muet">Total : {formatPrix(envoi.commande.total, devise)}. Vous payez {boutique.nom} directement, à la livraison ou comme convenu avec le vendeur.</p>
+          <p className="petit muet">Total : {formatPrix(envoi.commande.total, devise)}. Vous payez {boutique.nom} directement, à la livraison ou comme convenu avec le vendeur. Kaislo n’est pas le vendeur.</p>
           <button className="btn secondaire" onClick={() => setEnvoi(null)}>Retour à la boutique</button>
         </div>
       </div>
@@ -190,6 +190,7 @@ export default function Boutique() {
           ))}
         </div>
         <p className="vitrine-pied petit muet"><Marque taille={16} /> Boutique propulsée par <a href="https://kaislo.com">Kaislo</a></p>
+        <p className="vitrine-avertissement tres-petit muet">Cette boutique est tenue par un commerçant indépendant. Kaislo est un outil qui relie les boutiques et leurs clients : Kaislo n’est pas le vendeur et n’est pas responsable des articles, des prix, de la livraison ni de la vente. Confirmez le prix et la disponibilité avec la boutique avant de payer. <a href="/conditions-utilisation/#boutiques-en-ligne">En savoir plus</a></p>
       </main>
 
       {panier.length > 0 && !panierOuvert && (

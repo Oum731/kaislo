@@ -1097,8 +1097,6 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .vitrine-demo { background: var(--safran-clair); color: var(--safran-fonce); text-align: center; padding: 8px 16px; }
 
 /* Annuaire des boutiques (/boutiques/) */
-.bandeau-boutiques { background: var(--vert-clair); border-bottom: 1px solid var(--bordure); }
-.bandeau-boutiques .site-largeur { display: flex; gap: 12px 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; }
 .annuaire-filtres { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
 .annuaire-filtres input { flex: 1 1 260px; min-width: 0; }
 .annuaire-rayon { margin-top: 26px; }
@@ -1116,3 +1114,33 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .annuaire-vide { text-align: center; max-width: 520px; margin: 0 auto; padding: 24px 0; display: grid; gap: 12px; }
 .annuaire-etapes { list-style: none; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 16px; }
 .annuaire-etapes li { background: var(--surface); border: 1px solid var(--bordure); border-radius: 14px; padding: 14px; display: grid; gap: 4px; }
+
+.vitrine-avertissement { max-width: 640px; margin: 0 auto 8px; text-align: center; }
+.annuaire-avertissement { margin-top: 28px; max-width: 760px; }
+
+/* Accueil simplifié : deux entrées (client / commerçant), boutiques en premier */
+.accueil-hero { padding-bottom: 44px; }
+.choix-cartes { display: grid; gap: 16px; margin-top: 28px; }
+@media (min-width: 860px) { .choix-cartes { grid-template-columns: 1fr 1fr; } .choix-cartes.une { grid-template-columns: 1fr; max-width: 640px; } }
+.choix-carte { display: flex; gap: 18px; align-items: center; padding: 20px; border: 1px solid var(--bordure); border-radius: 18px; background: #fff; color: inherit; text-decoration: none; }
+.choix-carte.client { background: var(--vert-clair); border-color: var(--vert); }
+.choix-carte > img, .choix-carte > .capture { width: 120px; flex: none; height: auto; border-radius: 14px; }
+.choix-carte h2 { font-size: clamp(20px, 2.4vw, 26px); margin: 0 0 6px; }
+.choix-carte p { color: var(--encre-2); margin: 0 0 14px; }
+.choix-carte .boutons { margin-top: 0; }
+@media (max-width: 520px) { .choix-carte { gap: 12px; padding: 14px; } .choix-carte > img, .choix-carte > .capture { width: 84px; } .choix-carte .btn { width: 100%; text-align: center; } .choix-carte p { margin-bottom: 10px; font-size: 14.5px; } }
+.accueil-boutiques-tete { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+.accueil-rayons { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.accueil-rayon { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 10px; border: 1px solid var(--bordure); border-radius: 14px; background: #fff; color: inherit; text-decoration: none; text-align: center; }
+.accueil-rayon span { font-size: 34px; }
+.etapes-images { display: grid; gap: 16px; margin-top: 22px; }
+@media (min-width: 760px) { .etapes-images { grid-template-columns: repeat(3, 1fr); } }
+.etape-image { text-align: center; padding: 18px; border-radius: 16px; background: #fff; border: 1px solid var(--bordure); }
+.etape-image .numero { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--vert); color: #fff; font-weight: 700; margin-bottom: 8px; }
+.etape-image h3 { margin: 0 0 4px; }
+.accueil-pont { margin-top: 18px; max-width: 760px; }
+.tuiles-commercant { display: grid; gap: 18px; margin-top: 22px; }
+@media (min-width: 700px) { .tuiles-commercant { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .tuiles-commercant { grid-template-columns: repeat(4, 1fr); } }
+.tuile-commercant h3 { margin: 10px 0 2px; font-size: 17px; }
+.tuile-commercant p { margin: 0; font-size: 14.5px; }

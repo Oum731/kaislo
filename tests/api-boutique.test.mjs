@@ -56,7 +56,7 @@ before(async () => {
 
 after(() => { serveur?.kill(); fs.rmSync(dossier, { recursive: true, force: true }); });
 
-const reglages = { actif: true, slug: 'chez-awa', whatsapp: '0712345603', description: 'Boissons fraîches', livraison: 'Livraison à Cocody' };
+const reglages = { actif: true, conditionsAcceptees: true, slug: 'chez-awa', whatsapp: '0712345603', description: 'Boissons fraîches', livraison: 'Livraison à Cocody' };
 
 test('la boutique est introuvable tant qu\'elle n\'est pas activée, et réservée au gérant', async () => {
   assert.equal((await api('GET', '/public/boutique?b=chez-awa')).statut, 404);
@@ -68,9 +68,17 @@ test('la boutique est introuvable tant qu\'elle n\'est pas activée, et réserv�
   assert.equal((await api('POST', '/boutique', { ...reglages, slug: 'admin' }, gerant.jeton)).statut, 400);
   assert.equal((await api('POST', '/boutique', { ...reglages, whatsapp: '12' }, gerant.jeton)).statut, 400);
   assert.equal((await api('POST', '/boutique', reglages)).statut, 401);
+  // Activer la boutique demande d'accepter le rôle de Kaislo (outil, pas vendeur) ; la date est gardée ensuite
+  const sansAccord = await api('POST', '/boutique', { ...reglages, conditionsAcceptees: false }, gerant.jeton);
+  assert.equal(sansAccord.statut, 400);
+  assert.match(sansAccord.erreur, /seul responsable/);
+  assert.equal((await api('GET', '/boutique', null, gerant.jeton)).boutique.conditionsAcceptees, false);
   const ok = await api('POST', '/boutique', reglages, gerant.jeton);
   assert.equal(ok.ok, true, JSON.stringify(ok));
   assert.match(ok.boutique.lien, /\/boutique\/\?b=chez-awa$/);
+  assert.equal(ok.boutique.conditionsAcceptees, true);
+  // Déjà accepté : pas besoin de recocher à chaque enregistrement
+  assert.equal((await api('POST', '/boutique', { ...reglages, conditionsAcceptees: undefined }, gerant.jeton)).ok, true);
 });
 
 test('la vitrine ne montre que les articles publiés, sans prix d\'achat', async () => {
