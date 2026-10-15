@@ -1,27 +1,20 @@
 <?php
 // ------------------------------------------------------------
 // NUMÉROS DE TÉLÉPHONE selon le pays (format international E.164).
-// Mêmes règles que src/lib/donnees/telephone.js (à garder identiques).
+// Les règles viennent de pays.json, comme pour src/lib/donnees/telephone.js.
 // Le numéro identifie chaque personne et chaque commerce : unique dans tout Kaislo.
 // ------------------------------------------------------------
 
-const REGLES_TELEPHONE = [
-    'MA' => ['indicatif' => '212', 'longueurs' => [9], 'zero' => true, 'groupes' => [1, 2, 2, 2, 2], 'exemple' => '06 12 34 56 78'],
-    'CI' => ['indicatif' => '225', 'longueurs' => [10], 'zero' => false, 'groupes' => [2, 2, 2, 2, 2], 'exemple' => '07 07 12 34 56'],
-    'SN' => ['indicatif' => '221', 'longueurs' => [9], 'zero' => false, 'groupes' => [2, 3, 2, 2], 'exemple' => '77 123 45 67'],
-    'ML' => ['indicatif' => '223', 'longueurs' => [8], 'zero' => false, 'groupes' => [2, 2, 2, 2], 'exemple' => '76 12 34 56'],
-    'BF' => ['indicatif' => '226', 'longueurs' => [8], 'zero' => false, 'groupes' => [2, 2, 2, 2], 'exemple' => '70 12 34 56'],
-    'BJ' => ['indicatif' => '229', 'longueurs' => [10], 'zero' => false, 'groupes' => [2, 2, 2, 2, 2], 'exemple' => '01 97 12 34 56'],
-    'TG' => ['indicatif' => '228', 'longueurs' => [8], 'zero' => false, 'groupes' => [2, 2, 2, 2], 'exemple' => '90 12 34 56'],
-    'NE' => ['indicatif' => '227', 'longueurs' => [8], 'zero' => false, 'groupes' => [2, 2, 2, 2], 'exemple' => '90 12 34 56'],
-    'GN' => ['indicatif' => '224', 'longueurs' => [9], 'zero' => false, 'groupes' => [3, 2, 2, 2], 'exemple' => '622 12 34 56'],
-    'CM' => ['indicatif' => '237', 'longueurs' => [9], 'zero' => false, 'groupes' => [1, 2, 2, 2, 2], 'exemple' => '6 71 23 45 67'],
-    'GA' => ['indicatif' => '241', 'longueurs' => [8, 7], 'zero' => false, 'groupes' => [2, 2, 2, 2], 'exemple' => '06 12 34 56'],
-    'CG' => ['indicatif' => '242', 'longueurs' => [9], 'zero' => false, 'groupes' => [2, 3, 2, 2], 'exemple' => '06 612 34 56'],
-    'FR' => ['indicatif' => '33', 'longueurs' => [9], 'zero' => true, 'groupes' => [1, 2, 2, 2, 2], 'exemple' => '06 12 34 56 78'],
-    'BE' => ['indicatif' => '32', 'longueurs' => [9, 8], 'zero' => true, 'groupes' => [3, 2, 2, 2], 'exemple' => '0470 12 34 56'],
-    'CA' => ['indicatif' => '1', 'longueurs' => [10], 'zero' => false, 'groupes' => [3, 3, 4], 'exemple' => '514 555 0123'],
-];
+// Règles de chaque pays : api/lib/pays.json (même fichier que le site). « zero » = zeroNational.
+define('REGLES_TELEPHONE', (function () {
+    $regles = [];
+    foreach (json_decode((string) file_get_contents(__DIR__ . '/pays.json'), true) ?: [] as $p) {
+        if (empty($p['telephone'])) continue;
+        $t = $p['telephone'];
+        $regles[$p['id']] = ['indicatif' => $p['indicatif'], 'longueurs' => $t['longueurs'], 'zero' => $t['zeroNational'], 'groupes' => $t['groupes'], 'exemple' => $t['exemple']];
+    }
+    return $regles;
+})());
 
 function grouperNumero(string $national, array $groupes): string
 {

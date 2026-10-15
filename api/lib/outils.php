@@ -4,12 +4,9 @@
 // identifiants, numéros de téléphone, anti-force brute, jetons.
 // ------------------------------------------------------------
 
-// Pays acceptés et leur devise (même liste que src/lib/donnees/modeles.js)
-const PAYS = [
-    'MA' => 'MAD', 'CI' => 'FCFA', 'SN' => 'FCFA', 'ML' => 'FCFA', 'BF' => 'FCFA', 'BJ' => 'FCFA', 'TG' => 'FCFA',
-    'NE' => 'FCFA', 'GN' => 'GNF', 'CM' => 'FCFA', 'GA' => 'FCFA', 'CG' => 'FCFA', 'FR' => 'EUR', 'BE' => 'EUR',
-    'CA' => 'CAD', 'XX' => 'USD',
-];
+// Pays acceptés et leur devise : la liste unique des pays est dans pays.json (partagée avec le site)
+define('LISTE_PAYS', json_decode((string) file_get_contents(__DIR__ . '/pays.json'), true) ?: []);
+define('PAYS', array_column(LISTE_PAYS, 'devise', 'id'));
 // Métiers proposés à l'inscription (les métiers réglementés comme la pharmacie ne sont plus proposés)
 const TYPES_COMMERCE_OFFERTS = ['restaurant', 'maquis', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'beaute', 'telephonie', 'librairie', 'autre'];
 // Tous les types connus : les anciens commerces « pharmacie » gardent leur formule de prix

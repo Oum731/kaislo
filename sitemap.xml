@@ -364,6 +364,12 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/excel-ou-logiciel-de-gestion-comparatif/" />
 </url>
 <url>
+<loc>https://kaislo.com/guides/gerer-son-commerce-maroc/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-morocco/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
+</url>
+<url>
 <loc>https://kaislo.com/guides/gerer-son-commerce-cote-d-ivoire/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-cote-d-ivoire/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-cote-d-ivoire/" />
@@ -430,12 +436,6 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-congo/" />
 </url>
 <url>
-<loc>https://kaislo.com/guides/gerer-son-commerce-maroc/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-morocco/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
-</url>
-<url>
 <loc>https://kaislo.com/guides/gerer-son-commerce-france/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-france/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-france/" />
@@ -452,6 +452,12 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-canada/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-canada/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-canada/" />
+</url>
+<url>
+<loc>https://kaislo.com/guides/logiciel-de-caisse-maroc/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/pos-software-in-morocco/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
 </url>
 <url>
 <loc>https://kaislo.com/guides/logiciel-de-caisse-cote-d-ivoire/</loc>
@@ -520,12 +526,6 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/logiciel-de-caisse-congo/" />
 </url>
 <url>
-<loc>https://kaislo.com/guides/logiciel-de-caisse-maroc/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/pos-software-in-morocco/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
-</url>
-<url>
 <loc>https://kaislo.com/guides/logiciel-de-caisse-france/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/logiciel-de-caisse-france/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/pos-software-in-france/" />
@@ -568,6 +568,9 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/caisse-enregistreuse-certifiee-horeca-belgique/" />
 </url>
 <url>
+<loc>https://kaislo.com/pays/maroc/</loc>
+</url>
+<url>
 <loc>https://kaislo.com/pays/cote-d-ivoire/</loc>
 </url>
 <url>
@@ -599,9 +602,6 @@
 </url>
 <url>
 <loc>https://kaislo.com/pays/congo/</loc>
-</url>
-<url>
-<loc>https://kaislo.com/pays/maroc/</loc>
 </url>
 <url>
 <loc>https://kaislo.com/pays/france/</loc>
@@ -994,6 +994,12 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/excel-ou-logiciel-de-gestion-comparatif/" />
 </url>
 <url>
+<loc>https://kaislo.com/en/guides/running-a-business-in-morocco/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-morocco/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
+</url>
+<url>
 <loc>https://kaislo.com/en/guides/running-a-business-in-cote-d-ivoire/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-cote-d-ivoire/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-cote-d-ivoire/" />
@@ -1060,12 +1066,6 @@
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-congo/" />
 </url>
 <url>
-<loc>https://kaislo.com/en/guides/running-a-business-in-morocco/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-morocco/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-maroc/" />
-</url>
-<url>
 <loc>https://kaislo.com/en/guides/running-a-business-in-france/</loc>
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-france/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-france/" />
@@ -1082,6 +1082,12 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/gerer-son-commerce-canada/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/running-a-business-in-canada/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/gerer-son-commerce-canada/" />
+</url>
+<url>
+<loc>https://kaislo.com/en/guides/pos-software-in-morocco/</loc>
+<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/pos-software-in-morocco/" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
 </url>
 <url>
 <loc>https://kaislo.com/en/guides/pos-software-in-cote-d-ivoire/</loc>
@@ -1148,12 +1154,6 @@
 <xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/logiciel-de-caisse-congo/" />
 <xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/pos-software-in-congo/" />
 <xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/logiciel-de-caisse-congo/" />
-</url>
-<url>
-<loc>https://kaislo.com/en/guides/pos-software-in-morocco/</loc>
-<xhtml:link rel="alternate" hreflang="fr" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://kaislo.com/en/guides/pos-software-in-morocco/" />
-<xhtml:link rel="alternate" hreflang="x-default" href="https://kaislo.com/guides/logiciel-de-caisse-maroc/" />
 </url>
 <url>
 <loc>https://kaislo.com/en/guides/pos-software-in-france/</loc>
