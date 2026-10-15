@@ -505,11 +505,16 @@ function monter(nom, dossierTmp, liste, film, affiche) {
     filtres.push(`[${i + 2}:a]aformat=sample_rates=44100:channel_layouts=stereo,adelay=${ms}|${ms}[p${i}]`);
   });
   const n = narration.pistes.length;
-  filtres.push(`${narration.pistes.map((_, i) => `[p${i}]`).join('')}amix=inputs=${n}:normalize=0:dropout_transition=0,volume=1.15[voix]`);
-  filtres.push('[voix]asplit=2[voixA][voixB]');
-  filtres.push(`[1:a]volume=${VOLUME_MUSIQUE}[mus]`);
-  filtres.push('[mus][voixB]sidechaincompress=threshold=0.02:ratio=8:attack=40:release=700[musBas]');
-  filtres.push('[musBas][voixA]amix=inputs=2:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=44100[son]');
+  if (n === 0) {
+    // Vidéo sans voix (sous-titres seulement) : la musique seule, un peu plus présente
+    filtres.push(`[1:a]volume=${VOLUME_MUSIQUE * 1.6},loudnorm=I=-18:TP=-1.5:LRA=11,aresample=44100[son]`);
+  } else {
+    filtres.push(`${narration.pistes.map((_, i) => `[p${i}]`).join('')}amix=inputs=${n}:normalize=0:dropout_transition=0,volume=1.15[voix]`);
+    filtres.push('[voix]asplit=2[voixA][voixB]');
+    filtres.push(`[1:a]volume=${VOLUME_MUSIQUE}[mus]`);
+    filtres.push('[mus][voixB]sidechaincompress=threshold=0.02:ratio=8:attack=40:release=700[musBas]');
+    filtres.push('[musBas][voixA]amix=inputs=2:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=44100[son]');
+  }
 
   const mp4 = `${sortie}/${nom}${SUFFIXE}.mp4`;
   execFileSync(ffmpeg, ['-y', '-loglevel', 'error', ...entrees, '-filter_complex', filtres.join(';'), '-map', '0:v', '-map', '[son]',
@@ -917,6 +922,80 @@ for (const lang of ['fr', 'en']) {
     await conclusionPromo(p, film, X);
   });
 }
+
+// ============================================================
+// VIDÉO DE PROSPECTION « COMMERCE + CLIENTS » (restaurants, fast-foods) : npm run videos -- promo-commande
+// Le client commande sur son téléphone, la commande arrive chez le commerçant, la vente et le stock suivent.
+// Sans voix (sous-titres seulement) : se regarde sans le son, sur WhatsApp ou Instagram. Écrite dans outils/videos-pub/.
+// ============================================================
+const leg = async (p, html, ms = 2200) => { await p.evaluate((h) => { document.getElementById('v-titre').innerHTML = h; }, html); await pause(ms); };
+// Ajoute le n-ième article de la vitrine (en choisissant la première option si elle est obligatoire)
+async function ajouterVitrine(p, n) {
+  await toucher(p, null, await nieme(p, '.vitrine-article button', n), 900);
+  const boite = await p.$('.vitrine-feuille[role=dialog]');
+  if (boite) {
+    const radio = await p.$('.vitrine-feuille[role=dialog] input[type=radio]');
+    if (radio) await toucher(p, null, '.vitrine-feuille[role=dialog] .case-accord', 600);
+    await toucher(p, 'Ajouter ·', '.vitrine-feuille[role=dialog] button.grand', 900);
+  }
+}
+await enregistrer('promo-commande-fastfood', { largeur: 390, hauteur: 780, mobile: true, affiche: 14 }, async (p, demarrer) => {
+  await regler(p, 19, 25);
+  // Pas de bandeau cookies dans la vidéo (choix « Refuser » déjà fait)
+  await p.evaluateOnNewDocument(() => { try { if (!localStorage.getItem('kaislo-mesure')) localStorage.setItem('kaislo-mesure', 'non'); } catch { /* sans stockage */ } });
+  await connexion(p, 'resto-ivoire', 'CI', true); // fixe le pays de la démo (FCFA) avant d'ouvrir la vitrine
+  await p.goto(`${U}/boutique/?demo=resto-ivoire`, { waitUntil: 'networkidle0' });
+  await p.waitForSelector('.vitrine-article');
+  await p.evaluate(() => document.fonts.ready);
+  await preparer(p, true);
+  await carte(p, INTRO('Commandes, ventes et stock de votre restaurant<br>sur un seul téléphone.', 'Démo Kaislo · restaurants et fast-foods'));
+  const film = await demarrer();
+  await pause(1700);
+  await carte(p, `<div class="sk ancien"><div class="sk-badge">Aujourd’hui</div><div class="sk-rangee">💬📝😩</div><div class="sk-bulle sk-pop">Commandes éparpillées, stock au pif, comptes du soir à refaire…</div></div>`);
+  await pause(2200);
+  await carte(p, `<div class="sk kaislo"><div class="sk-badge">Avec Kaislo 😎</div><div class="sk-rangee">📲✅📦</div><div class="sk-bulle sk-pop">Le client commande, vous encaissez, le stock suit.</div></div>`);
+  await pause(2000);
+  await masquerCarte(p);
+
+  // 1. Le client
+  await leg(p, '👤 <b>Le client</b> ouvre votre boutique sur son téléphone', 1500);
+  await ajouterVitrine(p, 1);
+  await ajouterVitrine(p, 2);
+  await leg(p, 'Il choisit ses plats en <b>quelques touches</b>', 700);
+  await toucher(p, null, '.vitrine-barre', 1000);
+  await leg(p, 'Son <b>nom</b> et son <b>adresse</b> de livraison', 600);
+  await taper(p, await champ(p, 'Votre nom'), 'Aminata K.');
+  await taper(p, await champ(p, 'Adresse de livraison'), 'Cocody Riviera 2');
+  await leg(p, 'Il touche <b>Confirmer la commande</b>', 700);
+  await toucher(p, 'Confirmer la commande', 'button[type=submit]', 1800);
+  await leg(p, '📲 La commande part <b>sur votre WhatsApp</b>, déjà écrite', 2200);
+
+  // 2. Le commerçant
+  await p.goto(`${U}/app/?demo=resto-ivoire`, { waitUntil: 'networkidle0' });
+  await p.evaluate(() => document.fonts.ready);
+  await preparer(p, true);
+  await leg(p, '🏪 <b>Vous</b> : la commande est aussi dans Kaislo', 1100);
+  await seConnecter(p, '06 00 00 00 01');
+  await toucher(p, null, '.avatar', 900);
+  await toucher(p, 'Commandes en ligne', '.liste-item', 1600);
+  await leg(p, 'Nom, adresse, plats, total : <b>tout est là</b>', 2200);
+  await toucher(p, 'Ouvrir dans la caisse', 'button', 1500);
+  await leg(p, 'Un clic : la commande passe <b>en caisse</b>', 1500);
+
+  // 3. Vente, stock, comptes
+  await leg(p, 'Le client paie : vous <b>validez</b>, le stock baisse tout seul', 600);
+  await toucher(p, 'Valider', '.barre-panier button, .panneau-panier button.grand', 1200).catch(() => {});
+  await toucher(p, 'Espèces', '.feuille .choix-grille button, .panneau-panier .choix-grille button', 800).catch(() => {});
+  await toucher(p, 'Valider', '.feuille button.grand, .panneau-panier button.grand', 1800).catch(() => {});
+  await leg(p, 'Ticket imprimé ou envoyé par <b>WhatsApp</b>', 1500);
+  await toucher(p, 'Nouvelle vente', '.feuille-pied button', 700).catch(() => {});
+  await toucher(p, 'Accueil', '.menu-lien', 1500);
+  await leg(p, '📊 Le soir : <b>chiffre du jour</b>, marge et dépenses, sans calculer', 2400);
+  await leg(p, '');
+  await carte(p, `<div class="k">K</div><div class="marque">Kaislo</div><h1>Essayez gratuitement<br>pendant 30 jours.</h1><p>Sans carte, sans engagement. Je vous inscris à distance en 2 minutes.</p><div class="bouton">kaislo.com</div>`);
+  await pause(2600);
+  await film.stop();
+});
 
 serveur.close();
 console.log('Vidéos prêtes dans ' + SORTIE + ' (vidéos « promo- » : outils/videos-pub/)');
