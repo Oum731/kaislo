@@ -18,6 +18,7 @@
 //   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
 //   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
 //   GET  /api/pays          pays du visiteur d'après son adresse IP (voir lib/pays.php)
+//   /api/notifications      notifications au commerçant : résumé du soir, nouvelles commandes (voir lib/notifications.php)
 //   /api/commercial/...     espace des commerciaux Kaislo (voir lib/commerciaux.php)
 //   /api/admin/...          espace Amorac : commerces, abonnements, offres, équipe (voir lib/admin.php)
 //
@@ -43,6 +44,7 @@ require __DIR__ . '/lib/pays.php';
 require __DIR__ . '/lib/commerciaux.php';
 require __DIR__ . '/lib/commerces.php';
 require __DIR__ . '/lib/boutique.php';
+require __DIR__ . '/lib/notifications.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -86,6 +88,9 @@ try {
         'GET /public/boutiques' => routeBoutiquesAnnuaire(),
         'GET /public/boutique-image' => routeBoutiqueImage(),
         'POST /public/commande' => routeCommandePublique(),
+        'GET /notifications' => routeNotificationsEtat(),
+        'POST /notifications/tester' => routeNotificationsTester(),
+        'GET /cron/notifications', 'POST /cron/notifications' => routeCronNotifications(),
         'GET /avis' => routeAvisPublics(),
         'GET /mon-avis' => routeMonAvis(),
         'POST /avis' => routeAvisEnvoyer(),

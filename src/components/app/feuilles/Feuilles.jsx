@@ -14,6 +14,7 @@ import {
 
 import { FeuilleRapport } from './FeuilleRapport';
 import { FeuilleImport } from './FeuilleImport';
+import { FeuilleNotifications } from './FeuilleNotifications';
 import { FeuilleCommerces, FeuilleAjoutCommerce } from './FeuillesCommerces';
 import { FeuilleAvis } from './FeuilleAvis';
 import { FeuilleParrainage } from './FeuilleParrainage';
@@ -21,6 +22,7 @@ import { FeuilleBoutique, FeuilleCommandesEnLigne } from './FeuillesBoutique';
 
 const FEUILLES = {
   rapport: FeuilleRapport,
+  notifications: FeuilleNotifications,
   importProduits: FeuilleImport,
   options: FeuilleOptions,
   panier: FeuillePanier,

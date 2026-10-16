@@ -467,6 +467,14 @@ export function FeuilleCompte() {
             <span className="petit muet">{tr('Ajouter un commerce')}</span>
             <Icone nom="droite" className="muet" />
           </button>
+          {enLigne && !s.estDemoActuel() && (
+            <button className="liste-item" onClick={() => s.ouvrir('notifications')}>
+              <span className="mini-emoji teinte-bleu"><Icone nom="cloche" /></span>
+              <b className="grandit">{tr('Notifications')}</b>
+              <span className="petit muet">{tr('Résumé du soir')}</span>
+              <Icone nom="droite" className="muet" />
+            </button>
+          )}
           <button className="liste-item" onClick={() => s.ouvrir('boutique')}>
             <span className="mini-emoji teinte-safran"><Icone nom="produits" /></span>
             <b className="grandit">{tr('Boutique en ligne')}</b>

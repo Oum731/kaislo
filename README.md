@@ -291,6 +291,34 @@ Chaque commerce et chaque utilisateur est identifié par son numéro, enregistr�
 (ex : `+225 07 12 34 56 78`) selon les règles du pays (`src/lib/donnees/telephone.js` et `api/lib/telephone.php`,
 à garder identiques). Un numéro ne peut appartenir qu'à un seul commerce. Pour ajouter un pays : compléter les deux fichiers.
 
+## Notifications : résumé du soir et nouvelles commandes
+
+Le serveur prévient chaque gérant par **e-mail** et/ou **WhatsApp** (code : `api/lib/notifications.php`, écran : Compte → Notifications, gérant seulement) :
+- **Résumé du soir** (heure au choix, 19 h à 23 h, 21 h par défaut, heure locale du pays du commerce) : ventes du jour, panier moyen, marge, modes de paiement,
+  plus vendus, dépenses, crédits à récupérer, commandes en ligne à traiter, stock bas. Pas de message pour un commerce sans aucune vente depuis 7 jours.
+- **Nouvelle commande en ligne** : message tout de suite, avec le client, l'adresse et les articles.
+- **Selon ce que le compte permet** : l'e-mail part si le commerce a une adresse (Réglages → Commerce) ; WhatsApp part seulement si le gérant l'a activé (son accord)
+  et si le commerce a un numéro et que Kaislo a configuré l'API WhatsApp (sinon l'écran affiche « Bientôt disponible »). Un bouton envoie un essai.
+- Réglages du gérant : `d.commerce.notifications` (`resume`, `heure`, `email`, `whatsapp`, `commandes`), envoyés au serveur par la synchronisation. Historique : table `notifications`.
+
+**À faire une seule fois (serveur) :**
+1. `.env` : ajouter `CleCron=` suivie d'une clé secrète de 12 caractères ou plus.
+2. Déclencher chaque heure `POST https://kaislo.com/api/cron/notifications` avec l'en-tête `X-Cle-Cron: <la clé>` (ou `?cle=<la clé>` dans l'adresse). Deux façons :
+   - hPanel → Avancé → **Tâches Cron** → toutes les heures : `curl -s -X POST -H "X-Cle-Cron: LA_CLE" https://kaislo.com/api/cron/notifications > /dev/null` ;
+   - ou le workflow GitHub « Résumés du soir » : créer le secret `CLE_CRON` (Settings → Secrets and variables → Actions) avec la même clé.
+3. Un commerce n'est jamais servi deux fois le même jour (colonne `commerces.resume_envoye_le`).
+
+**WhatsApp (API WhatsApp Business de Meta, à activer quand vous êtes prêt) :**
+1. Créer l'application et le numéro d'envoi dans Meta Business (WhatsApp Cloud API), et garder le **jeton permanent** et l'**identifiant du numéro**.
+2. `.env` : `WhatsAppToken=` (jeton) et `WhatsAppNumeroId=` (identifiant du numéro). Facultatif : `WhatsAppModeleResume=` et `WhatsAppModeleCommande=`
+   (par défaut `kaislo_resume_soir` et `kaislo_nouvelle_commande` ; la version anglaise ajoute `_en`).
+3. Faire approuver par Meta (catégorie « Utilitaire ») les modèles, en français (`fr`) et en anglais (`en`) :
+   - `kaislo_resume_soir` : « Bonjour, voici le résumé de {{1}} pour le {{2}} : ventes {{3}}, dépenses {{4}}, crédits à récupérer {{5}}, stock : {{6}}. Détails dans votre e-mail ou dans Kaislo. »
+   - `kaislo_nouvelle_commande` : « Nouvelle commande n° {{1}} de {{2}} pour {{3}}. Livraison : {{4}}. Ouvrez Kaislo → Compte → Commandes en ligne. »
+4. Sans ces lignes, WhatsApp n'est simplement pas proposé : rien ne casse. Les messages WhatsApp d'une entreprise sont facturés par Meta à la conversation : voir sa grille de prix.
+
+**Essayer sans rien envoyer :** `NotificationsMode=test` dans le `.env` (tests, `npm test`) : chaque message est seulement noté dans la table `notifications`.
+
 ## Avant l'ouverture au public (production)
 
 - [ ] Acheter `kaislo.com`, le relier à Hostinger (hPanel → Domaines) et activer le certificat SSL.

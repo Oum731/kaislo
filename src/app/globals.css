@@ -1216,3 +1216,14 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .import-fin-icone { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: var(--vert); color: #fff; }
 .import-fin-icone .ic { width: 38px; height: 38px; }
 .import-fin-nombre { font-family: var(--marque); font-size: 26px; font-weight: 800; margin: 0; }
+
+/* Notifications */
+.notif-carte { padding: 14px; }
+.notif-icone { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--t-fond, var(--vert-clair)); }
+.notif-icone .ic { width: 20px; height: 20px; }
+.notif-icone.vert { background: var(--vert-clair); color: var(--vert); }
+.notif-icone.bleu { background: #e4edf4; color: #2c5877; }
+.notif-icone.safran { background: var(--safran-clair); color: var(--safran-fonce); }
+.notif-icone.rouge { background: var(--rouge-clair); color: var(--rouge); }
+.notif-icone.petit { width: 30px; height: 30px; border-radius: 10px; }
+.notif-icone.petit .ic { width: 16px; height: 16px; }
