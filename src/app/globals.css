@@ -1339,3 +1339,4 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .stock-etats.quatre .l { font-size: 12px; }
 .stock-etats .neutre .l i { background: var(--encre-3); }
 @media (max-width: 420px) { .stock-etats.quatre .l { font-size: 11px; gap: 4px; } }
+.liste-item .jauge { display: block; }
