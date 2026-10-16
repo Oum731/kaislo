@@ -301,6 +301,8 @@ Le serveur prévient chaque gérant par **e-mail** et/ou **WhatsApp** (code : `a
   et si le commerce a un numéro et que Kaislo a configuré l'API WhatsApp (sinon l'écran affiche « Bientôt disponible »). Un bouton envoie un essai.
 - Réglages du gérant : `d.commerce.notifications` (`resume`, `heure`, `email`, `whatsapp`, `commandes`), envoyés au serveur par la synchronisation. Historique : table `notifications`.
 
+**Notifications push (téléphone, même application fermée)** : gratuites, sans compte à ouvrir. Le gérant les autorise appareil par appareil (Compte → Notifications → « Sur cet appareil » ; sur iPhone, d'abord ajouter Kaislo à l'écran d'accueil). Le serveur envoie un signal vide signé (clé VAPID créée toute seule au premier usage et gardée dans `reglages_amorac`, clé « vapid ») aux services des navigateurs (Google, Mozilla, Apple, Microsoft) ; le texte de la notification reste chez Kaislo et c'est l'appareil qui vient le lire (`public/sw.js`, `api/lib/push.php`) : aucune donnée du commerce ne passe par ces services. Reçus par le gérant : résumé du soir, nouvelles commandes en ligne. Rien à configurer côté serveur (l'extension PHP OpenSSL suffit) ; le résumé du soir part en push dès qu'un appareil est abonné, même sans adresse e-mail, grâce à la tâche horaire ci-dessous.
+
 **À faire une seule fois (serveur) :**
 1. `.env` : ajouter `CleCron=` suivie d'une clé secrète de 12 caractères ou plus.
 2. Déclencher chaque heure `POST https://kaislo.com/api/cron/notifications` avec l'en-tête `X-Cle-Cron: <la clé>` (ou `?cle=<la clé>` dans l'adresse). Deux façons :
