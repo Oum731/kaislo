@@ -26,6 +26,7 @@ export default function Accueil() {
     return d.ventes.some((v) => new Date(v.date) >= debut) || !d.ventes.length ? 'jour' : 'semaine';
   });
   const [barre, setBarre] = useState(null);
+  const [detail, setDetail] = useState(null); // tuile dont le détail est affiché (toucher pour voir)
   const st = useMemo(() => calculerStats(d.ventes, periode, new Date(), d.depenses || []), [d.ventes, d.depenses, periode]);
   const credit = useMemo(() => totalCreditEnCours(d), [d]);
   const journees = historiqueCaisse(d).slice(0, 5);
@@ -35,6 +36,11 @@ export default function Accueil() {
   const etiquette = (i) => (n > 20 ? i === 0 || (i + 1) % 5 === 0 : n > 12 ? i % 2 === 0 : true);
   const lib = LIBELLES_PERIODE[periode];
   const prenom = s.utilisateur.nom.split(' ')[0];
+  const journeeEnCours = journees.find((j) => !j.fermeLe);
+  const gerant = s.utilisateur.role === 'gerant';
+  const peutArticles = s.peut('peutGererProduits');
+  const barresRecentes = st.barres.slice(-12);
+  const maxRecent = Math.max(1, ...barresRecentes.map((b) => b.valeur));
 
   return (
     <>
@@ -52,35 +58,45 @@ export default function Accueil() {
         <div className="grille-ecran deux" style={{ marginTop: 16 }}>
           {/* Colonne principale */}
           <div className="pile">
-            <div className="carte kpi-principal">
-              <p className="petit" style={{ opacity: 0.8 }}>{tr('Chiffre d’affaires · {0}', [lib.titre])}</p>
+            <div className="carte kpi-principal vert">
+              <p className="petit kpi-libelle"><Icone nom="hausse" taille="sm" />{tr('Ventes · {0}', [lib.titre])}</p>
               <p className="valeur">{s.prix(st.total)}</p>
               {st.variation !== null && (
                 <span className="evolution" style={st.variation < 0 ? { color: 'var(--rouge)', background: 'var(--rouge-clair)' } : undefined}>
                   <Icone nom={st.variation >= 0 ? 'hausse' : 'baisse'} taille="sm" />{tr('{0} % vs {1}', [(st.variation >= 0 ? '+' : '') + st.variation, lib.prec])}</span>
               )}
-            </div>
-            <div className="kpis">
-              <div className="carte kpi"><p className="petit muet">{tr('Tickets')}</p><p className="kpi-valeur">{st.nb}</p><p className="sous">{tr('Panier moyen {0}', [s.prix(st.panierMoyen)])}</p></div>
-              <div className="carte kpi">
-                <p className="petit muet">{tr('Marge brute')}</p>
-                <p className="kpi-valeur vert-texte">{st.marge !== null ? s.prix(st.marge) : '—'}</p>
-                <p className="sous">{st.tauxMarge !== null ? tr('{0} % des ventes', [st.tauxMarge]) : tr('Ajoutez les prix d’achat')}</p>
-              </div>
-              <div className="carte kpi"><p className="petit muet">{tr('Dépenses')}</p><p className="kpi-valeur rouge-texte">{s.prix(st.totalDepenses)}</p><p className="sous">{tr('Solde {0}', [s.prix(st.solde)])}</p></div>
-              <button className="carte kpi" onClick={() => s.allerA('clients')}>
-                <p className="petit muet">{tr('Crédit en cours')}</p><p className="kpi-valeur" style={{ color: 'var(--safran-fonce)' }}>{s.prix(credit)}</p><p className="sous">{tr('Voir le carnet →')}</p>
-              </button>
-              <div className="carte kpi"><p className="petit muet">{tr('Remises')}</p><p className="kpi-valeur">{s.prix(st.remises)}</p><p className="sous">{tr('accordées sur la période')}</p></div>
-              {s.aTables() ? (
-                <button className="carte kpi" onClick={() => s.allerA('tables')}>
-                  <p className="petit muet">{tr('Tables occupées')}</p><p className="kpi-valeur">{(d.commandes || []).length} / {d.commerce.tables.length}</p><p className="sous">{tr('Voir les tables →')}</p>
-                </button>
-              ) : (
-                <div className="carte kpi"><p className="petit muet">{tr('Vendu à crédit')}</p><p className="kpi-valeur">{s.prix(st.aCredit)}</p><p className="sous">{tr('sur la période')}</p></div>
+              {barresRecentes.some((b) => b.valeur > 0) && (
+                <div className="mini-barres" aria-hidden="true">
+                  {barresRecentes.map((b, i) => <i key={i} className={b.valeur === maxRecent ? 'haut' : ''} style={{ height: Math.max(6, (b.valeur / maxRecent) * 100) + '%' }} />)}
+                </div>
               )}
             </div>
-            <p className="tres-petit muet">{tr('Solde = ventes − dépenses, avant les autres charges éventuelles. Marge = prix de vente − prix d’achat.')}</p>
+            <div className="actions-rapides">
+              <button className="vente" onClick={() => s.allerA('caisse')}><Icone nom="caisse" />{tr('Vendre')}</button>
+              <button onClick={() => s.ouvrir('depense')}><Icone nom="plus" />{tr('Dépense')}</button>
+              {peutArticles && <button onClick={() => s.ouvrir('produit')}><Icone nom="produits" />{tr('Article')}</button>}
+            </div>
+
+            {gerant && (
+              <div className="etat-journee">
+                <span className="ligne" style={{ gap: 8 }}><i className={'point ' + (journeeEnCours ? 'ouvert' : '')} />{journeeEnCours ? tr('Journée ouverte') : tr('Journée fermée')}{journeeEnCours && <span className="muet">{tr('depuis {0}', [formatHeure(journeeEnCours.ouverteLe)])}</span>}</span>
+                <button className="btn petit sombre" onClick={() => s.ouvrir('cloture')}>{journeeEnCours ? tr('Fermer') : tr('Ouvrir')}</button>
+              </div>
+            )}
+
+            <div className="kpis">
+              <Tuile id="tickets" icone="ventes" teinte="vert" libelle={tr('Tickets')} valeur={st.nb} detail={tr('Panier moyen {0}', [s.prix(st.panierMoyen)])} ouvert={detail} surToucher={setDetail} />
+              <Tuile id="marge" icone="depense" teinte="vert" libelle={tr('Marge')} valeur={st.marge !== null ? s.prix(st.marge) : '—'} couleur="vert-texte"
+                detail={st.tauxMarge !== null ? tr('{0} % des ventes', [st.tauxMarge]) : tr('Ajoutez les prix d’achat')} ouvert={detail} surToucher={setDetail} />
+              <Tuile id="depenses" icone="baisse" teinte="rouge" libelle={tr('Dépenses')} valeur={s.prix(st.totalDepenses)} couleur="rouge-texte" detail={tr('Solde {0}', [s.prix(st.solde)])} ouvert={detail} surToucher={setDetail} />
+              <Tuile icone="carnet" teinte="safran" libelle={tr('À recevoir')} valeur={s.prix(credit)} couleur="safran-texte" va={() => s.allerA('clients')} />
+              <Tuile id="remises" icone="remise" teinte="bleu" libelle={tr('Remises')} valeur={s.prix(st.remises)} detail={tr('accordées sur la période')} ouvert={detail} surToucher={setDetail} />
+              {s.aTables() ? (
+                <Tuile icone="tables" teinte="bleu" libelle={tr('Tables')} valeur={`${(d.commandes || []).length} / ${d.commerce.tables.length}`} va={() => s.allerA('tables')} />
+              ) : (
+                <Tuile id="credit" icone="clients" teinte="safran" libelle={tr('Vendu à crédit')} valeur={s.prix(st.aCredit)} detail={tr('sur la période')} ouvert={detail} surToucher={setDetail} />
+              )}
+            </div>
 
             {/* Graphique */}
             <div className="carte">
@@ -167,6 +183,21 @@ export default function Accueil() {
         </div>
       </div>
     </>
+  );
+}
+
+// Tuile de chiffre : icône + valeur + un mot. Le détail (panier moyen, solde…) s'affiche en touchant la tuile ;
+// une tuile avec « va » ouvre directement l'écran concerné.
+function Tuile({ id, icone, teinte, libelle, valeur, couleur = '', detail, ouvert, surToucher, va }) {
+  const montre = id && ouvert === id;
+  return (
+    <button className={'carte kpi tuile-kpi ' + (montre ? 'detail' : '')} onClick={() => (va ? va() : surToucher(montre ? null : id))} aria-expanded={va ? undefined : !!montre}>
+      <span className={'tuile-icone teinte-' + teinte}><Icone nom={icone} /></span>
+      <p className={'kpi-valeur ' + couleur}>{valeur}</p>
+      <p className="tuile-kpi-libelle">{libelle}</p>
+      {montre && detail && <p className="sous">{detail}</p>}
+      {va && <Icone nom="droite" taille="sm" className="tuile-fleche" />}
+    </button>
   );
 }
 

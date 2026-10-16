@@ -1154,3 +1154,42 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .accueil-boutiques-tete > * { min-width: 0; }
 .accueil-boutiques-tete .btn { max-width: 100%; white-space: normal; }
 @media (max-width: 520px) { .choix-carte .btn.grand { padding-left: 14px; padding-right: 14px; font-size: 16px; } }
+
+/* Accueil et caisse plus visuels : icône + chiffre + un mot, détail en touchant */
+.kpi-principal.vert { background: var(--vert); color: #fff; border-color: var(--vert); border-radius: 16px; }
+.kpi-principal.vert .kpi-libelle { opacity: .85; display: flex; align-items: center; gap: 6px; }
+.kpi-principal.vert .valeur { font-family: var(--marque); font-size: 38px; font-weight: 800; letter-spacing: -0.03em; }
+.kpi-principal.vert .evolution { color: #fff; background: rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 4px 10px; font-weight: 700; }
+.mini-barres { display: flex; align-items: flex-end; gap: 5px; height: 44px; margin-top: 12px; }
+.mini-barres i { flex: 1; display: block; background: rgba(255, 255, 255, 0.28); border-radius: 4px 4px 2px 2px; }
+.mini-barres i.haut { background: var(--safran); }
+.kpi.tuile-kpi { position: relative; display: grid; gap: 6px; text-align: left; border-radius: 16px; width: 100%; align-content: start; }
+.tuile-icone { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--t-fond); color: var(--t-encre); }
+.tuile-icone .ic { width: 19px; height: 19px; }
+.tuile-kpi-libelle { font-size: 13px; font-weight: 600; color: var(--encre-2); margin: 0; }
+.kpi.tuile-kpi .kpi-valeur { margin-top: 4px; font-size: 21px; }
+.kpi.tuile-kpi .sous { margin: 0; }
+.tuile-fleche { position: absolute; top: 14px; right: 12px; color: var(--bordure-forte); }
+.safran-texte { color: var(--safran-fonce); }
+.actions-rapides { display: flex; gap: 10px; }
+.actions-rapides button { flex: 1; display: grid; justify-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--bordure); border-radius: 16px; padding: 12px 6px 10px; font-weight: 700; font-size: 13.5px; color: var(--encre); }
+.actions-rapides button.vente { background: var(--vert); color: #fff; border-color: var(--vert); }
+.actions-rapides .ic { width: 24px; height: 24px; }
+.etat-journee { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--bordure); border-radius: 16px; padding: 10px 14px; font-weight: 700; font-size: 14px; }
+.etat-journee .point { width: 10px; height: 10px; border-radius: 50%; background: var(--bordure-forte); display: inline-block; }
+.etat-journee .point.ouvert { background: #2f9e6b; box-shadow: 0 0 0 4px #d8efe3; }
+.btn.sombre { background: var(--encre); color: #fff; border-color: var(--encre); }
+.teinte-rouge { --t-fond: #f9e7e3; --t-encre: #b4412f; --t-barre: #b4412f; }
+
+/* Caisse : stock en pastille colorée, paiements avec icône, panier vide illustré */
+.tuile-stock { display: inline-flex; align-items: center; gap: 5px; }
+.tuile-stock i { width: 8px; height: 8px; border-radius: 50%; background: #2f9e6b; display: block; }
+.tuile-stock.bas i { background: var(--safran); }
+.tuile-stock.rupt i { background: var(--rouge); }
+.tuile-stock.rupt { color: var(--rouge); font-weight: 700; }
+.choix-grille button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 46px; }
+.choix-grille button .ic { width: 18px; height: 18px; flex: none; }
+.panier-vide .ic { width: 56px; height: 56px; color: var(--bordure-forte); margin-bottom: 10px; }
+.etat-caisse .point { width: 10px; height: 10px; border-radius: 50%; background: var(--bordure-forte); display: inline-block; margin-right: 8px; }
+.etat-caisse .point.ouvert { background: #2f9e6b; box-shadow: 0 0 0 4px #d8efe3; }
+.tuile-stock.bas { color: var(--safran-fonce); font-weight: 600; }
