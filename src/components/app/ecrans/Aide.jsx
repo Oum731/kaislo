@@ -26,12 +26,21 @@ export default function Aide() {
         {enLigne ? <Messagerie /> : (
           <p className="astuce">{tr('La messagerie avec l’équipe est disponible pour les commerces inscrits en ligne. En attendant, écrivez-nous sur WhatsApp ou par e-mail.')}</p>
         )}
-        <p className="section-titre">{tr('Autres moyens de nous joindre')}</p>
-        <div className="grille-2">
-          <a className="btn secondaire" href={'https://wa.me/' + CONTACT_WHATSAPP} target="_blank" rel="noreferrer"><Icone nom="whatsapp" /> {tr('WhatsApp')}</a>
-          <a className="btn secondaire" href={'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent('Kaislo — ' + s.d.commerce.nom)}><Icone nom="carnet" /> {CONTACT_EMAIL}</a>
+        <p className="section-titre">{tr('Nous joindre')}</p>
+        <div className="contacts-aide">
+          <a className="contact-aide" href={'https://wa.me/' + CONTACT_WHATSAPP} target="_blank" rel="noreferrer">
+            <span className="tuile-icone teinte-vert"><Icone nom="whatsapp" /></span>
+            <span>{tr('WhatsApp')}</span>
+          </a>
+          <a className="contact-aide" href={'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent('Kaislo — ' + s.d.commerce.nom)}>
+            <span className="tuile-icone teinte-bleu"><Icone nom="mail" /></span>
+            <span>{tr('E-mail')}<br /><small>{CONTACT_EMAIL}</small></span>
+          </a>
+          <a className="contact-aide" href={chemin('/tutoriels/')} target="_blank" rel="noreferrer">
+            <span className="tuile-icone teinte-safran"><Icone nom="ecran" /></span>
+            <span>{tr('Tutoriels vidéo')}</span>
+          </a>
         </div>
-        <a className="btn fantome bloc" style={{ marginTop: 10 }} href={chemin('/tutoriels/')} target="_blank" rel="noreferrer"><Icone nom="ecran" /> {tr('Voir les tutoriels vidéo')}</a>
       </div>
     </>
   );

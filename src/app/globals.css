@@ -1315,3 +1315,27 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
   .discussions.ouvert .discussions-liste { display: none; }
   .discussions:not(.ouvert) .discussion-fil { display: none; }
 }
+
+/* ---------- Refonte Crédit, Produits, Réglages, Aide ---------- */
+.liste-item .droite { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+.produit-pastilles { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.marge-pastille { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: var(--creme-fonce); color: var(--encre-2); white-space: nowrap; }
+.marge-pastille.haute { background: var(--vert-clair); color: var(--vert-fonce); }
+.marge-pastille.faible { background: var(--rouge-clair); color: var(--rouge); }
+.onglets-icones { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; overflow-x: auto; padding: 4px; background: var(--creme-fonce); border-radius: 14px; }
+.onglets-icones button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 10px; border: 0; border-radius: 11px; background: transparent; color: var(--encre-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.onglets-icones button .ic { width: 22px; height: 22px; }
+.onglets-icones button.actif { background: var(--surface); color: var(--vert-fonce); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.contacts-aide { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+.contact-aide { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 8px; text-align: center; border: 1px solid var(--bordure); border-radius: 16px; background: var(--surface); color: inherit; text-decoration: none; font-weight: 600; font-size: 14px; }
+.contact-aide .tuile-icone { width: 44px; height: 44px; border-radius: 14px; }
+.contact-aide .tuile-icone .ic { width: 24px; height: 24px; }
+.contact-aide small { font-weight: 400; color: var(--encre-3); font-size: 12px; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .contacts-aide { grid-template-columns: 1fr; } .contact-aide { flex-direction: row; text-align: left; padding: 12px 14px; } }
+
+.stock-etats.quatre { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stock-etats.quatre button { padding: 8px 10px; }
+.stock-etats.quatre .n { font-size: 22px; }
+.stock-etats.quatre .l { font-size: 12px; }
+.stock-etats .neutre .l i { background: var(--encre-3); }
+@media (max-width: 420px) { .stock-etats.quatre .l { font-size: 11px; gap: 4px; } }

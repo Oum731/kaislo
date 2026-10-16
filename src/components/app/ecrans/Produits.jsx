@@ -16,7 +16,11 @@ export default function Produits() {
   const { d } = s;
   const [onglet, setOnglet] = useState('articles');
   const [recherche, setRecherche] = useState('');
+  const [filtre, setFiltre] = useState('tous'); // tous | actif | masque | promo | enLigne
   const r = recherche.trim().toLowerCase();
+  const enPromo = (p) => p.promo !== null && p.promo !== undefined && p.promo < p.prix;
+  const nb = { actif: d.produits.filter((p) => p.actif).length, masque: d.produits.filter((p) => !p.actif).length, promo: d.produits.filter(enPromo).length, enLigne: d.produits.filter((p) => p.enLigne).length };
+  const garde = (p) => filtre === 'tous' || (filtre === 'actif' && p.actif) || (filtre === 'masque' && !p.actif) || (filtre === 'promo' && enPromo(p)) || (filtre === 'enLigne' && p.enLigne);
 
   return (
     <>
@@ -37,6 +41,14 @@ export default function Produits() {
 
         {onglet === 'articles' && (
           <>
+            <div className="stock-etats quatre" role="group" aria-label={tr('Filtrer les articles')} style={{ marginBottom: 12 }}>
+              {[['actif', 'bon', tr('En vente'), nb.actif], ['masque', 'neutre', tr('Masqués'), nb.masque], ['promo', 'bas', tr('Promo'), nb.promo], ['enLigne', 'bon', tr('En ligne'), nb.enLigne]].map(([cle, classe, libelle, n]) => (
+                <button key={cle} className={`${classe} ${filtre === cle ? 'on' : ''}`} onClick={() => setFiltre(filtre === cle ? 'tous' : cle)} aria-pressed={filtre === cle}>
+                  <span className="n">{n}</span>
+                  <span className="l"><i />{libelle}</span>
+                </button>
+              ))}
+            </div>
             <label className="recherche">
               <Icone nom="recherche" taille="sm" />
               <input type="search" placeholder={tr('Rechercher un article ou un code-barres…')} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
@@ -47,8 +59,8 @@ export default function Produits() {
               </button>
             )}
             {d.categories.map((c) => {
-              const liste = d.produits.filter((p) => p.categorieId === c.id && (!r || p.nom.toLowerCase().includes(r) || p.codeBarre === r));
-              if (r && !liste.length) return null;
+              const liste = d.produits.filter((p) => p.categorieId === c.id && garde(p) && (!r || p.nom.toLowerCase().includes(r) || p.codeBarre === r));
+              if ((r || filtre !== 'tous') && !liste.length) return null;
               return (
                 <div key={c.id}>
                   <div className="entete-section">
@@ -66,12 +78,16 @@ export default function Produits() {
                             <span className="ligne" style={{ gap: 6 }}>
                               <b className="tronque">{p.nom}</b>
                               {prixVente < p.prix && <span className="badge safran">{tr('Promo')}</span>}
+                              {!p.actif && <span className="badge gris">{tr('Masqué')}</span>}
                             </span>
                             <span className="tres-petit muet tronque bloc-texte">
-                              {prixVente < p.prix ? <><s>{s.prix(p.prix)}</s> {s.prix(prixVente)}</> : s.prix(p.prix)}
-                              {marge !== null && ` · ${tr('marge {0} %', [marge])}`}
+                              {prixVente < p.prix ? <><s>{s.prix(p.prix)}</s> <b>{s.prix(prixVente)}</b></> : <b>{s.prix(p.prix)}</b>}
                               {p.groupes.length > 0 && ' · ' + p.groupes.map((g) => g.nom).join(', ')}
-                              {p.suiviStock && ' · ' + tr('stock {0}', [stockDe(p)])}
+                            </span>
+                            <span className="produit-pastilles">
+                              {marge !== null && <span className={'marge-pastille ' + (marge >= 30 ? 'haute' : marge < 10 ? 'faible' : '')}>{tr('marge {0} %', [marge])}</span>}
+                              {p.suiviStock && <span className={'marge-pastille ' + (stockDe(p) <= 0 ? 'faible' : '')}>{tr('stock {0}', [stockDe(p)])}</span>}
+                              {p.enLigne && <span className="marge-pastille">{tr('En ligne')}</span>}
                             </span>
                           </span>
                           <span onClick={(e) => e.stopPropagation()}>
@@ -85,8 +101,7 @@ export default function Produits() {
                 </div>
               );
             })}
-            <p className="tres-petit muet centre" style={{ marginTop: 18 }}>{tr('L’interrupteur masque un article de l’écran de vente sans le supprimer.')}</p>
-            <button className="bouton-flottant seulement-mobile" onClick={() => s.ouvrir('produit')}><Icone nom="plus" /> {tr('Article')}</button>
+                        <button className="bouton-flottant seulement-mobile" onClick={() => s.ouvrir('produit')}><Icone nom="plus" /> {tr('Article')}</button>
           </>
         )}
 
