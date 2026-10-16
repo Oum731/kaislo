@@ -291,6 +291,10 @@ Chaque commerce et chaque utilisateur est identifié par son numéro, enregistr�
 (ex : `+225 07 12 34 56 78`) selon les règles du pays (`src/lib/donnees/telephone.js` et `api/lib/telephone.php`,
 à garder identiques). Un numéro ne peut appartenir qu'à un seul commerce. Pour ajouter un pays : compléter les deux fichiers.
 
+## Discussions en direct (clients ↔ commerçants)
+
+La vitrine d'une boutique (`/boutique/?b=…`) a une bulle « Discuter » (`src/components/site/ChatBoutique.jsx`). Le visiteur n'a pas de compte : son navigateur garde un identifiant aléatoire, dont seule l'empreinte est stockée (`chats_clients`, `chats_messages`, voir `api/lib/chat.php`). Le gérant répond dans l'écran **Discussions** de l'application ; un nouveau message déclenche une notification push (au plus une toutes les 5 minutes par conversation) et une pastille dans le menu. « En direct » = relève toutes les 4 s tant que la fenêtre est ouverte (30 s fermée, 8 s pour la liste du gérant), rien en arrière-plan (`src/lib/sondage.js`) : pas de WebSocket, donc rien de plus à installer sur l'hébergement mutualisé. Désactivable par le commerçant (Compte → Boutique en ligne), blocage d'un visiteur possible, limites : 20 messages / 10 min par visiteur, 15 nouvelles conversations par adresse IP. La messagerie commerçant ↔ équipe Kaislo (écran Aide) relève maintenant toutes les 6 s.
+
 ## Notifications : résumé du soir et nouvelles commandes
 
 Le serveur prévient chaque gérant par **e-mail** et/ou **WhatsApp** (code : `api/lib/notifications.php`, écran : Compte → Notifications, gérant seulement) :

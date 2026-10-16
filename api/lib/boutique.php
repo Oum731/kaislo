@@ -53,6 +53,7 @@ function versBoutique(?array $b, array $commerce): array
         'whatsapp' => $b['whatsapp'] ?? '',
         'publique' => $b ? ($b['publique'] === null ? true : (bool) $b['publique']) : true,
         'conditionsAcceptees' => !empty($b['conditions_le']),
+        'chat' => empty($b['chat_off']),
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
         'lien' => $b ? lienBoutique($b['slug']) : '',
@@ -122,14 +123,15 @@ function routeBoutiqueEnregistrer(): never
         $accepteLe = maintenant();
     }
     $publique = array_key_exists('publique', $e) ? (!empty($e['publique']) ? 1 : 0) : ($avant && $avant['publique'] !== null ? (int) $avant['publique'] : 1);
+    $chatOff = array_key_exists('chat', $e) ? (!empty($e['chat']) ? 0 : 1) : (int) ($avant['chat_off'] ?? 0);
     $description = texte($e, 'description', 'la description', false, 300);
     $livraison = texte($e, 'livraison', 'la livraison', false, 300);
     if ($avant) {
-        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
-            [$slug, $actif, $publique, $accepteLe, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
+        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, chat_off = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
+            [$slug, $actif, $publique, $accepteLe, $chatOff, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
     } else {
-        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$c['id'], $slug, $actif, $publique, $accepteLe, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
+        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, chat_off, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$c['id'], $slug, $actif, $publique, $accepteLe, $chatOff, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
     }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();
@@ -200,7 +202,7 @@ function routeBoutiquePublique(): never
     }
     repondre(['ok' => true, 'boutique' => [
         'slug' => $b['slug'], 'nom' => $c['nom'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'devise' => $c['devise'], 'pays' => $c['pays'],
-        'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'],
+        'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'], 'chat' => empty($b['chat_off']),
         'categories' => array_values(array_filter($categories, fn ($x) => isset($utilisees[$x['id']]))), 'produits' => $produits,
     ]]);
 }

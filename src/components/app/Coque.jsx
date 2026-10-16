@@ -6,6 +6,7 @@
 //  - la fenêtre ouverte (s'il y en a une)
 // Le menu dépend du rôle et des droits de la personne connectée.
 // ------------------------------------------------------------
+import { useEffect } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { Icone, Avatar } from '@/components/ui';
 import Accueil from './ecrans/Accueil';
@@ -16,6 +17,7 @@ import Clients from './ecrans/Clients';
 import Produits from './ecrans/Produits';
 import Stock from './ecrans/Stock';
 import Aide, { Messagerie } from './ecrans/Aide';
+import Discussions from './ecrans/Discussions';
 import BulleChat from '@/components/BulleChat';
 import { estServeur } from '@/lib/donnees/synchro';
 import Reglages, { BlocImprimante } from './ecrans/Reglages';
@@ -38,15 +40,21 @@ export function liensMenu(s) {
   // Vendeur : pas d'onglet « Imprimante » (bouton imprimante en haut de l'écran de vente, et dans « Mon compte »),
   // pour que son menu tienne en 5 liens maximum, sans « Plus »
   if (gerant) liens.push(['reglages', tr('Réglages'), 'reglages']);
+  // Discussions en direct avec les clients de la boutique en ligne (pastille : messages pas encore lus)
+  if (gerant && estServeur(s.d)) liens.push(['discussions', tr('Discussions'), 'bulles', s.chatsNonLus || null]);
   // Aide et messagerie avec l'équipe Kaislo (pastille : réponses pas encore lues)
   liens.push(['aide', tr('Aide'), 'whatsapp', s.messagesNonLus || null]);
   return liens;
 }
 
-const ECRANS = { accueil: Accueil, caisse: Caisse, tables: Tables, ventes: Ventes, clients: Clients, produits: Produits, stock: Stock, reglages: Reglages, imprimante: EcranImprimante, aide: Aide };
+const ECRANS = { accueil: Accueil, caisse: Caisse, tables: Tables, ventes: Ventes, clients: Clients, produits: Produits, stock: Stock, reglages: Reglages, imprimante: EcranImprimante, aide: Aide, discussions: Discussions };
 
 export default function Coque() {
   const s = useKaislo();
+  // Notification push « nouveau message d'un client » : /app/?e=discussions ouvre directement l'écran
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('e') === 'discussions' && s.estGerant() && estServeur(s.d)) s.allerA('discussions');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const liens = liensMenu(s);
   // Sur téléphone : 4 liens + "Plus" s'il y en a trop
   const tropDeLiens = liens.length > 5;
@@ -92,7 +100,7 @@ export default function Coque() {
         <Ecran />
       </main>
       {/* Bulle de discussion : pas sur l'écran de vente ni les tables (boutons de validation en bas), ni sur Aide (messagerie déjà affichée) */}
-      {!['aide', 'caisse', 'tables'].includes(s.ecran) && (
+      {!['aide', 'caisse', 'tables', 'discussions'].includes(s.ecran) && (
         <BulleChat position="app" nonLus={s.messagesNonLus} messagerie={estServeur(s.d) ? <Messagerie /> : null} />
       )}
       <Feuilles />

@@ -7,6 +7,7 @@
 // ------------------------------------------------------------
 import { useEffect, useMemo, useState } from 'react';
 import Marque from '@/components/Marque';
+import ChatBoutique from '@/components/site/ChatBoutique';
 import { ChampTelephone } from '@/components/ui';
 import { appelApi } from '@/lib/api';
 import { chemin } from '@/config';
@@ -192,6 +193,8 @@ export default function Boutique() {
         <p className="vitrine-pied petit muet"><Marque taille={16} /> Boutique propulsée par <a href="https://kaislo.com">Kaislo</a></p>
         <p className="vitrine-avertissement tres-petit muet">Cette boutique est tenue par un commerçant indépendant. Kaislo est un outil qui relie les boutiques et leurs clients : Kaislo n’est pas le vendeur et n’est en aucun cas responsable des articles, des photos et autres contenus publiés par la boutique, des prix, de la livraison ni de la vente. Confirmez le prix et la disponibilité avec la boutique avant de payer. <a href="/conditions-utilisation/#boutiques-en-ligne">En savoir plus</a></p>
       </main>
+
+      {boutique.chat && !demo && !panierOuvert && !choix && <ChatBoutique slug={slug} nomBoutique={boutique.nom} releve={panier.length > 0} />}
 
       {panier.length > 0 && !panierOuvert && (
         <button className="vitrine-barre btn grand bloc" onClick={() => setPanierOuvert(true)}>

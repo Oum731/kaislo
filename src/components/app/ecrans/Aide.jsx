@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // ÉCRAN AIDE : messagerie avec l'équipe Kaislo (commerces inscrits en ligne),
 // et contacts directs (WhatsApp, e-mail) + tutoriels vidéo.
-// Les nouveaux messages de l'équipe sont relevés toutes les 20 secondes.
+// Les nouveaux messages de l'équipe sont relevés toutes les 6 secondes.
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
@@ -14,7 +14,7 @@ import { Icone } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { tr } from '@/lib/i18n';
 
-const INTERVALLE_MS = 20000;
+const INTERVALLE_MS = 6000; // messagerie « en direct » : on relève toutes les 6 secondes tant que l'écran est ouvert
 
 export default function Aide() {
   const s = useKaislo();

@@ -41,7 +41,7 @@ export function FeuilleBoutique() {
     if (b.actif && !b.conditionsAcceptees && !b.accord) return setErreur(tr('Pour activer votre boutique, cochez la case des conditions : Kaislo est un outil, vous restez seul responsable de vos articles et de vos ventes.'));
     setOccupe(true);
     try {
-      const r = await appelApi('POST', '/boutique', { actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison }, s.jetonServeur());
+      const r = await appelApi('POST', '/boutique', { actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison }, s.jetonServeur());
       setB({ ...r.boutique });
       setMessage(r.boutique.actif ? tr('Boutique enregistrée : elle est en ligne.') : tr('Boutique enregistrée (désactivée).'));
     } catch (e) { setErreur(messageErreur(e)); }
@@ -84,6 +84,7 @@ export function FeuilleBoutique() {
               <label className="case-accord"><input type="checkbox" checked={!!b.accord} onChange={(e) => maj({ accord: e.target.checked })} /><span>{tr('Je comprends que Kaislo est un outil, un pont entre les boutiques et leurs clients : je suis seul responsable de mes articles, de mes prix, de la livraison et de mes ventes. J’accepte les conditions de la boutique en ligne.')} <a href={chemin('/conditions-utilisation/#boutiques-en-ligne')} target="_blank" rel="noreferrer">{tr('Lire')}</a></span></label>
             )}
             <label className="case-accord"><input type="checkbox" checked={b.publique !== false} onChange={(e) => maj({ publique: e.target.checked })} /><span>{tr('Afficher ma boutique sur kaislo.com/boutiques')}<br /><span className="tres-petit muet">{tr('Les clients du site la trouvent par rayon, avec quelques articles en exemple. Sans cette case, seuls ceux qui ont votre lien la voient.')}</span></span></label>
+            <label className="case-accord"><input type="checkbox" checked={b.chat !== false} onChange={(e) => maj({ chat: e.target.checked })} /><span>{tr('Discussion en direct avec les clients')}<br /><span className="tres-petit muet">{tr('Une bulle « Discuter » sur votre boutique : les clients vous écrivent, vous répondez depuis l’écran Discussions et recevez une notification. Vous restez seul responsable de vos réponses.')}</span></span></label>
             <label className="champ"><span>{tr('Adresse de la boutique')}</span>
               <input value={b.slug} onChange={(e) => maj({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })} placeholder="chez-awa" />
               <p className="aide">kaislo.com/boutique/?b={b.slug || '…'}</p>

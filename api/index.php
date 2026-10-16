@@ -13,6 +13,7 @@
 //   POST /api/utilisateurs  vendeurs (gérant) · POST /api/verifier-gerant (annulation)
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
 //   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
+//   GET|POST /api/public/chat, /api/chats…  discussion client ↔ commerçant (voir lib/chat.php)
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
 //   GET /api/parrainage     parrainage entre commerçants : code, filleuls, mois gagnés (voir lib/parrainage.php)
 //   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
@@ -46,6 +47,7 @@ require __DIR__ . '/lib/commerces.php';
 require __DIR__ . '/lib/boutique.php';
 require __DIR__ . '/lib/notifications.php';
 require __DIR__ . '/lib/push.php';
+require __DIR__ . '/lib/chat.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -86,6 +88,12 @@ try {
         'GET /commandes-en-ligne' => routeCommandesEnLigneLire(),
         'POST /commandes-en-ligne' => routeCommandesEnLigneStatut(),
         'GET /public/boutique' => routeBoutiquePublique(),
+        'GET /public/chat' => routeChatPublicLire(),
+        'POST /public/chat' => routeChatPublicEcrire(),
+        'GET /chats' => routeChatsListe(),
+        'GET /chats/messages' => routeChatsLire(),
+        'POST /chats/messages' => routeChatsEcrire(),
+        'POST /chats/bloquer' => routeChatsBloquer(),
         'GET /public/boutiques' => routeBoutiquesAnnuaire(),
         'GET /public/boutique-image' => routeBoutiqueImage(),
         'POST /public/commande' => routeCommandePublique(),
