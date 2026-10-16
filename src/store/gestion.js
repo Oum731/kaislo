@@ -9,7 +9,7 @@ import { soldeClient } from '@/lib/donnees/credit.js';
 import { reinitialiserCommerce, majCompte, supprimerCommerce, telephoneDejaUtilise, enregistrerCommerce } from '@/lib/donnees/stockage.js';
 import { estServeur } from '@/lib/donnees/synchro.js';
 import { appelApi } from '@/lib/api.js';
-import { cleTelephone } from '@/lib/donnees/modeles.js';
+import { cleTelephone, COULEURS } from '@/lib/donnees/modeles.js';
 import { normaliserTelephone } from '@/lib/donnees/telephone.js';
 import { supprimerImage } from '@/lib/donnees/images.js';
 import { postesDe, postePlein, vendeursDuPoste } from '@/lib/donnees/postes.js';
@@ -79,6 +79,71 @@ export const trancheGestion = (set, get) => ({
     supprimerImage(get().d.produits.find((p) => p.id === id)?.image); // sa photo aussi
     get().majDonnees((d) => ({ produits: d.produits.filter((p) => p.id !== id) }));
     get().message(tr('Produit supprimé'));
+  },
+
+  // Import d'articles depuis un tableur (voir lib/donnees/import-produits.js). Tout est enregistré en une seule fois.
+  //   articles : lignes analysées (nouveaux et déjà présents) ; miseAJour : modifier aussi les articles déjà présents
+  // Renvoie { crees, misAJour, ignores, categoriesCreees } ou { erreur }
+  importerArticles(articles, { miseAJour = false } = {}) {
+    if (!articles.length) return { erreur: tr('Aucun article à importer') };
+    const d0 = get().d;
+    const categories = [...d0.categories];
+    const trouverCategorie = (nom) => {
+      const cle = nom.trim().toLowerCase();
+      if (!cle) return categories[0] || null;
+      return categories.find((c) => c.nom.trim().toLowerCase() === cle) || null;
+    };
+    let categoriesCreees = 0;
+    const idCategorie = (nom) => {
+      let c = trouverCategorie(nom);
+      if (!c) {
+        c = { id: genId('c') + categories.length.toString(36), nom: nom.trim() || tr('Divers'), couleur: COULEURS[categories.length % COULEURS.length] };
+        categories.push(c);
+        categoriesCreees++;
+      }
+      return c.id;
+    };
+    const maintenant = new Date().toISOString();
+    const nouveaux = [];
+    const modifies = new Map();
+    const mouvements = [];
+    let ignores = 0;
+    articles.forEach((a, i) => {
+      if (a.etat === 'existant') {
+        const ancien = d0.produits.find((p) => p.id === a.ancienId);
+        if (!miseAJour || !ancien) { ignores++; return; }
+        const p = { ...ancien, prix: a.prix };
+        if (a.prixAchat !== null) p.prixAchat = a.prixAchat;
+        if (a.promo !== null) p.promo = a.promo;
+        if (a.codeBarre) p.codeBarre = a.codeBarre;
+        if (a.seuilAlerte !== null) p.seuilAlerte = a.seuilAlerte;
+        if (a.categorie) p.categorieId = idCategorie(a.categorie);
+        if (a.stock !== null) {
+          if (!ancien.suiviStock) { p.suiviStock = true; Object.assign(p, departStock(a.stock, maintenant)); }
+          else {
+            const ecart = a.stock - stockDe(ancien);
+            if (ecart !== 0) {
+              mouvements.push({ id: genId('m') + i.toString(36), date: maintenant, produitId: ancien.id, produitNom: ancien.nom, type: 'ajustement', quantite: ecart, prixAchat: p.prixAchat, fournisseur: '', note: 'Import Excel', utilisateurNom: get().utilisateur.nom });
+            }
+          }
+        }
+        modifies.set(ancien.id, p);
+        return;
+      }
+      const p = {
+        id: genId('p') + i.toString(36), categorieId: idCategorie(a.categorie), nom: a.nom, prix: a.prix, promo: a.promo, prixAchat: a.prixAchat,
+        emoji: '', image: null, codeBarre: a.codeBarre || '', unite: a.unite, suiviStock: a.stock !== null, seuilAlerte: a.seuilAlerte ?? 5, actif: true, groupes: [],
+      };
+      if (a.stock !== null) Object.assign(p, departStock(a.stock, maintenant));
+      nouveaux.push(p);
+    });
+    if (!nouveaux.length && !modifies.size) return { erreur: tr('Aucun article à importer') };
+    get().majDonnees((d) => ({
+      ...(categoriesCreees ? { categories } : {}),
+      produits: [...d.produits.map((p) => modifies.get(p.id) || p), ...nouveaux],
+      ...(mouvements.length ? { mouvements: [...(d.mouvements || []), ...mouvements] } : {}),
+    }));
+    return { crees: nouveaux.length, misAJour: modifies.size, ignores, categoriesCreees };
   },
 
   basculerProduit(id) {

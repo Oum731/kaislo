@@ -251,7 +251,7 @@ function PremiersPas() {
   const { d } = s;
   if (s.estDemoActuel()) return null;
   const pas = [
-    { fait: d.produits.length > 0, titre: tr('Ajoutez vos produits'), texte: tr('Avec leurs prix, options et prix d’achat'), action: () => s.allerA('produits') },
+    { fait: d.produits.length > 0, titre: tr('Ajoutez vos produits'), texte: tr('Un par un, ou tous d’un coup depuis Excel'), action: () => s.allerA('produits') },
     { fait: !!(d.commerce.logo && d.commerce.adresse), titre: tr('Complétez votre profil'), texte: tr('Logo, adresse et téléphone du commerce'), action: () => s.allerA('reglages') },
     { fait: d.utilisateurs.some((u) => u.role === 'vendeur'), titre: tr('Créez vos vendeurs'), texte: tr('Chacun aura son propre code PIN'), action: () => s.allerA('reglages') },
     { fait: s.imprimante.connectee, titre: tr('Connectez l’imprimante'), texte: tr('Imprimante thermique Bluetooth'), action: () => s.allerA('reglages') },

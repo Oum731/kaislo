@@ -13,6 +13,7 @@ import {
 } from './FeuillesGestion';
 
 import { FeuilleRapport } from './FeuilleRapport';
+import { FeuilleImport } from './FeuilleImport';
 import { FeuilleCommerces, FeuilleAjoutCommerce } from './FeuillesCommerces';
 import { FeuilleAvis } from './FeuilleAvis';
 import { FeuilleParrainage } from './FeuilleParrainage';
@@ -20,6 +21,7 @@ import { FeuilleBoutique, FeuilleCommandesEnLigne } from './FeuillesBoutique';
 
 const FEUILLES = {
   rapport: FeuilleRapport,
+  importProduits: FeuilleImport,
   options: FeuilleOptions,
   panier: FeuillePanier,
   ticket: FeuilleTicket,
