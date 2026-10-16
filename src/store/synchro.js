@@ -22,6 +22,7 @@ export const trancheSynchro = (set, get) => ({
   // etat : 'inactif' | 'envoi' | 'ok' | 'hors-ligne' | 'erreur'
   synchro: { etat: 'inactif', enAttente: 0, derniere: null, message: '' },
   messagesNonLus: 0, // réponses de l'équipe Kaislo pas encore lues (écran Aide)
+  chatsNonLus: 0, // messages de clients de la boutique pas encore lus (écran Discussions)
 
   // Jeton de connexion utilisable pour ce commerce (personne connectée, sinon un autre de l'appareil)
   jetonServeur() {
@@ -113,7 +114,7 @@ export const trancheSynchro = (set, get) => ({
         } while (rep.suite);
         const derniere = rep;
         await appliquer(async (base) => fusionServeur(base, derniere));
-        set({ messagesNonLus: derniere.messagesNonLus || 0 });
+        set({ messagesNonLus: derniere.messagesNonLus || 0, chatsNonLus: derniere.chatsNonLus || 0 });
         const u = get().utilisateur;
         const moi = u && get().d.utilisateurs.find((x) => x.id === u.id);
         // Envoi refusé : les ventes restent sur l'appareil et partiront dès que le blocage est levé

@@ -1286,3 +1286,32 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .stock-qte { font-family: var(--marque); font-weight: 800; font-size: 18px; min-width: 40px; text-align: right; white-space: nowrap; }
 .stock-qte.bas { color: var(--safran-fonce); }
 .stock-qte.rupture { color: var(--rouge); font-size: 14px; }
+
+/* ---------- Discussion en direct (vitrine et écran Discussions) ---------- */
+.chat-bulle-boutique { position: fixed; right: 16px; bottom: 16px; z-index: 39; display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border: 0; border-radius: 999px; background: var(--vert); color: #fff; font: inherit; font-weight: 600; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); }
+.chat-bulle-boutique.releve { bottom: 84px; }
+.chat-bulle-boutique .ic { width: 22px; height: 22px; }
+.chat-pastille { position: absolute; top: -6px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--safran, #e0a526); color: #14211c; font-size: 12px; display: grid; place-items: center; }
+.chat-fenetre { position: fixed; right: 16px; bottom: 16px; z-index: 60; width: min(380px, calc(100vw - 32px)); max-height: min(560px, calc(100dvh - 32px)); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--bordure); border-radius: 16px; box-shadow: 0 12px 40px rgba(0, 0, 0, .3); overflow: hidden; }
+.chat-entete { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 14px; background: var(--vert); color: #fff; }
+.chat-entete div { display: flex; flex-direction: column; min-width: 0; }
+.chat-entete .icone-btn { color: #fff; font-size: 24px; line-height: 1; background: transparent; border: 0; }
+.chat-fil { flex: 1; min-height: 160px; max-height: none; }
+.chat-saisie { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 12px; border-top: 1px solid var(--bordure); }
+.chat-ligne { display: flex; gap: 8px; align-items: flex-end; }
+.chat-ligne textarea { flex: 1; min-width: 0; resize: none; max-height: 110px; }
+@media (max-width: 520px) { .chat-fenetre { right: 8px; left: 8px; bottom: 8px; width: auto; max-height: calc(100dvh - 16px); } }
+
+.discussions { display: grid; grid-template-columns: 300px 1fr; gap: 14px; align-items: start; }
+.discussions-liste { display: flex; flex-direction: column; gap: 8px; }
+.discussion-ligne { display: flex; gap: 10px; align-items: center; width: 100%; padding: 10px 12px; text-align: left; border: 1px solid var(--bordure); border-radius: 12px; background: var(--surface); font: inherit; color: inherit; cursor: pointer; }
+.discussion-ligne.actif { border-color: var(--vert); background: var(--vert-tres-clair); }
+.discussion-ligne.non-lu b { color: var(--vert-fonce); }
+.discussion-ligne .infos { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.discussion-point { min-width: 22px; height: 22px; border-radius: 11px; background: var(--vert); color: #fff; font-size: 12px; display: grid; place-items: center; padding: 0 6px; }
+.discussion-fil .fil-messages { max-height: 55vh; }
+@media (max-width: 760px) {
+  .discussions { grid-template-columns: 1fr; }
+  .discussions.ouvert .discussions-liste { display: none; }
+  .discussions:not(.ouvert) .discussion-fil { display: none; }
+}
