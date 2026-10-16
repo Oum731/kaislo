@@ -1193,3 +1193,26 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .etat-caisse .point { width: 10px; height: 10px; border-radius: 50%; background: var(--bordure-forte); display: inline-block; margin-right: 8px; }
 .etat-caisse .point.ouvert { background: #2f9e6b; box-shadow: 0 0 0 4px #d8efe3; }
 .tuile-stock.bas { color: var(--safran-fonce); font-weight: 600; }
+
+/* Import d'articles (Excel / CSV) */
+.import-zone { display: grid; justify-items: center; gap: 8px; width: 100%; padding: 32px 16px; border: 2px dashed var(--bordure-forte); border-radius: 18px; background: var(--surface); color: var(--encre); }
+.import-zone:hover { border-color: var(--vert); background: var(--vert-tres-clair); }
+.import-zone-icone { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--vert-clair); color: var(--vert); }
+.import-zone-icone .ic { width: 28px; height: 28px; }
+.import-colonnes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.import-puces { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.import-puces.gros { justify-content: flex-start; }
+.import-compte { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 14px; font-weight: 600; font-size: 14px; }
+.import-compte b { font-family: var(--marque); font-size: 22px; }
+.import-compte.vert { background: var(--vert-clair); color: var(--vert); }
+.import-compte.safran { background: var(--safran-clair); color: var(--safran-fonce); }
+.import-compte.rouge { background: var(--rouge-clair); color: var(--rouge); }
+.import-liste { background: var(--surface); border: 1px solid var(--bordure); border-radius: 14px; overflow: hidden; }
+.import-ligne { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--bordure); }
+.import-ligne:first-child { border-top: 0; }
+.import-ligne.existant { background: var(--surface-2); }
+.import-ligne.erreur { background: #fdf4f2; }
+.import-fin { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 20px 0 8px; }
+.import-fin-icone { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: var(--vert); color: #fff; }
+.import-fin-icone .ic { width: 38px; height: 38px; }
+.import-fin-nombre { font-family: var(--marque); font-size: 26px; font-weight: 800; margin: 0; }

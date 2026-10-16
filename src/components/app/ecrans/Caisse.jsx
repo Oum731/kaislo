@@ -138,7 +138,12 @@ export default function Caisse() {
               <div className="vide">
                 <p><b>{tr('Aucun produit pour l’instant')}</b></p>
                 <p className="petit" style={{ margin: '4px 0 16px' }}>{s.peut('peutGererProduits') ? tr('Ajoutez vos premiers produits pour commencer à vendre.') : tr('Demandez au gérant d’ajouter les produits.')}</p>
-                {s.peut('peutGererProduits') && <button className="btn" onClick={() => { s.allerA('produits'); s.ouvrir('produit'); }}><Icone nom="plus" /> {tr('Ajouter un produit')}</button>}
+                {s.peut('peutGererProduits') && (
+                  <div className="pile" style={{ maxWidth: 320, margin: '0 auto' }}>
+                    <button className="btn" onClick={() => { s.allerA('produits'); s.ouvrir('produit'); }}><Icone nom="plus" /> {tr('Ajouter un produit')}</button>
+                    <button className="btn secondaire" onClick={() => s.ouvrir('importProduits')}><Icone nom="installer" /> {tr('Importer depuis Excel')}</button>
+                  </div>
+                )}
               </div>
             )}
           </div>

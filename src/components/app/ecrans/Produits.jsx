@@ -21,6 +21,9 @@ export default function Produits() {
   return (
     <>
       <EnTete surTitre={tr('{0} articles · {1} catégories', [d.produits.length, d.categories.length])} titre={tr('Produits')}>
+        {onglet === 'articles' && s.peut('peutGererProduits') && (
+          <button className="btn secondaire cache-mobile" onClick={() => s.ouvrir('importProduits')}><Icone nom="installer" /> {tr('Importer')}</button>
+        )}
         <button className="btn cache-mobile" onClick={() => (onglet === 'articles' ? s.ouvrir('produit') : s.ouvrir('categorie'))}>
           <Icone nom="plus" /> {onglet === 'articles' ? tr('Nouvel article') : tr('Nouvelle catégorie')}
         </button>
@@ -38,6 +41,11 @@ export default function Produits() {
               <Icone nom="recherche" taille="sm" />
               <input type="search" placeholder={tr('Rechercher un article ou un code-barres…')} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
             </label>
+            {s.peut('peutGererProduits') && (
+              <button className={`btn secondaire bloc ${d.produits.length ? 'seulement-mobile' : ''}`} style={{ marginTop: 10 }} onClick={() => s.ouvrir('importProduits')}>
+                <Icone nom="installer" /> {tr('Importer depuis Excel')}
+              </button>
+            )}
             {d.categories.map((c) => {
               const liste = d.produits.filter((p) => p.categorieId === c.id && (!r || p.nom.toLowerCase().includes(r) || p.codeBarre === r));
               if (r && !liste.length) return null;
