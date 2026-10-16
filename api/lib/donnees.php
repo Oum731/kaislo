@@ -60,6 +60,7 @@ function routeDonneesLire(): never
         'ok' => true, 'heure' => $heure, 'suite' => $suite, 'elements' => $elements,
         'commerce' => versCommerce($commerce), 'utilisateurs' => equipe($u['commerce_id']), 'moi' => versUtilisateur($u),
         'messagesNonLus' => messagesNonLus($u['commerce_id']), // réponses de l'équipe Amorac pas encore lues
+        'chatsNonLus' => chatsNonLus($u['commerce_id']), // messages de clients pas encore lus
         'tarif' => tarifCommerce($commerce), // formule, postes et prix de l'abonnement
     ]);
 }

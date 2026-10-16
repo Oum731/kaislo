@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 19;
+const VERSION_BASE = 20;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -141,6 +141,18 @@ const STRUCTURE = [
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['abonnement_id', 'livre_le']],
     ],
+    // Discussion en direct entre les visiteurs d'une boutique et son commerçant (voir lib/chat.php)
+    'chats_clients' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'visiteur_hash' => 'VARCHAR(64)', 'visiteur_nom' => 'TEXTE',
+            'bloque' => 'ENTIER', 'cree_le' => 'DATE', 'dernier_le' => 'DATE', 'push_le' => 'DATE',
+        ],
+        'cle' => ['id'], 'uniques' => [['commerce_id', 'visiteur_hash']], 'index' => [['commerce_id', 'dernier_le']],
+    ],
+    'chats_messages' => [
+        'colonnes' => ['id' => 'ID', 'chat_id' => 'ID', 'commerce_id' => 'ID', 'auteur' => 'VARCHAR(10)', 'texte' => 'LONG', 'cree_le' => 'DATE', 'lu_le' => 'DATE'], // auteur : 'client' ou 'commerce'
+        'cle' => ['id'], 'uniques' => [], 'index' => [['chat_id', 'cree_le'], ['commerce_id', 'lu_le']],
+    ],
     // Messages laissés par les visiteurs du site (bulle « Discuter avec nous »)
     'contacts' => [
         'colonnes' => [
@@ -206,6 +218,7 @@ const STRUCTURE = [
     'boutiques' => [
         'colonnes' => [
             'commerce_id' => 'ID', 'slug' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'whatsapp' => 'VARCHAR(40)', 'whatsapp_cle' => 'VARCHAR(20)', 'conditions_le' => 'DATE', // date d'acceptation du rôle de Kaislo (pont, pas vendeur) par le gérant
+            'chat_off' => 'ENTIER', // 1 = le commerçant a désactivé la discussion en direct de sa boutique
             'publique' => 'ENTIER', // 1 = affichée sur kaislo.com/boutiques/ (annuaire pour les clients)
             'description' => 'LONG', 'livraison' => 'LONG', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
         ],
@@ -339,6 +352,11 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 19 : discussion en direct de la boutique (activée par défaut)
+    if ($version >= 1 && $version < 20) {
+        $essayer('ALTER TABLE boutiques ADD COLUMN chat_off INTEGER NULL');
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur
