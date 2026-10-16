@@ -309,7 +309,8 @@
   "en": {
    "nom": "France",
    "slug": "france"
-  }
+  },
+  "restauration": "avis"
  },
  {
   "id": "BE",
@@ -333,7 +334,8 @@
   "en": {
    "nom": "Belgium",
    "slug": "belgium"
-  }
+  },
+  "restauration": "avis"
  },
  {
   "id": "CA",
@@ -357,7 +359,8 @@
   "en": {
    "nom": "Canada",
    "slug": "canada"
-  }
+  },
+  "restauration": "avis"
  },
  {
   "id": "XX",
