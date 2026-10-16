@@ -311,9 +311,11 @@ function routeCommandePublique(): never
         throw $err;
     }
     journaliser($c['id'], null, 'commande-en-ligne', ['numero' => $numero, 'total' => $total]);
-    repondre(['ok' => true, 'commande' => [
+    $commande = [
         'numero' => $numero, 'total' => $total, 'devise' => $c['devise'], 'lignes' => $lignes,
         'client' => ['nom' => $nom, 'telephone' => $tel['affichage'], 'adresse' => $adresse], 'note' => $note,
         'whatsapp' => $b['whatsapp_cle'], 'boutique' => $c['nom'],
-    ]], 201);
+    ];
+    notifierNouvelleCommande($c['id'], $commande); // e-mail et/ou WhatsApp au commerçant, après la réponse
+    repondre(['ok' => true, 'commande' => $commande], 201);
 }

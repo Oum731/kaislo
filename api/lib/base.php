@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 16;
+const VERSION_BASE = 17;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -28,6 +28,7 @@ const STRUCTURE = [
             'parrain_commerce_id' => 'ID', // commerce (d'un autre gérant) dont le code de parrainage a été saisi à l'inscription
             'jours_offerts' => 'ENTIER', // jours offerts (parrainage) comptés dans le 1er mois payé : le client ne paie que les jours restants
             'parrain_recompense_le' => 'DATE', // date où le mois offert au parrain a été accordé (au 1er paiement de ce commerce)
+            'resume_envoye_le' => 'VARCHAR(10)', // dernier jour (date locale du commerce, AAAA-MM-JJ) où le résumé du soir a été envoyé
         ],
         // Le numéro d'un commerce n'est plus unique : un gérant peut avoir plusieurs commerces avec le même numéro
         // (l'unicité entre personnes différentes est vérifiée dans le code : voir numeroPrisAilleurs et numeroLibrePourGerant)
@@ -114,6 +115,14 @@ const STRUCTURE = [
     'reglages_amorac' => [
         'colonnes' => ['cle' => 'VARCHAR(40)', 'valeur' => 'LONG', 'modifie_le' => 'DATE'],
         'cle' => ['cle'], 'uniques' => [], 'index' => [],
+    ],
+    // Notifications envoyées aux commerçants (résumé du soir, nouvelles commandes) : historique et limite des essais
+    'notifications' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'type' => 'VARCHAR(12)', 'canal' => 'VARCHAR(10)', 'statut' => 'VARCHAR(10)',
+            'detail' => 'LONG', 'cree_le' => 'DATE',
+        ],
+        'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id', 'cree_le']],
     ],
     // Messages laissés par les visiteurs du site (bulle « Discuter avec nous »)
     'contacts' => [
@@ -303,6 +312,11 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 15 : acceptation du rôle de Kaislo pour la boutique en ligne
     if ($version >= 1 && $version < 16) {
         $essayer('ALTER TABLE boutiques ADD COLUMN conditions_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 16 : résumé du soir (dernier jour envoyé)
+    if ($version >= 1 && $version < 17) {
+        $essayer('ALTER TABLE commerces ADD COLUMN resume_envoye_le VARCHAR(10) NULL');
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur
