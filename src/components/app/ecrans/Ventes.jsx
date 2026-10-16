@@ -45,7 +45,6 @@ export function EtatCaisse({ compact = false }) {
         <span className="pastille"><Icone nom="caisse" /></span>
         <div className="grandit">
           <b>{tr('La journée est fermée')}</b>
-          <p className="tres-petit muet">{tr('Ouvrez-la avant la première vente : comptez la monnaie du matin.')}</p>
         </div>
         <button className="btn" onClick={() => s.ouvrir('ouverture')}><Icone nom="ok" taille="sm" /> {tr('Ouvrir la journée')}</button>
       </div>
@@ -56,8 +55,7 @@ export function EtatCaisse({ compact = false }) {
     <div className="carte etat-caisse ouverte" style={{ marginTop: 4 }}>
       <span className="pastille"><Icone nom="caisse" /></span>
       <div className="grandit">
-        <b>{tr('Journée ouverte depuis {0}', [formatHeure(session.ouverteLe)])}</b>
-        <p className="tres-petit muet">{tr('{0} · par {1} · fond de départ {2}', [formatJourLong(new Date(session.ouverteLe)), session.ouvertePar, s.prix(session.fondDeCaisse)])}</p>
+        <b><i className="point ouvert" />{tr('Journée ouverte depuis {0}', [formatHeure(session.ouverteLe)])}</b>
       </div>
       <button className="btn safran" onClick={() => s.ouvrir('cloture')}><Icone nom="caisse" taille="sm" /> {tr('Fermer la journée')}</button>
     </div>

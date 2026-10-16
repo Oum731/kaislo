@@ -88,7 +88,7 @@ export default function Caisse() {
             <div className="caisse-outils">
               <label className="recherche">
                 <Icone nom="recherche" taille="sm" />
-                <input ref={champRecherche} type="search" placeholder={tr('Rechercher un article ou un code-barres… (touche /)')} value={recherche} onChange={(e) => setRecherche(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && valider()} enterKeyHint="search" />
+                <input ref={champRecherche} type="search" placeholder={tr('Rechercher…')} value={recherche} onChange={(e) => setRecherche(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && valider()} enterKeyHint="search" />
               </label>
               {s.gereStock() && (
                 <button className="bouton-rond" style={{ width: 50, height: 50, borderRadius: 14 }} onClick={() => s.ouvrir('scan', { surCode: (code) => { const p = d.produits.find((x) => x.actif && x.codeBarre === code); if (p) toucher(p); else s.message(tr('Aucun produit avec le code {0}', [code]), 'erreur'); } })} aria-label={tr('Scanner un code-barres')}>
@@ -111,7 +111,7 @@ export default function Caisse() {
                         {base < p.prix && <s>{s.prix(p.prix)}</s>}
                         {(p.groupes.length ? tr('dès ') : '') + s.prix(depart)}
                       </span>
-                      {p.suiviStock && <span className={`tuile-stock ${stockDe(p) <= (p.seuilAlerte ?? 5) ? 'bas' : ''}`}>{stockDe(p) <= 0 ? tr('Rupture') : tr('Stock {0}', [quantiteUnite(stockDe(p), p.unite)])}</span>}
+                      {p.suiviStock && <span className={`tuile-stock ${stockDe(p) <= 0 ? 'rupt' : stockDe(p) <= (p.seuilAlerte ?? 5) ? 'bas' : 'ok'}`} title={tr('Stock')}><i />{stockDe(p) <= 0 ? tr('Rupture') : quantiteUnite(stockDe(p), p.unite)}</span>}
                     </span>
                   </>
                 );
@@ -189,9 +189,9 @@ export function ContenuPanier({ dansFeuille = false }) {
       <>
         <div className="panier-tete"><h2 className="grandit">{commande ? commande.table : tr('Commande')}</h2></div>
         <div className="panier-corps">
-          <div className="vide" style={{ padding: '40px 10px' }}>
-            <p><b>{tr('Panier vide')}</b></p>
-            <p className="petit">{tr('Touchez un article pour l’ajouter.')}</p>
+          <div className="vide panier-vide" style={{ padding: '40px 10px' }}>
+            <Icone nom="caisse" />
+            <p><b>{tr('Touchez un article pour l’ajouter.')}</b></p>
           </div>
         </div>
       </>
@@ -253,7 +253,6 @@ export function ContenuPanier({ dansFeuille = false }) {
         <div className="carte pile" style={{ marginTop: 14, padding: 14 }}>
           <Reglage
             titre={tr('Client à distance')}
-            aide={tr('Livraison, commande par téléphone… Le reçu lui sera envoyé par WhatsApp.')}
             actif={s.aDistance}
             surChanger={(v) => setEtat({ aDistance: v })}
           />
@@ -272,9 +271,9 @@ export function ContenuPanier({ dansFeuille = false }) {
         <p className="section-titre" style={{ marginTop: 18 }}>{tr('Paiement')}</p>
         <div className="choix-grille">
           {d.commerce.modesPaiement.map((m) => (
-            <button key={m} className={paiement === m ? 'actif' : ''} onClick={() => setEtat({ paiementChoisi: m })}>{tt(m)}</button>
+            <button key={m} className={paiement === m ? 'actif' : ''} onClick={() => setEtat({ paiementChoisi: m })}><Icone nom={m === 'Espèces' ? 'billet' : m === 'Carte' ? 'depense' : 'telephone'} />{tt(m)}</button>
           ))}
-          <button className={`credit ${paiement === CREDIT ? 'actif' : ''}`} onClick={() => setEtat({ paiementChoisi: CREDIT })}>{tr('À crédit')}</button>
+          <button className={`credit ${paiement === CREDIT ? 'actif' : ''}`} onClick={() => setEtat({ paiementChoisi: CREDIT })}><Icone nom="carnet" />{tr('À crédit')}</button>
         </div>
 
         {paiement === 'Espèces' && (

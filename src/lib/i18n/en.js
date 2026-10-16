@@ -1800,4 +1800,12 @@ export const EN = {
   "Pour les commerçants": "For merchants",
   "Votre commerce, simple à gérer.": "Your business, simple to manage.",
   "Vos clients vous paient comme d’habitude : Kaislo n’encaisse jamais l’argent.": "Your customers pay you as usual: Kaislo never collects the money.",
+  "Ventes · {0}": "Sales · {0}",
+  "Marge": "Margin",
+  "À recevoir": "To collect",
+  "Dépense": "Expense",
+  "Journée ouverte": "Day open",
+  "Journée fermée": "Day closed",
+  "depuis {0}": "since {0}",
+  "Ouvrir": "Open",
 };
