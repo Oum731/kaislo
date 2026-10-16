@@ -1,0 +1,23 @@
+name: Résumés du soir
+
+# Toutes les heures : le site envoie les résumés du soir dont l'heure est venue (voir api/lib/notifications.php).
+# Ne fait rien tant que le secret « CLE_CRON » n'existe pas (GitHub → Settings → Secrets and variables → Actions) :
+# sa valeur est la ligne « CleCron=… » du fichier .env du serveur.
+# Alternative sans GitHub : une tâche planifiée hPanel (Avancé → Tâches Cron) toutes les heures, voir le README.
+on:
+  schedule:
+    - cron: '12 * * * *'
+  workflow_dispatch:
+
+jobs:
+  envoyer:
+    runs-on: ubuntu-latest
+    env:
+      CLE_CRON: ${{ secrets.CLE_CRON }}
+    steps:
+      - name: Envoi des résumés
+        if: env.CLE_CRON != ''
+        run: |
+          reponse=$(curl --silent --show-error --fail --max-time 120 --retry 2 --retry-delay 15 -X POST -H "X-Cle-Cron: $CLE_CRON" https://kaislo.com/api/cron/notifications)
+          echo "$reponse"
+          echo "$reponse" | grep -q '"ok":true'

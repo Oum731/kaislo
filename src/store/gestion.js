@@ -304,6 +304,19 @@ export const trancheGestion = (set, get) => ({
     return null;
   },
 
+  // Notifications (résumé du soir, commandes) : réglages du commerce, envoyés au serveur par la synchronisation habituelle
+  enregistrerNotifications(partiel) {
+    get().majDonnees((d) => ({ commerce: { ...d.commerce, notifications: { ...(d.commerce.notifications || {}), ...partiel } } }));
+  },
+
+  // E-mail du commerce (reçoit les notifications) : renvoie un message d'erreur, ou null
+  enregistrerEmailCommerce(email) {
+    const e = String(email || '').trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return tr('Adresse e-mail incorrecte');
+    majCompte(get().majDonnees((d) => ({ commerce: { ...d.commerce, email: e } })).commerce);
+    return null;
+  },
+
   enregistrerTables(tables) {
     const propres = tables.map((t) => t.trim()).filter(Boolean);
     if (new Set(propres).size !== propres.length) return tr('Deux tables ont le même nom');
