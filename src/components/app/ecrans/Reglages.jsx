@@ -20,13 +20,20 @@ export default function Reglages() {
   const { d } = s;
   const [onglet, setOnglet] = useState('equipe');
   const avecTables = typeCommerce(d.commerce.type).tables || d.commerce.tables.length > 0;
-  const options = [['equipe', 'Équipe'], ['postes', 'Postes'], ['commerce', 'Profil'], ...(avecTables ? [['tables', 'Tables']] : []), ['imprimante', 'Imprimante']];
+  const options = [['equipe', tr('Équipe'), 'clients'], ['postes', tr('Postes'), 'ecran'], ['commerce', tr('Profil'), 'reglages'], ...(avecTables ? [['tables', tr('Tables'), 'tables']] : []), ['imprimante', tr('Imprimante'), 'imprimante']];
 
   return (
     <>
       <EnTete surTitre={d.commerce.nom} titre={tr('Réglages')} />
       <div className="contenu" style={{ maxWidth: 820 }}>
-        <Segment options={options} valeur={onglet} surChanger={setOnglet} />
+        <div className="onglets-icones" role="tablist">
+          {options.map(([cle, libelle, icone]) => (
+            <button key={cle} role="tab" aria-selected={onglet === cle} className={onglet === cle ? 'actif' : ''} onClick={() => setOnglet(cle)}>
+              <Icone nom={icone} />
+              {libelle}
+            </button>
+          ))}
+        </div>
         <div style={{ marginTop: 18 }}>
           {onglet === 'equipe' && <Equipe />}
           {onglet === 'postes' && <Postes />}
