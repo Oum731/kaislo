@@ -1255,3 +1255,34 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .avis-restauration a { color: inherit; text-decoration: underline; }
 .avis-restauration.compact { grid-template-columns: auto 1fr; align-items: start; padding: 8px 12px; }
 .avis-restauration.compact .ic { margin-top: 2px; }
+
+/* Ventes et Stock : icônes de paiement, compteurs d'état, jauges */
+.vente-paiement { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--vert-clair); color: var(--vert); }
+.vente-paiement .ic { width: 20px; height: 20px; }
+.vente-paiement.mobile { background: #e4edf4; color: #2c5877; }
+.vente-paiement.credit { background: var(--safran-clair); color: var(--safran-fonce); }
+.vente-paiement.carte { background: var(--creme-fonce); color: var(--encre-2); }
+.vente-paiement.annulee { background: var(--rouge-clair); color: var(--rouge); }
+.etat-caisse.ouverte { padding: 10px 14px; border-radius: 16px; }
+.etat-caisse.ouverte .pastille { display: none; }
+.stock-etats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stock-etats button { background: var(--surface); border: 1.5px solid var(--bordure); border-radius: 16px; padding: 10px 12px; display: grid; gap: 2px; text-align: left; color: var(--encre); }
+.stock-etats button.on { border-color: var(--vert); background: var(--vert-tres-clair); }
+.stock-etats .n { font-family: var(--marque); font-weight: 800; font-size: 26px; }
+.stock-etats .l { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.stock-etats .l i { width: 9px; height: 9px; border-radius: 50%; background: #2f9e6b; display: block; }
+.stock-etats .bas .n { color: var(--safran-fonce); }
+.stock-etats .bas .l i { background: var(--safran); }
+.stock-etats .rupture .n { color: var(--rouge); }
+.stock-etats .rupture .l i { background: var(--rouge); }
+.stock-valeur { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; background: var(--surface); border: 1px solid var(--bordure); border-radius: 16px; padding: 10px 14px; }
+.stock-valeur small { display: block; color: var(--encre-3); font-weight: 600; font-size: 12px; }
+.stock-valeur b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.stock-valeur .droite { text-align: right; }
+.jauge-stock { display: block; height: 7px; border-radius: 4px; background: var(--creme-fonce); margin-top: 7px; overflow: hidden; }
+.jauge-stock i { display: block; height: 100%; border-radius: 4px; background: #2f9e6b; }
+.jauge-stock.bas i { background: var(--safran); }
+.jauge-stock.rupture i { background: var(--rouge); }
+.stock-qte { font-family: var(--marque); font-weight: 800; font-size: 18px; min-width: 40px; text-align: right; white-space: nowrap; }
+.stock-qte.bas { color: var(--safran-fonce); }
+.stock-qte.rupture { color: var(--rouge); font-size: 14px; }

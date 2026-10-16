@@ -57,7 +57,7 @@ export function EtatCaisse({ compact = false }) {
       <div className="grandit">
         <b><i className="point ouvert" />{tr('Journée ouverte depuis {0}', [formatHeure(session.ouverteLe)])}</b>
       </div>
-      <button className="btn safran" onClick={() => s.ouvrir('cloture')}><Icone nom="caisse" taille="sm" /> {tr('Fermer la journée')}</button>
+      <button className="btn safran" onClick={() => s.ouvrir('cloture')}><Icone nom="caisse" taille="sm" /> {tr('Fermer')}</button>
     </div>
   );
 }
@@ -95,33 +95,38 @@ function ListeTickets() {
         <Puces options={[['jour', tr('Aujourd’hui')], ['hier', tr('Hier')], ['semaine', tr('7 derniers jours')]]} valeur={filtre} surChanger={setFiltre} />
       </div>
       <div className="grille-2" style={{ margin: '14px 0' }}>
-        <div className="carte kpi"><p className="petit muet">{tr('Total')}</p><p className="kpi-valeur">{s.prix(total)}</p></div>
-        <div className="carte kpi"><p className="petit muet">{tr('Tickets')}</p><p className="kpi-valeur">{valides.length}</p></div>
+        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-vert"><Icone nom="depense" /></span><p className="kpi-valeur">{s.prix(total)}</p><p className="tuile-kpi-libelle">{tr('Total')}</p></div>
+        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-vert"><Icone nom="ventes" /></span><p className="kpi-valeur">{valides.length}</p><p className="tuile-kpi-libelle">{tr('Tickets')}</p></div>
       </div>
       <label className="recherche" style={{ marginBottom: 14 }}>
         <Icone nom="recherche" taille="sm" />
         <input type="search" placeholder={tr('N° de ticket, client ou table…')} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
       </label>
-      {liste.map((v) => (
-        <button key={v.id} className={`vente-item ${v.annulee ? 'annulee' : ''}`} onClick={() => s.ouvrir('ticket', { vente: v })}>
-          <span className="vente-heure">
-            {formatHeure(v.date)}
-            {filtre === 'semaine' && <span className="tres-petit muet bloc-texte" style={{ fontWeight: 500 }}>{formatDate(v.date).slice(0, 5)}</span>}
-          </span>
-          <span className="grandit" style={{ minWidth: 0 }}>
-            <span className="ligne" style={{ gap: 6, flexWrap: 'wrap' }}>
-              <b>N° {v.numero}</b>
-              <span className={`badge ${v.annulee ? 'rouge' : v.paiement === 'Crédit' ? 'safran' : 'gris'}`}>{v.annulee ? tr('Annulée') : tt(v.paiement)}</span>
-              {v.table && <span className="badge gris">{v.table}</span>}
-              {v.aDistance && <span className="badge">{tr('À distance')}</span>}
+      {liste.map((v) => {
+        const mode = v.annulee ? 'annulee' : v.paiement === 'Crédit' ? 'credit' : v.paiement === 'Espèces' ? 'especes' : v.paiement === 'Carte' ? 'carte' : 'mobile';
+        const icone = { annulee: 'fermer', credit: 'carnet', especes: 'billet', carte: 'depense', mobile: 'telephone' }[mode];
+        return (
+          <button key={v.id} className={`vente-item ${v.annulee ? 'annulee' : ''}`} onClick={() => s.ouvrir('ticket', { vente: v })} aria-label={tr('Ticket n° {0}, {1}', [v.numero, s.prix(v.total)])}>
+            <span className="vente-heure">
+              {formatHeure(v.date)}
+              {filtre === 'semaine' && <span className="tres-petit muet bloc-texte" style={{ fontWeight: 500 }}>{formatDate(v.date).slice(0, 5)}</span>}
             </span>
-            <span className="tres-petit muet tronque bloc-texte" style={{ marginTop: 3 }}>
-              {(gerant ? v.vendeurNom.split(' ')[0] + ' · ' : '') + (v.clientNom ? v.clientNom + ' · ' : '') + v.lignes.map((l) => l.produitNom || l.nom).join(', ')}
+            <span className={`vente-paiement ${mode}`} title={v.annulee ? tr('Annulée') : tt(v.paiement)}><Icone nom={icone} /></span>
+            <span className="grandit" style={{ minWidth: 0 }}>
+              <span className="ligne" style={{ gap: 6, flexWrap: 'wrap' }}>
+                <b>N° {v.numero}</b>
+                {v.annulee && <span className="badge rouge">{tr('Annulée')}</span>}
+                {v.table && <span className="badge gris">{v.table}</span>}
+                {v.aDistance && <span className="badge"><Icone nom="whatsapp" taille="sm" /></span>}
+              </span>
+              <span className="tres-petit muet tronque bloc-texte" style={{ marginTop: 3 }}>
+                {(mode === 'mobile' || mode === 'credit' ? tt(v.paiement) + ' · ' : '') + (gerant ? v.vendeurNom.split(' ')[0] + ' · ' : '') + (v.clientNom ? v.clientNom + ' · ' : '') + v.lignes.map((l) => l.produitNom || l.nom).join(', ')}
+              </span>
             </span>
-          </span>
-          <b className="chiffre prix-vente">{s.prix(v.total)}</b>
-        </button>
-      ))}
+            <b className="chiffre prix-vente">{s.prix(v.total)}</b>
+          </button>
+        );
+      })}
       {!liste.length && <div className="vide"><p>{tr('Aucune vente sur cette période')}</p></div>}
     </>
   );
