@@ -33,6 +33,7 @@ function prefsNotifications(array $reglages): array
         'email' => ($n['email'] ?? true) !== false,
         'whatsapp' => ($n['whatsapp'] ?? false) === true, // jamais sans l'accord du gérant
         'commandes' => ($n['commandes'] ?? true) !== false,
+        'push' => ($n['push'] ?? true) !== false, // notification sur les appareils où le gérant l'a autorisée
     ];
 }
 
@@ -301,6 +302,10 @@ function envoyerNotification(array $commerce, array $reglages, string $type, arr
         noterNotification($id, $type, 'email', $ok ? 'envoye' : 'echec', $detail);
         $resultats[] = ['email', $ok ? 'envoye' : 'echec', $canaux['email']];
     }
+    if ($prefs['push'] && !empty($contenu['push'])) {
+        $r = envoyerPush($id, $type === 'essai' ? 'essai' : $type, $contenu['push'][0], $contenu['push'][1]);
+        if ($r) $resultats[] = ['push', $r[0] > 0 ? 'envoye' : 'echec', $r[0] . '/' . $r[1]];
+    }
     if ($prefs['whatsapp']) {
         if (!whatsappConfigure() && !modeEssaiNotifications()) {
             $resultats[] = ['whatsapp', 'indisponible', 'WhatsApp n’est pas encore activé sur Kaislo'];
@@ -329,9 +334,20 @@ function envoyerResume(array $commerce, array $reglages): array
     $r = calculerResume($commerce, $reglages);
     [$sujet, $corps, $variables] = composerResume($commerce, $r, $langue);
     return envoyerNotification($commerce, $reglages, 'resume', [
-        'sujet' => $sujet, 'corps' => $corps, 'variables' => $variables,
+        'sujet' => $sujet, 'corps' => $corps, 'variables' => $variables, 'push' => pushResume($commerce, $r, $langue),
         'modele' => modeleWhatsApp('WhatsAppModeleResume', 'kaislo_resume_soir', $langue),
     ], $langue);
+}
+
+// Texte court du résumé pour une notification push : titre et une ligne
+function pushResume(array $commerce, array $r, string $langue): array
+{
+    $en = $langue === 'en';
+    $m = fn (float $x) => montantTexte($x, $r['devise']);
+    $ligne = $r['nb'] ? $m($r['total']) . ' · ' . $r['nb'] . ' tickets' : ($en ? 'No sales today' : 'Aucune vente aujourd’hui');
+    if ($r['depenses'] > 0) $ligne .= ' · ' . ($en ? 'expenses ' : 'dépenses ') . $m($r['depenses']);
+    if ($r['nbStockBas'] > 0) $ligne .= ' · ' . ($en ? $r['nbStockBas'] . ' low stock' : $r['nbStockBas'] . ' stock bas');
+    return [($en ? 'Evening summary · ' : 'Résumé du soir · ') . $commerce['nom'], $ligne];
 }
 
 // Un commerce reçoit-il son résumé maintenant ? (heure locale choisie, pas déjà envoyé aujourd'hui, abonnement en cours)
@@ -341,7 +357,7 @@ function resumeDu(array $commerce, array $reglages, DateTimeImmutable $maintenan
     $prefs = prefsNotifications($reglages);
     if (!$prefs['resume']) return false;
     $canaux = canauxDuCompte($commerce, $reglages);
-    $aUnCanal = ($prefs['email'] && $canaux['email']) || ($prefs['whatsapp'] && $canaux['whatsapp'] && (whatsappConfigure() || modeEssaiNotifications()));
+    $aUnCanal = ($prefs['push'] && abonnementsPush($commerce['id'])) || ($prefs['email'] && $canaux['email']) || ($prefs['whatsapp'] && $canaux['whatsapp'] && (whatsappConfigure() || modeEssaiNotifications()));
     if (!$aUnCanal) return false;
     $local = $maintenantUtc->setTimezone(fuseauDuCommerce($commerce));
     if ((int) $local->format('G') < $prefs['heure']) return false; // pas encore l'heure
@@ -398,9 +414,10 @@ function notifierNouvelleCommande(string $commerceId, array $commande): void
             . ($commande['note'] !== '' ? ($en ? 'Note: ' : 'Note : ') . $commande['note'] . "\n" : '')
             . "\n" . ($en ? "Handle it in Kaislo: $url (Account → Online orders)\n" : "À traiter dans Kaislo : $url (Compte → Commandes en ligne)\n") . "\nKaislo · kaislo.com";
         $variables = [(string) $commande['numero'], $commande['client']['nom'], $total, mb_substr($commande['client']['adresse'], 0, 80)];
-        apresReponse(function () use ($commerce, $reglages, $sujet, $corps, $variables, $langue) {
+        $push = [($en ? 'New online order no. ' : 'Nouvelle commande n° ') . $commande['numero'], $commande['client']['nom'] . ' · ' . $total];
+        apresReponse(function () use ($commerce, $reglages, $sujet, $corps, $variables, $push, $langue) {
             envoyerNotification($commerce, $reglages, 'commande', [
-                'sujet' => $sujet, 'corps' => $corps, 'variables' => $variables, 'modele' => modeleWhatsApp('WhatsAppModeleCommande', 'kaislo_nouvelle_commande', $langue),
+                'sujet' => $sujet, 'corps' => $corps, 'variables' => $variables, 'push' => $push, 'modele' => modeleWhatsApp('WhatsAppModeleCommande', 'kaislo_nouvelle_commande', $langue),
             ], $langue);
         });
     } catch (Throwable $e) {
@@ -434,6 +451,7 @@ function routeNotificationsEtat(): never
         'reglages' => prefsNotifications($reglages),
         'email' => ['disponible' => (bool) $canaux['email'], 'adresse' => $canaux['email'] ? masquerEmail($canaux['email']) : null],
         'whatsapp' => ['plateforme' => whatsappConfigure(), 'disponible' => whatsappConfigure() && (bool) $canaux['whatsapp'], 'numero' => $canaux['whatsapp'] ? ((string) $commerce['telephone'] ?: '+' . $canaux['whatsapp']) : null],
+        'push' => ['clePublique' => (function () { try { return cleVapid()['publique']; } catch (Throwable) { return null; } })(), 'appareils' => count(abonnementsPush($u['commerce_id']))],
         'derniers' => array_map(fn ($d) => ['type' => $d['type'], 'canal' => $d['canal'], 'statut' => $d['statut'], 'le' => $d['cree_le']], $derniers),
     ]);
 }
@@ -449,7 +467,7 @@ function routeNotificationsTester(): never
     $langue = langueNotifications($commerce, $reglages);
     $r = calculerResume($commerce, $reglages);
     [$sujet, $corps, $variables] = composerResume($commerce, $r, $langue);
-    $essai = ['sujet' => ($langue === 'en' ? '[Test] ' : '[Essai] ') . $sujet, 'corps' => $corps, 'variables' => $variables, 'modele' => modeleWhatsApp('WhatsAppModeleResume', 'kaislo_resume_soir', $langue)];
+    $essai = ['sujet' => ($langue === 'en' ? '[Test] ' : '[Essai] ') . $sujet, 'corps' => $corps, 'variables' => $variables, 'push' => pushResume($commerce, $r, $langue), 'modele' => modeleWhatsApp('WhatsAppModeleResume', 'kaislo_resume_soir', $langue)];
     // L'essai part sur les canaux choisis par le gérant (e-mail par défaut) : jamais vers une autre adresse que celle du compte
     $resultats = envoyerNotification($commerce, $reglages, 'essai', $essai, $langue);
     if (!$resultats) {

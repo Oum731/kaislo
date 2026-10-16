@@ -45,6 +45,7 @@ require __DIR__ . '/lib/commerciaux.php';
 require __DIR__ . '/lib/commerces.php';
 require __DIR__ . '/lib/boutique.php';
 require __DIR__ . '/lib/notifications.php';
+require __DIR__ . '/lib/push.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -89,6 +90,9 @@ try {
         'GET /public/boutique-image' => routeBoutiqueImage(),
         'POST /public/commande' => routeCommandePublique(),
         'GET /notifications' => routeNotificationsEtat(),
+        'POST /push/abonner' => routePushAbonner(),
+        'POST /push/desabonner' => routePushDesabonner(),
+        'POST /push/message' => routePushMessage(),
         'POST /notifications/tester' => routeNotificationsTester(),
         'GET /cron/notifications', 'POST /cron/notifications' => routeCronNotifications(),
         'GET /avis' => routeAvisPublics(),
