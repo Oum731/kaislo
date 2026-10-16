@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 18;
+const VERSION_BASE = 19;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -124,6 +124,22 @@ const STRUCTURE = [
             'detail' => 'LONG', 'cree_le' => 'DATE',
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id', 'cree_le']],
+    ],
+    // Appareils qui reçoivent les notifications push du gérant (l'adresse de l'abonnement est secrète : seule son empreinte sert à la retrouver)
+    'abonnements_push' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'utilisateur_id' => 'ID', 'endpoint_hash' => 'VARCHAR(64)', 'endpoint' => 'LONG',
+            'appareil' => 'TEXTE', 'cree_le' => 'DATE', 'vu_le' => 'DATE', 'echecs' => 'ENTIER',
+        ],
+        'cle' => ['id'], 'uniques' => [['endpoint_hash']], 'index' => [['commerce_id']],
+    ],
+    // Textes des notifications push en attente de lecture par l'appareil (voir lib/push.php)
+    'push_messages' => [
+        'colonnes' => [
+            'id' => 'ID', 'abonnement_id' => 'ID', 'titre' => 'TEXTE', 'texte' => 'LONG', 'url' => 'TEXTE', 'tag' => 'VARCHAR(20)',
+            'cree_le' => 'DATE', 'livre_le' => 'DATE',
+        ],
+        'cle' => ['id'], 'uniques' => [], 'index' => [['abonnement_id', 'livre_le']],
     ],
     // Messages laissés par les visiteurs du site (bulle « Discuter avec nous »)
     'contacts' => [

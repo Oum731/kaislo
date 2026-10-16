@@ -8,10 +8,12 @@ import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { Feuille, Icone, Interrupteur } from '@/components/ui';
 import { appelApi } from '@/lib/api';
+import { etatPush, activerPush, desactiverPush, iosNonInstalle } from '@/lib/push-client';
 import { formatHeure } from '@/lib/utils/format';
 import { tr } from '@/lib/i18n';
 
 const HEURES = [19, 20, 21, 22, 23];
+const LIBELLE_CANAL = (c) => (c === 'email' ? tr('e-mail') : c === 'push' ? tr('notification') : 'WhatsApp');
 
 export function FeuilleNotifications() {
   const s = useKaislo();
@@ -19,6 +21,8 @@ export function FeuilleNotifications() {
   const [erreur, setErreur] = useState('');
   const [essai, setEssai] = useState(null); // null | 'en cours' | résultats
   const [nouvelEmail, setNouvelEmail] = useState('');
+  const [appareil, setAppareil] = useState(null); // { supporte, permission, abonne } pour CET appareil
+  const [occupePush, setOccupePush] = useState(false);
   const choix = s.d.commerce.notifications || {};
   const resume = choix.resume !== false;
   const heure = Number.isInteger(choix.heure) ? choix.heure : 21;
@@ -27,7 +31,7 @@ export function FeuilleNotifications() {
   const commandes = choix.commandes !== false;
 
   const charger = () => appelApi('GET', '/notifications', null, s.jetonServeur()).then(setEtat).catch((e) => setErreur(e.horsLigne ? tr('Connexion internet nécessaire') : e.message));
-  useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); etatPush().then(setAppareil); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const regler = (x) => s.enregistrerNotifications(x);
 
@@ -42,6 +46,23 @@ export function FeuilleNotifications() {
     } catch (e) {
       setEssai(null);
       setErreur(e.horsLigne ? tr('Connexion internet nécessaire') : e.message);
+    }
+  };
+
+  // Notifications sur cet appareil : la permission se demande à ce clic
+  const basculerPush = async (v) => {
+    setOccupePush(true);
+    setErreur('');
+    try {
+      if (v) await activerPush(etat?.push?.clePublique, s.jetonServeur());
+      else await desactiverPush(s.jetonServeur());
+      setAppareil(await etatPush());
+      charger();
+    } catch (e) {
+      setErreur(e.code === 'refuse' ? tr('Notifications refusées : autorisez-les dans les réglages de votre navigateur.') : e.code === 'indisponible' ? tr('Les notifications ne sont pas disponibles sur cet appareil.') : e.horsLigne ? tr('Connexion internet nécessaire') : e.message);
+      setAppareil(await etatPush());
+    } finally {
+      setOccupePush(false);
     }
   };
 
@@ -60,7 +81,7 @@ export function FeuilleNotifications() {
 
   return (
     <Feuille titre={tr('Notifications')} sousTitre={tr('Soyez prévenu sans ouvrir l’application')} surFermer={s.fermer}
-      pied={<button className="btn bloc" onClick={tester} disabled={essai === 'en cours' || (!email && !whatsapp)}><Icone nom="cloche" /> {essai === 'en cours' ? tr('Envoi…') : tr('Envoyer un essai maintenant')}</button>}>
+      pied={<button className="btn bloc" onClick={tester} disabled={essai === 'en cours' || (!email && !whatsapp && !(etat?.push.appareils > 0))}><Icone nom="cloche" /> {essai === 'en cours' ? tr('Envoi…') : tr('Envoyer un essai maintenant')}</button>}>
       <div className="pile">
         {erreur && <p className="alerte">{erreur}</p>}
 
@@ -76,6 +97,23 @@ export function FeuilleNotifications() {
               {HEURES.map((h) => <button key={h} className={'puce ' + (heure === h ? 'actif' : '')} onClick={() => regler({ heure: h })}>{h} h</button>)}
             </div>
           )}
+        </div>
+
+        {/* Sur cet appareil (notification push) */}
+        <div className="carte notif-carte">
+          <div className="ligne">
+            <span className="notif-icone vert"><Icone nom="telephone" /></span>
+            <span className="grandit">
+              <b>{tr('Sur cet appareil')}</b>
+              <span className="tres-petit muet bloc-texte">
+                {!appareil ? ' ' : !appareil.supporte ? tr('Non disponible sur ce navigateur') : iosNonInstalle() ? tr('Sur iPhone : ajoutez d’abord Kaislo à l’écran d’accueil') : appareil.permission === 'denied' ? tr('Refusées dans le navigateur') : tr('Une notification, même application fermée')}
+              </span>
+            </span>
+            {appareil?.supporte && !iosNonInstalle() && appareil.permission !== 'denied'
+              ? <Interrupteur actif={appareil.abonne} surChanger={(v) => !occupePush && basculerPush(v)} label={tr('Sur cet appareil')} />
+              : <span className="badge gris">{tr('Indisponible')}</span>}
+          </div>
+          {etat && etat.push.appareils > 0 && <p className="tres-petit muet" style={{ marginTop: 8 }}>{etat.push.appareils > 1 ? tr('{0} appareils reçoivent les notifications', [etat.push.appareils]) : tr('1 appareil reçoit les notifications')}</p>}
         </div>
 
         {/* Où le recevoir */}
@@ -123,7 +161,7 @@ export function FeuilleNotifications() {
           <div className="pile" style={{ gap: 6 }}>
             {essai.map((x) => (
               <p key={x.canal} className={x.statut === 'envoye' ? 'info-verte' : 'alerte'}>
-                {x.statut === 'envoye' ? tr('Essai envoyé par {0}', [x.canal === 'email' ? tr('e-mail') : 'WhatsApp']) : tr('Échec : {0}', [x.canal === 'email' ? tr('e-mail') : 'WhatsApp'])}
+                {x.statut === 'envoye' ? tr('Essai envoyé par {0}', [LIBELLE_CANAL(x.canal)]) : tr('Échec : {0}', [LIBELLE_CANAL(x.canal)])}
               </p>
             ))}
           </div>
@@ -136,7 +174,7 @@ export function FeuilleNotifications() {
                 <div key={i} className="liste-item">
                   <span className={'notif-icone petit ' + (n.statut === 'envoye' ? 'vert' : 'rouge')}><Icone nom={n.statut === 'envoye' ? 'ok' : 'alerte'} /></span>
                   <span className="grandit"><b>{n.type === 'resume' ? tr('Résumé du soir') : n.type === 'commande' ? tr('Nouvelle commande') : tr('Essai')}</b></span>
-                  <span className="petit muet">{n.canal === 'email' ? tr('e-mail') : 'WhatsApp'} · {formatHeure(n.le)}</span>
+                  <span className="petit muet">{LIBELLE_CANAL(n.canal)} · {formatHeure(n.le)}</span>
                 </div>
               ))}
             </div>
