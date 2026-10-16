@@ -208,6 +208,7 @@ function routeInscription(): never
     $pin = (string) ($gerant['pin'] ?? '');
     if (!preg_match('/^\d{4}$/', $pin)) throw new ErreurApi('Le code PIN doit contenir 4 chiffres');
     if (($e['conditionsAcceptees'] ?? false) !== true) throw new ErreurApi('Merci d’accepter les conditions d’utilisation');
+    $avisRestaurationLe = controlerRestauration($pays, $type, $e); // pays aux règles particulières pour les restaurants : confirmation obligatoire
     // Code parrain (facultatif) : celui d'un commercial Kaislo, ou le code de parrainage d'un autre commerçant (« P » + 6 chiffres)
     $codeSaisi = codeParrainPropre((string) ($e['codeParrain'] ?? ''));
     $parrainCommerce = estCodeParrainageCommerce($codeSaisi) ? commerceParCodeParrainage($codeSaisi) : null;
@@ -239,6 +240,7 @@ function routeInscription(): never
             $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $quartier, $numCommerce['affichage'], $numCommerce['cle'],
             'essai', 'essai', maintenant($joursEssai * 86400), null, maintenant(), maintenant(), maintenant(), $commercial['id'] ?? null, $parrainCommerce['id'] ?? null, $parrainCommerce ? JOURS_BONUS_FILLEUL : 0,
         ]);
+        if ($avisRestaurationLe) requete('UPDATE commerces SET avis_restauration_le = ? WHERE id = ?', [$avisRestaurationLe, $idCommerce]);
         $utilisateur = [
             'id' => nouvelId('u'), 'commerce_id' => $idCommerce, 'nom' => $nomGerant, 'telephone' => $telGerant,
             'cle_telephone' => $cle, 'role' => 'gerant', 'actif' => 1, 'peut_gerer_produits' => 1, 'peut_faire_remises' => 1,

@@ -1227,3 +1227,31 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .notif-icone.rouge { background: var(--rouge-clair); color: var(--rouge); }
 .notif-icone.petit { width: 30px; height: 30px; border-radius: 10px; }
 .notif-icone.petit .ic { width: 16px; height: 16px; }
+
+/* Tables : couleur + montant + chrono, sans phrases */
+.legende-tables { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; align-items: center; }
+.legende-tables span { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--bordure); border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: 13.5px; }
+.legende-tables .total { margin-left: auto; font-variant-numeric: tabular-nums; }
+.legende-tables .pt { width: 9px; height: 9px; border-radius: 50%; background: var(--bordure-forte); display: block; }
+.legende-tables .pt.occupee { background: var(--vert); }
+.grille-tables { gap: 10px; }
+.table-carte { min-height: 108px; border-radius: 18px; padding: 12px 14px; display: grid; align-content: space-between; gap: 6px; text-align: left; }
+.table-carte.libre { border: 2px dashed var(--bordure-forte); background: transparent; box-shadow: none; }
+.table-carte.libre .nom { color: var(--encre-2); }
+.plus-table { justify-self: end; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--creme-fonce); color: var(--encre-3); }
+.table-carte.occupee { background: var(--vert); border-color: var(--vert); box-shadow: none; color: #fff; }
+.table-carte.occupee .nom { color: #fff; }
+.table-carte.occupee .montant { color: #fff; font-family: var(--marque); font-size: 22px; font-weight: 800; margin-top: 0; }
+.table-carte.occupee:hover { color: #fff; border-color: var(--vert-fonce); }
+.puces-table { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; font-weight: 700; }
+.puces-table span { display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 3px 9px; }
+.puces-table .long { background: var(--safran); color: #3b2a12; }
+.table-carte.longue { background: var(--vert); border-color: var(--safran); box-shadow: inset 0 0 0 2px var(--safran); }
+
+/* Avis restauration (pays aux règles particulières) */
+.avis-restauration { background: var(--safran-clair); border: 1px solid #ecd2a1; border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; color: var(--safran-fonce); margin-bottom: 14px; }
+.avis-restauration .avis-titre { display: flex; align-items: center; gap: 8px; font-weight: 700; margin: 0; }
+.avis-restauration p { margin: 0; }
+.avis-restauration a { color: inherit; text-decoration: underline; }
+.avis-restauration.compact { grid-template-columns: auto 1fr; align-items: start; padding: 8px 12px; }
+.avis-restauration.compact .ic { margin-top: 2px; }

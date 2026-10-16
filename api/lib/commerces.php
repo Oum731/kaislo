@@ -119,6 +119,7 @@ function routeAjouterCommerce(): never
     if (!in_array($type, TYPES_COMMERCE_OFFERTS, true)) throw new ErreurApi('Type de commerce inconnu');
     $pays = strtoupper((string) ($c['pays'] ?? $actuel['pays']));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Pays non pris en charge');
+    $avisRestaurationLe = controlerRestauration($pays, $type, $e); // pays aux règles particulières pour les restaurants : confirmation obligatoire
     $ville = texte($c, 'ville', 'la ville');
     $quartier = texte($c, 'quartier', 'le quartier');
     // Numéro du commerce : le sien par défaut, ou un autre numéro qui n'appartient à personne d'autre
@@ -140,6 +141,7 @@ function routeAjouterCommerce(): never
             $idCommerce, $code, $nom, $type, $pays, PAYS[$pays], $ville, $quartier, $numCommerce['affichage'], $numCommerce['cle'],
             'essai', 'essai', maintenant(DUREE_ESSAI_JOURS * 86400), null, maintenant(), maintenant(), maintenant(), null,
         ]);
+        if ($avisRestaurationLe) requete('UPDATE commerces SET avis_restauration_le = ? WHERE id = ?', [$avisRestaurationLe, $idCommerce]);
         $idUtilisateur = nouvelId('u');
         // Même numéro et même code PIN que le premier compte du gérant
         requete('INSERT INTO utilisateurs (id, commerce_id, nom, telephone, cle_telephone, pin_hash, role, actif, peut_gerer_produits, peut_faire_remises, cree_le, modifie_le)

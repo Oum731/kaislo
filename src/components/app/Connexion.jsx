@@ -13,6 +13,8 @@ import { useKaislo } from '@/store/kaislo';
 import { COMMERCES_DEMO } from '@/lib/donnees/demo';
 import { telephoneDejaUtilise } from '@/lib/donnees/stockage';
 import { TYPES_COMMERCE, PAYS, paysParId, paysDuNavigateur, cleTelephone } from '@/lib/donnees/modeles';
+import { reglementRestauration } from '@/lib/donnees/restauration';
+import { ConfirmationRestauration } from './AvisRestauration';
 import { symbole, NOMS_DEVISES } from '@/lib/utils/format';
 import { CONTACT_WHATSAPP, chemin } from '@/config';
 import { Icone, Avatar, ImageStockee, ChampTelephone, SelecteurLangueDiscret } from '@/components/ui';
@@ -251,7 +253,7 @@ function CommerceSuspendu() {
 function Inscription() {
   const s = useKaislo();
   const [etape, setEtape] = useState(1);
-  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', quartier: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false, codeParrain: s.prefs.codeParrain || '' });
+  const [f, setF] = useState({ type: '', nom: '', pays: paysDuNavigateur(), ville: '', quartier: '', telephone: '', gerantNom: '', gerantTelephone: '', gerantPin: '', gerantPin2: '', accepte: false, avisResto: false, codeParrain: s.prefs.codeParrain || '' });
   const paysTouche = useRef(false);
   const maj = (champ) => (e) => { if (champ === 'pays') paysTouche.current = true; setF({ ...f, [champ]: e.target.value }); };
   // Pays pré-rempli : choix déjà fait, sinon adresse IP / fuseau horaire (sauf si la personne a déjà choisi elle-même)
@@ -278,8 +280,10 @@ function Inscription() {
     if (!/^\d{4}$/.test(f.gerantPin)) return s.message(tr('Le code PIN doit contenir 4 chiffres'), 'erreur');
     if (f.gerantPin !== f.gerantPin2) return s.message(tr('Les deux codes PIN ne sont pas identiques'), 'erreur');
     if (!f.accepte) return s.message(tr('Merci d’accepter les conditions d’utilisation pour continuer'), 'erreur');
+    if (reglementRestauration(f.pays, f.type) === 'desactive') return s.message(tr('Les restaurants, cafés et bars ne sont pas encore proposés dans ce pays'), 'erreur');
+    if (reglementRestauration(f.pays, f.type) === 'avis' && !f.avisResto) return s.message(tr('Merci de confirmer que vous restez responsable du respect des règles de votre pays'), 'erreur');
     // En ligne : le commerce est créé sur le serveur (le numéro y est vérifié dans tout Kaislo)
-    const err = await s.inscrire({ ...f, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), quartier: f.quartier.trim(), telephone: numeroCommerce.affichage, gerantNom: f.gerantNom.trim(), gerantTelephone: numero.affichage });
+    const err = await s.inscrire({ ...f, avisRestauration: f.avisResto, conditionsAccepteesLe: new Date().toISOString(), nom: f.nom.trim(), ville: f.ville.trim(), quartier: f.quartier.trim(), telephone: numeroCommerce.affichage, gerantNom: f.gerantNom.trim(), gerantTelephone: numero.affichage });
     if (err) s.message(err, 'erreur');
   };
   const pays = paysParId(f.pays);
@@ -294,7 +298,7 @@ function Inscription() {
       {etape === 1 && (
         <>
           <div className="intro"><p className="petit muet">{tr('Étape 1 sur 3')}</p><h1 style={{ marginTop: 4 }}>{tr('Quel est votre commerce ?')}</h1></div>
-          {TYPES_COMMERCE.map((t) => (
+          {TYPES_COMMERCE.filter((t) => reglementRestauration(f.pays, t.id) !== 'desactive').map((t) => (
             <button key={t.id} className="choix-carte" onClick={() => { setF({ ...f, type: t.id }); setEtape(2); }}>
               <span className="emoji-grand"><Icone nom={t.icone} /></span>
               <span className="grandit"><h3>{tt(t.nom)}</h3><span className="petit muet">{tt(t.description)}</span></span>
@@ -346,6 +350,7 @@ function Inscription() {
             <input value={f.codeParrain} onChange={(e) => setF({ ...f, codeParrain: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 12) })} placeholder={tr('Ex : AWA25')} autoCapitalize="characters" />
           </label>
           <p className="tres-petit muet">{tr('Avec un code parrain valide, vous bénéficiez d’environ {0} % de remise sur l’abonnement.', [REGLES_TARIFS.remiseParrain])} {tr('Si c’est le code d’un autre commerçant (il commence par P), vous avez {0} jours d’essai en plus.', [JOURS_BONUS_FILLEUL])}</p>
+          <ConfirmationRestauration pays={f.pays} type={f.type} accepte={f.avisResto} surChanger={(v) => setF({ ...f, avisResto: v })} />
           <label className="case-accord">
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
             <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('et la')} <a href={chemin('/confidentialite/')} target="_blank" rel="noreferrer">{tr('politique de confidentialité')}</a> {tr('de Kaislo.')}</span>

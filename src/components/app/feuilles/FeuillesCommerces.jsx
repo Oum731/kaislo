@@ -4,6 +4,8 @@
 // Chaque activité (épicerie, restaurant…) est un commerce à part : son abonnement, son stock, ses ventes et ses
 // comptes du soir ne se mélangent pas avec ceux des autres.
 // ------------------------------------------------------------
+import { reglementRestauration } from '@/lib/donnees/restauration';
+import { ConfirmationRestauration } from '../AvisRestauration';
 import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { Feuille, Icone } from '@/components/ui';
@@ -73,7 +75,7 @@ export function FeuilleCommerces() {
 // ---------- Ajouter un commerce ----------
 export function FeuilleAjoutCommerce() {
   const s = useKaislo();
-  const [f, setF] = useState({ nom: '', type: 'epicerie', ville: s.d.commerce.ville || '', quartier: '', pin: '', accepte: false });
+  const [f, setF] = useState({ nom: '', type: 'epicerie', ville: s.d.commerce.ville || '', quartier: '', pin: '', accepte: false, avisResto: false });
   const [erreur, setErreur] = useState('');
   const demo = s.estDemoActuel();
   const devise = s.d.commerce.devise;
@@ -85,6 +87,7 @@ export function FeuilleAjoutCommerce() {
     e.preventDefault();
     setErreur('');
     if (!f.accepte && !demo) return setErreur(tr('Merci d’accepter les conditions d’utilisation pour continuer'));
+    if (!demo && reglementRestauration(s.d.commerce.pays, f.type) === 'avis' && !f.avisResto) return setErreur(tr('Merci de confirmer que vous restez responsable du respect des règles de votre pays'));
     const err = await s.ajouterCommerce(f);
     if (err) setErreur(err);
   };
@@ -102,7 +105,7 @@ export function FeuilleAjoutCommerce() {
         <div className="duo">
           <label className="champ"><span>{tr('Activité')}</span>
             <select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
-              {TYPES_COMMERCE.map((t) => <option key={t.id} value={t.id}>{tt(t.nom)}</option>)}
+              {TYPES_COMMERCE.filter((t) => reglementRestauration(s.d.commerce.pays, t.id) !== 'desactive').map((t) => <option key={t.id} value={t.id}>{tt(t.nom)}</option>)}
             </select>
           </label>
           <label className="champ"><span>{tr('Ville')}</span><input value={f.ville} onChange={(e) => setF({ ...f, ville: e.target.value })} /></label>
@@ -118,6 +121,7 @@ export function FeuilleAjoutCommerce() {
           <label className="champ"><span>{tr('Votre code PIN (pour confirmer)')}</span>
             <input className="pin-saisie" type="password" inputMode="numeric" autoComplete="current-password" maxLength={4} placeholder="••••" value={f.pin} onChange={(e) => setF({ ...f, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
           </label>
+          {!demo && <ConfirmationRestauration pays={s.d.commerce.pays} type={f.type} accepte={f.avisResto} surChanger={(v) => setF({ ...f, avisResto: v })} />}
           <label className="case-accord">
             <input type="checkbox" checked={f.accepte} onChange={(e) => setF({ ...f, accepte: e.target.checked })} />
             <span>{tr('J’accepte les')} <a href={chemin('/conditions-utilisation/')} target="_blank" rel="noreferrer">{tr('conditions d’utilisation')}</a> {tr('de Kaislo.')}</span>

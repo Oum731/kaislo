@@ -156,6 +156,22 @@ const SECTIONS = [
     ),
   },
   {
+    id: 'contenus-et-reglementation',
+    titre: 'Contenus publiés et activités réglementées',
+    contenu: (
+      <>
+        <p><b>Kaislo est un outil de gestion.</b> Ce n’est ni un éditeur de contenus, ni une caisse enregistreuse certifiée, ni un conseiller juridique, fiscal ou sanitaire.</p>
+        <ul>
+          <li><b>Contenus des commerçants.</b> Les noms d’articles, descriptions, photos, prix, textes de boutique, messages et autres contenus saisis ou publiés par un commerce sont publiés sous sa seule responsabilité. Kaislo n’en est ni l’auteur ni l’éditeur, ne les contrôle pas avant leur publication et <b>n’est en aucun cas responsable</b> de leur contenu, de leur exactitude ni de leur légalité. Le commerçant garantit qu’il a le droit de publier ce qu’il publie (notamment les droits sur les photos).</li>
+          <li><b>Règles de chaque pays et de chaque activité.</b> Selon le pays et l’activité (restaurants, cafés, bars, vente d’alcool ou de produits alimentaires, pharmacie…), la loi peut imposer une caisse enregistreuse ou un système de caisse certifié, une facturation et une TVA particulières, des règles d’hygiène et de sécurité alimentaire, des licences ou des autorisations. <b>Le commerçant est seul responsable du respect de ces règles.</b> Kaislo ne vérifie pas que l’activité d’un commerce y est conforme et ne garantit pas que son utilisation suffit à les respecter ; le commerçant garde, si son pays l’exige, l’appareil ou le logiciel certifié en plus de Kaislo.</li>
+          <li><b>Pays aux règles particulières pour la restauration.</b> Dans certains pays (par exemple la Belgique, la France et le Canada), l’inscription d’un restaurant, d’un café ou d’un bar demande de confirmer ce rappel ; la date de la confirmation est conservée. Cette liste peut évoluer et n’est pas exhaustive : renseignez-vous toujours auprès de l’administration ou d’un comptable de votre pays.</li>
+          <li><b>Signalement et retrait.</b> Si vous pensez qu’un contenu est illégal ou porte atteinte à vos droits, écrivez-nous (contact en bas de page) en indiquant la boutique et le contenu concernés. Nous pouvons retirer un contenu ou suspendre un commerce qui ne respecte pas ces conditions.</li>
+        </ul>
+        <p>Les paiements restent toujours directs entre le client et le commerçant : Kaislo n’encaisse aucun paiement de vente.</p>
+      </>
+    ),
+  },
+  {
     id: 'responsabilite',
     titre: 'Responsabilité',
     contenu: (

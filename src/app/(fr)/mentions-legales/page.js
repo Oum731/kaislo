@@ -39,7 +39,7 @@ const SECTIONS = [
     id: 'role',
     titre: 'Rôle de Kaislo',
     contenu: (
-      <p>Kaislo est un outil de gestion (ventes, stock, inventaire) et un pont entre les boutiques et leurs clients. {SOCIETE.nom} n’est pas vendeur des articles présentés dans les boutiques en ligne : ils sont proposés par des commerçants indépendants, seuls responsables de leurs articles, de leurs prix, de leur livraison et de leurs ventes. {SOCIETE.nom} n’encaisse aucun paiement de ces ventes. Voir les <a href="/conditions-utilisation/#boutiques-en-ligne">conditions d’utilisation</a>.</p>
+      <p>Kaislo est un outil de gestion (ventes, stock, inventaire) et un pont entre les boutiques et leurs clients. {SOCIETE.nom} n’est pas vendeur des articles présentés dans les boutiques en ligne : ils sont proposés par des commerçants indépendants, seuls responsables de leurs articles, de leurs prix, de leur livraison et de leurs ventes. {SOCIETE.nom} n’encaisse aucun paiement de ces ventes. Voir les <a href="/conditions-utilisation/#boutiques-en-ligne">conditions d’utilisation</a>. Les contenus publiés par les commerçants (articles, photos, textes) restent sous leur seule responsabilité : voir <a href="/conditions-utilisation/#contenus-et-reglementation">Contenus publiés et activités réglementées</a>.</p>
     ),
   },
   {
