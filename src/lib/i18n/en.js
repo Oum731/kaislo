@@ -1908,4 +1908,9 @@ export const EN = {
   "{0}, occupée, {1}": "{0}, occupied, {1}",
   "{0}, libre": "{0}, free",
   "maintenant": "now",
+  "État du stock": "Stock status",
+  "Bon": "Good",
+  "Bas": "Low",
+  "Si tout est vendu": "If everything sells",
+  "Ticket n° {0}, {1}": "Receipt no. {0}, {1}",
 };
