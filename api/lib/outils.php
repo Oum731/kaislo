@@ -11,6 +11,24 @@ define('PAYS', array_column(LISTE_PAYS, 'devise', 'id'));
 const TYPES_COMMERCE_OFFERTS = ['restaurant', 'maquis', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'beaute', 'telephonie', 'librairie', 'autre'];
 // Tous les types connus : les anciens commerces « pharmacie » gardent leur formule de prix
 const TYPES_COMMERCE = ['restaurant', 'maquis', 'bar', 'boulangerie', 'epicerie', 'grossiste', 'boutique', 'quincaillerie', 'pharmacie', 'beaute', 'telephonie', 'librairie', 'autre'];
+// Restauration et règles locales (champ « restauration » de pays.json) : '' | 'avis' | 'desactive'. Types à tables : restaurant, maquis, bar.
+const TYPES_RESTAURATION = ['restaurant', 'maquis', 'bar'];
+function reglementRestauration(string $pays, string $type): string
+{
+    if (!in_array($type, TYPES_RESTAURATION, true)) return '';
+    foreach (LISTE_PAYS as $p) if (($p['id'] ?? '') === $pays) return (string) ($p['restauration'] ?? '');
+    return '';
+}
+// Refuse l'inscription d'un commerce à tables si le pays ne le permet pas, ou sans la confirmation demandée
+function controlerRestauration(string $pays, string $type, array $e): ?string
+{
+    $regle = reglementRestauration($pays, $type);
+    if ($regle === 'desactive') throw new ErreurApi('Les restaurants, cafés et bars ne sont pas encore proposés dans ce pays');
+    if ($regle === 'avis' && ($e['avisRestauration'] ?? false) !== true) {
+        throw new ErreurApi('Confirmez que Kaislo est un outil de gestion (et non une caisse certifiée) et que vous restez seul responsable du respect des règles de votre pays');
+    }
+    return $regle === 'avis' ? maintenant() : null; // date de la confirmation, gardée avec le commerce
+}
 const DUREE_ESSAI_JOURS = 30;
 const DUREE_JETON_JOURS = 90;   // un appareil reste connecté 90 jours sans utilisation
 const ESSAIS_AVANT_BLOCAGE = 5; // codes faux autorisés…

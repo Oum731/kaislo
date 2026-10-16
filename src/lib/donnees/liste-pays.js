@@ -7,6 +7,10 @@
 //   article     : « en » ou « au » (en Côte d'Ivoire, au Mali)
 //   seo { slug, commerces } : page /pays/<slug>/ et commerces courants (absent = pas de page)
 //   en { nom, slug } : nom et adresse anglais
+//   restauration : règles propres aux restaurants, cafés et bars (caisse certifiée…) :
+//                  « avis »     = l'inscription demande de confirmer que Kaislo est un outil de gestion et que le commerçant reste seul responsable ;
+//                  « desactive » = les commerces à tables (restaurant, maquis, bar) ne sont pas proposés dans ce pays ;
+//                  absent       = aucune restriction particulière. À faire valider par un juriste ou un comptable du pays.
 // Les devises nouvelles demandent en plus des prix (tarifs.js et api/lib/tarifs.php).
 // ------------------------------------------------------------
 import donneesPays from '../../../api/lib/pays.json' with { type: 'json' };

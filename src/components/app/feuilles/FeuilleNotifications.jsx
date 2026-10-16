@@ -95,14 +95,17 @@ export function FeuilleNotifications() {
               <button className="btn petit" onClick={ajouterEmail} disabled={!nouvelEmail.trim()}>{tr('Enregistrer')}</button>
             </div>
           )}
-          <div className="liste-item">
-            <span className="notif-icone vert"><Icone nom="whatsapp" /></span>
-            <span className="grandit">
-              <b>WhatsApp</b>
-              <span className="tres-petit muet bloc-texte tronque">{!etat ? ' ' : !waPlateforme ? tr('Bientôt disponible') : waOk ? etat.whatsapp.numero : tr('Aucun numéro sur le compte')}</span>
-            </span>
-            {waOk ? <Interrupteur actif={whatsapp} surChanger={(v) => regler({ whatsapp: v })} label="WhatsApp" /> : <span className="badge gris">{tr('Indisponible')}</span>}
-          </div>
+          {/* WhatsApp : proposé seulement quand Kaislo a activé l'envoi (voir README) ; sinon l'e-mail suffit */}
+          {waPlateforme && (
+            <div className="liste-item">
+              <span className="notif-icone vert"><Icone nom="whatsapp" /></span>
+              <span className="grandit">
+                <b>WhatsApp</b>
+                <span className="tres-petit muet bloc-texte tronque">{!etat ? ' ' : waOk ? etat.whatsapp.numero : tr('Aucun numéro sur le compte')}</span>
+              </span>
+              {waOk ? <Interrupteur actif={whatsapp} surChanger={(v) => regler({ whatsapp: v })} label="WhatsApp" /> : <span className="badge gris">{tr('Indisponible')}</span>}
+            </div>
+          )}
         </div>
         {waOk && whatsapp && <p className="tres-petit muet">{tr('En activant WhatsApp, vous acceptez de recevoir ces messages de Kaislo sur ce numéro. Vous pouvez les couper à tout moment.')}</p>}
 

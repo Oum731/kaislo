@@ -382,7 +382,7 @@ export const trancheSession = (set, get) => ({
   },
 
   /** Crée un nouveau commerce pour le gérant (même numéro, même code PIN) et l'ouvre. Renvoie un message d'erreur, ou null. */
-  async ajouterCommerce({ nom, type, ville, quartier = '', pin }) {
+  async ajouterCommerce({ nom, type, ville, quartier = '', pin, avisResto = false }) {
     if (!nom.trim()) return tr('Entrez le nom du commerce');
     if (!ville.trim()) return tr('Entrez la ville');
     if (!quartier.trim()) return tr('Entrez le quartier');
@@ -399,7 +399,7 @@ export const trancheSession = (set, get) => ({
     set({ connexionEnCours: true });
     try {
       const rep = await appelApi('POST', '/ajouter-commerce', {
-        commerce: { nom: nom.trim(), type, ville: ville.trim(), quartier: quartier.trim() }, pin: String(pin), conditionsAcceptees: true, appareil: nomAppareil(),
+        commerce: { nom: nom.trim(), type, ville: ville.trim(), quartier: quartier.trim() }, pin: String(pin), conditionsAcceptees: true, avisRestauration: avisResto === true, appareil: nomAppareil(),
       }, get().jetonServeur());
       if (estServeur(get().d)) await get().synchroniser().catch(() => {});
       get().fermer();
@@ -448,6 +448,7 @@ export const trancheSession = (set, get) => ({
         commerce: { nom: infos.nom, type: infos.type, pays: infos.pays, ville: infos.ville, quartier: infos.quartier, telephone: infos.telephone },
         gerant: { nom: infos.gerantNom, telephone: infos.gerantTelephone, pin: infos.gerantPin },
         conditionsAcceptees: !!infos.conditionsAccepteesLe,
+        avisRestauration: infos.avisRestauration === true, // pays aux règles particulières pour les restaurants (voir restauration.js)
         codeParrain: infos.codeParrain || '', // commercial Kaislo qui a présenté l'application
         appareil: nomAppareil(),
       });

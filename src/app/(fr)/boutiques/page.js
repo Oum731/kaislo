@@ -38,7 +38,7 @@ export default function PageBoutiques() {
         <section className="section">
           <div className="site-largeur">
             <Annuaire />
-            <p className="tres-petit muet annuaire-avertissement">Les boutiques sont tenues par des commerçants indépendants. Kaislo est un outil qui relie les boutiques et leurs clients : il n’est pas le vendeur et n’est pas responsable des articles, des prix, de la livraison ni des ventes. <Link href="/conditions-utilisation/#boutiques-en-ligne">En savoir plus</Link></p>
+            <p className="tres-petit muet annuaire-avertissement">Les boutiques sont tenues par des commerçants indépendants. Kaislo est un outil qui relie les boutiques et leurs clients : il n’est pas le vendeur et n’est en aucun cas responsable des articles, des photos et autres contenus publiés par les boutiques, des prix, de la livraison ni des ventes. <Link href="/conditions-utilisation/#contenus-et-reglementation">En savoir plus</Link></p>
           </div>
         </section>
         <section className="section claire">
