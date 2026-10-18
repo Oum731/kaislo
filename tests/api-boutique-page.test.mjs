@@ -122,6 +122,14 @@ test('plan du site des boutiques : seulement les boutiques publiques avec articl
   assert.doesNotMatch(r.texte, /boutique-cachee|boutique-vide/);
 });
 
+test('plan du site sans aucune boutique indexable : jamais vide (Google refuse un plan sans adresse)', async () => {
+  await api('POST', '/boutique', { actif: false, slug: 'chez-awa-page', whatsapp: '0712345859' }, gerant.jeton);
+  const r = await page('/plan-boutiques');
+  assert.equal((r.texte.match(/<url>/g) || []).length, 1);
+  assert.match(r.texte, /<loc>https:\/\/kaislo\.com\/boutiques\/<\/loc>/);
+  await api('POST', '/boutique', { actif: true, slug: 'chez-awa-page', whatsapp: '0712345859' }, gerant.jeton);
+});
+
 test('adresses réécrites par .htaccess : le paramètre kaislo-page choisit la page', async () => {
   const r = await page('/nimporte-quoi?kaislo-page=boutique&b=chez-awa-page');
   assert.equal(r.statut, 200);

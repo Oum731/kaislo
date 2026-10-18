@@ -177,6 +177,8 @@ function routePlanBoutiques(): never
 {
     $site = 'https://' . DOMAINE_OFFICIEL; // toujours l'adresse officielle (jamais l'hôte de la requête : l'adresse canonique ne doit pas dépendre du visiteur)
     $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    // Google refuse un plan sans aucune adresse (« balise url manquante ») : l'annuaire y figure toujours, même sans boutique indexable
+    $xml .= '<url><loc>' . echapper($site . '/boutiques/') . "</loc></url>\n";
     $lignes = requete("SELECT b.slug, b.publique, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu' ORDER BY b.slug LIMIT 5000")->fetchAll();
     foreach ($lignes as $c) {
         if (abonnementExpire($c) || !articlesPublies($c['id'])) continue;
