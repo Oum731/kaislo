@@ -14,13 +14,14 @@ import { articlePays } from '@/lib/donnees/liste-pays';
 import { trouverPays, choisirPays, paysParGps } from '@/lib/pays-visiteur';
 import { CATEGORIES_ANNUAIRE, categorieAnnuaire, grouperBoutiques } from '@/lib/donnees/boutique';
 
-const lienBoutique = (b) => '/boutique/?b=' + encodeURIComponent(b.slug);
+const lienBoutique = (b) => '/boutique/' + encodeURIComponent(b.slug) + '/';
 const photo = (b, e) => (e.image ? chemin('/api/public/boutique-image?b=' + encodeURIComponent(b.slug) + '&i=' + encodeURIComponent(e.image)) : null);
 
 export function CarteBoutique({ b }) {
   const lieu = [b.quartier, b.ville].filter(Boolean).join(', ');
   return (
-    <Link href={lienBoutique(b)} className="annuaire-carte">
+    // Lien ordinaire (pas next/link) : la page de la boutique est écrite par le serveur, elle n'existe pas dans l'export statique
+    <a href={chemin(lienBoutique(b))} className="annuaire-carte">
       <div className="annuaire-entete">
         <b>{b.nom}</b>
         <span className="petit muet">{lieu}</span>
@@ -38,7 +39,7 @@ export function CarteBoutique({ b }) {
         ))}
       </div>
       <span className="guide-lire">{b.nbArticles} article{b.nbArticles > 1 ? 's' : ''} · Voir la boutique →</span>
-    </Link>
+    </a>
   );
 }
 

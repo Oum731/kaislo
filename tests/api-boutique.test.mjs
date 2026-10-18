@@ -75,7 +75,7 @@ test('la boutique est introuvable tant qu\'elle n\'est pas activée, et réserv�
   assert.equal((await api('GET', '/boutique', null, gerant.jeton)).boutique.conditionsAcceptees, false);
   const ok = await api('POST', '/boutique', reglages, gerant.jeton);
   assert.equal(ok.ok, true, JSON.stringify(ok));
-  assert.match(ok.boutique.lien, /\/boutique\/\?b=chez-awa$/);
+  assert.match(ok.boutique.lien, /\/boutique\/chez-awa\/$/);
   assert.equal(ok.boutique.conditionsAcceptees, true);
   // Déjà accepté : pas besoin de recocher à chaque enregistrement
   assert.equal((await api('POST', '/boutique', { ...reglages, conditionsAcceptees: undefined }, gerant.jeton)).ok, true);

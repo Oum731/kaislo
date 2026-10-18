@@ -1,6 +1,6 @@
 'use client';
 // ------------------------------------------------------------
-// VITRINE D'UN COMMERÇANT : kaislo.com/boutique/?b=nom-du-commerce
+// VITRINE D'UN COMMERÇANT : kaislo.com/boutique/nom-du-commerce/ (ou /boutique/?b=nom-du-commerce)
 // Le client choisit ses articles, saisit son nom et son numéro, puis la commande s'ouvre sur WhatsApp (message déjà écrit,
 // à envoyer au commerçant). La commande est aussi enregistrée dans Kaislo (le commerçant la voit dans « Commandes en ligne »).
 // Kaislo n'encaisse rien : le client paie le commerçant comme d'habitude. Aucun suivi publicitaire sur cette page.
@@ -47,7 +47,10 @@ export default function Boutique() {
       }).catch(() => setErreur('La démonstration n’a pas pu se charger.'));
       return;
     }
-    const s = (params.get('b') || '').toLowerCase();
+    // /boutique/nom-du-commerce/ (page réécrite par le serveur, avec le contenu pour Google) ou ancienne forme /boutique/?b=nom
+    const dansLAdresse = /^\/boutique\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(window.location.pathname);
+    const s = (params.get('b') || (dansLAdresse ? dansLAdresse[1] : '')).toLowerCase();
+    document.getElementById('seo-boutique')?.remove(); // contenu en HTML simple ajouté par le serveur pour Google : la vitrine prend le relais
     setSlug(s);
     if (!s) { setErreur('Adresse de boutique incomplète.'); return; }
     setPanier(lirePanier(s));
