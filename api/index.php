@@ -48,6 +48,7 @@ require __DIR__ . '/lib/boutique.php';
 require __DIR__ . '/lib/notifications.php';
 require __DIR__ . '/lib/push.php';
 require __DIR__ . '/lib/chat.php';
+require __DIR__ . '/lib/boutique-page.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -59,6 +60,8 @@ header('Referrer-Policy: same-origin');
 $chemin = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $chemin = '/' . trim((string) preg_replace('#^.*?/api(?=/|$)#', '', $chemin), '/');
 $methode = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+// Pages réécrites par .htaccess (/boutique/nom/, /sitemap-boutiques.xml) : l'adresse demandée reste celle du visiteur, la page est choisie ici
+$chemin = ['boutique' => '/page-boutique', 'plan-boutiques' => '/plan-boutiques'][(string) ($_GET['kaislo-page'] ?? '')] ?? $chemin;
 
 try {
     $route = "$methode $chemin";
@@ -88,6 +91,8 @@ try {
         'GET /commandes-en-ligne' => routeCommandesEnLigneLire(),
         'POST /commandes-en-ligne' => routeCommandesEnLigneStatut(),
         'GET /public/boutique' => routeBoutiquePublique(),
+        'GET /page-boutique' => routePageBoutique(),
+        'GET /plan-boutiques' => routePlanBoutiques(),
         'GET /public/chat' => routeChatPublicLire(),
         'POST /public/chat' => routeChatPublicEcrire(),
         'GET /chats' => routeChatsListe(),

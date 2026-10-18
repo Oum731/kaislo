@@ -1,5 +1,6 @@
 User-Agent: *
 Allow: /
+Allow: /api/public/boutique-image
 Disallow: /app/
 Disallow: /admin/
 Disallow: /commercial/
@@ -7,3 +8,4 @@ Disallow: /api/
 Disallow: /purge-cache.txt
 
 Sitemap: https://kaislo.com/sitemap.xml
+Sitemap: https://kaislo.com/sitemap-boutiques.xml
