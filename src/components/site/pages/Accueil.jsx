@@ -107,7 +107,7 @@ export default function Accueil({ lang }) {
                   <div key={n} className="etape-image"><span className="numero">{n}</span><h3>{t}</h3><p className="muet">{d}</p></div>
                 ))}
               </div>
-              <p className="muet petit accueil-pont">Kaislo est un outil et un pont entre les boutiques et leurs clients. Chaque boutique est seule responsable de ce qu’elle vend. <Link href="/conditions-utilisation/#boutiques-en-ligne">En savoir plus</Link></p>
+              <p className="muet petit accueil-pont">Kaislo est un outil et un pont entre les boutiques et leurs clients. Chaque boutique est seule responsable de ce qu’elle vend. <Link href="/conditions-utilisation/#boutiques-en-ligne">Lire les règles des boutiques en ligne</Link></p>
             </div>
           </section>
         )}

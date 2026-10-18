@@ -14,9 +14,9 @@ export function LecteurVideo({ src, poster, vertical, titre }) {
   return <video key={fichier} src={chemin(fichier)} poster={chemin(afficheVideo(captureDevise(poster, pays.devise), vertical))} controls playsInline preload="none" width={vertical ? 780 : 1280} height={vertical ? 1560 : 720} aria-label={titre} />;
 }
 
-export function AfficheVignette({ poster, vertical }) {
+export function AfficheVignette({ poster, vertical, alt = '' }) {
   const [pays] = useSelectionPays();
   const adresse = captureDevise(poster, pays.devise);
   // eslint-disable-next-line @next/next/no-img-element
-  return <img key={adresse} src={chemin(adresse)} srcSet={jeuDeTailles(adresse, { telephone: vertical })} sizes="(min-width: 900px) 240px, 45vw" alt="" loading="lazy" decoding="async" />;
+  return <img key={adresse} src={chemin(adresse)} srcSet={jeuDeTailles(adresse, { telephone: vertical })} sizes="(min-width: 900px) 240px, 45vw" alt={alt} loading="lazy" decoding="async" />;
 }
