@@ -291,6 +291,15 @@ Chaque commerce et chaque utilisateur est identifié par son numéro, enregistr�
 (ex : `+225 07 12 34 56 78`) selon les règles du pays (`src/lib/donnees/telephone.js` et `api/lib/telephone.php`,
 à garder identiques). Un numéro ne peut appartenir qu'à un seul commerce. Pour ajouter un pays : compléter les deux fichiers.
 
+## Une page par boutique pour Google
+
+Chaque boutique ouverte, publique (case « Afficher ma boutique sur kaislo.com/boutiques ») et avec au moins un article a une vraie page : `kaislo.com/boutique/nom-du-commerce/`. Le site est un export statique, donc le serveur écrit cette page à la demande (`api/lib/boutique-page.php`) : il prend la vitrine `boutique/index.html` et y met le titre, la description, l'adresse canonique, l'aperçu de partage, des données structurées (commerce local, fil d'Ariane, liste d'articles avec prix en XOF/XAF/MAD/EUR…) et le même contenu en HTML simple, que la vitrine retire dès qu'elle démarre. Réécritures dans `public/.htaccess` ; plan du site `kaislo.com/sitemap-boutiques.xml` (écrit par l'API, annoncé dans `robots.txt` ; les photos des articles restent lisibles par Google malgré `Disallow: /api/`).
+- Boutique cachée de l'annuaire ou sans article : la page sert la vitrine en `noindex`. Boutique inconnue, fermée ou suspendue : vraie erreur 404.
+- L'ancienne forme `/boutique/?b=nom` (liens déjà partagés) continue de marcher, en `noindex` ; le numéro WhatsApp du commerçant n'est jamais dans la page pour Google.
+- Si un commerçant change l'adresse de sa boutique, l'ancienne adresse devient une 404 (pas de redirection).
+- Le dossier du site se trouve tout seul (`dirname(api)`) ; la clé facultative `DossierSite=` du `.env` le force (utilisée par les tests).
+- Après le déploiement : renvoyer `sitemap-boutiques.xml` dans la Search Console.
+
 ## Discussions en direct (clients ↔ commerçants)
 
 La vitrine d'une boutique (`/boutique/?b=…`) a une bulle « Discuter » (`src/components/site/ChatBoutique.jsx`). Le visiteur n'a pas de compte : son navigateur garde un identifiant aléatoire, dont seule l'empreinte est stockée (`chats_clients`, `chats_messages`, voir `api/lib/chat.php`). Le gérant répond dans l'écran **Discussions** de l'application ; un nouveau message déclenche une notification push (au plus une toutes les 5 minutes par conversation) et une pastille dans le menu. « En direct » = relève toutes les 4 s tant que la fenêtre est ouverte (30 s fermée, 8 s pour la liste du gérant), rien en arrière-plan (`src/lib/sondage.js`) : pas de WebSocket, donc rien de plus à installer sur l'hébergement mutualisé. Désactivable par le commerçant (Compte → Boutique en ligne), blocage d'un visiteur possible, limites : 20 messages / 10 min par visiteur, 15 nouvelles conversations par adresse IP. La messagerie commerçant ↔ équipe Kaislo (écran Aide) relève maintenant toutes les 6 s.

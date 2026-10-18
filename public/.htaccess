@@ -10,6 +10,12 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [L,R=301]
 RewriteCond %{HTTP_HOST} ^www\.kaislo\.com$ [NC]
 RewriteRule ^(.*)$ https://kaislo.com/$1 [L,R=301]
 
+# Une page par boutique pour Google : /boutique/nom-du-commerce/ (titre, description, articles et prix ajoutés par l'API : api/lib/boutique-page.php)
+# et le plan du site de ces pages. /boutique/ seul reste la vitrine statique (?b=nom et ?demo=… continuent de marcher).
+RewriteRule ^boutique/([a-z0-9]+(-[a-z0-9]+)*)$ /boutique/$1/ [R=301,L]
+RewriteRule ^boutique/([a-z0-9]+(-[a-z0-9]+)*)/$ /api/index.php?kaislo-page=boutique&b=$1 [L,QSA]
+RewriteRule ^sitemap-boutiques\.xml$ /api/index.php?kaislo-page=plan-boutiques [L]
+
 # Anciennes adresses des pages par activité (« caisse-… » devenues « gestion-… »)
 RewriteRule ^caisse-(restaurant|epicerie|boutique|quincaillerie|boulangerie|bar)/?$ /gestion-$1/ [R=301,L]
 # Pages retirées (métier réglementé non proposé) : « 410 Gone » (disparue pour de bon), pas une redirection vers l'accueil

@@ -1,6 +1,6 @@
 <?php
 // ------------------------------------------------------------
-// BOUTIQUE EN LIGNE : une vitrine par commerce (kaislo.com/boutique/?b=nom-du-commerce).
+// BOUTIQUE EN LIGNE : une vitrine par commerce (kaislo.com/boutique/nom-du-commerce/, ancienne forme /boutique/?b=nom-du-commerce toujours valable).
 //
 //   Le commerçant choisit les articles à publier (case « Vendre en ligne » de la fiche article) et active sa boutique.
 //   Le client compose son panier, saisit son nom et son numéro, puis la commande part sur le WhatsApp du commerçant
@@ -40,7 +40,7 @@ function slugValide(string $slug): bool
 
 function lienBoutique(string $slug): string
 {
-    return 'https://' . (domaineSite() ?: 'kaislo.com') . '/boutique/?b=' . $slug;
+    return 'https://' . (domaineSite() ?: 'kaislo.com') . '/boutique/' . $slug . '/';
 }
 
 function versBoutique(?array $b, array $commerce): array
@@ -178,6 +178,12 @@ function imagePublique(string $ref): ?string
 function routeBoutiquePublique(): never
 {
     [$b, $c] = boutiqueParSlug(strtolower((string) ($_GET['b'] ?? '')));
+    repondre(['ok' => true, 'boutique' => donneesBoutiquePublique($b, $c)]);
+}
+
+// Ce que le public voit d'une boutique : réglages, catégories utilisées et articles publiés (API et page pour Google)
+function donneesBoutiquePublique(array $b, array $c): array
+{
     $articles = articlesPublies($c['id']);
     $categories = [];
     foreach (requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'categories' AND supprime = 0", [$c['id']])->fetchAll() as $l) {
@@ -200,11 +206,11 @@ function routeBoutiquePublique(): never
         ];
         $utilisees[$p['categorieId'] ?? ''] = true;
     }
-    repondre(['ok' => true, 'boutique' => [
-        'slug' => $b['slug'], 'nom' => $c['nom'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'devise' => $c['devise'], 'pays' => $c['pays'],
+    return [
+        'slug' => $b['slug'], 'nom' => $c['nom'], 'type' => $c['type'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'devise' => $c['devise'], 'pays' => $c['pays'],
         'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'], 'chat' => empty($b['chat_off']),
         'categories' => array_values(array_filter($categories, fn ($x) => isset($utilisees[$x['id']]))), 'produits' => $produits,
-    ]]);
+    ];
 }
 
 // GET /api/public/boutiques : annuaire pour les clients (sans numéro WhatsApp : il n'apparaît que sur la page de la boutique)
