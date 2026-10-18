@@ -1953,4 +1953,5 @@ export const EN = {
   "Masqué": "Hidden",
   "Équipe": "Team",
   "Profil": "Profile",
+  "Vidéo : {0}": "Video: {0}",
 };

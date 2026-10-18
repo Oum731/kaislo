@@ -259,7 +259,7 @@ export function VignettesTutos({ videos, titre = tr('Les autres tutoriels') }) {
           return (
             <Link key={cle} href={lien('/tutoriels/#' + cle)} className="vignette-tuto">
               <span className="vignette-image">
-                <AfficheVignette poster={v.poster} vertical={!!v.vertical} />
+                <AfficheVignette poster={v.poster} vertical={!!v.vertical} alt={tr('Vidéo : {0}', [v.titre])} />
                 <span className="vignette-lecture" aria-hidden="true">▶</span>
                 <span className="vignette-duree">{v.duree}</span>
               </span>

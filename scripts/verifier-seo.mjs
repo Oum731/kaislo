@@ -45,6 +45,11 @@ for (const f of pages) {
     // Google veut une date et une heure complètes avec fuseau horaire (2026-10-05T08:00:00+00:00), pas une date seule
     for (const d of m[1].matchAll(/"uploadDate":"([^"]*)"/g)) if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/.test(d[1])) dit(`uploadDate « ${d[1]} » : heure ou fuseau horaire manquant`);
   }
+  // Textes de liens parlants (les moteurs et les lecteurs d'écran s'en servent pour comprendre la page visée) : pas de « en savoir plus » ni « cliquez ici »
+  for (const m of html.matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gs)) {
+    const texte = m[2].replace(/<[^>]+>/g, '').trim();
+    if (/^(cliquez ici|ici|en savoir plus|lire la suite|voir plus|click here|here|learn more|read more)$/i.test(texte)) dit(`lien « ${texte} » vers ${m[1]} : texte de lien trop vague`);
+  }
   if (!sitemap.includes(`<loc>${SITE}${adresse}</loc>`)) dit('absente du plan du site');
 }
 for (const m of sitemap.matchAll(/<loc>(.*?)<\/loc>/g)) {
