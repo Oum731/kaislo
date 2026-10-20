@@ -168,7 +168,7 @@ function chezSentinelle() {
       { id: cFruits, nom: 'Fruits & légumes', couleur: 'terre' },
     ],
     produits: [
-      p(cEpi, 'Huile de table 1L', 24, 20.5, '🫒', '6111000000011', 30, { gros: { prix: 262, unite: 'carton', contenance: 12, minimum: 2 } }),
+      p(cEpi, 'Huile de table 1L', 24, 20.5, '🫒', '6111000000011', 30, { gros: { prix: 262, unite: 'carton', contenance: 12, minimum: 2, demi: { prix: 138 } } }),
       p(cEpi, 'Sucre en morceaux 1kg', 12.5, 10.8, '🧊', '6111000000028', 42),
       p(cEpi, 'Thé vert 200g', 16, 12.5, '🍵', '6111000000035', 4),
       p(cEpi, 'Farine 1kg', 9, 7.4, '🌾', '6111000000042', 25),
@@ -508,7 +508,7 @@ function adapterAuPays(d, paysId) {
     p.prix = c(p.prix);
     p.promo = p.promo ? c(p.promo) : null;
     p.prixAchat = c(p.prixAchat);
-    if (p.gros) p.gros = { ...p.gros, prix: c(p.gros.prix) };
+    if (p.gros) p.gros = { ...p.gros, prix: c(p.gros.prix), ...(p.gros.demi ? { demi: { prix: c(p.gros.demi.prix) } } : {}) };
     for (const g of p.groupes) for (const o of g.options) o.prix = c(o.prix);
   }
   const noms = CLIENTS_EPICERIE[pays.id === 'MA' ? 'MA' : 'autre'];

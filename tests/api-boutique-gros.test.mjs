@@ -39,7 +39,7 @@ before(async () => {
   assert.equal(gerant.statut, 201, JSON.stringify(gerant));
   const r = await api('POST', '/donnees', { elements: [
     { type: 'categories', id: 'c1', modifieLe: maintenant(), contenu: { id: 'c1', nom: 'Boissons' } },
-    { type: 'produits', id: 'p1', modifieLe: maintenant(), contenu: { id: 'p1', nom: 'Coca 33 cl', prix: 500, categorieId: 'c1', actif: true, enLigne: true, groupes: [], gros: { prix: 10800, unite: 'carton', contenance: 24, minimum: 2 } } },
+    { type: 'produits', id: 'p1', modifieLe: maintenant(), contenu: { id: 'p1', nom: 'Coca 33 cl', prix: 500, categorieId: 'c1', actif: true, enLigne: true, groupes: [], gros: { prix: 10800, unite: 'carton', contenance: 24, minimum: 2, demi: { prix: 5800 } } } },
     { type: 'produits', id: 'p2', modifieLe: maintenant(), contenu: { id: 'p2', nom: 'Eau 1,5 L', prix: 300, categorieId: 'c1', actif: true, enLigne: true, groupes: [] } },
   ] }, gerant.jeton);
   assert.deepEqual(r.refuses, [], JSON.stringify(r));
@@ -78,7 +78,7 @@ test('lien privé : seulement les articles avec prix de gros, à ce prix, au car
   const r = await api('GET', `/public/boutique?b=depot-awa&pro=${cle}`);
   assert.equal(r.statut, 200);
   assert.equal(r.boutique.gros, true);
-  assert.deepEqual(r.boutique.produits.map((p) => [p.nom, p.prix, p.minimum]), [['Coca 33 cl (carton de 24)', 10800, 2]]);
+  assert.deepEqual(r.boutique.produits.map((p) => [p.id, p.nom, p.prix, p.minimum]), [['p1', 'Coca 33 cl (carton de 24)', 10800, 2], ['p1:demi', 'Coca 33 cl (demi-carton de 12)', 5800, 1]]);
   assert.doesNotMatch(JSON.stringify(r), /"prix":500\b/); // le prix de détail n'y est jamais
 });
 
@@ -95,12 +95,19 @@ test('commande de gros : minimum respecté, prix de gros recalculé par le serve
   assert.equal(ok.commande.total, 32400);
   assert.equal(ok.commande.gros, true);
   assert.equal(ok.commande.lignes[0].nom, 'Coca 33 cl (carton de 24)');
+  // Demi-carton : un article de plus, au prix du demi-carton, dès 1
+  const demi = await api('POST', '/public/commande', { b: 'depot-awa', pro: cle, client, lignes: [{ produitId: 'p1:demi', quantite: 1 }, { produitId: 'p1', quantite: 2 }] });
+  assert.equal(demi.statut, 201, JSON.stringify(demi));
+  assert.equal(demi.commande.total, 5800 + 21600);
+  assert.deepEqual(demi.commande.lignes.map((l) => l.produitId), ['p1:demi', 'p1']);
+  // Le demi-carton n'existe pas dans le catalogue de détail
+  assert.equal((await api('POST', '/public/commande', { b: 'depot-awa', client, lignes: [{ produitId: 'p1:demi', quantite: 1 }] })).statut, 400);
   // Mauvaise clé : refus
   assert.equal((await api('POST', '/public/commande', { b: 'depot-awa', pro: 'ffffffffffffffff', client, lignes: lignes(3) })).statut, 404);
   // Le gérant la voit, marquée « gros »
   const liste = await api('GET', '/commandes-en-ligne', null, gerant.jeton);
-  assert.equal(liste.commandes[0].gros, true);
-  assert.equal(liste.commandes[0].total, 32400);
+  assert.equal(liste.commandes[1].gros, true);
+  assert.equal(liste.commandes[1].total, 32400);
 });
 
 test('commande par le lien public : toujours le prix de détail, jamais le gros', async () => {

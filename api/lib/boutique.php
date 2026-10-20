@@ -85,6 +85,7 @@ function prixGrosValide(array $p): ?array
     return [
         'prix' => (float) $g['prix'], 'unite' => in_array($g['unite'] ?? '', $unites, true) ? $g['unite'] : 'carton',
         'contenance' => round((float) $g['contenance'], 3), 'minimum' => max(1, (int) ($g['minimum'] ?? 1)),
+        'demi' => is_array($g['demi'] ?? null) && is_numeric($g['demi']['prix'] ?? null) && (float) $g['demi']['prix'] > 0 ? (float) $g['demi']['prix'] : null, // prix du demi-carton
     ];
 }
 
@@ -96,6 +97,12 @@ function articlesDeGros(array $articles): array
         $g = prixGrosValide($p);
         if (!$g) continue;
         $liste[$cle] = array_merge($p, ['prix' => $g['prix'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (' . $g['unite'] . ' de ' . str_replace('.', ',', (string) $g['contenance']) . ')', '_gros' => $g]);
+        // Le demi-carton est un article de plus (identifiant « …:demi »), au prix du demi-carton, à partir de 1
+        if ($g['demi'] !== null) {
+            $moitie = $g['contenance'] / 2;
+            $liste[$cle . ':demi'] = array_merge($p, ['id' => $cle . ':demi', 'prix' => $g['demi'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (demi-' . $g['unite'] . ' de ' . str_replace('.', ',', (string) round($moitie, 3)) . ')',
+                '_gros' => ['prix' => $g['demi'], 'unite' => 'demi-' . $g['unite'], 'contenance' => $moitie, 'minimum' => 1, 'demi' => null]]);
+        }
     }
     return $liste;
 }

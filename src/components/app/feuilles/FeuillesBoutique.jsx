@@ -178,9 +178,10 @@ export function FeuilleCommandesEnLigne() {
     s.viderPanier();
     if (c.gros) s.choisirModeGros(true); // commande de grossiste : au carton, au prix de gros
     for (const l of c.lignes) {
-      const produit = s.d.produits.find((p) => p.id === l.produitId);
+      const demi = String(l.produitId).endsWith(':demi'); // demi-carton d'une commande de gros
+      const produit = s.d.produits.find((p) => p.id === String(l.produitId).replace(/:demi$/, ''));
       if (!produit) { manquants.push(l.nom); continue; }
-      s.ajouterAuPanier(produit, choixDepuisCommande(produit, l.optionIds || []), l.quantite);
+      s.ajouterAuPanier(produit, choixDepuisCommande(produit, l.optionIds || []), l.quantite, { demi });
     }
     useKaislo.setState({ aDistance: true, telephoneDistance: c.client.telephone });
     if (c.statut === 'nouvelle') changer(c, 'confirmee');
@@ -212,7 +213,7 @@ export function FeuilleCommandesEnLigne() {
             <p className="petit"><b>{c.client.nom}</b> · {c.client.telephone}{c.client.adresse ? ' · ' + c.client.adresse : ''}</p>
             <ul className="petit" style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
               {c.lignes.map((l, i) => {
-                const produit = s.d.produits.find((p) => p.id === l.produitId);
+                const produit = s.d.produits.find((p) => p.id === String(l.produitId).replace(/:demi$/, ''));
                 return (
                   <li key={i} className="ligne-commande-photo">
                     <ImageStockee reference={produit?.image} className="mini-photo" alt={l.nom} secours={<span className="mini-photo mini-photo-vide" aria-hidden="true">{produit?.emoji || '🛍️'}</span>} />

@@ -9,7 +9,7 @@ import { stockDe } from '@/lib/donnees/stock.js';
 import { useEffect, useRef, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
-import { venteEnGros, produitPourMode } from '@/lib/donnees/gros';
+import { venteEnGros, produitPourMode, aDemi } from '@/lib/donnees/gros';
 import { dire, montantParle, phrasePanier, voixDisponible } from '@/lib/voix';
 import { CREDIT } from '@/lib/donnees/modeles';
 import { soldeClient } from '@/lib/donnees/credit';
@@ -126,7 +126,8 @@ export default function Caisse() {
                     </span>
                   </>
                 );
-                return (
+                const demi = s.modeGros && aDemi(brut); // « ½ » : un demi-carton
+                const tuile = (
                   <button key={p.id} className={`tuile teinte-${couleur(p)} ${p.image ? 'avec-photo' : ''} ${q ? 'dans-panier' : ''} ${p.suiviStock && stockDe(p) <= 0 ? 'rupture' : ''}`} onClick={() => toucher(brut)}>
                     {q > 0 && <span className="tuile-compteur">{q}</span>}
                     {base < p.prix && <span className="badge safran tuile-promo">{tr('Promo')}</span>}
@@ -143,6 +144,12 @@ export default function Caisse() {
                     )}
                   </button>
                 );
+                return demi ? (
+                  <div key={p.id} className="tuile-cadre">
+                    {tuile}
+                    <button type="button" className="tuile-demi" onClick={() => s.ajouterAuPanier(brut, {}, 1, { demi: true })} aria-label={tr('Ajouter un demi-carton')}>½</button>
+                  </div>
+                ) : tuile;
               })}
             </div>
             {!produits.length && d.produits.length > 0 && <div className="vide"><p>{tr('Aucun article trouvé')}</p></div>}
@@ -301,7 +308,7 @@ export function ContenuPanier({ dansFeuille = false }) {
         <p className="section-titre" style={{ marginTop: 18 }}>{tr('Paiement')}</p>
         <div className="choix-grille">
           {d.commerce.modesPaiement.map((m) => (
-            <button key={m} className={paiement === m ? 'actif' : ''} onClick={() => setEtat({ paiementChoisi: m })}><Icone nom={m === 'Espèces' ? 'billet' : m === 'Carte' ? 'depense' : 'telephone'} />{tt(m)}</button>
+            <button key={m} className={paiement === m ? 'actif' : ''} onClick={() => setEtat({ paiementChoisi: m })}><Icone nom={m === 'Espèces' ? 'billet' : m === 'Carte' ? 'depense' : m === 'Virement' ? 'banque' : 'telephone'} />{tt(m)}</button>
           ))}
           <button className={`credit ${paiement === CREDIT ? 'actif' : ''}`} onClick={() => setEtat({ paiementChoisi: CREDIT })}><Icone nom="carnet" />{tr('À crédit')}</button>
         </div>
@@ -319,6 +326,13 @@ export function ContenuPanier({ dansFeuille = false }) {
                 <span className="chiffre">{s.prix(Math.abs(rendu))}</span>
               </div>
             )}
+          </div>
+        )}
+
+        {paiement === 'Virement' && (
+          <div style={{ marginTop: 14 }}>
+            <input className="saisie" value={s.refPaiement} maxLength={60} onChange={(e) => setEtat({ refPaiement: e.target.value })} placeholder={tr('Nom du client ou référence du virement (facultatif)')} />
+            <p className="tres-petit muet" style={{ marginTop: 6 }}>{tr('Vérifiez que l’argent est bien arrivé sur le compte avant de valider.')}</p>
           </div>
         )}
 

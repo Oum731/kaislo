@@ -1,7 +1,7 @@
 // Vente en gros : prix du carton, stock en unités, marge, lignes séparées détail/gros. Lancer : npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { aPrixGros, venteEnGros, grosDisponible, produitPourMode, nettoyerGros } from '../src/lib/donnees/gros.js';
+import { aPrixGros, aDemi, venteEnGros, grosDisponible, produitPourMode, nettoyerGros } from '../src/lib/donnees/gros.js';
 import { creerLigne, cleLigne, coutVente } from '../src/lib/donnees/vente.js';
 import { avecStocks } from '../src/lib/donnees/stock.js';
 
@@ -91,4 +91,33 @@ test('jamais de vente en gros pour la restauration (restaurant, snack, fast-food
   }
   for (const type of ['epicerie', 'grossiste', 'boulangerie', 'boutique']) assert.equal(grosDisponible({ type }), true, type);
   assert.equal(venteEnGros({ commerce: { type: 'epicerie' }, produits: [coca] }), true);
+});
+
+test('demi-carton : prix propre, moitié du contenu, ligne séparée, stock et coût', () => {
+  const avec = { ...coca, gros: { ...coca.gros, demi: { prix: 5800 } } };
+  assert.equal(aDemi(avec), true);
+  assert.equal(aDemi(coca), false);
+  const m = produitPourMode(avec, true, true);
+  assert.equal(m.prix, 5800);
+  assert.equal(m.prixAchat, 3600); // 300 × 12
+  assert.equal(m._gros.contenance, 12);
+  assert.equal(m._gros.minimum, 1); // jamais de minimum pour un demi-carton
+  assert.equal(m.unite, 'demi-carton');
+  // Sans mode gros : le demi-carton n'existe pas
+  assert.equal(produitPourMode(avec, false, true), avec);
+  const entier = creerLigne(produitPourMode(avec, true), {}, 1, 'FCFA');
+  const demi = creerLigne(m, {}, 3, 'FCFA');
+  assert.equal(demi.nom, 'Coca 33 cl (demi-carton de 12)');
+  assert.equal(demi.total, 17400);
+  assert.equal(demi.demi, true);
+  assert.notEqual(cleLigne(entier), cleLigne(demi)); // jamais additionnés
+  // Stock : 1 carton (24) + 3 demi-cartons (3 × 12) = 60 pièces ; 100 − 60 = 40
+  const d = { produits: [avec], mouvements: [], ventes: [{ id: 'v', date: '2026-06-01T00:00:00.000Z', lignes: [entier, demi] }] };
+  assert.equal(avecStocks(d).produits[0].stockActuel, 40);
+});
+
+test('fiche article : demi-carton sans prix = moitié du carton ; prix saisi gardé', () => {
+  assert.deepEqual(nettoyerGros({ prix: 10800, contenance: 24, demi: { prix: null } }).gros.demi, { prix: 5400 });
+  assert.deepEqual(nettoyerGros({ prix: 10800, contenance: 24, demi: { prix: '5800' } }).gros.demi, { prix: 5800 });
+  assert.equal(nettoyerGros({ prix: 10800, contenance: 24, demi: null }).gros.demi, undefined);
 });

@@ -4,7 +4,7 @@
 // ------------------------------------------------------------
 import { useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
-import { typeCommerce, paysParId } from '@/lib/donnees/modeles';
+import { typeCommerce, paysParId, VIREMENT } from '@/lib/donnees/modeles';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { exporterTout, exporterVentesCsv } from '@/lib/donnees/export';
 import { NOMS_DEVISES, formatDate } from '@/lib/utils/format';
@@ -178,6 +178,12 @@ function InfosCommerce() {
           aide={tr('Quantités en stock, entrées de marchandise, inventaire, alertes de rupture et code-barres. Utile aussi pour les boissons d’un restaurant.')}
           actif={b.gestionStock ?? typeCommerce(d.commerce.type).gereStock}
           surChanger={(v) => setB({ ...b, gestionStock: v })}
+        />
+        <Reglage
+          titre={tr('Accepter les virements bancaires')}
+          aide={tr('Un client paie par virement : à la caisse, choisissez « Virement » (vous pouvez noter son nom ou la référence). Les virements apparaissent à part dans les comptes du soir.')}
+          actif={(b.modesPaiement || []).includes(VIREMENT)}
+          surChanger={(v) => setB({ ...b, modesPaiement: v ? [...(b.modesPaiement || []).filter((m) => m !== VIREMENT), VIREMENT] : (b.modesPaiement || []).filter((m) => m !== VIREMENT) })}
         />
       </div>
       <button className="btn grand bloc" onClick={enregistrer}>{tr('Enregistrer les informations')}</button>

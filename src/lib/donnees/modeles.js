@@ -6,6 +6,7 @@ import { normaliserTelephone } from './telephone.js';
 
 // Mode de paiement spécial : la vente est notée dans le carnet du client
 export const CREDIT = 'Crédit';
+export const VIREMENT = 'Virement'; // moyen de paiement facultatif : un client paie la vendeuse par virement bancaire (Réglages → Profil)
 
 // Types d'activité : chacun a ses catégories de départ, son unité habituelle,
 // et le stock et/ou les tables activés par défaut (modifiables dans Réglages).

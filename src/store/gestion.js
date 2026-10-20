@@ -303,6 +303,8 @@ export const trancheGestion = (set, get) => ({
         logoSurTicket: b.logoSurTicket === true, // logo sur les reçus : seulement si demandé
         localisation: b.localisation || null, // { lat, lng }
         gestionStock: b.gestionStock, // stock et inventaire (sinon : choix par défaut selon le type de commerce)
+        // Moyens de paiement : ceux du pays, avec ou sans « Virement » (réglage du gérant) ; « Espèces » reste toujours
+        modesPaiement: Array.isArray(b.modesPaiement) && b.modesPaiement.includes('Espèces') ? b.modesPaiement : d.commerce.modesPaiement,
       },
     }));
     majCompte(d.commerce);

@@ -150,6 +150,13 @@ export function FeuilleProduit({ produit, categorieId }) {
                   <label className="champ"><span>{tr('Prix de gros ({0}) par {1}', [dev, b.gros.unite || 'carton'])}</span><ChampMontant valeur={b.gros.prix} surChanger={(v) => maj({ gros: { ...b.gros, prix: v } })} /></label>
                   <label className="champ"><span>{tr('Minimum conseillé')}</span><ChampMontant valeur={b.gros.minimum} surChanger={(v) => maj({ gros: { ...b.gros, minimum: v } })} placeholder="1" /></label>
                 </div>
+                <Reglage titre={tr('Vendre aussi au demi-carton')} aide={tr('Un bouton « ½ » apparaît sur l’article en mode Gros. Sans prix saisi, le demi-carton coûte la moitié du carton.')}
+                  actif={!!b.gros.demi} surChanger={(v) => maj({ gros: { ...b.gros, demi: v ? { prix: null } : null } })} />
+                {b.gros.demi && (
+                  <label className="champ"><span>{tr('Prix du demi-carton ({0})', [dev])}</span>
+                    <ChampMontant valeur={b.gros.demi.prix} surChanger={(v) => maj({ gros: { ...b.gros, demi: { prix: v } } })} placeholder={b.gros.prix > 0 ? String(Math.round(b.gros.prix / 2)) : ''} />
+                  </label>
+                )}
                 {b.gros.prix > 0 && b.gros.contenance >= 1 && (() => {
                   const parPiece = b.gros.prix / b.gros.contenance;
                   const margeGros = b.prixAchat > 0 ? b.gros.prix - b.prixAchat * b.gros.contenance : null;

@@ -21,6 +21,9 @@ export const UNITES_GROS = ['carton', 'sac', 'colis', 'caisse', 'paquet'];
 // Article vendable en gros : prix de gros et contenance valides, et pas d'options (accompagnements, suppléments)
 export const aPrixGros = (p) => !!(p?.gros && Number(p.gros.prix) > 0 && Number(p.gros.contenance) > 0 && !(p.groupes || []).length);
 
+// Demi-carton : en plus du carton entier, l'article peut se vendre par moitié (prix propre, souvent un peu plus que la moitié du carton)
+export const aDemi = (p) => aPrixGros(p) && Number(p.gros.demi?.prix) > 0;
+
 // Pas de vente en gros pour la restauration (restaurant, fast-food, snack, maquis, bar) : plats et boissons se vendent à l'assiette ou au verre
 export const grosDisponible = (commerce) => !!commerce && !TYPES_RESTAURATION.includes(commerce.type);
 
@@ -31,18 +34,21 @@ export const venteEnGros = (d) => grosDisponible(d?.commerce) && (d?.produits ||
  * L'article tel qu'il se vend dans le mode choisi.
  * Mode gros et article avec prix de gros : prix, unité et prix d'achat du carton ; le stock reste en unités (voir « contenance »).
  */
-export function produitPourMode(p, gros) {
+export function produitPourMode(p, gros, demi = false) {
   if (!gros || !aPrixGros(p)) return p;
-  const { prix, unite, contenance, minimum } = p.gros;
+  const { unite, minimum } = p.gros;
+  const demiCarton = demi && aDemi(p); // moitié du carton : prix du demi-carton, moitié du contenu, jamais de minimum
+  const contenance = Number(p.gros.contenance) / (demiCarton ? 2 : 1);
+  const nom = (demiCarton ? 'demi-' : '') + (unite || 'carton');
   return {
     ...p,
-    prix: Number(prix),
+    prix: Number(demiCarton ? p.gros.demi.prix : p.gros.prix),
     promo: null,
-    prixAchat: p.prixAchat > 0 ? Number(p.prixAchat) * Number(contenance) : null,
-    unite: unite || 'carton',
+    prixAchat: p.prixAchat > 0 ? Math.round(Number(p.prixAchat) * contenance * 1000) / 1000 : null,
+    unite: nom,
     // Stock affiché en cartons entiers (le stock réel reste en unités)
-    ...(p.suiviStock ? { stockActuel: Math.floor((p.stockActuel ?? p.stock ?? 0) / Number(contenance)), seuilAlerte: Math.ceil((p.seuilAlerte ?? 5) / Number(contenance)) } : {}),
-    _gros: { unite: unite || 'carton', contenance: Number(contenance), minimum: Math.max(1, Number(minimum) || 1) },
+    ...(p.suiviStock ? { stockActuel: Math.floor((p.stockActuel ?? p.stock ?? 0) / contenance), seuilAlerte: Math.ceil((p.seuilAlerte ?? 5) / contenance) } : {}),
+    _gros: { unite: nom, contenance, minimum: demiCarton ? 1 : Math.max(1, Number(minimum) || 1), ...(demiCarton ? { demi: true } : {}) },
   };
 }
 
@@ -54,5 +60,12 @@ export function nettoyerGros(gros, tr = (t) => t) {
   if (!(prix > 0)) return { erreur: tr('Indiquez le prix de gros') };
   if (!(contenance > 0)) return { erreur: tr('Indiquez combien d’unités contient un carton') };
   const minimum = Math.max(1, Math.floor(Number(gros.minimum)) || 1);
-  return { gros: { prix, unite: gros.unite || 'carton', contenance, minimum } };
+  const resultat = { prix, unite: gros.unite || 'carton', contenance, minimum };
+  // Demi-carton (facultatif) : sans prix saisi, la moitié du prix du carton
+  if (gros.demi) {
+    const prixDemi = Number(gros.demi.prix) > 0 ? Number(gros.demi.prix) : Math.round(prix / 2);
+    if (!(prixDemi > 0)) return { erreur: tr('Indiquez le prix du demi-carton') };
+    resultat.demi = { prix: prixDemi };
+  }
+  return { gros: resultat };
 }
