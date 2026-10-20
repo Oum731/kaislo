@@ -9,10 +9,11 @@ import { stockDe } from '@/lib/donnees/stock.js';
 import { useEffect, useRef, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
+import { venteEnGros, produitPourMode } from '@/lib/donnees/gros';
 import { CREDIT } from '@/lib/donnees/modeles';
 import { soldeClient } from '@/lib/donnees/credit';
 import { formatHeure, quantiteUnite } from '@/lib/utils/format';
-import { Icone, Puces, ChampMontant, ImageStockee, Reglage, initiales } from '@/components/ui';
+import { Icone, Puces, Segment, ChampMontant, ImageStockee, Reglage, initiales } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { EtatCaisse } from './Ventes';
 import { tr, tt } from '@/lib/i18n';
@@ -96,10 +97,16 @@ export default function Caisse() {
                 </button>
               )}
             </div>
+            {venteEnGros(d) && !commande && (
+              <div className="mode-gros" role="group" aria-label={tr('Type de vente')}>
+                <Segment options={[['detail', tr('Détail')], ['gros', tr('Gros')]]} valeur={s.modeGros ? 'gros' : 'detail'} surChanger={(v) => s.choisirModeGros(v === 'gros')} />
+              </div>
+            )}
             <Puces options={[['tout', tr('Tout')], ...d.categories.map((c) => [c.id, c.nom])]} valeur={categorie} surChanger={setCategorie} />
 
             <div className="grille-produits">
-              {produits.map((p) => {
+              {produits.map((brut) => {
+                const p = produitPourMode(brut, s.modeGros); // en mode gros : prix du carton (seul le prix du mode choisi est affiché)
                 const q = qteDansPanier(p);
                 const base = prixDeBase(p);
                 const depart = base + p.groupes.filter((g) => g.obligatoire).reduce((x, g) => x + Math.min(...g.options.map((o) => o.prix)), 0);
@@ -109,14 +116,14 @@ export default function Caisse() {
                     <span className="tuile-bas">
                       <span className="tuile-prix">
                         {base < p.prix && <s>{s.prix(p.prix)}</s>}
-                        {(p.groupes.length ? tr('dès ') : '') + s.prix(depart)}
+                        {(p.groupes.length ? tr('dès ') : '') + s.prix(depart)}{p._gros ? ' / ' + p._gros.unite : ''}
                       </span>
                       {p.suiviStock && <span className={`tuile-stock ${stockDe(p) <= 0 ? 'rupt' : stockDe(p) <= (p.seuilAlerte ?? 5) ? 'bas' : 'ok'}`} title={tr('Stock')}><i />{stockDe(p) <= 0 ? tr('Rupture') : quantiteUnite(stockDe(p), p.unite)}</span>}
                     </span>
                   </>
                 );
                 return (
-                  <button key={p.id} className={`tuile teinte-${couleur(p)} ${p.image ? 'avec-photo' : ''} ${q ? 'dans-panier' : ''} ${p.suiviStock && stockDe(p) <= 0 ? 'rupture' : ''}`} onClick={() => toucher(p)}>
+                  <button key={p.id} className={`tuile teinte-${couleur(p)} ${p.image ? 'avec-photo' : ''} ${q ? 'dans-panier' : ''} ${p.suiviStock && stockDe(p) <= 0 ? 'rupture' : ''}`} onClick={() => toucher(brut)}>
                     {q > 0 && <span className="tuile-compteur">{q}</span>}
                     {base < p.prix && <span className="badge safran tuile-promo">{tr('Promo')}</span>}
                     {p.image ? (

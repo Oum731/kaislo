@@ -117,6 +117,7 @@ function ListeTickets() {
                 <b>N° {v.numero}</b>
                 {v.annulee && <span className="badge rouge">{tr('Annulée')}</span>}
                 {v.table && <span className="badge gris">{v.table}</span>}
+                {v.gros && <span className="badge safran">{tr('Gros')}</span>}
                 {v.aDistance && <span className="badge"><Icone nom="whatsapp" taille="sm" /></span>}
               </span>
               <span className="tres-petit muet tronque bloc-texte" style={{ marginTop: 3 }}>

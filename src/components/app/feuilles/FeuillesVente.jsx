@@ -12,6 +12,7 @@ import { formatDate, formatHeure, formatJourLong, symbole } from '@/lib/utils/fo
 import { historiqueCaisse } from '@/lib/donnees/cloture';
 import { Feuille, Icone, ApercuTicket, ChampMontant, Segment, ImageStockee, initiales } from '@/components/ui';
 import { ContenuPanier } from '../ecrans/Caisse';
+import { venteEnGros } from '@/lib/donnees/gros';
 import { tr, tt } from '@/lib/i18n';
 
 // ---------- Options d'un produit (accompagnement, taille…) ----------
@@ -261,6 +262,8 @@ export function FeuilleChoixClient() {
   const retour = () => (window.innerWidth < 1024 ? s.ouvrir('panier') : s.fermer());
   const choisir = (c) => {
     useKaislo.setState({ clientCredit: c, paiementChoisi: 'Crédit' });
+    // Client grossiste : on le rappelle, sans changer les prix du panier à son insu (le vendeur choisit « Gros » lui-même)
+    if (c.gros && venteEnGros(s.d) && !s.modeGros) s.message(tr('{0} est grossiste : choisissez « Gros » pour lui appliquer les prix de gros', [c.nom]), 'erreur');
     retour();
   };
   const creer = () => {

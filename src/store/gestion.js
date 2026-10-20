@@ -16,6 +16,7 @@ import { postesDe, postePlein, vendeursDuPoste } from '@/lib/donnees/postes.js';
 import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs.js';
 
 import { stockDe, departStock } from '@/lib/donnees/stock.js';
+import { nettoyerGros } from '@/lib/donnees/gros.js';
 import { tr } from '@/lib/i18n';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
@@ -33,6 +34,11 @@ export const trancheGestion = (set, get) => ({
     b.promo = nombre(b.promo);
     if (b.promo !== null && b.promo >= b.prix) return tr('Le prix promo doit être plus petit que le prix normal');
     b.prixAchat = nombre(b.prixAchat);
+    // Vente en gros (carton, sac…) : voir lib/donnees/gros.js
+    const g = nettoyerGros(b.gros, tr);
+    if (g.erreur) return g.erreur;
+    if (g.gros && (b.groupes || []).length) return tr('La vente en gros n’est pas possible pour un article avec options');
+    if (g.gros) b.gros = g.gros; else delete b.gros;
     b.stock = nombre(b.stock) || 0;
     b.seuilAlerte = nombre(b.seuilAlerte) ?? 5;
     for (const g of b.groupes) {

@@ -47,7 +47,7 @@ export function avecStocks(d) {
     if (v.annulee) continue;
     for (const l of v.lignes || []) {
       const s = suivis.get(l.produitId);
-      if (s && v.date >= depuisDe(s.p)) s.delta -= Number(l.quantite) || 0;
+      if (s && v.date >= depuisDe(s.p)) s.delta -= (Number(l.quantite) || 0) * (Number(l.contenance) || 1); // au carton : contenance unités par carton (gros.js)
     }
   }
   for (const m of d.mouvements || []) {
