@@ -49,7 +49,7 @@ export function creerLigne(produit, choix, quantite, devise, categorieNom = '') 
     produitNom: produit.nom,
     categorieNom,
     // Au carton : « Coca 33 cl (carton de 24) » ; « contenance » dit au stock combien d'unités sortent par carton
-    nom: morceauxNom.join(' – ') + (g ? ` (${g.unite} de ${g.contenance})` : ''),
+    nom: morceauxNom.join(' – ') + (g ? ` (${g.unite} de ${String(g.contenance).replace('.', ',')})` : ''),
     ...(g ? { gros: true, contenance: g.contenance, uniteGros: g.unite, minimumGros: g.minimum } : {}),
     details,
     options: optionsChoisies,

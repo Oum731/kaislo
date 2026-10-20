@@ -3,7 +3,8 @@
 //
 //   produit.gros = { prix, unite: 'carton', contenance: 24, minimum: 1 }
 //     prix        : prix d'UN carton
-//     contenance  : nombre d'unités de vente (pièces) dans un carton : le stock baisse de « contenance » par carton vendu
+//     contenance  : nombre d'unités de vente dans un carton (24 pièces, 12 bouteilles, 25 kg…, décimales permises : 12,5 kg) :
+//                   le stock baisse de « contenance » par carton vendu. Chaque article a la sienne.
 //     minimum     : nombre de cartons conseillé pour avoir le prix de gros (avertissement, pas un blocage)
 //
 //   À la caisse, le vendeur choisit « Détail » ou « Gros » : en mode gros, les articles qui ont un prix de gros se vendent
@@ -16,7 +17,7 @@
 export const UNITES_GROS = ['carton', 'sac', 'colis', 'caisse', 'paquet'];
 
 // Article vendable en gros : prix de gros et contenance valides, et pas d'options (accompagnements, suppléments)
-export const aPrixGros = (p) => !!(p?.gros && Number(p.gros.prix) > 0 && Number(p.gros.contenance) >= 1 && !(p.groupes || []).length);
+export const aPrixGros = (p) => !!(p?.gros && Number(p.gros.prix) > 0 && Number(p.gros.contenance) > 0 && !(p.groupes || []).length);
 
 // La vente en gros est proposée dès qu'un article a un prix de gros
 export const venteEnGros = (d) => (d?.produits || []).some(aPrixGros);
@@ -44,9 +45,9 @@ export function produitPourMode(p, gros) {
 export function nettoyerGros(gros, tr = (t) => t) {
   if (!gros) return { gros: null };
   const prix = Number(gros.prix);
-  const contenance = Math.floor(Number(gros.contenance));
+  const contenance = Math.round(Number(gros.contenance) * 1000) / 1000; // 24 pièces, mais aussi 12,5 kg pour un sac
   if (!(prix > 0)) return { erreur: tr('Indiquez le prix de gros') };
-  if (!(contenance >= 1)) return { erreur: tr('Indiquez combien d’unités contient un carton') };
+  if (!(contenance > 0)) return { erreur: tr('Indiquez combien d’unités contient un carton') };
   const minimum = Math.max(1, Math.floor(Number(gros.minimum)) || 1);
   return { gros: { prix, unite: gros.unite || 'carton', contenance, minimum } };
 }

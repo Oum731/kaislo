@@ -79,11 +79,11 @@ function articlesPublies(string $commerceId): array
 function prixGrosValide(array $p): ?array
 {
     $g = $p['gros'] ?? null;
-    if (!is_array($g) || !is_numeric($g['prix'] ?? null) || (float) $g['prix'] <= 0 || (int) ($g['contenance'] ?? 0) < 1 || !empty($p['groupes'])) return null;
+    if (!is_array($g) || !is_numeric($g['prix'] ?? null) || (float) $g['prix'] <= 0 || (float) ($g['contenance'] ?? 0) <= 0 || !empty($p['groupes'])) return null;
     $unites = ['carton', 'sac', 'colis', 'caisse', 'paquet'];
     return [
         'prix' => (float) $g['prix'], 'unite' => in_array($g['unite'] ?? '', $unites, true) ? $g['unite'] : 'carton',
-        'contenance' => (int) $g['contenance'], 'minimum' => max(1, (int) ($g['minimum'] ?? 1)),
+        'contenance' => round((float) $g['contenance'], 3), 'minimum' => max(1, (int) ($g['minimum'] ?? 1)),
     ];
 }
 
@@ -94,7 +94,7 @@ function articlesDeGros(array $articles): array
     foreach ($articles as $cle => $p) {
         $g = prixGrosValide($p);
         if (!$g) continue;
-        $liste[$cle] = array_merge($p, ['prix' => $g['prix'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (' . $g['unite'] . ' de ' . $g['contenance'] . ')', '_gros' => $g]);
+        $liste[$cle] = array_merge($p, ['prix' => $g['prix'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (' . $g['unite'] . ' de ' . str_replace('.', ',', (string) $g['contenance']) . ')', '_gros' => $g]);
     }
     return $liste;
 }

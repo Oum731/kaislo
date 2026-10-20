@@ -58,9 +58,28 @@ test('le stock baisse de la contenance par carton vendu', () => {
   assert.equal(avecStocks(annulee).produits[0].stockActuel, 100);
 });
 
+test('contenance différente de 24 : le prix d\'achat, la ligne et le stock suivent', () => {
+  // Sac de riz vendu au kilo en détail, au sac de 12,5 kg en gros
+  const riz = { id: 'p9', nom: 'Riz', prix: 800, prixAchat: 600, unite: 'kg', groupes: [], suiviStock: true, stockBase: 100, stockDepuis: '2026-01-01T00:00:00.000Z', gros: { prix: 9000, unite: 'sac', contenance: 12.5, minimum: 1 } };
+  const g = produitPourMode(riz, true);
+  assert.equal(g.prixAchat, 7500); // 600 × 12,5
+  const ligne = creerLigne(g, {}, 3, 'FCFA');
+  assert.equal(ligne.nom, 'Riz (sac de 12,5)');
+  assert.equal(ligne.contenance, 12.5);
+  const d = { produits: [riz], mouvements: [], ventes: [{ id: 'v', date: '2026-06-01T00:00:00.000Z', lignes: [ligne] }] };
+  assert.equal(avecStocks(d).produits[0].stockActuel, 62.5); // 100 − 3 × 12,5
+  // Carton de 6 : 2 cartons = 12 pièces
+  const eau = { ...coca, gros: { prix: 2400, unite: 'carton', contenance: 6, minimum: 1 } };
+  const d2 = { produits: [eau], mouvements: [], ventes: [{ id: 'v', date: '2026-06-01T00:00:00.000Z', lignes: [creerLigne(produitPourMode(eau, true), {}, 2, 'FCFA')] }] };
+  assert.equal(avecStocks(d2).produits[0].stockActuel, 88);
+});
+
 test('fiche article : le bloc gros est vérifié', () => {
   assert.deepEqual(nettoyerGros(null), { gros: null });
   assert.match(nettoyerGros({ prix: null, contenance: 24 }).erreur, /prix de gros/);
   assert.match(nettoyerGros({ prix: 1000, contenance: 0 }).erreur, /unités/);
-  assert.deepEqual(nettoyerGros({ prix: '10800', unite: 'sac', contenance: '24.7', minimum: '' }).gros, { prix: 10800, unite: 'sac', contenance: 24, minimum: 1 });
+  assert.deepEqual(nettoyerGros({ prix: '10800', unite: 'sac', contenance: '24', minimum: '' }).gros, { prix: 10800, unite: 'sac', contenance: 24, minimum: 1 });
+  // Un carton n'a pas toujours 24 pièces : 6, 12, 50… ou un sac de 12,5 kg
+  assert.equal(nettoyerGros({ prix: 5000, contenance: 6 }).gros.contenance, 6);
+  assert.equal(nettoyerGros({ prix: 5000, contenance: 12.5, unite: 'sac' }).gros.contenance, 12.5);
 });
