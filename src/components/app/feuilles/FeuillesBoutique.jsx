@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { Feuille, Icone, ChampTelephone, ImageStockee } from '@/components/ui';
 import { appelApi } from '@/lib/api';
+import { grosDisponible } from '@/lib/donnees/gros';
 import { tr } from '@/lib/i18n';
 import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
 import { lienWhatsApp } from '@/lib/donnees/whatsapp';
@@ -118,8 +119,8 @@ export function FeuilleBoutique() {
                 </div>
               </div>
             )}
-            <label className="case-accord"><input type="checkbox" checked={!!b.proActif} onChange={(e) => maj({ proActif: e.target.checked })} /><span>{tr('Lien privé pour les grossistes')}<br /><span className="tres-petit muet">{tr('Un second lien, que vous envoyez vous-même à vos grossistes : ils y voient seulement les prix de gros (au carton). Vos clients au détail ne le voient jamais, et les grossistes ne voient pas vos prix de détail. Enregistrez pour le créer.')}</span></span></label>
-            {b.proActif && b.lienPro && (
+            {grosDisponible(s.d.commerce) && <label className="case-accord"><input type="checkbox" checked={!!b.proActif} onChange={(e) => maj({ proActif: e.target.checked })} /><span>{tr('Lien privé pour les grossistes')}<br /><span className="tres-petit muet">{tr('Un second lien, que vous envoyez vous-même à vos grossistes : ils y voient seulement les prix de gros (au carton). Vos clients au détail ne le voient jamais, et les grossistes ne voient pas vos prix de détail. Enregistrez pour le créer.')}</span></span></label>}
+            {grosDisponible(s.d.commerce) && b.proActif && b.lienPro && (
               <div className="carte pile">
                 <b>{tr('Lien des grossistes (privé)')}</b>
                 <p className="petit" style={{ wordBreak: 'break-all' }}>{b.lienPro}</p>

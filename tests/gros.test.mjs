@@ -1,7 +1,7 @@
 // Vente en gros : prix du carton, stock en unités, marge, lignes séparées détail/gros. Lancer : npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { aPrixGros, venteEnGros, produitPourMode, nettoyerGros } from '../src/lib/donnees/gros.js';
+import { aPrixGros, venteEnGros, grosDisponible, produitPourMode, nettoyerGros } from '../src/lib/donnees/gros.js';
 import { creerLigne, cleLigne, coutVente } from '../src/lib/donnees/vente.js';
 import { avecStocks } from '../src/lib/donnees/stock.js';
 
@@ -16,8 +16,8 @@ test('un article avec prix de gros valide est vendable en gros, pas un article �
   assert.equal(aPrixGros({ ...coca, gros: null }), false);
   assert.equal(aPrixGros({ ...coca, gros: { prix: 0, contenance: 24 } }), false);
   assert.equal(aPrixGros({ ...coca, groupes: [{ id: 'g' }] }), false);
-  assert.equal(venteEnGros({ produits: [{ ...coca, gros: null }] }), false);
-  assert.equal(venteEnGros({ produits: [coca] }), true);
+  assert.equal(venteEnGros({ commerce: { type: 'epicerie' }, produits: [{ ...coca, gros: null }] }), false);
+  assert.equal(venteEnGros({ commerce: { type: 'epicerie' }, produits: [coca] }), true);
 });
 
 test('mode détail : l\'article est inchangé ; mode gros : prix, unité et coût du carton', () => {
@@ -82,4 +82,13 @@ test('fiche article : le bloc gros est vérifié', () => {
   // Un carton n'a pas toujours 24 pièces : 6, 12, 50… ou un sac de 12,5 kg
   assert.equal(nettoyerGros({ prix: 5000, contenance: 6 }).gros.contenance, 6);
   assert.equal(nettoyerGros({ prix: 5000, contenance: 12.5, unite: 'sac' }).gros.contenance, 12.5);
+});
+
+test('jamais de vente en gros pour la restauration (restaurant, snack, fast-food, bar)', () => {
+  for (const type of ['restaurant', 'maquis', 'bar']) {
+    assert.equal(grosDisponible({ type }), false, type);
+    assert.equal(venteEnGros({ commerce: { type }, produits: [coca] }), false, type);
+  }
+  for (const type of ['epicerie', 'grossiste', 'boulangerie', 'boutique']) assert.equal(grosDisponible({ type }), true, type);
+  assert.equal(venteEnGros({ commerce: { type: 'epicerie' }, produits: [coca] }), true);
 });

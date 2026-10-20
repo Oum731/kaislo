@@ -133,3 +133,23 @@ test('changer le lien : l\'ancien cesse de marcher ; le désactiver aussi', asyn
   assert.equal(off.boutique.proActif, false);
   assert.equal((await api('GET', `/public/boutique?b=depot-awa&pro=${nouvelle}`)).statut, 404);
 });
+
+test('restauration (restaurant, fast-food, snack, bar) : pas de vente en gros', async () => {
+  const resto = await api('POST', '/inscription', {
+    commerce: { nom: 'Chez Koffi Snack', type: 'maquis', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712346151' },
+    gerant: { nom: 'Koffi', telephone: '0712346152', pin: '1234' }, conditionsAcceptees: true,
+  });
+  assert.equal(resto.statut, 201, JSON.stringify(resto));
+  await api('POST', '/donnees', { elements: [
+    { type: 'categories', id: 'c1', modifieLe: maintenant(), contenu: { id: 'c1', nom: 'Plats' } },
+    { type: 'produits', id: 'p1', modifieLe: maintenant(), contenu: { id: 'p1', nom: 'Garba', prix: 1500, categorieId: 'c1', actif: true, enLigne: true, groupes: [], gros: { prix: 12000, unite: 'carton', contenance: 10, minimum: 1 } } },
+  ] }, resto.jeton);
+  const r = await api('POST', '/boutique', { actif: true, slug: 'snack-koffi', whatsapp: '0712346152', conditionsAcceptees: true, pro: true }, resto.jeton);
+  assert.equal(r.boutique.grosDisponible, false);
+  assert.equal(r.boutique.proActif, false);
+  assert.equal(r.boutique.lienPro, '');
+  // Même avec une clé devinée, jamais de catalogue de gros
+  assert.equal((await api('GET', '/public/boutique?b=snack-koffi&pro=0123456789abcdef')).statut, 404);
+  // Et le dépôt (grossiste) l'a bien
+  assert.equal((await api('GET', '/boutique', null, gerant.jeton)).boutique.grosDisponible, true);
+});

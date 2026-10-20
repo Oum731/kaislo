@@ -13,7 +13,7 @@ import { CATEGORIES_DEPENSES, COULEURS, UNITES, typeCommerce } from '@/lib/donne
 import { historiqueClient, soldeClient, lienRappelWhatsApp } from '@/lib/donnees/credit';
 import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, ChoixImage, initiales, ChampTelephone } from '@/components/ui';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
-import { UNITES_GROS } from '@/lib/donnees/gros';
+import { UNITES_GROS, grosDisponible } from '@/lib/donnees/gros';
 import { dire, voixDisponible } from '@/lib/voix';
 import { liensMenu } from '../Coque';
 import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
@@ -132,7 +132,7 @@ export function FeuilleProduit({ produit, categorieId }) {
             <label className="champ"><span>{tr('Alerte à partir de')}</span><ChampMontant valeur={b.seuilAlerte} surChanger={(v) => maj({ seuilAlerte: v })} /></label>
           </div>
         )}
-        {!b.groupes.length && (
+        {!b.groupes.length && grosDisponible(d.commerce) && (
           <>
             <Reglage titre={tr('Vendre aussi en gros')} aide={tr('Un prix pour les clients qui achètent par carton, sac ou colis. À la caisse, vous choisissez « Gros » pour les servir : ils ne voient jamais vos prix de détail, et vos clients au détail ne voient pas ceux du gros.')}
               actif={!!b.gros} surChanger={(v) => maj({ gros: v ? { prix: null, unite: 'carton', contenance: null, minimum: null } : null })} />
@@ -303,7 +303,7 @@ export function FeuilleClient({ client }) {
         <label className="champ"><span>{tr('Nom')}</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder={tr('Ex : Amorac Kaislo')} autoFocus /></label>
         <label className="champ"><span>{tr('Téléphone (pour le rappel WhatsApp)')}</span><input type="tel" value={b.telephone} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder={tr('Ex : 06 12 34 56 78')} /></label>
         <label className="champ"><span>{tr('Note')}</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder={tr('Ex : paie en fin de mois')} /></label>
-        <Reglage titre={tr('Client grossiste')} aide={tr('Pour vous rappeler qu’il achète en gros : choisissez « Gros » à la caisse pour lui appliquer vos prix de gros.')} actif={!!b.gros} surChanger={(v) => setB({ ...b, gros: v })} />
+        {grosDisponible(s.d.commerce) && <Reglage titre={tr('Client grossiste')} aide={tr('Pour vous rappeler qu’il achète en gros : choisissez « Gros » à la caisse pour lui appliquer vos prix de gros.')} actif={!!b.gros} surChanger={(v) => setB({ ...b, gros: v })} />}
         {b.id && s.estGerant() && (
           <button className="btn danger bloc" onClick={() => { const err = s.supprimerClient(b.id); err ? s.message(err, 'erreur') : s.fermer(); }}>{tr('Supprimer le client')}</button>
         )}

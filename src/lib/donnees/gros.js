@@ -14,13 +14,18 @@
 //   La ligne de vente garde « contenance » : le stock (lib/donnees/stock.js) et la marge (prix d'achat × contenance) en tiennent compte.
 // ------------------------------------------------------------
 
+import { TYPES_RESTAURATION } from './restauration.js';
+
 export const UNITES_GROS = ['carton', 'sac', 'colis', 'caisse', 'paquet'];
 
 // Article vendable en gros : prix de gros et contenance valides, et pas d'options (accompagnements, suppléments)
 export const aPrixGros = (p) => !!(p?.gros && Number(p.gros.prix) > 0 && Number(p.gros.contenance) > 0 && !(p.groupes || []).length);
 
-// La vente en gros est proposée dès qu'un article a un prix de gros
-export const venteEnGros = (d) => (d?.produits || []).some(aPrixGros);
+// Pas de vente en gros pour la restauration (restaurant, fast-food, snack, maquis, bar) : plats et boissons se vendent à l'assiette ou au verre
+export const grosDisponible = (commerce) => !!commerce && !TYPES_RESTAURATION.includes(commerce.type);
+
+// La vente en gros est proposée dès qu'un article a un prix de gros (et jamais pour la restauration)
+export const venteEnGros = (d) => grosDisponible(d?.commerce) && (d?.produits || []).some(aPrixGros);
 
 /**
  * L'article tel qu'il se vend dans le mode choisi.
