@@ -126,19 +126,26 @@ function rangCommerceDuGerant(array $c): int
 }
 
 // Tarif actuel d'un commerce (affiché dans ses réglages et dans l'espace Amorac)
-function tarifCommerce(array $c): array
+function tarifCommerce(array $c, ?string $devise = null): array
 {
+    $dev = $devise ?? $c['devise']; // autre devise : même formule et mêmes remises, prix de la grille dans cette devise (ex. virement en euros)
     $formule = $c['offre'] && formuleParId((string) $c['offre']) ? formuleParId((string) $c['offre']) : formuleDuType((string) $c['type']);
     $postes = nombrePostes($c['id']);
     $mode = modeTarif($c);
     $multi = rangCommerceDuGerant($c) > 0; // 2e commerce et suivants du même gérant : remise
-    $prix = prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), $mode, $multi);
-    $prixPoste = (float) ($formule['prixPoste'][$c['devise']] ?? 0);
-    return ['formule' => $formule['id'], 'nom' => $formule['nom'], 'postes' => $postes, 'fondateur' => (bool) ($c['fondateur'] ?? 0),
+    $prix = prixAbonnement($formule, $dev, $postes, 1, (bool) ($c['fondateur'] ?? 0), $mode, $multi);
+    $prixPoste = (float) ($formule['prixPoste'][$dev] ?? 0);
+    $tarif = ['formule' => $formule['id'], 'nom' => $formule['nom'], 'postes' => $postes, 'fondateur' => (bool) ($c['fondateur'] ?? 0),
         'mode' => $mode, 'parrain' => !empty($c['commercial_id']),
-        'parMoisCatalogue' => prixAbonnement($formule, $c['devise'], $postes, 1, (bool) ($c['fondateur'] ?? 0), 'catalogue', $multi)['parMois'], 'remiseMulti' => $multi ? (float) (reglesTarifs()['remiseMultiCommerce'] ?? 0) : 0,
-        'parMois' => $prix['parMois'], 'annuel' => prixAbonnement($formule, $c['devise'], $postes, 12, (bool) ($c['fondateur'] ?? 0), $mode, $multi)['total'],
-        'prixPoste' => $mode === 'catalogue' ? prixCatalogue($prixPoste, $c['devise'], (float) reglesTarifs()['remiseParrain']) : $prixPoste, 'devise' => $c['devise']];
+        'parMoisCatalogue' => prixAbonnement($formule, $dev, $postes, 1, (bool) ($c['fondateur'] ?? 0), 'catalogue', $multi)['parMois'], 'remiseMulti' => $multi ? (float) (reglesTarifs()['remiseMultiCommerce'] ?? 0) : 0,
+        'parMois' => $prix['parMois'], 'annuel' => prixAbonnement($formule, $dev, $postes, 12, (bool) ($c['fondateur'] ?? 0), $mode, $multi)['total'],
+        'prixPoste' => $mode === 'catalogue' ? prixCatalogue($prixPoste, $dev, (float) reglesTarifs()['remiseParrain']) : $prixPoste, 'devise' => $dev];
+    // Équivalent en euros (paiement par virement en euros) : prix de la grille en euros, mêmes remises
+    if ($devise === null && $dev !== 'EUR' && (float) ($formule['prix']['EUR'] ?? 0) > 0) {
+        $euro = tarifCommerce($c, 'EUR');
+        $tarif['euro'] = ['parMois' => $euro['parMois'], 'annuel' => $euro['annuel']];
+    }
+    return $tarif;
 }
 
 function routeTarifs(): never
