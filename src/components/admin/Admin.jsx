@@ -569,6 +569,48 @@ function VueAvis({ ctx }) {
   );
 }
 
+// ---------- Comptes bancaires pour les virements (affichés aux gérants : Compte → Abonnement → Payer par virement) ----------
+const DEVISES_COMPTES = ['EUR', 'MAD', 'USD', 'CAD', 'FCFA', 'GNF'];
+function ComptesVirement({ ctx }) {
+  const [comptes, setComptes] = useState(null);
+  const [message, setMessage] = useState(null);
+  useEffect(() => { ctx.api('GET', '/admin/virement').then((r) => setComptes(r.comptes)).catch((e) => setMessage({ ok: false, texte: e.message })); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const maj = (i, x) => setComptes(comptes.map((c, j) => (j === i ? { ...c, ...x } : c)));
+  const enregistrer = async () => {
+    try {
+      const r = await ctx.api('POST', '/admin/virement', { comptes });
+      setComptes(r.comptes);
+      setMessage({ ok: true, texte: 'Comptes enregistrés' });
+    } catch (e) { setMessage({ ok: false, texte: e.message }); }
+  };
+  return (
+    <div className="carte pile" style={{ marginBottom: 14 }}>
+      <h3>Comptes bancaires pour les virements</h3>
+      <p className="petit muet">Les gérants les voient dans l’application, avec le montant exact dans la devise du compte (euros : prix de la grille, avec leurs remises) et leur référence <b>KAISLO-code</b> à écrire dans le motif. Quand un virement arrive, enregistrez le paiement du commerce avec le moyen « Virement ».</p>
+      {message && <p className={message.ok ? 'info-verte' : 'alerte'}>{message.texte}</p>}
+      {(comptes || []).map((c, i) => (
+        <div key={i} className="groupe-edition pile">
+          <div className="grille-3">
+            <label className="champ"><span>Devise du compte</span><select value={c.devise} onChange={(e) => maj(i, { devise: e.target.value })}>{DEVISES_COMPTES.map((d) => <option key={d}>{d}</option>)}</select></label>
+            <label className="champ"><span>Bénéficiaire</span><input value={c.beneficiaire} onChange={(e) => maj(i, { beneficiaire: e.target.value })} placeholder="Nom sur le compte" /></label>
+            <label className="champ"><span>Banque</span><input value={c.banque} onChange={(e) => maj(i, { banque: e.target.value })} /></label>
+          </div>
+          <div className="grille-2">
+            <label className="champ"><span>IBAN ou RIB</span><input value={c.iban} onChange={(e) => maj(i, { iban: e.target.value })} /></label>
+            <label className="champ"><span>BIC / SWIFT (facultatif)</span><input value={c.bic} onChange={(e) => maj(i, { bic: e.target.value })} /></label>
+          </div>
+          <label className="champ"><span>Note pour le client (facultatif)</span><input value={c.note} onChange={(e) => maj(i, { note: e.target.value })} maxLength={200} /></label>
+          <button className="btn secondaire petit" onClick={() => setComptes(comptes.filter((_, j) => j !== i))}>Retirer ce compte</button>
+        </div>
+      ))}
+      <div className="grille-2">
+        {comptes && comptes.length < 6 && <button className="btn secondaire" onClick={() => setComptes([...comptes, { devise: 'EUR', beneficiaire: '', banque: '', iban: '', bic: '', note: '' }])}>+ Ajouter un compte</button>}
+        <button className="btn" onClick={enregistrer} disabled={!comptes}>Enregistrer les comptes</button>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Tarifs : formules par métier, poste supplémentaire, règles communes ----------
 function VueTarifs({ ctx }) {
   const [formules, setFormules] = useState(() => JSON.parse(JSON.stringify(ctx.formules)));
@@ -589,6 +631,7 @@ function VueTarifs({ ctx }) {
       </EnTeteAdmin>
       <div className="contenu" style={{ maxWidth: 960 }}>
         {message && <p className={message.ok ? 'info-verte' : 'alerte'} style={{ marginBottom: 14 }}>{message.texte}</p>}
+        <ComptesVirement ctx={ctx} />
         <div className="carte pile" style={{ marginBottom: 14 }}>
           <h3>Règles communes</h3>
           <div className="grille-3">
@@ -709,6 +752,12 @@ function FicheCommerce({ c, ctx, fermer }) {
     // Jours offerts (parrainage) : ils comptent dans le mois, le client ne paie que les jours restants
     const reste = prixApresJoursOfferts(prix.total, m, c.joursOfferts || 0, dev);
     return { ...prix, totalPlein: prix.total, total: reste.montant, joursOfferts: reste.deduits, joursPayes: reste.joursPayes };
+  };
+  // Équivalent en euros (virement en euros) : prix de la grille en euros, mêmes remises (hors jours offerts)
+  const enEuros = (f = formule, p = postes, m = mois) => {
+    const fo = ctx.formules.find((x) => x.id === f);
+    if (dev === 'EUR' || !(fo?.prix?.EUR > 0)) return null;
+    return prixAbonnement({ formule: fo, devise: 'EUR', postes: p, mois: m, fondateur: c.commerce.fondateur, regles: ctx.regles, mode: c.tarif.mode }).total;
   };
   const [montant, setMontant] = useState(calcul().total);
   const choisir = (x) => { const n = { formule, postes, mois, ...x }; if ('formule' in x) setFormule(x.formule); if ('postes' in x) setPostes(x.postes); if ('mois' in x) setMois(x.mois); setMontant(calcul(n.formule, n.postes, n.mois).total); };
@@ -865,6 +914,7 @@ function FicheCommerce({ c, ctx, fermer }) {
                 </label>
               </div>
               <p className="tres-petit muet">Prix calculé : {formatPrix(calcul().parMois, dev)}/mois{c.commerce.fondateur ? ' avec la remise fondateur' : ''}{c.tarif.mode === 'catalogue' ? ' (prix catalogue, sans code parrain)' : c.commerce.commercialId ? ' (avec code parrain)' : ''} → <b>{formatPrix(calcul().total, dev)}</b> pour {mois} mois. Saisissez le montant réellement reçu.</p>
+              {enEuros() !== null && <p className="tres-petit muet">Si le client paie par virement en euros : <b>{formatPrix(enEuros(), 'EUR')}</b> pour {mois} mois (prix de la grille en euros). Enregistrez quand même le paiement dans la devise du commerce ({dev}).</p>}
               {calcul().joursOfferts > 0 && <p className="tres-petit info-verte">{calcul().joursOfferts} jours offerts (parrainage) comptent dans le mois : le client paie seulement {calcul().joursPayes} jours sur {mois * 30} ({formatPrix(calcul().totalPlein, dev)} → {formatPrix(calcul().total, dev)}).</p>}
               <div className="grille-2">
                 <label className="champ"><span>Montant reçu ({symbole(dev)})</span><ChampMontant valeur={montant} surChanger={setMontant} /></label>
