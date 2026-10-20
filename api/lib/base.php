@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 20;
+const VERSION_BASE = 21;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -219,6 +219,7 @@ const STRUCTURE = [
         'colonnes' => [
             'commerce_id' => 'ID', 'slug' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'whatsapp' => 'VARCHAR(40)', 'whatsapp_cle' => 'VARCHAR(20)', 'conditions_le' => 'DATE', // date d'acceptation du rôle de Kaislo (pont, pas vendeur) par le gérant
             'chat_off' => 'ENTIER', // 1 = le commerçant a désactivé la discussion en direct de sa boutique
+            'pro_cle' => 'VARCHAR(40)', // clé du lien privé des grossistes (…/?pro=clé) ; vide = pas de lien de gros
             'publique' => 'ENTIER', // 1 = affichée sur kaislo.com/boutiques/ (annuaire pour les clients)
             'description' => 'LONG', 'livraison' => 'LONG', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
         ],
@@ -229,6 +230,7 @@ const STRUCTURE = [
             'id' => 'ID', 'commerce_id' => 'ID', 'numero' => 'ENTIER', 'client_nom' => 'TEXTE', 'client_telephone' => 'VARCHAR(40)',
             'adresse' => 'TEXTE', 'note' => 'LONG', 'lignes' => 'LONG', 'total' => 'MONTANT', 'devise' => 'VARCHAR(6)',
             'statut' => 'VARCHAR(12)', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
+            'gros' => 'ENTIER', // 1 = commande passée par le lien des grossistes (prix de gros, au carton)
         ],
         'cle' => ['id'], 'uniques' => [['commerce_id', 'numero']], 'index' => [['commerce_id', 'cree_le']],
     ],
@@ -357,6 +359,12 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 19 : discussion en direct de la boutique (activée par défaut)
     if ($version >= 1 && $version < 20) {
         $essayer('ALTER TABLE boutiques ADD COLUMN chat_off INTEGER NULL');
+    }
+
+    // Bases en version 1 à 20 : lien privé des grossistes et commandes de gros
+    if ($version >= 1 && $version < 21) {
+        $essayer('ALTER TABLE boutiques ADD COLUMN pro_cle VARCHAR(40) NULL');
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN gros INTEGER NULL');
     }
 
     // Bases en version 1 à 3 : postes, commerciaux, tarif fondateur

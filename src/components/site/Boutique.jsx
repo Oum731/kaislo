@@ -33,6 +33,7 @@ export default function Boutique() {
   const [message, setMessage] = useState('');
 
   const [demo, setDemo] = useState(null); // identifiant du commerce de démo, ou null
+  const [pro, setPro] = useState(''); // clé du lien privé des grossistes (?pro=…) : prix de gros, au carton
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     // Démo : kaislo.com/boutique/?demo=resto-ivoire (articles de la démo, commande gardée dans l'appareil)
@@ -51,10 +52,13 @@ export default function Boutique() {
     const dansLAdresse = /^\/boutique\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(window.location.pathname);
     const s = (params.get('b') || (dansLAdresse ? dansLAdresse[1] : '')).toLowerCase();
     document.getElementById('seo-boutique')?.remove(); // contenu en HTML simple ajouté par le serveur pour Google : la vitrine prend le relais
+    const cle = (params.get('pro') || '').replace(/[^a-z0-9]/gi, '').slice(0, 40);
+    setPro(cle);
+    const cleStock = s + (cle ? '-gros' : ''); // le panier de gros et celui du détail ne se mélangent jamais
     setSlug(s);
     if (!s) { setErreur('Adresse de boutique incomplète.'); return; }
-    setPanier(lirePanier(s));
-    appelApi('GET', '/public/boutique?b=' + encodeURIComponent(s))
+    setPanier(lirePanier(cleStock));
+    appelApi('GET', '/public/boutique?b=' + encodeURIComponent(s) + (cle ? '&pro=' + encodeURIComponent(cle) : ''))
       .then((r) => setBoutique(r.boutique))
       .catch((e) => setErreur(e.statut === 404 ? 'Cette boutique n’existe pas ou est fermée pour le moment.' : (e.horsLigne ? 'Pas de connexion internet.' : e.message)));
   }, []);
@@ -75,7 +79,7 @@ export default function Boutique() {
     }
   };
 
-  const majPanier = (liste) => { setPanier(liste); garderPanier(slug, liste); };
+  const majPanier = (liste) => { setPanier(liste); garderPanier(slug + (pro ? '-gros' : ''), liste); };
   const devise = boutique?.devise;
   const produits = useMemo(() => (boutique?.produits || []).filter((p) => !categorie || p.categorieId === categorie), [boutique, categorie]);
 
@@ -83,13 +87,14 @@ export default function Boutique() {
     const cle = cleLignePanier(produit.id, optionIds);
     const i = panier.findIndex((l) => l.cle === cle);
     if (i >= 0) majPanier(panier.map((l, j) => (j === i ? { ...l, quantite: Math.min(99, l.quantite + 1) } : l)));
-    else majPanier([...panier, { cle, produitId: produit.id, nom: produit.nom, options: nomsOptions(produit, optionIds), optionIds, quantite: 1, prixUnitaire: prixArticleBoutique(produit, optionIds) }]);
+    else majPanier([...panier, { cle, produitId: produit.id, nom: produit.nom, options: nomsOptions(produit, optionIds), optionIds, quantite: pro ? Math.max(1, produit.minimum || 1) : 1, minimum: pro ? Math.max(1, produit.minimum || 1) : 1, prixUnitaire: prixArticleBoutique(produit, optionIds) }]);
   };
   const toucher = (produit) => {
     if ((produit.groupes || []).length) setChoix({ produit, options: [] });
     else ajouter(produit, []);
   };
-  const changer = (cle, delta) => majPanier(panier.map((l) => (l.cle === cle ? { ...l, quantite: l.quantite + delta } : l)).filter((l) => l.quantite > 0));
+  // Au prix de gros, descendre sous le minimum retire l'article (le serveur refuse de toute façon une quantité plus petite)
+  const changer = (cle, delta) => majPanier(panier.map((l) => (l.cle === cle ? { ...l, quantite: l.quantite + delta } : l)).filter((l) => l.quantite >= (l.minimum || 1)));
   const basculerOption = (g, o) => setChoix((c) => {
     const ids = c.options.includes(o.id) ? c.options.filter((x) => x !== o.id) : (g.type === 'unique' ? [...c.options.filter((x) => !g.options.some((y) => y.id === x)), o.id] : [...c.options, o.id]);
     return { ...c, options: ids };
@@ -122,7 +127,7 @@ export default function Boutique() {
         return;
       }
       const r = await appelApi('POST', '/public/commande', {
-        b: slug, site: form.site, note: form.note, client: { nom: form.nom.trim(), telephone: form.telephone, adresse: form.adresse.trim() },
+        b: slug, ...(pro ? { pro } : {}), site: form.site, note: form.note, client: { nom: form.nom.trim(), telephone: form.telephone, adresse: form.adresse.trim() },
         lignes: panier.map((l) => ({ produitId: l.produitId, quantite: l.quantite, options: l.optionIds })),
       });
       if (!r.commande) { setOccupe(false); return; }
@@ -164,6 +169,7 @@ export default function Boutique() {
   return (
     <div className="vitrine">
       {demo && <p className="vitrine-demo petit">Boutique de démonstration : votre commande reste sur cet appareil. Vous la retrouvez dans l’application de démo, menu Compte → Commandes en ligne.</p>}
+      {pro && boutique.gros && <p className="vitrine-demo petit"><b>Espace grossistes</b> : prix de gros, vente au carton. Ce lien est réservé aux professionnels qui l’ont reçu de {boutique.nom}.</p>}
       <header className="vitrine-tete">
         <div className="vitrine-largeur">
           <h1>{boutique.nom}</h1>
@@ -188,6 +194,7 @@ export default function Boutique() {
               <p className="vitrine-prix">
                 {formatPrix(p.promo ?? p.prix, devise)}{p.promo ? <>{' '}<s className="muet">{formatPrix(p.prix, devise)}</s></> : null}
                 {p.groupes.length ? <span className="petit muet"> · options</span> : null}
+                {p.minimum > 1 ? <span className="petit muet"> · min. {p.minimum} {p.uniteGros}s</span> : null}
               </p>
               <button className="btn petit bloc" onClick={() => toucher(p)}>Ajouter</button>
             </article>
