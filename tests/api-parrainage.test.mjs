@@ -6,8 +6,9 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { portLibre } from './port-libre.mjs';
 
-const PORT = 4890 + (process.pid % 200);
+const PORT = await portLibre();
 const U = `http://127.0.0.1:${PORT}/api`;
 const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-parrainage-'));
 const fichierEnv = path.join(dossier, '.env');

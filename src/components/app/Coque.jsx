@@ -61,7 +61,7 @@ export default function Coque() {
   const Ecran = ECRANS[s.ecran] || Caisse;
 
   return (
-    <div className="coque">
+    <div className={'coque' + (s.prefs.modeIllustre ? ' illustre' : '')}>
       <nav className="menu" aria-label={tr('Menu principal')}>
         <div className="menu-marque">
           <span className="logo"><Marque /><span className="logo-texte">{tr('Kaislo')}</span></span>

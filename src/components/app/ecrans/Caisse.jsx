@@ -9,7 +9,8 @@ import { stockDe } from '@/lib/donnees/stock.js';
 import { useEffect, useRef, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
-import { venteEnGros, produitPourMode } from '@/lib/donnees/gros';
+import { venteEnGros, produitPourMode, aDemi } from '@/lib/donnees/gros';
+import { dire, montantParle, phrasePanier, voixDisponible } from '@/lib/voix';
 import { CREDIT } from '@/lib/donnees/modeles';
 import { soldeClient } from '@/lib/donnees/credit';
 import { formatHeure, quantiteUnite } from '@/lib/utils/format';
@@ -53,7 +54,10 @@ export default function Caisse() {
   const qteDansPanier = (p) => s.panier.filter((l) => l.produitId === p.id).reduce((x, l) => x + l.quantite, 0);
   const couleur = (p) => d.categories.find((c) => c.id === p.categorieId)?.couleur || 'vert';
 
+  // Mode illustré avec voix : l'article touché est dit à voix haute (« Attiéké, 3000 francs CFA »)
+  const voix = !!s.prefs.modeIllustre && s.prefs.voix !== false;
   const toucher = (p) => {
+    if (voix) dire(`${p.nom}, ${montantParle(prixDeBase(produitPourMode(p, s.modeGros)), s.devise())}`);
     if (p.groupes.length) s.ouvrir('options', { produit: p });
     else s.ajouterAuPanier(p, {}, 1);
   };
@@ -122,7 +126,8 @@ export default function Caisse() {
                     </span>
                   </>
                 );
-                return (
+                const demi = s.modeGros && aDemi(brut); // « ½ » : un demi-carton
+                const tuile = (
                   <button key={p.id} className={`tuile teinte-${couleur(p)} ${p.image ? 'avec-photo' : ''} ${q ? 'dans-panier' : ''} ${p.suiviStock && stockDe(p) <= 0 ? 'rupture' : ''}`} onClick={() => toucher(brut)}>
                     {q > 0 && <span className="tuile-compteur">{q}</span>}
                     {base < p.prix && <span className="badge safran tuile-promo">{tr('Promo')}</span>}
@@ -133,11 +138,18 @@ export default function Caisse() {
                       </>
                     ) : (
                       <>
-                                                {texte}
+                        <span className="tuile-emoji" aria-hidden="true">{p.emoji || initiales(p.nom)}</span>
+                        {texte}
                       </>
                     )}
                   </button>
                 );
+                return demi ? (
+                  <div key={p.id} className="tuile-cadre">
+                    {tuile}
+                    <button type="button" className="tuile-demi" onClick={() => s.ajouterAuPanier(brut, {}, 1, { demi: true })} aria-label={tr('Ajouter un demi-carton')}>½</button>
+                  </div>
+                ) : tuile;
               })}
             </div>
             {!produits.length && d.produits.length > 0 && <div className="vide"><p>{tr('Aucun article trouvé')}</p></div>}
@@ -194,7 +206,16 @@ export function ContenuPanier({ dansFeuille = false }) {
   const suggestions = [...new Set((BILLETS[s.devise()] || []).map((b) => Math.ceil(t.total / b) * b).filter((m) => m > t.total))].sort((a, b) => a - b).slice(0, 3);
   const rendu = recu > 0 ? recu - t.total : 0;
 
-  const encaisser = () => s.validerVente({ paiement, recu: recu || 0, client: paiement === CREDIT ? client : null });
+  // Mode illustré : photos dans le panier, et voix (total avant d'encaisser, monnaie à rendre, vente enregistrée)
+  const illustre = !!s.prefs.modeIllustre;
+  const voix = illustre && s.prefs.voix !== false && voixDisponible();
+  const devise = s.devise();
+  useEffect(() => { if (voix && recu > 0 && rendu >= 0) dire(`À rendre : ${montantParle(rendu, devise)}`); }, [recu]); // eslint-disable-line react-hooks/exhaustive-deps
+  const encaisser = () => {
+    const total = t.total;
+    s.validerVente({ paiement, recu: recu || 0, client: paiement === CREDIT ? client : null });
+    if (voix && !useKaislo.getState().panier.length) dire(`Vente enregistrée. ${montantParle(total, devise)}`);
+  };
 
   if (!panier.length) {
     return (
@@ -229,6 +250,10 @@ export function ContenuPanier({ dansFeuille = false }) {
         <div className={dansFeuille ? 'carte' : ''} style={dansFeuille ? { padding: '4px 16px' } : undefined}>
           {panier.map((l, i) => (
             <div key={i + l.nom} className="ligne-panier">
+              {illustre && (() => {
+                const produit = d.produits.find((x) => x.id === l.produitId);
+                return <ImageStockee reference={produit?.image} className="mini-photo" alt="" secours={<span className="mini-emoji" aria-hidden="true">{produit?.emoji || initiales(l.produitNom || l.nom)}</span>} />;
+              })()}
               <div className="grandit">
                 <b>{l.nom}</b>
                 {l.details.map((x) => <p key={x} className="tres-petit muet">{x}</p>)}
@@ -283,7 +308,7 @@ export function ContenuPanier({ dansFeuille = false }) {
         <p className="section-titre" style={{ marginTop: 18 }}>{tr('Paiement')}</p>
         <div className="choix-grille">
           {d.commerce.modesPaiement.map((m) => (
-            <button key={m} className={paiement === m ? 'actif' : ''} onClick={() => setEtat({ paiementChoisi: m })}><Icone nom={m === 'Espèces' ? 'billet' : m === 'Carte' ? 'depense' : 'telephone'} />{tt(m)}</button>
+            <button key={m} className={paiement === m ? 'actif' : ''} onClick={() => setEtat({ paiementChoisi: m })}><Icone nom={m === 'Espèces' ? 'billet' : m === 'Carte' ? 'depense' : m === 'Virement' ? 'banque' : 'telephone'} />{tt(m)}</button>
           ))}
           <button className={`credit ${paiement === CREDIT ? 'actif' : ''}`} onClick={() => setEtat({ paiementChoisi: CREDIT })}><Icone nom="carnet" />{tr('À crédit')}</button>
         </div>
@@ -301,6 +326,13 @@ export function ContenuPanier({ dansFeuille = false }) {
                 <span className="chiffre">{s.prix(Math.abs(rendu))}</span>
               </div>
             )}
+          </div>
+        )}
+
+        {paiement === 'Virement' && (
+          <div style={{ marginTop: 14 }}>
+            <input className="saisie" value={s.refPaiement} maxLength={60} onChange={(e) => setEtat({ refPaiement: e.target.value })} placeholder={tr('Nom du client ou référence du virement (facultatif)')} />
+            <p className="tres-petit muet" style={{ marginTop: 6 }}>{tr('Vérifiez que l’argent est bien arrivé sur le compte avant de valider.')}</p>
           </div>
         )}
 
@@ -333,6 +365,7 @@ export function ContenuPanier({ dansFeuille = false }) {
         </div>
         <div className="ligne espace" style={{ margin: '4px 0 12px' }}>
           <span className="muet">{tr('Total à payer')}</span>
+          {illustre && voixDisponible() && <button type="button" className="bouton-voix" onClick={() => dire(phrasePanier(panier, t.total, devise))} aria-label={tr('Écouter le total')}><Icone nom="voix" /></button>}
           <span className="total-grand">{s.prix(t.total)}</span>
         </div>
         {(commande || s.aTables()) && (

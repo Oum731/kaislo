@@ -13,7 +13,8 @@ import { CATEGORIES_DEPENSES, COULEURS, UNITES, typeCommerce } from '@/lib/donne
 import { historiqueClient, soldeClient, lienRappelWhatsApp } from '@/lib/donnees/credit';
 import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, ChoixImage, initiales, ChampTelephone } from '@/components/ui';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
-import { UNITES_GROS } from '@/lib/donnees/gros';
+import { UNITES_GROS, grosDisponible } from '@/lib/donnees/gros';
+import { dire, voixDisponible } from '@/lib/voix';
 import { liensMenu } from '../Coque';
 import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
 import { cleTelephone } from '@/lib/donnees/modeles';
@@ -131,7 +132,7 @@ export function FeuilleProduit({ produit, categorieId }) {
             <label className="champ"><span>{tr('Alerte à partir de')}</span><ChampMontant valeur={b.seuilAlerte} surChanger={(v) => maj({ seuilAlerte: v })} /></label>
           </div>
         )}
-        {!b.groupes.length && (
+        {!b.groupes.length && grosDisponible(d.commerce) && (
           <>
             <Reglage titre={tr('Vendre aussi en gros')} aide={tr('Un prix pour les clients qui achètent par carton, sac ou colis. À la caisse, vous choisissez « Gros » pour les servir : ils ne voient jamais vos prix de détail, et vos clients au détail ne voient pas ceux du gros.')}
               actif={!!b.gros} surChanger={(v) => maj({ gros: v ? { prix: null, unite: 'carton', contenance: null, minimum: null } : null })} />
@@ -149,6 +150,13 @@ export function FeuilleProduit({ produit, categorieId }) {
                   <label className="champ"><span>{tr('Prix de gros ({0}) par {1}', [dev, b.gros.unite || 'carton'])}</span><ChampMontant valeur={b.gros.prix} surChanger={(v) => maj({ gros: { ...b.gros, prix: v } })} /></label>
                   <label className="champ"><span>{tr('Minimum conseillé')}</span><ChampMontant valeur={b.gros.minimum} surChanger={(v) => maj({ gros: { ...b.gros, minimum: v } })} placeholder="1" /></label>
                 </div>
+                <Reglage titre={tr('Vendre aussi au demi-carton')} aide={tr('Un bouton « ½ » apparaît sur l’article en mode Gros. Sans prix saisi, le demi-carton coûte la moitié du carton.')}
+                  actif={!!b.gros.demi} surChanger={(v) => maj({ gros: { ...b.gros, demi: v ? { prix: null } : null } })} />
+                {b.gros.demi && (
+                  <label className="champ"><span>{tr('Prix du demi-carton ({0})', [dev])}</span>
+                    <ChampMontant valeur={b.gros.demi.prix} surChanger={(v) => maj({ gros: { ...b.gros, demi: { prix: v } } })} placeholder={b.gros.prix > 0 ? String(Math.round(b.gros.prix / 2)) : ''} />
+                  </label>
+                )}
                 {b.gros.prix > 0 && b.gros.contenance >= 1 && (() => {
                   const parPiece = b.gros.prix / b.gros.contenance;
                   const margeGros = b.prixAchat > 0 ? b.gros.prix - b.prixAchat * b.gros.contenance : null;
@@ -302,7 +310,7 @@ export function FeuilleClient({ client }) {
         <label className="champ"><span>{tr('Nom')}</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder={tr('Ex : Amorac Kaislo')} autoFocus /></label>
         <label className="champ"><span>{tr('Téléphone (pour le rappel WhatsApp)')}</span><input type="tel" value={b.telephone} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder={tr('Ex : 06 12 34 56 78')} /></label>
         <label className="champ"><span>{tr('Note')}</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder={tr('Ex : paie en fin de mois')} /></label>
-        <Reglage titre={tr('Client grossiste')} aide={tr('Pour vous rappeler qu’il achète en gros : choisissez « Gros » à la caisse pour lui appliquer vos prix de gros.')} actif={!!b.gros} surChanger={(v) => setB({ ...b, gros: v })} />
+        {grosDisponible(s.d.commerce) && <Reglage titre={tr('Client grossiste')} aide={tr('Pour vous rappeler qu’il achète en gros : choisissez « Gros » à la caisse pour lui appliquer vos prix de gros.')} actif={!!b.gros} surChanger={(v) => setB({ ...b, gros: v })} />}
         {b.id && s.estGerant() && (
           <button className="btn danger bloc" onClick={() => { const err = s.supprimerClient(b.id); err ? s.message(err, 'erreur') : s.fermer(); }}>{tr('Supprimer le client')}</button>
         )}
@@ -481,6 +489,12 @@ export function FeuilleCompte() {
         <span style={{ display: 'inline-block' }}><Avatar nom={s.utilisateur.nom} gerant={s.estGerant()} grand /></span>
         <h2 style={{ marginTop: 12 }}>{s.utilisateur.nom}</h2>
         <p className="muet">{s.estGerant() ? tr('Gérant') : tr('Vendeur')} · {s.d.commerce.nom}</p>
+      </div>
+      <div className="carte pile" style={{ marginTop: 18 }}>
+        <Reglage titre={tr('Mode illustré')} aide={tr('Grandes photos, gros chiffres et voix : pour utiliser Kaislo sans lire. Réglage de ce téléphone.')} actif={!!s.prefs.modeIllustre} surChanger={(v) => s.sauverPrefs({ modeIllustre: v })} />
+        {s.prefs.modeIllustre && voixDisponible() && (
+          <Reglage titre={tr('Voix')} aide={tr('Dit l’article touché, le total, la monnaie à rendre.')} actif={s.prefs.voix !== false} surChanger={(v) => { s.sauverPrefs({ voix: v }); if (v) dire('La voix est activée'); }} />
+        )}
       </div>
       {!s.estGerant() && (
         <div className="liste" style={{ marginTop: 18 }}>

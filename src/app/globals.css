@@ -1343,3 +1343,34 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 
 /* Vente en gros : choix « Détail / Gros » au-dessus des articles de la caisse */
 .mode-gros { max-width: 320px; margin: 0 0 12px; }
+
+/* ---------- Mode illustré : pour utiliser la caisse sans lire (grandes photos, gros chiffres, voix) ---------- */
+.bouton-voix { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--vert-clair); color: var(--vert-fonce); display: grid; place-items: center; cursor: pointer; flex: none; }
+.bouton-voix .ic { width: 24px; height: 24px; }
+.illustre .grille-produits { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.illustre .tuile { min-height: 190px; padding: 0; overflow: hidden; border-width: 2px; }
+.illustre .tuile .tuile-photo { aspect-ratio: 1 / 1; height: auto; }
+.illustre .tuile-emoji { display: grid; place-items: center; font-size: 64px; aspect-ratio: 1 / 1; background: var(--t-fond, var(--vert-clair)); color: var(--t-encre, var(--vert-fonce)); font-weight: 800; }
+.illustre .tuile-nom { font-size: 14px; padding: 6px 10px 0; }
+.illustre .tuile-bas { padding: 4px 10px 10px; }
+.illustre .tuile-prix { font-size: 24px; font-weight: 800; letter-spacing: -.5px; }
+.illustre .tuile.avec-photo .tuile-texte { padding: 0; }
+.illustre .tuile .tuile-compteur { width: 40px; height: 40px; font-size: 22px; }
+.illustre .tuile.dans-panier { border-color: var(--vert); box-shadow: 0 0 0 3px var(--vert-clair); }
+.illustre .ligne-panier { align-items: center; gap: 12px; }
+.illustre .ligne-panier .mini-photo, .illustre .ligne-panier .mini-emoji { width: 64px; height: 64px; font-size: 32px; border-radius: 14px; flex: none; object-fit: cover; }
+.illustre .ligne-panier b { font-size: 15px; }
+.illustre .quantite button { width: 52px; height: 52px; }
+.illustre .quantite span { font-size: 26px; min-width: 36px; font-weight: 800; }
+.illustre .choix-grille button { min-height: 76px; font-size: 16px; font-weight: 700; border-width: 2px; }
+.illustre .choix-grille button .ic { width: 30px; height: 30px; }
+.illustre .choix-grille button.actif { border-color: var(--vert); background: var(--vert-clair); }
+.illustre .total-grand { font-size: 38px; }
+.illustre .panier-pied .btn.grand, .illustre .panier-pied .btn.bloc.grand { min-height: 72px; font-size: 20px; }
+.illustre .puces .puce { min-height: 48px; font-size: 18px; font-weight: 700; padding: 0 18px; }
+
+/* Demi-carton : bouton « ½ » posé sur la tuile de l'article (mode Gros) */
+.tuile-cadre { position: relative; display: flex; }
+.tuile-cadre > .tuile { flex: 1; }
+.tuile-demi { position: absolute; right: 8px; top: 8px; z-index: 2; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--vert); background: var(--surface); color: var(--vert-fonce); font-size: 22px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(0, 0, 0, .2); }
+.tuile-demi:active { background: var(--vert-clair); }

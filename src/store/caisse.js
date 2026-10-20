@@ -18,6 +18,7 @@ export const trancheCaisse = (set, get) => ({
   remise: null, // { type: 'pourcent' | 'montant', valeur }
   commandeActive: null, // id de la commande (table) en cours de modification
   derniereVente: null,
+  refPaiement: '', // virement : nom du client ou référence du virement (facultatif)
   modeGros: false, // « Détail » ou « Gros » : le prix affiché et vendu est celui du mode (voir lib/donnees/gros.js)
   // choix en cours dans le panier (gardés quand on passe d'une fenêtre à l'autre)
   paiementChoisi: null,
@@ -28,10 +29,11 @@ export const trancheCaisse = (set, get) => ({
   telephoneDistance: '',
 
   // --- Panier ---
-  ajouterAuPanier(produit, choix, quantite) {
+  // plus.demi : un demi-carton (mode gros seulement, article qui a un prix de demi-carton)
+  ajouterAuPanier(produit, choix, quantite, plus = {}) {
     const { d } = get();
     const cat = d.categories.find((c) => c.id === produit.categorieId);
-    const vendu = produitPourMode(produit, get().modeGros); // au carton en mode gros (si l'article a un prix de gros)
+    const vendu = produitPourMode(produit, get().modeGros, !!plus.demi); // au carton en mode gros (si l'article a un prix de gros)
     const ligne = creerLigne(vendu, choix, quantite, d.commerce.devise, cat?.nom);
     const panier = [...get().panier];
     // Même article avec les mêmes options, pas encore envoyé en cuisine : on additionne
@@ -83,7 +85,7 @@ export const trancheCaisse = (set, get) => ({
   },
 
   viderPanier() {
-    set({ modeGros: false, panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
+    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
   },
 
   definirRemise(remise) {
@@ -135,6 +137,7 @@ export const trancheCaisse = (set, get) => ({
       appareil: get().prefs.appareilId,
       paiement,
       recu: paiement === 'Espèces' && recu > 0 ? recu : 0,
+      ...(paiement === 'Virement' && get().refPaiement.trim() ? { refPaiement: get().refPaiement.trim().slice(0, 60) } : {}),
       clientId: client?.id || null,
       clientNom: client?.nom || null,
       table: commande?.table || null,
@@ -157,7 +160,7 @@ export const trancheCaisse = (set, get) => ({
       // La table est libérée
       commandes: commande ? d.commandes.filter((c) => c.id !== commande.id) : d.commandes,
     }));
-    set({ modeGros: false, panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
+    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
     get().ouvrir('ticket', { vente, nouvelle: true });
     if (typeof navigator !== 'undefined') navigator.vibrate?.([30, 50, 30]);
     // Impression automatique seulement si une imprimante est connectée ET si l'option est active (facultatif)

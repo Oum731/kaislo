@@ -9,8 +9,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { creerLigne } from '../src/lib/donnees/vente.js';
 import { creerDonneesDemo } from '../src/lib/donnees/demo.js';
+import { portLibre } from './port-libre.mjs';
 
-const PORT = 4390 + (process.pid % 200);
+const PORT = await portLibre();
 const U = `http://127.0.0.1:${PORT}/api`;
 const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-api-'));
 const fichierBase = path.join(dossier, 'test.sqlite');

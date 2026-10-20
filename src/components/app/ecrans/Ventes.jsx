@@ -104,7 +104,7 @@ function ListeTickets() {
       </label>
       {liste.map((v) => {
         const mode = v.annulee ? 'annulee' : v.paiement === 'Crédit' ? 'credit' : v.paiement === 'Espèces' ? 'especes' : v.paiement === 'Carte' ? 'carte' : 'mobile';
-        const icone = { annulee: 'fermer', credit: 'carnet', especes: 'billet', carte: 'depense', mobile: 'telephone' }[mode];
+        const icone = v.paiement === 'Virement' && !v.annulee ? 'banque' : { annulee: 'fermer', credit: 'carnet', especes: 'billet', carte: 'depense', mobile: 'telephone' }[mode];
         return (
           <button key={v.id} className={`vente-item ${v.annulee ? 'annulee' : ''}`} onClick={() => s.ouvrir('ticket', { vente: v })} aria-label={tr('Ticket n° {0}, {1}', [v.numero, s.prix(v.total)])}>
             <span className="vente-heure">
@@ -121,7 +121,7 @@ function ListeTickets() {
                 {v.aDistance && <span className="badge"><Icone nom="whatsapp" taille="sm" /></span>}
               </span>
               <span className="tres-petit muet tronque bloc-texte" style={{ marginTop: 3 }}>
-                {(mode === 'mobile' || mode === 'credit' ? tt(v.paiement) + ' · ' : '') + (gerant ? v.vendeurNom.split(' ')[0] + ' · ' : '') + (v.clientNom ? v.clientNom + ' · ' : '') + v.lignes.map((l) => l.produitNom || l.nom).join(', ')}
+                {(mode === 'mobile' || mode === 'credit' ? tt(v.paiement) + ' · ' : '') + (v.refPaiement ? v.refPaiement + ' · ' : '') + (gerant ? v.vendeurNom.split(' ')[0] + ' · ' : '') + (v.clientNom ? v.clientNom + ' · ' : '') + v.lignes.map((l) => l.produitNom || l.nom).join(', ')}
               </span>
             </span>
             <b className="chiffre prix-vente">{s.prix(v.total)}</b>

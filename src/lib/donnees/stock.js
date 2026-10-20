@@ -59,7 +59,7 @@ export function avecStocks(d) {
   const produits = d.produits.map((p) => {
     const s = suivis.get(p.id);
     if (!s) return p;
-    const stock = baseDe(p) + s.delta;
+    const stock = Math.round((baseDe(p) + s.delta) * 1000) / 1000; // arrondi : un sac de 12,5 kg ne doit pas laisser 0,30000000000000004
     if (p.stockActuel === stock) return p;
     change = true;
     return { ...p, stockActuel: stock };
