@@ -7,6 +7,8 @@ import { FORMULES, REGLES_TARIFS, prixCatalogue, catalogueEnVigueur, remiseCodeP
 import { PAYS, TYPES_COMMERCE, typeCommerce } from '@/lib/donnees/modeles';
 import { symbole } from '@/lib/utils/format';
 import { useSelectionPays } from '@/lib/pays-visiteur';
+import { Puces } from '@/components/ui';
+import { useState } from 'react';
 import { tr, tt } from '@/lib/i18n';
 
 // Prix d'abonnement en nombre entier : 149 DH, 9 000 FCFA
@@ -30,7 +32,10 @@ export function ChoixPays({ pays, changer, gps, erreur }) {
 
 export default function TarifsPays() {
   const [pays, changer, { gps, erreur }] = useSelectionPays();
-  const d = pays.devise;
+  // Prix en euros (pour un virement bancaire) : même grille, colonne « EUR » (voir lib/donnees/tarifs.js)
+  const [enEuros, setEnEuros] = useState(false);
+  const peutEuros = pays.devise !== 'EUR';
+  const d = enEuros && peutEuros ? 'EUR' : pays.devise;
   // Prix public = prix catalogue ; avec un code parrain, le client paie le prix de la grille (les tarifs actuels)
   const catalogue = catalogueEnVigueur();
   const public_ = (x) => (catalogue ? prixCatalogue(x, d) : x);
@@ -38,6 +43,12 @@ export default function TarifsPays() {
   return (
     <>
       <ChoixPays pays={pays} changer={changer} gps={gps} erreur={erreur} />
+      {peutEuros && (
+        <div style={{ margin: '0 0 18px' }}>
+          <Puces options={[['local', tr('Prix en {0}', [symbole(pays.devise)])], ['euro', tr('Prix en euros (€)')]]} valeur={enEuros ? 'euro' : 'local'} surChanger={(v) => setEnEuros(v === 'euro')} />
+          {enEuros && <p className="petit muet" style={{ marginTop: 8 }}>{tr('Prix en euros : pour payer par virement bancaire depuis un compte en euros. Après votre inscription, l’application affiche le compte, le montant exact et la référence à indiquer.')}</p>}
+        </div>
+      )}
       {FAMILLES.map((famille) => {
         const formules = FORMULES.filter((f) => f.famille === famille);
         return (

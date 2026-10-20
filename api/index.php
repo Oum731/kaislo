@@ -49,6 +49,7 @@ require __DIR__ . '/lib/notifications.php';
 require __DIR__ . '/lib/push.php';
 require __DIR__ . '/lib/chat.php';
 require __DIR__ . '/lib/boutique-page.php';
+require __DIR__ . '/lib/virement.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -126,6 +127,9 @@ try {
         'POST /admin/paiement' => routeAdminPaiement(),
         'POST /admin/paiement-groupe' => routeAdminPaiementGroupe(),
         'POST /admin/tarifs' => routeAdminTarifs(),
+        'GET /admin/virement' => routeAdminVirementLire(),
+        'POST /admin/virement' => routeAdminVirementEnregistrer(),
+        'GET /paiement-virement' => routePaiementVirement(),
         'GET /admin/commerciaux' => routeAdminCommerciaux(),
         'GET /admin/commercial' => routeAdminCommercial(),
         'POST /admin/commercial' => routeAdminCommercialEnregistrer(),

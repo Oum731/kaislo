@@ -10,6 +10,7 @@ import { FORMULES, formuleDuType, prixAbonnement, REGLES_TARIFS } from '@/lib/do
 import { postesDe } from '@/lib/donnees/postes';
 import { formatDate } from '@/lib/utils/format';
 import { estServeur } from '@/lib/donnees/synchro';
+import { Icone } from '@/components/ui';
 import { tr } from '@/lib/i18n';
 
 // Tarif du commerce : { nom, postes, parMois, annuel, prixPoste, fondateur }
@@ -19,11 +20,15 @@ export function tarifDuCommerce(d) {
   const formule = FORMULES.find((f) => f.id === d.commerce.abonnement?.offre) || formuleDuType(d.commerce.type);
   const postes = postesDe(d).length;
   const devise = d.commerce.devise;
+  const euro = devise !== 'EUR' && formule.prix.EUR > 0
+    ? { parMois: prixAbonnement({ formule, devise: 'EUR', postes }).parMois, annuel: prixAbonnement({ formule, devise: 'EUR', postes, mois: 12 }).total }
+    : null;
   return {
     nom: tr(formule.nom), postes, fondateur: false, devise,
     parMois: prixAbonnement({ formule, devise, postes }).parMois,
     annuel: prixAbonnement({ formule, devise, postes, mois: 12 }).total,
     prixPoste: formule.prixPoste[devise] ?? 0,
+    ...(euro ? { euro } : {}),
   };
 }
 
@@ -53,11 +58,13 @@ export default function AbonnementCommerce() {
           <div>
             <p className="tres-petit muet">{tr('Par mois')}</p>
             <b>{s.prix(tarif.parMois)}</b>
+            {tarif.euro && <p className="tres-petit muet">{tr('ou {0} € en euros (virement)', [Math.round(tarif.euro.parMois)])}</p>}
             <p className="tres-petit muet">{tr('{0} poste{1}{2}', [tarif.postes, tarif.postes > 1 ? 's' : '', tarif.postes > 1 ? ' (1 inclus + ' + (tarif.postes - 1) + ' × ' + s.prix(tarif.prixPoste) + ')' : ' inclus, 5 vendeurs'])}</p>
           </div>
           <div>
             <p className="tres-petit muet">{tr('À l’année')}</p>
             <b>{s.prix(tarif.annuel)}</b>
+            {tarif.euro && <p className="tres-petit muet">{tr('ou {0} € en euros (virement)', [Math.round(tarif.euro.annuel)])}</p>}
             <p className="tres-petit muet">{tr('{0} mois offerts', [REGLES_TARIFS.moisOffertsAnnuel])}</p>
           </div>
         </div>
@@ -68,6 +75,9 @@ export default function AbonnementCommerce() {
       {tarif?.fondateur && <p className="info-verte petit">{tr('Tarif fondateur : remise à vie déjà appliquée. Merci de faire partie des premiers !')}</p>}
       {(estServeur(s.d) || s.estDemoActuel()) && s.estGerant() && (
         <button className="btn secondaire bloc" onClick={() => s.ouvrir('commerces')}>{(s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length) > 1 ? tr('Mes {0} commerces et le total à payer', [s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length]) : tr('Ajouter un autre commerce (autre activité)')}</button>
+      )}
+      {estServeur(s.d) && s.estGerant() && !s.estDemoActuel() && (
+        <button className="btn secondaire bloc" onClick={() => s.ouvrir('virement')}><Icone nom="billet" /> {tr('Payer par virement bancaire')}</button>
       )}
       <p className="tres-petit muet">{tr('Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.')}</p>
     </div>
