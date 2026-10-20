@@ -54,6 +54,7 @@ function versBoutique(?array $b, array $commerce): array
         'publique' => $b ? ($b['publique'] === null ? true : (bool) $b['publique']) : true,
         'conditionsAcceptees' => !empty($b['conditions_le']),
         'chat' => empty($b['chat_off']),
+        'grosDisponible' => !in_array($commerce['type'], TYPES_RESTAURATION, true),
         'proActif' => !empty($b['pro_cle']),
         'lienPro' => !empty($b['pro_cle']) ? lienBoutique($b['slug']) . '?pro=' . $b['pro_cle'] : '',
         'articlesGros' => count(array_filter(articlesPublies($commerce['id']), fn ($p) => prixGrosValide($p) !== null)),
@@ -79,11 +80,12 @@ function articlesPublies(string $commerceId): array
 function prixGrosValide(array $p): ?array
 {
     $g = $p['gros'] ?? null;
-    if (!is_array($g) || !is_numeric($g['prix'] ?? null) || (float) $g['prix'] <= 0 || (int) ($g['contenance'] ?? 0) < 1 || !empty($p['groupes'])) return null;
+    if (!is_array($g) || !is_numeric($g['prix'] ?? null) || (float) $g['prix'] <= 0 || (float) ($g['contenance'] ?? 0) <= 0 || !empty($p['groupes'])) return null;
     $unites = ['carton', 'sac', 'colis', 'caisse', 'paquet'];
     return [
         'prix' => (float) $g['prix'], 'unite' => in_array($g['unite'] ?? '', $unites, true) ? $g['unite'] : 'carton',
-        'contenance' => (int) $g['contenance'], 'minimum' => max(1, (int) ($g['minimum'] ?? 1)),
+        'contenance' => round((float) $g['contenance'], 3), 'minimum' => max(1, (int) ($g['minimum'] ?? 1)),
+        'demi' => is_array($g['demi'] ?? null) && is_numeric($g['demi']['prix'] ?? null) && (float) $g['demi']['prix'] > 0 ? (float) $g['demi']['prix'] : null, // prix du demi-carton
     ];
 }
 
@@ -94,7 +96,13 @@ function articlesDeGros(array $articles): array
     foreach ($articles as $cle => $p) {
         $g = prixGrosValide($p);
         if (!$g) continue;
-        $liste[$cle] = array_merge($p, ['prix' => $g['prix'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (' . $g['unite'] . ' de ' . $g['contenance'] . ')', '_gros' => $g]);
+        $liste[$cle] = array_merge($p, ['prix' => $g['prix'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (' . $g['unite'] . ' de ' . str_replace('.', ',', (string) $g['contenance']) . ')', '_gros' => $g]);
+        // Le demi-carton est un article de plus (identifiant « …:demi »), au prix du demi-carton, à partir de 1
+        if ($g['demi'] !== null) {
+            $moitie = $g['contenance'] / 2;
+            $liste[$cle . ':demi'] = array_merge($p, ['id' => $cle . ':demi', 'prix' => $g['demi'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (demi-' . $g['unite'] . ' de ' . str_replace('.', ',', (string) round($moitie, 3)) . ')',
+                '_gros' => ['prix' => $g['demi'], 'unite' => 'demi-' . $g['unite'], 'contenance' => $moitie, 'minimum' => 1, 'demi' => null]]);
+        }
     }
     return $liste;
 }
@@ -103,6 +111,9 @@ function articlesDeGros(array $articles): array
 function cleGrosValide(array $b, string $cle): bool
 {
     if ($cle === '') return false;
+    // Pas de vente en gros pour la restauration (restaurant, fast-food, snack, maquis, bar)
+    $type = requete('SELECT type FROM commerces WHERE id = ?', [$b['commerce_id']])->fetch()['type'] ?? '';
+    if (in_array($type, TYPES_RESTAURATION, true)) return false;
     $cleIp = 'cle-gros:' . adresseIp();
     verifierBlocage($cleIp);
     if (!empty($b['pro_cle']) && hash_equals((string) $b['pro_cle'], $cle)) return true;
@@ -164,6 +175,7 @@ function routeBoutiqueEnregistrer(): never
     // Lien privé des grossistes : activé par le gérant, clé secrète au hasard, changeable (l'ancien lien cesse alors de marcher)
     $proCle = $avant['pro_cle'] ?? null;
     if (array_key_exists('pro', $e)) $proCle = !empty($e['pro']) ? ($proCle ?: bin2hex(random_bytes(8))) : null;
+    if (in_array($c['type'], TYPES_RESTAURATION, true)) $proCle = null; // pas de vente en gros pour la restauration
     if (!empty($e['regenererPro']) && $proCle) $proCle = bin2hex(random_bytes(8));
     $chatOff = array_key_exists('chat', $e) ? (!empty($e['chat']) ? 0 : 1) : (int) ($avant['chat_off'] ?? 0);
     $description = texte($e, 'description', 'la description', false, 300);
