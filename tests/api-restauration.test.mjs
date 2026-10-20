@@ -6,8 +6,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { reglementRestauration, TYPES_RESTAURATION } from '../src/lib/donnees/restauration.js';
+import { portLibre } from './port-libre.mjs';
 
-const PORT = 5790 + (process.pid % 200);
+const PORT = await portLibre();
 const U = `http://127.0.0.1:${PORT}/api`;
 const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'kaislo-resto-'));
 const fichierEnv = path.join(dossier, '.env');
