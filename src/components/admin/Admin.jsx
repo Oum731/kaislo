@@ -17,7 +17,7 @@ import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnee
 import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
-import { prixAbonnement, prixApresJoursOfferts, prixCatalogue } from '@/lib/donnees/tarifs';
+import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixTouteDevise, TAUX_CHANGE } from '@/lib/donnees/tarifs';
 import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
@@ -617,6 +617,13 @@ function VueTarifs({ ctx }) {
   const [regles, setRegles] = useState(() => ({ ...ctx.regles }));
   const [message, setMessage] = useState(null);
   const maj = (i, x) => setFormules(formules.map((f, j) => (j === i ? { ...f, ...x } : f)));
+  const taux = { ...TAUX_CHANGE, ...(regles.taux || {}) };
+  // Un prix modifié dans une devise recalcule toutes les autres (taux ci-dessous) : la grille reste cohérente
+  const changerPrix = (i, champ, dev, v) => maj(i, { [champ]: v == null || v <= 0 ? { ...formules[i][champ], [dev]: v } : prixTouteDevise(v, dev, DEVISES, taux) });
+  const recalculer = (dev) => {
+    setFormules(formules.map((f) => ({ ...f, ...Object.fromEntries(['prix', 'prixPoste'].map((champ) => [champ, f[champ]?.[dev] > 0 ? prixTouteDevise(f[champ][dev], dev, DEVISES, taux) : f[champ]])) })));
+    setMessage({ ok: true, texte: `Toutes les devises ont été recalculées depuis ${NOMS_DEVISES[dev] || dev}. Pensez à enregistrer.` });
+  };
   const enregistrer = async () => {
     try {
       await ctx.api('POST', '/admin/tarifs', { formules, regles });
@@ -632,6 +639,21 @@ function VueTarifs({ ctx }) {
       <div className="contenu" style={{ maxWidth: 960 }}>
         {message && <p className={message.ok ? 'info-verte' : 'alerte'} style={{ marginBottom: 14 }}>{message.texte}</p>}
         <ComptesVirement ctx={ctx} />
+        <div className="carte pile" style={{ marginBottom: 14 }}>
+          <h3>Taux de change</h3>
+          <p className="petit muet">Quand vous changez un prix dans une devise, toutes les autres sont recalculées avec ces taux (1 euro = …). Le FCFA est fixe. Montants arrondis : dirhams en …9, FCFA à 500, GNF à 5 000.</p>
+          <div className="grille-3">
+            {DEVISES.filter((d) => d !== 'EUR').map((dev) => (
+              <label key={dev} className="champ"><span>1 € = … {NOMS_DEVISES[dev] || dev}</span>
+                <input type="number" min="0" step="any" disabled={dev === 'FCFA'} value={taux[dev]} onChange={(e) => setRegles({ ...regles, taux: { ...taux, [dev]: Number(e.target.value) } })} />
+              </label>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn secondaire" onClick={() => recalculer('FCFA')}>Recalculer tout depuis le FCFA</button>
+            <button className="btn secondaire" onClick={() => recalculer('EUR')}>Recalculer tout depuis l’euro</button>
+          </div>
+        </div>
         <div className="carte pile" style={{ marginBottom: 14 }}>
           <h3>Règles communes</h3>
           <div className="grille-3">
@@ -662,7 +684,7 @@ function VueTarifs({ ctx }) {
             <div className="grille-3">
               {DEVISES.map((dev) => (
                 <label key={dev} className="champ"><span>{NOMS_DEVISES[dev] || dev}</span>
-                  <ChampMontant valeur={f.prix?.[dev] ?? null} surChanger={(v) => maj(i, { prix: { ...f.prix, [dev]: v } })} />
+                  <ChampMontant valeur={f.prix?.[dev] ?? null} surChanger={(v) => changerPrix(i, 'prix', dev, v)} />
                 </label>
               ))}
             </div>
@@ -671,7 +693,7 @@ function VueTarifs({ ctx }) {
             <div className="grille-3">
               {DEVISES.map((dev) => (
                 <label key={dev} className="champ"><span>{NOMS_DEVISES[dev] || dev}</span>
-                  <ChampMontant valeur={f.prixPoste?.[dev] ?? null} surChanger={(v) => maj(i, { prixPoste: { ...f.prixPoste, [dev]: v } })} />
+                  <ChampMontant valeur={f.prixPoste?.[dev] ?? null} surChanger={(v) => changerPrix(i, 'prixPoste', dev, v)} />
                 </label>
               ))}
             </div>

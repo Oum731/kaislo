@@ -188,7 +188,7 @@ function signauxActivite(array $c, array $produits, array $reglages): array
     }
     $tables = is_array($reglages['tables'] ?? null) ? count($reglages['tables']) : 0;
     $candidats = [];
-    $restauration = in_array($declaree['id'], ['proximite'], true)
+    $restauration = in_array($declaree['id'], ['epicerie', 'proximite'], true)
         && ($tables >= 1 || ($n >= 5 && $portions >= 0.3 * $n) || ($plats >= 3 && $plats >= 0.25 * $n));
     if ($restauration) {
         $candidats[] = ['code' => 'restauration', 'formule' => $tables >= 1 ? 'restaurant' : 'maquis', 'gravite' => $tables >= 1 && $portions >= 0.3 * $n ? 'forte' : 'moyenne',
@@ -198,7 +198,7 @@ function signauxActivite(array $c, array $produits, array $reglages): array
         $candidats[] = ['code' => 'gros', 'formule' => 'pro', 'gravite' => 'moyenne',
             'texte' => "Beaucoup d’articles vendus au carton, au sac ou au lot ($gros sur $n) : vente en gros possible."];
     }
-    if (in_array($declaree['id'], ['proximite', 'maquis', 'restaurant'], true) && $n >= 5 && $metre >= 0.3 * $n) {
+    if (in_array($declaree['id'], ['epicerie', 'proximite', 'maquis', 'restaurant'], true) && $n >= 5 && $metre >= 0.3 * $n) {
         $candidats[] = ['code' => 'quincaillerie', 'formule' => 'quincaillerie', 'gravite' => 'moyenne',
             'texte' => "Beaucoup d’articles vendus au mètre ($metre sur $n) : activité de quincaillerie possible."];
     }

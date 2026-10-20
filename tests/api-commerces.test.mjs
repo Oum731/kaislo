@@ -62,7 +62,7 @@ test('ajouter un commerce : le code PIN est redemandé, puis le second commerce 
   assert.equal(liste.courant, resto.commerce.id);
   const e = liste.commerces.find((c) => c.type === 'epicerie');
   const m = liste.commerces.find((c) => c.type === 'maquis');
-  assert.equal(e.tarif.formule, 'proximite');
+  assert.equal(e.tarif.formule, 'epicerie');
   assert.equal(m.tarif.formule, 'maquis');
   // Total à payer = somme des deux abonnements (chacun au tarif de son métier)
   assert.equal(liste.totaux.FCFA, e.tarif.parMois + m.tarif.parMois);
@@ -116,13 +116,13 @@ test('le numéro d’un commerce qui appartient à quelqu’un d’autre est ref
 
 test('une épicerie qui vend des plats à la portion est signalée, une vraie épicerie non', async () => {
   const plats = ['Attiéké poisson', 'Riz sauce', 'Foutou', 'Poulet braisé', 'Garba', 'Alloco'].map((nom, i) => produit('plat' + i, nom, { unite: 'portion', groupes: [{ id: 'g', nom: 'Accompagnement', obligatoire: true, options: [{ id: 'o', nom: 'Alloco', prix: 0 }] }] }));
-  const faux = await api('POST', '/inscription', { commerce: { nom: 'Fausse Épicerie', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345720' }, gerant: { nom: 'Faux', telephone: '0712345721', pin: '3333' }, conditionsAcceptees: true });
+  const faux = await api('POST', '/inscription', { commerce: { nom: 'Fausse Boutique', type: 'boutique', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345720' }, gerant: { nom: 'Faux', telephone: '0712345721', pin: '3333' }, conditionsAcceptees: true });
   assert.equal((await api('POST', '/donnees', { elements: plats }, faux.jeton)).ok, true);
   const vraie = ['Huile', 'Riz', 'Sucre', 'Lait', 'Savon'].map((nom, i) => produit('e' + i, nom));
   assert.equal((await api('POST', '/donnees', { elements: vraie }, epicerie.jeton)).ok, true);
   const liste = (await api('GET', '/admin/commerces', null, admin)).commerces;
   const parNom = Object.fromEntries(liste.map((c) => [c.commerce.nom, c]));
-  const s = parNom['Fausse Épicerie'].signaux;
+  const s = parNom['Fausse Boutique'].signaux;
   assert.equal(s.length, 1, JSON.stringify(s));
   assert.equal(s[0].code, 'restauration');
   assert.equal(s[0].formuleSuggeree.id, 'maquis');

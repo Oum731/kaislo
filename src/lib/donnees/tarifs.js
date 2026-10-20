@@ -15,17 +15,51 @@
 
 export const VENDEURS_PAR_POSTE = 5;
 
+// Taux de change de la grille : combien d'unités de chaque devise pour 1 euro (le FCFA est fixe : 655,957).
+// Changer un prix dans une devise recalcule les autres avec ces taux (espace Amorac → Tarifs).
+export const TAUX_CHANGE = { EUR: 1, FCFA: 655.957, MAD: 10.8, CAD: 1.5, USD: 1.1, GNF: 9840 };
+
+/**
+ * Arrondi « prix » d'une devise : MAD terminé par 9 (149, 169…), FCFA à 500, GNF à 5 000, euro/CAD/USD à l'unité.
+ */
+export function arrondiPrix(montant, devise) {
+  if (!(montant > 0)) return 0;
+  if (devise === 'MAD') return Math.max(9, Math.ceil((montant - 0.5) / 10) * 10 - 1);
+  const pas = { FCFA: 500, GNF: 5000 }[devise] || 1;
+  return Math.max(pas, Math.round(montant / pas) * pas);
+}
+
+/** Convertit un montant d'une devise à une autre (via l'euro) avec l'arrondi « prix » de la devise d'arrivée. */
+export function convertirPrix(montant, depuis, vers, taux = TAUX_CHANGE) {
+  if (depuis === vers) return montant;
+  const t = { ...TAUX_CHANGE, ...taux };
+  return arrondiPrix((montant / t[depuis]) * t[vers], vers);
+}
+
+/** Tous les prix d'une grille à partir d'un montant dans une devise ; la devise saisie garde sa valeur exacte. */
+export function prixTouteDevise(montant, devise, devises, taux = TAUX_CHANGE) {
+  const r = {};
+  for (const d of devises) r[d] = d === devise ? montant : convertirPrix(montant, devise, d, taux);
+  return r;
+}
+
 export const FORMULES = [
   {
+    id: 'epicerie', nom: 'Épicerie', famille: 'Commerce de proximité',
+    types: ['epicerie'],
+    prix: { MAD: 199, FCFA: 12000, EUR: 18, CAD: 27, USD: 20, GNF: 180000 },
+    prixPoste: { MAD: 49, FCFA: 3000, EUR: 5, CAD: 7, USD: 5, GNF: 45000 },
+  },
+  {
     id: 'proximite', nom: 'Commerce de proximité', famille: 'Commerce de proximité',
-    types: ['epicerie', 'boutique', 'telephonie', 'librairie', 'beaute', 'autre'],
+    types: ['boutique', 'telephonie', 'librairie', 'beaute', 'autre'],
     prix: { MAD: 149, FCFA: 9000, EUR: 14, CAD: 21, USD: 15, GNF: 135000 },
     prixPoste: { MAD: 49, FCFA: 3000, EUR: 5, CAD: 7, USD: 5, GNF: 45000 },
   },
   {
     id: 'maquis', nom: 'Maquis et boulangerie', famille: 'Restauration et boissons',
     types: ['maquis', 'boulangerie'],
-    prix: { MAD: 169, FCFA: 10000, EUR: 16, CAD: 24, USD: 17, GNF: 150000 },
+    prix: { MAD: 169, FCFA: 10000, EUR: 15, CAD: 23, USD: 17, GNF: 150000 },
     prixPoste: { MAD: 69, FCFA: 4000, EUR: 6, CAD: 9, USD: 7, GNF: 60000 },
   },
   {
@@ -37,19 +71,20 @@ export const FORMULES = [
   {
     id: 'quincaillerie', nom: 'Quincaillerie', famille: 'Commerces professionnels',
     types: ['quincaillerie'],
-    prix: { MAD: 269, FCFA: 16000, EUR: 25, CAD: 37, USD: 27, GNF: 240000 },
-    prixPoste: { MAD: 89, FCFA: 5000, EUR: 8, CAD: 12, USD: 9, GNF: 75000 },
+    prix: { MAD: 269, FCFA: 16000, EUR: 24, CAD: 37, USD: 27, GNF: 240000 },
+    prixPoste: { MAD: 89, FCFA: 5000, EUR: 8, CAD: 11, USD: 8, GNF: 75000 },
   },
   {
     id: 'pro', nom: 'Commerce de gros', famille: 'Commerces professionnels',
     types: ['grossiste', 'pharmacie'], // « pharmacie » : anciens commerces seulement (plus proposé à l'inscription)
-    prix: { MAD: 319, FCFA: 19000, EUR: 29, CAD: 44, USD: 32, GNF: 285000 },
-    prixPoste: { MAD: 89, FCFA: 5000, EUR: 8, CAD: 12, USD: 9, GNF: 75000 },
+    prix: { MAD: 319, FCFA: 19000, EUR: 29, CAD: 43, USD: 32, GNF: 285000 },
+    prixPoste: { MAD: 89, FCFA: 5000, EUR: 8, CAD: 11, USD: 8, GNF: 75000 },
   },
 ];
 
 // Règles communes (modifiables dans l'espace Amorac → Tarifs)
 export const REGLES_TARIFS = {
+  taux: TAUX_CHANGE, // devises pour 1 euro : une modification de prix dans une devise recalcule les autres
   moisOffertsAnnuel: 2, // paiement annuel : 12 mois pour le prix de 10
   remiseFondateur: 20, // % de remise à vie
   placesFondateur: 20, // pour les 20 premiers clients

@@ -232,6 +232,10 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   « Cet appareil imprime les tickets du poste… » + imprimante Bluetooth connectée, application ouverte
   (synchronisation toutes les 5 secondes).
 - Paiement annuel : 2 mois offerts. Tarif fondateur : −20 % à vie, 20 places (case dans la fiche du commerce).
+- **Épicerie à part** (12 000 FCFA, 199 DH, 18 €…) ; les autres commerces de proximité restent à 9 000 FCFA.
+- **Toutes les devises suivent le même taux** : `TAUX_CHANGE` (1 € = 655,957 FCFA, 10,8 DH, 1,5 CAD, 1,1 USD, 9 840 GNF), modifiable dans
+  `/admin` → Tarifs → « Taux de change ». Changer un prix dans une devise recalcule toutes les autres (dirhams en …9, FCFA à 500, GNF à 5 000) ;
+  deux boutons recalculent toute la grille depuis le FCFA ou l'euro. La migration 22 remplace une grille déjà enregistrée par la grille officielle.
 - **Code parrain et prix catalogue** : les prix de la grille sont ceux des clients inscrits **avec un code parrain** (les tarifs
   actuels, inchangés). Les nouveaux clients **sans code** paient le **prix catalogue** = prix ÷ (1 − remise), arrondi au pas supérieur
   (FCFA 500, MAD 5, GNF 5 000, EUR/CAD/USD 1) : par défaut remise de 10 %, catalogue pour les inscriptions à partir du 06/10/2026
@@ -306,7 +310,7 @@ Pour les vendeuses qui lisent peu : **Compte → Mode illustré** (réglage de c
 
 ## Paiement par virement et prix en euros
 
-La page Tarifs propose « Prix en euros (€) » (colonne EUR de la grille). Dans l'application, Compte → Abonnement affiche « ou 16 € en euros (virement) » et le bouton **Payer par virement bancaire** : comptes de l'équipe (Espace Amorac → Tarifs → Comptes bancaires pour les virements), montant exact dans la devise du compte, référence `KAISLO-code` à écrire dans le motif, « J'ai fait le virement » (message à l'équipe). L'équipe enregistre ensuite le paiement avec le moyen « Virement » (`api/lib/virement.php`).
+La page Tarifs propose « Prix en euros (€) » (colonne EUR de la grille). Dans l'application, Compte → Abonnement affiche « ou 20 € en euros (virement) » et le bouton **Payer par virement bancaire** : comptes de l'équipe (Espace Amorac → Tarifs → Comptes bancaires pour les virements), montant exact dans la devise du compte, référence `KAISLO-code` à écrire dans le motif, « J'ai fait le virement » (message à l'équipe). L'équipe enregistre ensuite le paiement avec le moyen « Virement » (`api/lib/virement.php`).
 
 ## Une page par boutique pour Google
 

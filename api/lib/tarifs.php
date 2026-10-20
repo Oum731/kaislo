@@ -12,13 +12,17 @@
 const VENDEURS_PAR_POSTE = 5;
 
 const FORMULES_DEFAUT = [
+    ['id' => 'epicerie', 'nom' => 'Épicerie', 'famille' => 'Commerce de proximité',
+        'types' => ['epicerie'],
+        'prix' => ['MAD' => 199, 'FCFA' => 12000, 'EUR' => 18, 'CAD' => 27, 'USD' => 20, 'GNF' => 180000],
+        'prixPoste' => ['MAD' => 49, 'FCFA' => 3000, 'EUR' => 5, 'CAD' => 7, 'USD' => 5, 'GNF' => 45000]],
     ['id' => 'proximite', 'nom' => 'Commerce de proximité', 'famille' => 'Commerce de proximité',
-        'types' => ['epicerie', 'boutique', 'telephonie', 'librairie', 'beaute', 'autre'],
+        'types' => ['boutique', 'telephonie', 'librairie', 'beaute', 'autre'],
         'prix' => ['MAD' => 149, 'FCFA' => 9000, 'EUR' => 14, 'CAD' => 21, 'USD' => 15, 'GNF' => 135000],
         'prixPoste' => ['MAD' => 49, 'FCFA' => 3000, 'EUR' => 5, 'CAD' => 7, 'USD' => 5, 'GNF' => 45000]],
     ['id' => 'maquis', 'nom' => 'Maquis et boulangerie', 'famille' => 'Restauration et boissons',
         'types' => ['maquis', 'boulangerie'],
-        'prix' => ['MAD' => 169, 'FCFA' => 10000, 'EUR' => 16, 'CAD' => 24, 'USD' => 17, 'GNF' => 150000],
+        'prix' => ['MAD' => 169, 'FCFA' => 10000, 'EUR' => 15, 'CAD' => 23, 'USD' => 17, 'GNF' => 150000],
         'prixPoste' => ['MAD' => 69, 'FCFA' => 4000, 'EUR' => 6, 'CAD' => 9, 'USD' => 7, 'GNF' => 60000]],
     ['id' => 'restaurant', 'nom' => 'Restaurant et bar', 'famille' => 'Restauration et boissons',
         'types' => ['restaurant', 'bar'],
@@ -26,20 +30,22 @@ const FORMULES_DEFAUT = [
         'prixPoste' => ['MAD' => 69, 'FCFA' => 4000, 'EUR' => 6, 'CAD' => 9, 'USD' => 7, 'GNF' => 60000]],
     ['id' => 'quincaillerie', 'nom' => 'Quincaillerie', 'famille' => 'Commerces professionnels',
         'types' => ['quincaillerie'],
-        'prix' => ['MAD' => 269, 'FCFA' => 16000, 'EUR' => 25, 'CAD' => 37, 'USD' => 27, 'GNF' => 240000],
-        'prixPoste' => ['MAD' => 89, 'FCFA' => 5000, 'EUR' => 8, 'CAD' => 12, 'USD' => 9, 'GNF' => 75000]],
+        'prix' => ['MAD' => 269, 'FCFA' => 16000, 'EUR' => 24, 'CAD' => 37, 'USD' => 27, 'GNF' => 240000],
+        'prixPoste' => ['MAD' => 89, 'FCFA' => 5000, 'EUR' => 8, 'CAD' => 11, 'USD' => 8, 'GNF' => 75000]],
     ['id' => 'pro', 'nom' => 'Commerce de gros', 'famille' => 'Commerces professionnels',
         'types' => ['grossiste', 'pharmacie'], // « pharmacie » : anciens commerces seulement
-        'prix' => ['MAD' => 319, 'FCFA' => 19000, 'EUR' => 29, 'CAD' => 44, 'USD' => 32, 'GNF' => 285000],
-        'prixPoste' => ['MAD' => 89, 'FCFA' => 5000, 'EUR' => 8, 'CAD' => 12, 'USD' => 9, 'GNF' => 75000]],
+        'prix' => ['MAD' => 319, 'FCFA' => 19000, 'EUR' => 29, 'CAD' => 43, 'USD' => 32, 'GNF' => 285000],
+        'prixPoste' => ['MAD' => 89, 'FCFA' => 5000, 'EUR' => 8, 'CAD' => 11, 'USD' => 8, 'GNF' => 75000]],
 ];
 
 // Prix catalogue et code parrain : les prix saisis dans la grille (FORMULES) sont ceux des clients qui s'inscrivent AVEC un code parrain
 // (donc les tarifs actuels, inchangés). Les nouveaux clients SANS code paient le prix catalogue = prix de la grille ÷ (1 − remise),
 // arrondi au pas supérieur : le code donne alors une vraie remise sans jamais baisser les tarifs actuels.
 // Les commerces inscrits avant « catalogueDepuis » gardent leur prix actuel.
+// « taux » : unités de chaque devise pour 1 euro (le FCFA est fixe). Changer un prix dans l'espace Amorac recalcule les autres devises.
+const TAUX_CHANGE = ['EUR' => 1, 'FCFA' => 655.957, 'MAD' => 10.8, 'CAD' => 1.5, 'USD' => 1.1, 'GNF' => 9840];
 const REGLES_DEFAUT = [
-    'moisOffertsAnnuel' => 2, 'remiseFondateur' => 20, 'placesFondateur' => 20,
+    'taux' => TAUX_CHANGE, 'moisOffertsAnnuel' => 2, 'remiseFondateur' => 20, 'placesFondateur' => 20,
     'remiseParrain' => 10, 'remiseMultiCommerce' => 10, 'catalogueActif' => true, 'catalogueDepuis' => '2026-10-06',
 ];
 
@@ -172,7 +178,13 @@ function routeAdminTarifs(): never
     }
     if (!$propres) throw new ErreurApi('Liste de formules attendue');
     $r = (array) ($e['regles'] ?? []);
+    $taux = [];
+    foreach (TAUX_CHANGE as $devise => $defaut) {
+        $t = (float) (((array) ($r['taux'] ?? []))[$devise] ?? 0);
+        $taux[$devise] = $devise === 'EUR' ? 1 : ($t > 0 ? $t : $defaut);
+    }
     $regles = [
+        'taux' => $taux,
         'moisOffertsAnnuel' => max(0, min(6, (int) ($r['moisOffertsAnnuel'] ?? 2))),
         'remiseFondateur' => max(0, min(90, (float) ($r['remiseFondateur'] ?? 20))),
         'placesFondateur' => max(0, min(1000, (int) ($r['placesFondateur'] ?? 20))),

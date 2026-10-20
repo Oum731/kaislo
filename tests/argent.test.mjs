@@ -215,3 +215,21 @@ test('prix catalogue : le code parrain ne baisse jamais les tarifs actuels', asy
   assert.equal(modeTarif({ commercialId: null, creeLe: '2026-10-06T00:00:01Z' }), 'catalogue');
   assert.equal(modeTarif({ commercialId: null, creeLe: '2027-01-01T00:00:00Z' }, { ...REGLES_TARIFS, catalogueActif: false }), 'base');
 });
+
+test('tarifs : épicerie à 12 000 FCFA et toutes les devises suivent la même grille', async () => {
+  const { FORMULES, TAUX_CHANGE, convertirPrix, prixTouteDevise, formuleDuType } = await import('../src/lib/donnees/tarifs.js');
+  assert.equal(formuleDuType('epicerie').prix.FCFA, 12000);
+  assert.equal(formuleDuType('boutique').id, 'proximite');
+  const devises = ['MAD', 'FCFA', 'EUR', 'CAD', 'USD', 'GNF'];
+  for (const f of FORMULES) {
+    // Chaque ligne de la grille est celle que donnent les taux à partir du FCFA
+    assert.deepEqual(f.prix, prixTouteDevise(f.prix.FCFA, 'FCFA', devises), `${f.id} : prix`);
+    assert.deepEqual(f.prixPoste, prixTouteDevise(f.prixPoste.FCFA, 'FCFA', devises), `${f.id} : poste`);
+  }
+  // Changer le FCFA ou l'euro met tout le reste à jour, dans les deux sens
+  assert.deepEqual(prixTouteDevise(12000, 'FCFA', devises), { MAD: 199, FCFA: 12000, EUR: 18, CAD: 27, USD: 20, GNF: 180000 });
+  assert.equal(convertirPrix(18, 'EUR', 'FCFA'), 12000);
+  assert.equal(convertirPrix(199, 'MAD', 'FCFA'), 12000);
+  assert.equal(convertirPrix(15000, 'FCFA', 'MAD') % 10, 9); // dirhams terminés par 9
+  assert.equal(TAUX_CHANGE.FCFA, 655.957);
+});
