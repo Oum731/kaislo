@@ -58,18 +58,18 @@ test('l\'équipe enregistre un compte : IBAN nettoyé, contrôles, réservé à 
   assert.equal((await api('GET', '/admin/virement', null, admin.jeton)).comptes.length, 1);
 });
 
-test('le gérant voit le compte en euros avec le montant de la grille (épicerie : 14 € par mois, catalogue ÷ 0,9 = 16 €)', async () => {
+test('le gérant voit le compte en euros avec le montant de la grille (épicerie : 18 € par mois, catalogue ÷ 0,9 = 20 €)', async () => {
   const r = await api('GET', '/paiement-virement', null, gerant.jeton);
   assert.equal(r.comptes.length, 1);
   assert.equal(r.comptes[0].devise, 'EUR');
   assert.equal(r.comptes[0].iban, 'FR7630006000011234567890189');
-  // Nouveau client sans code parrain : prix catalogue (14 / (1 − 10 %) arrondi au pas supérieur = 16)
-  assert.equal(r.comptes[0].parMois, 16);
-  assert.equal(r.comptes[0].annuel, 160); // 12 mois pour le prix de 10
+  // Nouveau client sans code parrain : prix catalogue (18 / (1 − 10 %) = 20)
+  assert.equal(r.comptes[0].parMois, 20);
+  assert.equal(r.comptes[0].annuel, 200); // 12 mois pour le prix de 10
 });
 
 test('l\'équivalent en euros accompagne le tarif du commerce en francs CFA', async () => {
   const d = await api('GET', '/donnees?depuis=', null, gerant.jeton);
   assert.equal(d.tarif.devise, 'FCFA');
-  assert.deepEqual(d.tarif.euro, { parMois: 16, annuel: 160 });
+  assert.deepEqual(d.tarif.euro, { parMois: 20, annuel: 200 });
 });

@@ -239,15 +239,15 @@ test('commercial : inscription libre, code automatique, validation par l’équi
   // Catalogue prévu pour demain : tous les commerces d'aujourd'hui gardent leur prix actuel
   await fixerDate(1);
   let t = await tarifs();
-  assert.equal(t['Chez Sans Code'].parMois, 9000);
+  assert.equal(t['Chez Sans Code'].parMois, 12000);
   assert.equal(t['Chez Sans Code'].mode, 'base');
 
   // Catalogue en vigueur depuis hier : sans code = prix catalogue ; avec code = tarif actuel ; commerces plus anciens inchangés
   await fixerDate(-1);
   t = await tarifs();
-  assert.equal(t['Chez Code'].parMois, 9000); // tarif actuel inchangé
+  assert.equal(t['Chez Code'].parMois, 12000); // tarif actuel inchangé
   assert.equal(t['Chez Code'].parrain, true);
-  assert.equal(t['Chez Sans Code'].parMois, 10000); // catalogue = 9000 ÷ 0,9
+  assert.equal(t['Chez Sans Code'].parMois, 13500); // catalogue = 12000 ÷ 0,9
   assert.equal(t['Chez Sans Code'].mode, 'catalogue');
   assert.ok(t['Chez Sans Code'].annuel > t['Chez Code'].annuel);
 
