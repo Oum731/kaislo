@@ -4,6 +4,7 @@
 // ------------------------------------------------------------
 import { stockDe } from '@/lib/donnees/stock.js';
 import { creerLigne, cleLigne, sousTotal, montantRemise } from '@/lib/donnees/vente.js';
+import { produitPourMode, aPrixGros } from '@/lib/donnees/gros.js';
 import { soldeClient } from '@/lib/donnees/credit.js';
 import { CREDIT } from '@/lib/donnees/modeles.js';
 import { arrondir, genId } from '@/lib/utils/format.js';
@@ -17,6 +18,7 @@ export const trancheCaisse = (set, get) => ({
   remise: null, // { type: 'pourcent' | 'montant', valeur }
   commandeActive: null, // id de la commande (table) en cours de modification
   derniereVente: null,
+  modeGros: false, // « Détail » ou « Gros » : le prix affiché et vendu est celui du mode (voir lib/donnees/gros.js)
   // choix en cours dans le panier (gardés quand on passe d'une fenêtre à l'autre)
   paiementChoisi: null,
   montantRecu: null,
@@ -29,7 +31,8 @@ export const trancheCaisse = (set, get) => ({
   ajouterAuPanier(produit, choix, quantite) {
     const { d } = get();
     const cat = d.categories.find((c) => c.id === produit.categorieId);
-    const ligne = creerLigne(produit, choix, quantite, d.commerce.devise, cat?.nom);
+    const vendu = produitPourMode(produit, get().modeGros); // au carton en mode gros (si l'article a un prix de gros)
+    const ligne = creerLigne(vendu, choix, quantite, d.commerce.devise, cat?.nom);
     const panier = [...get().panier];
     // Même article avec les mêmes options, pas encore envoyé en cuisine : on additionne
     const i = panier.findIndex((l) => !l.envoyee && cleLigne(l) === cleLigne(ligne));
@@ -40,8 +43,16 @@ export const trancheCaisse = (set, get) => ({
       panier.push(ligne);
     }
     set({ panier });
+    const contenance = vendu._gros?.contenance || 1;
     if (produit.suiviStock && stockDe(produit) <= 0) {
       get().message(tr('Stock de « {0} » à zéro : pensez à le mettre à jour', [produit.nom]), 'erreur');
+    } else if (produit.suiviStock && contenance > 1 && panier[i >= 0 ? i : panier.length - 1].quantite * contenance > stockDe(produit)) {
+      get().message(tr('Stock de « {0} » : {1} seulement', [produit.nom, stockDe(produit)]), 'erreur');
+    }
+    // Prix de gros : nombre de cartons conseillé (avertissement, jamais un blocage)
+    const l = panier[i >= 0 ? i : panier.length - 1];
+    if (vendu._gros && l.quantite === 1 && l.quantite < vendu._gros.minimum) {
+      get().message(tr('Prix de gros à partir de {0} {1}', [vendu._gros.minimum, vendu._gros.unite]), 'erreur');
     }
     if (typeof navigator !== 'undefined') navigator.vibrate?.(15);
   },
@@ -54,8 +65,25 @@ export const trancheCaisse = (set, get) => ({
     set({ panier });
   },
 
+  // Passe de « Détail » à « Gros » (ou l'inverse) : les articles du panier qui ont un prix de gros sont refaits au nouveau prix.
+  // Les quantités repartent à 1 (un carton n'est pas 24 pièces) : le message invite à les vérifier.
+  choisirModeGros(gros) {
+    if (get().modeGros === gros) return;
+    const { d } = get();
+    let change = false;
+    const panier = get().panier.map((l) => {
+      const p = d.produits.find((x) => x.id === l.produitId);
+      if (!p || l.envoyee || !aPrixGros(p)) return l;
+      change = true;
+      const cat = d.categories.find((c) => c.id === p.categorieId);
+      return creerLigne(produitPourMode(p, gros), {}, 1, d.commerce.devise, cat?.nom);
+    });
+    set({ modeGros: gros, panier });
+    if (change) get().message(gros ? tr('Prix de gros appliqués : vérifiez les quantités (au carton)') : tr('Prix de détail appliqués : vérifiez les quantités (à la pièce)'), 'erreur');
+  },
+
   viderPanier() {
-    set({ panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
+    set({ modeGros: false, panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
   },
 
   definirRemise(remise) {
@@ -114,6 +142,7 @@ export const trancheCaisse = (set, get) => ({
       aDistance: get().aDistance || undefined,
       telephoneClient: (get().aDistance && get().telephoneDistance.trim()) || client?.telephone || undefined,
       lignes: panier.map(({ envoyee, ...l }) => l),
+      ...(panier.some((l) => l.gros) ? { gros: true } : {}), // vente avec des articles au carton (badge dans l'historique)
       sousTotal: t.sousTotal,
       remise: t.remise,
       remiseInfo: t.remise > 0 ? remise : null,
@@ -128,7 +157,7 @@ export const trancheCaisse = (set, get) => ({
       // La table est libérée
       commandes: commande ? d.commandes.filter((c) => c.id !== commande.id) : d.commandes,
     }));
-    set({ panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
+    set({ modeGros: false, panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
     get().ouvrir('ticket', { vente, nouvelle: true });
     if (typeof navigator !== 'undefined') navigator.vibrate?.([30, 50, 30]);
     // Impression automatique seulement si une imprimante est connectée ET si l'option est active (facultatif)

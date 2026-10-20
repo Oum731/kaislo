@@ -168,11 +168,11 @@ function chezSentinelle() {
       { id: cFruits, nom: 'Fruits & légumes', couleur: 'terre' },
     ],
     produits: [
-      p(cEpi, 'Huile de table 1L', 24, 20.5, '🫒', '6111000000011', 30),
+      p(cEpi, 'Huile de table 1L', 24, 20.5, '🫒', '6111000000011', 30, { gros: { prix: 262, unite: 'carton', contenance: 12, minimum: 2 } }),
       p(cEpi, 'Sucre en morceaux 1kg', 12.5, 10.8, '🧊', '6111000000028', 42),
       p(cEpi, 'Thé vert 200g', 16, 12.5, '🍵', '6111000000035', 4),
       p(cEpi, 'Farine 1kg', 9, 7.4, '🌾', '6111000000042', 25),
-      p(cEpi, 'Pâtes 500g', 7.5, 5.9, '🍝', '6111000000059', 60),
+      p(cEpi, 'Pâtes 500g', 7.5, 5.9, '🍝', '6111000000059', 60, { gros: { prix: 130, unite: 'carton', contenance: 20, minimum: 2 } }),
       p(cEpi, 'Riz 1kg', 14, 11, '🍚', '6111000000066', 3),
       p(cEpi, 'Pain rond', 1.5, 1.1, '🥖', '', 80, { seuilAlerte: 20 }),
       p(cBoi, 'Eau minérale 1,5L', 6, 4.6, '💧', '6111000000073', 48, {
@@ -180,7 +180,7 @@ function chezSentinelle() {
       }),
       p(cBoi, 'Soda 1L', 9, 6.8, '🥤', '6111000000080', 24, { promo: 8 }),
       p(cBoi, 'Jus d’orange 1L', 11, 8.5, '🍊', '6111000000097', 12),
-      p(cLait, 'Lait 1L', 7.5, 6.6, '🥛', '6111000000103', 36, { seuilAlerte: 10 }),
+      p(cLait, 'Lait 1L', 7.5, 6.6, '🥛', '6111000000103', 36, { seuilAlerte: 10, gros: { prix: 84, unite: 'carton', contenance: 12, minimum: 2 } }),
       p(cLait, 'Yaourt nature', 2.5, 1.9, '🍶', '6111000000110', 50, { seuilAlerte: 12 }),
       p(cLait, 'Raïbi', 3, 2.3, '🍓', '6111000000127', 2),
       p(cLait, 'Fromage portions x8', 13, 10.2, '🧀', '6111000000134', 15),
@@ -508,6 +508,7 @@ function adapterAuPays(d, paysId) {
     p.prix = c(p.prix);
     p.promo = p.promo ? c(p.promo) : null;
     p.prixAchat = c(p.prixAchat);
+    if (p.gros) p.gros = { ...p.gros, prix: c(p.gros.prix) };
     for (const g of p.groupes) for (const o of g.options) o.prix = c(o.prix);
   }
   const noms = CLIENTS_EPICERIE[pays.id === 'MA' ? 'MA' : 'autre'];

@@ -23,6 +23,7 @@ export function prixDeBase(produit) {
  * Elle garde aussi le prix d'achat (coutUnitaire) pour calculer la marge.
  */
 export function creerLigne(produit, choix, quantite, devise, categorieNom = '') {
+  const g = produit._gros || null; // vente au carton (voir gros.js)
   const morceauxNom = [produit.nom];
   const details = [];
   const optionsChoisies = [];
@@ -47,7 +48,9 @@ export function creerLigne(produit, choix, quantite, devise, categorieNom = '') 
     produitId: produit.id,
     produitNom: produit.nom,
     categorieNom,
-    nom: morceauxNom.join(' – '),
+    // Au carton : « Coca 33 cl (carton de 24) » ; « contenance » dit au stock combien d'unités sortent par carton
+    nom: morceauxNom.join(' – ') + (g ? ` (${g.unite} de ${g.contenance})` : ''),
+    ...(g ? { gros: true, contenance: g.contenance, uniteGros: g.unite, minimumGros: g.minimum } : {}),
     details,
     options: optionsChoisies,
     prixUnitaire,
@@ -68,7 +71,7 @@ export function choixComplets(produit, choix) {
 
 // Clé qui permet de regrouper deux fois le même article avec les mêmes options.
 export function cleLigne(ligne) {
-  return ligne.produitId + '|' + ligne.options.map((o) => o.groupe + ':' + o.nom).join(',');
+  return ligne.produitId + '|' + ligne.options.map((o) => o.groupe + ':' + o.nom).join(',') + (ligne.gros ? '|gros' : '');
 }
 
 export function sousTotal(lignes, devise) {
