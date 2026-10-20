@@ -12,6 +12,7 @@ import { formatDate, formatHeure, formatJourLong, symbole } from '@/lib/utils/fo
 import { historiqueCaisse } from '@/lib/donnees/cloture';
 import { Feuille, Icone, ApercuTicket, ChampMontant, Segment, ImageStockee, initiales } from '@/components/ui';
 import { ContenuPanier } from '../ecrans/Caisse';
+import BoutonContacts from '../BoutonContacts';
 import { venteEnGros } from '@/lib/donnees/gros';
 import { tr, tt } from '@/lib/i18n';
 
@@ -168,6 +169,7 @@ function EnvoiWhatsApp({ vente, enAvant }) {
         <input className="saisie grandit" type="tel" inputMode="tel" placeholder={tr('Numéro WhatsApp du client')} value={telephone} onChange={(e) => setTelephone(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && envoyer()} />
         <button className="btn" onClick={envoyer} disabled={!telephone.trim()}><Icone nom="whatsapp" /> {tr('Envoyer')}</button>
       </div>
+      <BoutonContacts surChoisir={(c) => setTelephone(c.telephone)} />
       <p className="tres-petit muet">{tr('WhatsApp s’ouvre avec le reçu déjà écrit : il ne reste qu’à appuyer sur Envoyer. Le numéro peut être tapé sans l’indicatif du pays.')}</p>
     </div>
   );
@@ -278,6 +280,7 @@ export function FeuilleChoixClient() {
         <div className="pile">
           <label className="champ"><span>{tr('Nom')}</span><input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} autoFocus placeholder={tr('Ex : Amorac Kaislo')} /></label>
           <label className="champ"><span>{tr('Téléphone (pour le rappel WhatsApp)')}</span><input type="tel" value={nouveau.telephone} onChange={(e) => setNouveau({ ...nouveau, telephone: e.target.value })} placeholder={tr('Ex : 06 12 34 56 78')} /></label>
+          <BoutonContacts avecNom surChoisir={(c) => setNouveau({ ...nouveau, telephone: c.telephone, nom: nouveau.nom.trim() ? nouveau.nom : c.nomContact })} />
         </div>
       </Feuille>
     );

@@ -291,6 +291,10 @@ Chaque commerce et chaque utilisateur est identifié par son numéro, enregistr�
 (ex : `+225 07 12 34 56 78`) selon les règles du pays (`src/lib/donnees/telephone.js` et `api/lib/telephone.php`,
 à garder identiques). Un numéro ne peut appartenir qu'à un seul commerce. Pour ajouter un pays : compléter les deux fichiers.
 
+## Contacts du téléphone
+
+Bouton « Choisir dans mes contacts » à côté des numéros de clients (client à distance et reçu WhatsApp à la caisse, nouveau client, client du crédit). Il utilise le **sélecteur de contacts du navigateur** (`src/lib/contacts.js`, `BoutonContacts.jsx`) : disponible sur **Chrome pour Android** (et l'application installée), absent sur iPhone/Safari et sur ordinateur, où le bouton n'apparaît pas et la saisie reste comme avant. Kaislo ne lit jamais tout le répertoire : le téléphone affiche sa propre fenêtre, la vendeuse touche un contact, et seuls son nom et ses numéros arrivent dans la fiche en cours (un contact avec plusieurs numéros : elle choisit le bon). Rien n'est copié ailleurs.
+
 ## Demi-carton et virement à la caisse
 
 - **Demi-carton** : dans la fiche article (Vendre aussi en gros → « Vendre aussi au demi-carton »), prix propre ou moitié du carton par défaut. En mode Gros, un bouton « ½ » apparaît sur la tuile ; la ligne s'appelle « Coca (demi-carton de 12) », garde son prix, sort la moitié du contenu du stock, et n'a jamais de minimum. Sur le lien privé des grossistes, c'est un article de plus (identifiant `…:demi`). « Ouvrir dans la caisse » reprend les demi-cartons d'une commande.

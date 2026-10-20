@@ -2019,4 +2019,8 @@ export const EN = {
   "Un bouton « ½ » apparaît sur l’article en mode Gros. Sans prix saisi, le demi-carton coûte la moitié du carton.": "A “½” button appears on the item in Wholesale mode. With no price entered, the half carton costs half of the carton.",
   "Prix du demi-carton ({0})": "Half-carton price ({0})",
   "Indiquez le prix du demi-carton": "Enter the half-carton price",
+  "Ce contact n’a pas de numéro de téléphone.": "This contact has no phone number.",
+  "Les contacts ne sont pas accessibles sur ce téléphone : tapez le numéro.": "Contacts are not available on this phone: type the number.",
+  "Choisir dans mes contacts": "Pick from my contacts",
+  "quel numéro ?": "which number?",
 };

@@ -15,6 +15,7 @@ import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, C
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { UNITES_GROS, grosDisponible } from '@/lib/donnees/gros';
 import { dire, voixDisponible } from '@/lib/voix';
+import BoutonContacts from '../BoutonContacts';
 import { liensMenu } from '../Coque';
 import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
 import { cleTelephone } from '@/lib/donnees/modeles';
@@ -309,6 +310,7 @@ export function FeuilleClient({ client }) {
       <div className="pile">
         <label className="champ"><span>{tr('Nom')}</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder={tr('Ex : Amorac Kaislo')} autoFocus /></label>
         <label className="champ"><span>{tr('Téléphone (pour le rappel WhatsApp)')}</span><input type="tel" value={b.telephone} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder={tr('Ex : 06 12 34 56 78')} /></label>
+        <BoutonContacts avecNom surChoisir={(c) => setB({ ...b, telephone: c.telephone, nom: b.nom.trim() ? b.nom : c.nomContact })} />
         <label className="champ"><span>{tr('Note')}</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder={tr('Ex : paie en fin de mois')} /></label>
         {grosDisponible(s.d.commerce) && <Reglage titre={tr('Client grossiste')} aide={tr('Pour vous rappeler qu’il achète en gros : choisissez « Gros » à la caisse pour lui appliquer vos prix de gros.')} actif={!!b.gros} surChanger={(v) => setB({ ...b, gros: v })} />}
         {b.id && s.estGerant() && (

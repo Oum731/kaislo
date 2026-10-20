@@ -11,6 +11,7 @@ import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
 import { venteEnGros, produitPourMode, aDemi } from '@/lib/donnees/gros';
 import { dire, montantParle, phrasePanier, voixDisponible } from '@/lib/voix';
+import BoutonContacts from '../BoutonContacts';
 import { CREDIT } from '@/lib/donnees/modeles';
 import { soldeClient } from '@/lib/donnees/credit';
 import { formatHeure, quantiteUnite } from '@/lib/utils/format';
@@ -294,14 +295,17 @@ export function ContenuPanier({ dansFeuille = false }) {
             surChanger={(v) => setEtat({ aDistance: v })}
           />
           {s.aDistance && (
-            <input
-              className="saisie"
-              type="tel"
-              inputMode="tel"
-              placeholder={tr('Numéro WhatsApp du client')}
-              value={s.telephoneDistance}
-              onChange={(e) => setEtat({ telephoneDistance: e.target.value })}
-            />
+            <>
+              <input
+                className="saisie"
+                type="tel"
+                inputMode="tel"
+                placeholder={tr('Numéro WhatsApp du client')}
+                value={s.telephoneDistance}
+                onChange={(e) => setEtat({ telephoneDistance: e.target.value })}
+              />
+              <BoutonContacts surChoisir={(c) => setEtat({ telephoneDistance: c.telephone })} />
+            </>
           )}
         </div>
 
