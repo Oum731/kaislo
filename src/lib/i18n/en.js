@@ -2005,4 +2005,9 @@ export const EN = {
   "Prix en {0}": "Prices in {0}",
   "Prix en euros (€)": "Prices in euros (€)",
   "Prix en euros : pour payer par virement bancaire depuis un compte en euros. Après votre inscription, l’application affiche le compte, le montant exact et la référence à indiquer.": "Prices in euros: to pay by bank transfer from a euro account. After you sign up, the app shows the account, the exact amount and the reference to write.",
+  "Écouter le total": "Listen to the total",
+  "Mode illustré": "Picture mode",
+  "Grandes photos, gros chiffres et voix : pour utiliser Kaislo sans lire. Réglage de ce téléphone.": "Big photos, big numbers and voice: to use Kaislo without reading. Setting for this phone.",
+  "Voix": "Voice",
+  "Dit l’article touché, le total, la monnaie à rendre.": "Says the item you touch, the total and the change to give back.",
 };

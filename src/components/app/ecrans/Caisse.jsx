@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { prixDeBase } from '@/lib/donnees/vente';
 import { venteEnGros, produitPourMode } from '@/lib/donnees/gros';
+import { dire, montantParle, phrasePanier, voixDisponible } from '@/lib/voix';
 import { CREDIT } from '@/lib/donnees/modeles';
 import { soldeClient } from '@/lib/donnees/credit';
 import { formatHeure, quantiteUnite } from '@/lib/utils/format';
@@ -53,7 +54,10 @@ export default function Caisse() {
   const qteDansPanier = (p) => s.panier.filter((l) => l.produitId === p.id).reduce((x, l) => x + l.quantite, 0);
   const couleur = (p) => d.categories.find((c) => c.id === p.categorieId)?.couleur || 'vert';
 
+  // Mode illustré avec voix : l'article touché est dit à voix haute (« Attiéké, 3000 francs CFA »)
+  const voix = !!s.prefs.modeIllustre && s.prefs.voix !== false;
   const toucher = (p) => {
+    if (voix) dire(`${p.nom}, ${montantParle(prixDeBase(produitPourMode(p, s.modeGros)), s.devise())}`);
     if (p.groupes.length) s.ouvrir('options', { produit: p });
     else s.ajouterAuPanier(p, {}, 1);
   };
@@ -133,7 +137,8 @@ export default function Caisse() {
                       </>
                     ) : (
                       <>
-                                                {texte}
+                        <span className="tuile-emoji" aria-hidden="true">{p.emoji || initiales(p.nom)}</span>
+                        {texte}
                       </>
                     )}
                   </button>
@@ -194,7 +199,16 @@ export function ContenuPanier({ dansFeuille = false }) {
   const suggestions = [...new Set((BILLETS[s.devise()] || []).map((b) => Math.ceil(t.total / b) * b).filter((m) => m > t.total))].sort((a, b) => a - b).slice(0, 3);
   const rendu = recu > 0 ? recu - t.total : 0;
 
-  const encaisser = () => s.validerVente({ paiement, recu: recu || 0, client: paiement === CREDIT ? client : null });
+  // Mode illustré : photos dans le panier, et voix (total avant d'encaisser, monnaie à rendre, vente enregistrée)
+  const illustre = !!s.prefs.modeIllustre;
+  const voix = illustre && s.prefs.voix !== false && voixDisponible();
+  const devise = s.devise();
+  useEffect(() => { if (voix && recu > 0 && rendu >= 0) dire(`À rendre : ${montantParle(rendu, devise)}`); }, [recu]); // eslint-disable-line react-hooks/exhaustive-deps
+  const encaisser = () => {
+    const total = t.total;
+    s.validerVente({ paiement, recu: recu || 0, client: paiement === CREDIT ? client : null });
+    if (voix && !useKaislo.getState().panier.length) dire(`Vente enregistrée. ${montantParle(total, devise)}`);
+  };
 
   if (!panier.length) {
     return (
@@ -229,6 +243,10 @@ export function ContenuPanier({ dansFeuille = false }) {
         <div className={dansFeuille ? 'carte' : ''} style={dansFeuille ? { padding: '4px 16px' } : undefined}>
           {panier.map((l, i) => (
             <div key={i + l.nom} className="ligne-panier">
+              {illustre && (() => {
+                const produit = d.produits.find((x) => x.id === l.produitId);
+                return <ImageStockee reference={produit?.image} className="mini-photo" alt="" secours={<span className="mini-emoji" aria-hidden="true">{produit?.emoji || initiales(l.produitNom || l.nom)}</span>} />;
+              })()}
               <div className="grandit">
                 <b>{l.nom}</b>
                 {l.details.map((x) => <p key={x} className="tres-petit muet">{x}</p>)}
@@ -333,6 +351,7 @@ export function ContenuPanier({ dansFeuille = false }) {
         </div>
         <div className="ligne espace" style={{ margin: '4px 0 12px' }}>
           <span className="muet">{tr('Total à payer')}</span>
+          {illustre && voixDisponible() && <button type="button" className="bouton-voix" onClick={() => dire(phrasePanier(panier, t.total, devise))} aria-label={tr('Écouter le total')}><Icone nom="voix" /></button>}
           <span className="total-grand">{s.prix(t.total)}</span>
         </div>
         {(commande || s.aTables()) && (

@@ -32,7 +32,13 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - name: Construction du site
-        run: npm run build
+        # Google Fonts est téléchargé pendant la construction : une panne réseau passagère ne doit pas faire échouer tout le contrôle
+        run: |
+          for essai in 1 2 3; do
+            npm run build && exit 0
+            echo "Construction ratée (essai $essai sur 3), nouvelle tentative…"; sleep 10
+          done
+          exit 1
       - name: Captures d'écran
         if: ${{ inputs.quoi == 'captures' || inputs.quoi == 'captures et videos' }}
         env:

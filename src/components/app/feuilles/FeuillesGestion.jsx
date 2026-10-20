@@ -14,6 +14,7 @@ import { historiqueClient, soldeClient, lienRappelWhatsApp } from '@/lib/donnees
 import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, ChoixImage, initiales, ChampTelephone } from '@/components/ui';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { UNITES_GROS } from '@/lib/donnees/gros';
+import { dire, voixDisponible } from '@/lib/voix';
 import { liensMenu } from '../Coque';
 import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
 import { cleTelephone } from '@/lib/donnees/modeles';
@@ -481,6 +482,12 @@ export function FeuilleCompte() {
         <span style={{ display: 'inline-block' }}><Avatar nom={s.utilisateur.nom} gerant={s.estGerant()} grand /></span>
         <h2 style={{ marginTop: 12 }}>{s.utilisateur.nom}</h2>
         <p className="muet">{s.estGerant() ? tr('Gérant') : tr('Vendeur')} · {s.d.commerce.nom}</p>
+      </div>
+      <div className="carte pile" style={{ marginTop: 18 }}>
+        <Reglage titre={tr('Mode illustré')} aide={tr('Grandes photos, gros chiffres et voix : pour utiliser Kaislo sans lire. Réglage de ce téléphone.')} actif={!!s.prefs.modeIllustre} surChanger={(v) => s.sauverPrefs({ modeIllustre: v })} />
+        {s.prefs.modeIllustre && voixDisponible() && (
+          <Reglage titre={tr('Voix')} aide={tr('Dit l’article touché, le total, la monnaie à rendre.')} actif={s.prefs.voix !== false} surChanger={(v) => { s.sauverPrefs({ voix: v }); if (v) dire('La voix est activée'); }} />
+        )}
       </div>
       {!s.estGerant() && (
         <div className="liste" style={{ marginTop: 18 }}>

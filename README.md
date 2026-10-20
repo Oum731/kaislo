@@ -291,6 +291,14 @@ Chaque commerce et chaque utilisateur est identifié par son numéro, enregistr�
 (ex : `+225 07 12 34 56 78`) selon les règles du pays (`src/lib/donnees/telephone.js` et `api/lib/telephone.php`,
 à garder identiques). Un numéro ne peut appartenir qu'à un seul commerce. Pour ajouter un pays : compléter les deux fichiers.
 
+## Mode illustré (utiliser Kaislo sans lire)
+
+Pour les vendeuses qui lisent peu : **Compte → Mode illustré** (réglage de ce téléphone). La caisse montre de grandes photos (ou une grande icône) avec le prix en gros chiffres, des photos dans le panier avec de gros boutons + et −, des moyens de paiement plus grands, et le bouton de validation plus haut. La **voix** (synthèse vocale du téléphone, `src/lib/voix.js`, rien n'est envoyé nulle part) dit l'article touché (« Attiéké, 3000 francs CFA »), le total sur demande (bouton haut-parleur), la monnaie à rendre et « Vente enregistrée ». Photos des articles : plus elles sont présentes, plus c'est simple (fiche article → photo, ou import).
+
+## Paiement par virement et prix en euros
+
+La page Tarifs propose « Prix en euros (€) » (colonne EUR de la grille). Dans l'application, Compte → Abonnement affiche « ou 16 € en euros (virement) » et le bouton **Payer par virement bancaire** : comptes de l'équipe (Espace Amorac → Tarifs → Comptes bancaires pour les virements), montant exact dans la devise du compte, référence `KAISLO-code` à écrire dans le motif, « J'ai fait le virement » (message à l'équipe). L'équipe enregistre ensuite le paiement avec le moyen « Virement » (`api/lib/virement.php`).
+
 ## Une page par boutique pour Google
 
 Chaque boutique ouverte, publique (case « Afficher ma boutique sur kaislo.com/boutiques ») et avec au moins un article a une vraie page : `kaislo.com/boutique/nom-du-commerce/`. Le site est un export statique, donc le serveur écrit cette page à la demande (`api/lib/boutique-page.php`) : il prend la vitrine `boutique/index.html` et y met le titre, la description, l'adresse canonique, l'aperçu de partage, des données structurées (commerce local, fil d'Ariane, liste d'articles avec prix en XOF/XAF/MAD/EUR…) et le même contenu en HTML simple, que la vitrine retire dès qu'elle démarre. Réécritures dans `public/.htaccess` ; plan du site `kaislo.com/sitemap-boutiques.xml` (écrit par l'API, annoncé dans `robots.txt` ; les photos des articles restent lisibles par Google malgré `Disallow: /api/`).

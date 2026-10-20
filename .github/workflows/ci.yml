@@ -23,7 +23,13 @@ jobs:
       - name: Syntaxe PHP de l'API
         run: find api -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Construction du site
-        run: npm run build
+        # Google Fonts est téléchargé pendant la construction : une panne réseau passagère ne doit pas faire échouer tout le contrôle
+        run: |
+          for essai in 1 2 3; do
+            npm run build && exit 0
+            echo "Construction ratée (essai $essai sur 3), nouvelle tentative…"; sleep 10
+          done
+          exit 1
       - name: Contrôle du référencement (titres, descriptions, plan du site…)
         run: npm run seo
       - name: Traductions (anglais)
