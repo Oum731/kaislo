@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 21;
+const VERSION_BASE = 22;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -408,6 +408,15 @@ function migrer(PDO $pdo, string $driver): void
     if ($version >= 4 && $version < 6) $essayer('UPDATE commerciaux SET valide_le = cree_le WHERE valide_le IS NULL');
     // Numéros déjà enregistrés : mis au format international (pays du commerce)
     if ($version >= 1 && $version < 3) normaliserNumerosExistants($pdo);
+    // Bases en version 1 à 21 : nouvelle grille de tarifs (épicerie à part, toutes devises recalculées). Si l'équipe Amorac
+    // avait déjà enregistré ses tarifs, ils sont remplacés par la grille officielle (sinon les valeurs par défaut s'appliquent).
+    if ($version >= 1 && $version < 22) {
+        try {
+            $existe = $pdo->query("SELECT 1 FROM reglages_amorac WHERE cle = 'formules'")->fetch();
+            if ($existe) $pdo->prepare("UPDATE reglages_amorac SET valeur = ?, modifie_le = ? WHERE cle = 'formules'")
+                ->execute([json_encode(FORMULES_DEFAUT, JSON_UNESCAPED_UNICODE), gmdate('Y-m-d\TH:i:s\Z')]);
+        } catch (PDOException) { /* table absente : rien à mettre à jour */ }
+    }
     $pdo->prepare('INSERT INTO kaislo_version (version) VALUES (?)')->execute([VERSION_BASE]);
 }
 
