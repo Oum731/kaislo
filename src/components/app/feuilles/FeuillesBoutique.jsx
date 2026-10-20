@@ -35,13 +35,28 @@ export function FeuilleBoutique() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maj = (x) => setB({ ...b, ...x });
+  // Ce qu'on envoie au serveur (le lien privé des grossistes : activé ou non ; « regenererPro » : nouvelle clé)
+  const donnees = (plus = {}) => ({ actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison, ...plus });
+  const changerLienPro = async () => {
+    if (!confirm(tr('Changer le lien des grossistes ? L’ancien lien ne marchera plus : il faudra envoyer le nouveau à vos grossistes.'))) return;
+    setErreur(''); setOccupe(true);
+    try {
+      const r = await appelApi('POST', '/boutique', donnees({ regenererPro: true }), s.jetonServeur());
+      setB({ ...b, ...r.boutique });
+      setMessage(tr('Nouveau lien des grossistes créé. Envoyez-le à vos grossistes.'));
+    } catch (e) { setErreur(messageErreur(e)); }
+    setOccupe(false);
+  };
+  const copierPro = async () => {
+    try { await navigator.clipboard.writeText(b.lienPro); setMessage(tr('Lien des grossistes copié.')); } catch { setErreur(tr('Copie impossible : utilisez le bouton WhatsApp.')); }
+  };
   const enregistrer = async () => {
     setErreur('');
     setMessage('');
     if (b.actif && !b.conditionsAcceptees && !b.accord) return setErreur(tr('Pour activer votre boutique, cochez la case des conditions : Kaislo est un outil, vous restez seul responsable de vos articles et de vos ventes.'));
     setOccupe(true);
     try {
-      const r = await appelApi('POST', '/boutique', { actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison }, s.jetonServeur());
+      const r = await appelApi('POST', '/boutique', donnees(), s.jetonServeur());
       setB({ ...r.boutique });
       setMessage(r.boutique.actif ? tr('Boutique enregistrée : elle est en ligne.') : tr('Boutique enregistrée (désactivée).'));
     } catch (e) { setErreur(messageErreur(e)); }
@@ -95,12 +110,25 @@ export function FeuilleBoutique() {
             <p className="petit">{tr('{0} article(s) publié(s) en ligne. Pour en publier d’autres : ouvrez la fiche de l’article et cochez « Vendre en ligne ».', [b.articlesPublies])}</p>
             {b.lien && (
               <div className="carte pile">
-                <b>{tr('Votre lien')}</b>
+                <b>{tr('Lien public (prix de détail)')}</b>
                 <p className="petit" style={{ wordBreak: 'break-all' }}>{b.lien}</p>
                 <div className="grille-2">
                   <button className="btn secondaire" onClick={copier}><Icone nom="ok" /> {tr('Copier le lien')}</button>
                   <a className="btn" target="_blank" rel="noreferrer" href={'https://wa.me/?text=' + encodeURIComponent(tr('Commandez chez {0} : {1}', [s.d.commerce.nom, b.lien]))}><Icone nom="whatsapp" /> {tr('Partager')}</a>
                 </div>
+              </div>
+            )}
+            <label className="case-accord"><input type="checkbox" checked={!!b.proActif} onChange={(e) => maj({ proActif: e.target.checked })} /><span>{tr('Lien privé pour les grossistes')}<br /><span className="tres-petit muet">{tr('Un second lien, que vous envoyez vous-même à vos grossistes : ils y voient seulement les prix de gros (au carton). Vos clients au détail ne le voient jamais, et les grossistes ne voient pas vos prix de détail. Enregistrez pour le créer.')}</span></span></label>
+            {b.proActif && b.lienPro && (
+              <div className="carte pile">
+                <b>{tr('Lien des grossistes (privé)')}</b>
+                <p className="petit" style={{ wordBreak: 'break-all' }}>{b.lienPro}</p>
+                {!b.articlesGros && <p className="alerte petit">{tr('Aucun article n’a encore de prix de gros : ouvrez la fiche d’un article et activez « Vendre aussi en gros ». Seuls ces articles apparaissent sur ce lien.')}</p>}
+                <div className="grille-2">
+                  <button className="btn secondaire" onClick={copierPro}><Icone nom="ok" /> {tr('Copier le lien')}</button>
+                  <a className="btn" target="_blank" rel="noreferrer" href={'https://wa.me/?text=' + encodeURIComponent(tr('Prix de gros de {0} : {1}', [s.d.commerce.nom, b.lienPro]))}><Icone nom="whatsapp" /> {tr('Envoyer à un grossiste')}</a>
+                </div>
+                <button className="lien" onClick={changerLienPro} disabled={occupe}>{tr('Changer ce lien (l’ancien cessera de marcher)')}</button>
               </div>
             )}
           </>
@@ -147,6 +175,7 @@ export function FeuilleCommandesEnLigne() {
   const ouvrirDansCaisse = (c) => {
     const manquants = [];
     s.viderPanier();
+    if (c.gros) s.choisirModeGros(true); // commande de grossiste : au carton, au prix de gros
     for (const l of c.lignes) {
       const produit = s.d.produits.find((p) => p.id === l.produitId);
       if (!produit) { manquants.push(l.nom); continue; }
@@ -175,7 +204,7 @@ export function FeuilleCommandesEnLigne() {
         {(liste || []).map((c) => (
           <div key={c.id} className="carte pile">
             <div className="ligne espace">
-              <b>{tr('Commande n° {0}', [c.numero])}</b>
+              <b>{tr('Commande n° {0}', [c.numero])}{c.gros && <span className="badge safran" style={{ marginLeft: 8 }}>{tr('Gros')}</span>}</b>
               <span className={'badge' + (c.statut === 'nouvelle' ? ' safran' : c.statut === 'annulee' ? ' gris' : '')}>{libelleStatut(c.statut)}</span>
             </div>
             <p className="tres-petit muet">{formatDate(c.creeLe)} {formatHeure(c.creeLe)}</p>

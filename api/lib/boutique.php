@@ -54,6 +54,9 @@ function versBoutique(?array $b, array $commerce): array
         'publique' => $b ? ($b['publique'] === null ? true : (bool) $b['publique']) : true,
         'conditionsAcceptees' => !empty($b['conditions_le']),
         'chat' => empty($b['chat_off']),
+        'proActif' => !empty($b['pro_cle']),
+        'lienPro' => !empty($b['pro_cle']) ? lienBoutique($b['slug']) . '?pro=' . $b['pro_cle'] : '',
+        'articlesGros' => count(array_filter(articlesPublies($commerce['id']), fn ($p) => prixGrosValide($p) !== null)),
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
         'lien' => $b ? lienBoutique($b['slug']) : '',
@@ -70,6 +73,41 @@ function articlesPublies(string $commerceId): array
         if (is_array($p) && !empty($p['enLigne']) && !empty($p['nom']) && isset($p['prix'])) $liste[$p['id'] ?? $l['id']] = $p;
     }
     return $liste;
+}
+
+// Prix de gros d'un article (au carton, sac…) : [prix, unite, contenance, minimum], ou null s'il n'en a pas (ou s'il a des options)
+function prixGrosValide(array $p): ?array
+{
+    $g = $p['gros'] ?? null;
+    if (!is_array($g) || !is_numeric($g['prix'] ?? null) || (float) $g['prix'] <= 0 || (int) ($g['contenance'] ?? 0) < 1 || !empty($p['groupes'])) return null;
+    $unites = ['carton', 'sac', 'colis', 'caisse', 'paquet'];
+    return [
+        'prix' => (float) $g['prix'], 'unite' => in_array($g['unite'] ?? '', $unites, true) ? $g['unite'] : 'carton',
+        'contenance' => (int) $g['contenance'], 'minimum' => max(1, (int) ($g['minimum'] ?? 1)),
+    ];
+}
+
+// Les articles tels que les voit un grossiste : seulement ceux qui ont un prix de gros, à ce prix, au carton (jamais le prix de détail)
+function articlesDeGros(array $articles): array
+{
+    $liste = [];
+    foreach ($articles as $cle => $p) {
+        $g = prixGrosValide($p);
+        if (!$g) continue;
+        $liste[$cle] = array_merge($p, ['prix' => $g['prix'], 'promo' => null, 'groupes' => [], 'nom' => $p['nom'] . ' (' . $g['unite'] . ' de ' . $g['contenance'] . ')', '_gros' => $g]);
+    }
+    return $liste;
+}
+
+// La clé du lien privé de la boutique est-elle la bonne ? (comparaison à temps constant ; trop d'essais ratés : blocage)
+function cleGrosValide(array $b, string $cle): bool
+{
+    if ($cle === '') return false;
+    $cleIp = 'cle-gros:' . adresseIp();
+    verifierBlocage($cleIp);
+    if (!empty($b['pro_cle']) && hash_equals((string) $b['pro_cle'], $cle)) return true;
+    noterEchec($cleIp, 30);
+    return false;
 }
 
 function boutiqueParSlug(string $slug): array
@@ -123,15 +161,19 @@ function routeBoutiqueEnregistrer(): never
         $accepteLe = maintenant();
     }
     $publique = array_key_exists('publique', $e) ? (!empty($e['publique']) ? 1 : 0) : ($avant && $avant['publique'] !== null ? (int) $avant['publique'] : 1);
+    // Lien privé des grossistes : activé par le gérant, clé secrète au hasard, changeable (l'ancien lien cesse alors de marcher)
+    $proCle = $avant['pro_cle'] ?? null;
+    if (array_key_exists('pro', $e)) $proCle = !empty($e['pro']) ? ($proCle ?: bin2hex(random_bytes(8))) : null;
+    if (!empty($e['regenererPro']) && $proCle) $proCle = bin2hex(random_bytes(8));
     $chatOff = array_key_exists('chat', $e) ? (!empty($e['chat']) ? 0 : 1) : (int) ($avant['chat_off'] ?? 0);
     $description = texte($e, 'description', 'la description', false, 300);
     $livraison = texte($e, 'livraison', 'la livraison', false, 300);
     if ($avant) {
-        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, chat_off = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
-            [$slug, $actif, $publique, $accepteLe, $chatOff, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
+        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, chat_off = ?, pro_cle = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
+            [$slug, $actif, $publique, $accepteLe, $chatOff, $proCle, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
     } else {
-        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, chat_off, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$c['id'], $slug, $actif, $publique, $accepteLe, $chatOff, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
+        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, chat_off, pro_cle, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$c['id'], $slug, $actif, $publique, $accepteLe, $chatOff, $proCle, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
     }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();
@@ -144,6 +186,7 @@ function versCommandeLigne(array $c): array
         'id' => $c['id'], 'numero' => (int) $c['numero'], 'statut' => $c['statut'], 'creeLe' => $c['cree_le'],
         'client' => ['nom' => $c['client_nom'], 'telephone' => $c['client_telephone'], 'adresse' => $c['adresse']],
         'note' => $c['note'], 'lignes' => json_decode($c['lignes'], true) ?: [], 'total' => (float) $c['total'], 'devise' => $c['devise'],
+        'gros' => !empty($c['gros']),
     ];
 }
 
@@ -178,13 +221,20 @@ function imagePublique(string $ref): ?string
 function routeBoutiquePublique(): never
 {
     [$b, $c] = boutiqueParSlug(strtolower((string) ($_GET['b'] ?? '')));
+    // Lien privé des grossistes (?pro=clé) : le catalogue de gros ; clé fausse = même réponse qu'une boutique inconnue
+    $cle = trim((string) ($_GET['pro'] ?? ''));
+    if ($cle !== '') {
+        if (!cleGrosValide($b, $cle)) throw new ErreurApi('Boutique introuvable', 404);
+        header('Cache-Control: private, no-store');
+        repondre(['ok' => true, 'boutique' => donneesBoutiquePublique($b, $c, true)]);
+    }
     repondre(['ok' => true, 'boutique' => donneesBoutiquePublique($b, $c)]);
 }
 
 // Ce que le public voit d'une boutique : réglages, catégories utilisées et articles publiés (API et page pour Google)
-function donneesBoutiquePublique(array $b, array $c): array
+function donneesBoutiquePublique(array $b, array $c, bool $gros = false): array
 {
-    $articles = articlesPublies($c['id']);
+    $articles = $gros ? articlesDeGros(articlesPublies($c['id'])) : articlesPublies($c['id']);
     $categories = [];
     foreach (requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'categories' AND supprime = 0", [$c['id']])->fetchAll() as $l) {
         $cat = json_decode($l['contenu'], true);
@@ -203,14 +253,14 @@ function donneesBoutiquePublique(array $b, array $c): array
         $produits[] = [
             'id' => (string) $p['id'], 'nom' => (string) $p['nom'], 'prix' => (float) $p['prix'], 'promo' => prixArticle($p) < (float) $p['prix'] ? prixArticle($p) : null,
             'categorieId' => (string) ($p['categorieId'] ?? ''), 'emoji' => (string) ($p['emoji'] ?? ''), 'image' => $image, 'unite' => (string) ($p['unite'] ?? ''), 'groupes' => $groupes,
-        ];
+        ] + ($gros ? ['minimum' => $p['_gros']['minimum'], 'uniteGros' => $p['_gros']['unite']] : []);
         $utilisees[$p['categorieId'] ?? ''] = true;
     }
     return [
         'slug' => $b['slug'], 'nom' => $c['nom'], 'type' => $c['type'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'devise' => $c['devise'], 'pays' => $c['pays'],
         'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'], 'chat' => empty($b['chat_off']),
         'categories' => array_values(array_filter($categories, fn ($x) => isset($utilisees[$x['id']]))), 'produits' => $produits,
-    ];
+    ] + ($gros ? ['gros' => true] : []);
 }
 
 // GET /api/public/boutiques : annuaire pour les clients (sans numéro WhatsApp : il n'apparaît que sur la page de la boutique)
@@ -268,6 +318,10 @@ function routeCommandePublique(): never
     $cleIp = 'commande-en-ligne:' . adresseIp();
     verifierBlocage($cleIp);
     [$b, $c] = boutiqueParSlug(strtolower((string) ($e['b'] ?? '')));
+    // Commande passée par le lien privé des grossistes : prix de gros, au carton (le serveur recalcule tout, comme pour le détail)
+    $cleGros = trim((string) ($e['pro'] ?? ''));
+    $gros = $cleGros !== '';
+    if ($gros && !cleGrosValide($b, $cleGros)) throw new ErreurApi('Boutique introuvable', 404);
     $client = is_array($e['client'] ?? null) ? $e['client'] : [];
     $nom = texte($client, 'nom', 'votre nom', true, 60);
     $tel = telephoneValide(texte($client, 'telephone', 'votre numéro de téléphone', true, 40), $c['pays'], 'votre numéro');
@@ -278,7 +332,7 @@ function routeCommandePublique(): never
     $demandes = is_array($e['lignes'] ?? null) ? array_values($e['lignes']) : [];
     if (!$demandes) throw new ErreurApi('Votre panier est vide');
     if (count($demandes) > LIGNES_COMMANDE_MAX) throw new ErreurApi('Trop d’articles dans une seule commande');
-    $articles = articlesPublies($c['id']);
+    $articles = $gros ? articlesDeGros(articlesPublies($c['id'])) : articlesPublies($c['id']);
     $lignes = [];
     $total = 0.0;
     foreach ($demandes as $d) {
@@ -286,6 +340,7 @@ function routeCommandePublique(): never
         if (!$p) throw new ErreurApi('Un article n’est plus en vente : actualisez la boutique');
         $quantite = (int) ($d['quantite'] ?? 0);
         if ($quantite < 1 || $quantite > 99) throw new ErreurApi('Quantité invalide');
+        if ($gros && $quantite < $p['_gros']['minimum']) throw new ErreurApi('Minimum ' . $p['_gros']['minimum'] . ' ' . $p['_gros']['unite'] . ' pour « ' . $p['nom'] . ' » au prix de gros');
         $choisies = array_map('strval', (array) ($d['options'] ?? []));
         $prix = prixArticle($p);
         $details = [];
@@ -310,8 +365,8 @@ function routeCommandePublique(): never
     try {
         $numero = 1 + (int) requete('SELECT COALESCE(MAX(numero), 0) AS n FROM commandes_en_ligne WHERE commerce_id = ?', [$c['id']])->fetch()['n'];
         $id = nouvelId('cl');
-        requete('INSERT INTO commandes_en_ligne (id, commerce_id, numero, client_nom, client_telephone, adresse, note, lignes, total, devise, statut, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            $id, $c['id'], $numero, $nom, $tel['affichage'], $adresse, $note, json_encode($lignes, JSON_UNESCAPED_UNICODE), $total, $c['devise'], 'nouvelle', maintenant(), maintenant(),
+        requete('INSERT INTO commandes_en_ligne (id, commerce_id, numero, client_nom, client_telephone, adresse, note, lignes, total, devise, statut, cree_le, modifie_le, gros) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            $id, $c['id'], $numero, $nom, $tel['affichage'], $adresse, $note, json_encode($lignes, JSON_UNESCAPED_UNICODE), $total, $c['devise'], 'nouvelle', maintenant(), maintenant(), $gros ? 1 : null,
         ]);
         $pdo->commit();
     } catch (Throwable $err) {
@@ -322,7 +377,7 @@ function routeCommandePublique(): never
     $commande = [
         'numero' => $numero, 'total' => $total, 'devise' => $c['devise'], 'lignes' => $lignes,
         'client' => ['nom' => $nom, 'telephone' => $tel['affichage'], 'adresse' => $adresse], 'note' => $note,
-        'whatsapp' => $b['whatsapp_cle'], 'boutique' => $c['nom'],
+        'whatsapp' => $b['whatsapp_cle'], 'boutique' => $c['nom'], 'gros' => $gros,
     ];
     notifierNouvelleCommande($c['id'], $commande); // e-mail et/ou WhatsApp au commerçant, après la réponse
     repondre(['ok' => true, 'commande' => $commande], 201);

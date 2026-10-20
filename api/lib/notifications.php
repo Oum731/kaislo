@@ -407,14 +407,15 @@ function notifierNouvelleCommande(string $commerceId, array $commande): void
         $total = montantTexte((float) $commande['total'], $dev);
         $lignes = array_map(fn ($l) => '  · ' . $l['quantite'] . ' × ' . $l['nom'] . (empty($l['options']) ? '' : ' (' . implode(', ', $l['options']) . ')'), $commande['lignes']);
         $url = 'https://' . (domaineSite() ?: 'kaislo.com') . '/app/';
-        $sujet = ($en ? 'Kaislo: new online order no. ' : 'Kaislo : nouvelle commande en ligne n° ') . $commande['numero'] . ' — ' . $total;
+        $gros = !empty($commande['gros']) ? ($en ? ' (wholesale)' : ' (gros)') : '';
+        $sujet = ($en ? 'Kaislo: new online order no. ' : 'Kaislo : nouvelle commande en ligne n° ') . $commande['numero'] . $gros . ' — ' . $total;
         $corps = ($en ? "Hello,\n\nNew online order no. {$commande['numero']} for {$commande['boutique']}.\n\n" : "Bonjour,\n\nNouvelle commande en ligne n° {$commande['numero']} pour {$commande['boutique']}.\n\n")
             . ($en ? 'Customer: ' : 'Client : ') . $commande['client']['nom'] . ' · ' . $commande['client']['telephone'] . "\n"
             . ($en ? 'Address: ' : 'Adresse : ') . $commande['client']['adresse'] . "\n\n" . implode("\n", $lignes) . "\n\nTotal : $total\n"
             . ($commande['note'] !== '' ? ($en ? 'Note: ' : 'Note : ') . $commande['note'] . "\n" : '')
             . "\n" . ($en ? "Handle it in Kaislo: $url (Account → Online orders)\n" : "À traiter dans Kaislo : $url (Compte → Commandes en ligne)\n") . "\nKaislo · kaislo.com";
         $variables = [(string) $commande['numero'], $commande['client']['nom'], $total, mb_substr($commande['client']['adresse'], 0, 80)];
-        $push = [($en ? 'New online order no. ' : 'Nouvelle commande n° ') . $commande['numero'], $commande['client']['nom'] . ' · ' . $total];
+        $push = [($en ? 'New online order no. ' : 'Nouvelle commande n° ') . $commande['numero'] . $gros, $commande['client']['nom'] . ' · ' . $total];
         apresReponse(function () use ($commerce, $reglages, $sujet, $corps, $variables, $push, $langue) {
             envoyerNotification($commerce, $reglages, 'commande', [
                 'sujet' => $sujet, 'corps' => $corps, 'variables' => $variables, 'push' => $push, 'modele' => modeleWhatsApp('WhatsAppModeleCommande', 'kaislo_nouvelle_commande', $langue),

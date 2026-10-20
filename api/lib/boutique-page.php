@@ -83,6 +83,11 @@ function routePageBoutique(): never
 {
     $slug = strtolower((string) ($_GET['b'] ?? ''));
     $coque = coqueVitrine();
+    // Lien privé des grossistes (?pro=…) : jamais indexé, jamais mis en cache, jamais dans la page écrite pour Google
+    if (trim((string) ($_GET['pro'] ?? '')) !== '') {
+        header('X-Robots-Tag: noindex, nofollow');
+        repondreHtml($coque, 200, 'private, no-store');
+    }
     try {
         [$b, $c] = boutiqueParSlug($slug);
     } catch (ErreurApi $e) {
