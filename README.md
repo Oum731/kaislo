@@ -223,6 +223,13 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   tarif fondateur) ; on saisit le montant réellement reçu.
 - **Commerciaux**, **Tarifs** et **Équipe** (administrateurs seulement).
 
+## Direction visuelle du site public : « le cahier du commerçant »
+
+Accueil : un vrai ticket de caisse (`TicketCaisse.jsx`, montants de la boutique de démonstration, total calculé) à la place des maquettes de
+téléphone ; un titre concret ; des listes séparées par un filet à la place des cartes ; plus de pictogrammes emoji dans les rayons ; bandeau
+de mesure réduit à une barre basse. Classes `.tk-*` (ne pas réutiliser `.ticket`, déjà pris par le reçu de l'application). Prochaine étape :
+les pages métiers, les tarifs et l'application.
+
 ## Tarifs et postes
 
 - Une **formule par métier** (`src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`, à garder identiques ; modifiables

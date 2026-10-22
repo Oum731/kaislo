@@ -11,6 +11,7 @@ import { tr, choisirLangue } from '@/lib/i18n';
 import { alternates, lien } from '@/lib/site-routes';
 import { SCRIPT_REDIRECTION_ESPACE } from '@/lib/espace';
 import RedirectionEspace from '@/components/site/RedirectionEspace';
+import TicketCaisse from '@/components/site/TicketCaisse';
 import AvisClients from '@/components/site/AvisClients';
 import {
   EnTeteSite, PiedSite, Capture, Faq, AppelFinal, DonneesLogiciel,
@@ -67,32 +68,17 @@ export default function Accueil({ lang }) {
       <EnTeteSite lang={lang} />
       <main>
         <section className="hero accueil-hero">
-          <div className="site-largeur">
-            <h1>{fr ? 'Le pont entre les boutiques et leurs clients.' : tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}</h1>
-            <p className="chapo">{fr ? 'Commandez dans une boutique près de chez vous, ou gérez vos ventes et votre stock avec Kaislo.' : tr('Restaurants, épiceries, boutiques, bars, boulangeries : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir.')}</p>
-            <div className={`choix-cartes ${fr ? '' : 'une'}`}>
-              {fr && (
-                <Link href="/boutiques/" className="choix-carte client">
-                  <img src={chemin('/images/boutique-mobile-390.webp')} alt="Une boutique Kaislo sur téléphone" width={390} height={844} decoding="async" fetchPriority="high" />
-                  <div>
-                    <h2>Je cherche une boutique</h2>
-                    <p>Commandez sur WhatsApp, près de chez vous.</p>
-                    <span className="btn grand">Voir les boutiques →</span>
-                  </div>
-                </Link>
-              )}
-              <div className="choix-carte commerce">
-                <Capture src="/captures/vente-mobile.webp" alt={tr('Écran de vente Kaislo sur téléphone')} telephone largeur={390} hauteur={844} priorite />
-                <div>
-                  <h2>{tr('J’ai un commerce')}</h2>
-                  <p>{tr('Ventes, stock et crédit sur votre téléphone.')}</p>
-                  <div className="boutons">
-                    <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
-                    <Link href={LIEN_DEMO_RESTO} className="btn secondaire grand">{tr('Voir la démo')}</Link>
-                  </div>
-                </div>
+          <div className="site-largeur accueil-hero-grille">
+            <div className="accueil-hero-texte">
+              <h1>{fr ? 'Le cahier du soir, sans le crayon.' : tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}</h1>
+              <p className="chapo">{fr ? 'Vos ventes, votre stock et vos crédits sur le téléphone. Chaque soir, les comptes sont faits : vous n’avez plus rien à recopier.' : tr('Restaurants, épiceries, boutiques, bars, boulangeries : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir.')}</p>
+              <div className="boutons">
+                <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
+                <Link href={LIEN_DEMO_RESTO} className="btn secondaire grand">{tr('Voir la démo')}</Link>
               </div>
+              {fr && <p className="accueil-client">Vous cherchez une boutique près de chez vous ? <Link href="/boutiques/">Voir les boutiques →</Link></p>}
             </div>
+            <TicketCaisse />
           </div>
         </section>
 
@@ -102,11 +88,11 @@ export default function Accueil({ lang }) {
           <section className="section claire">
             <div className="site-largeur">
               <h2>Commander, c’est simple.</h2>
-              <div className="etapes-images">
+              <ol className="etapes-liste">
                 {ETAPES_CLIENT.map(([n, t, d]) => (
-                  <div key={n} className="etape-image"><span className="numero">{n}</span><h3>{t}</h3><p className="muet">{d}</p></div>
+                  <li key={n}><span className="numero">{n}</span><div><h3>{t}</h3><p className="muet">{d}</p></div></li>
                 ))}
-              </div>
+              </ol>
               <p className="muet petit accueil-pont">Kaislo est un outil et un pont entre les boutiques et leurs clients. Chaque boutique est seule responsable de ce qu’elle vend. <Link href="/conditions-utilisation/#boutiques-en-ligne">Lire les règles des boutiques en ligne</Link></p>
             </div>
           </section>

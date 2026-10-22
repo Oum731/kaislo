@@ -44,7 +44,7 @@ export default function ApercuBoutiques() {
         ) : (
           <div className="accueil-rayons">
             {CATEGORIES_ANNUAIRE.slice(0, 6).map((c) => (
-              <Link key={c.id} href="/boutiques/" className="accueil-rayon"><span aria-hidden="true">{c.emoji}</span><b>{c.nom}</b></Link>
+              <Link key={c.id} href="/boutiques/" className="accueil-rayon"><b>{c.nom}</b><span aria-hidden="true">→</span></Link>
             ))}
           </div>
         )}

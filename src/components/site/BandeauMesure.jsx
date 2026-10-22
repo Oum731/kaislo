@@ -13,12 +13,12 @@ const nomsRegies = (et) => [GOOGLE_ADS_ID && 'Google', FACEBOOK_PIXEL_ID && 'Fac
 const TEXTES = {
   fr: () => ({
     titre: 'Mesurer nos publicités ?',
-    texte: `Kaislo aimerait savoir quelles publicités (${nomsRegies(' et ')}) amènent de vrais commerces. Cela place de petits cookies de mesure : jamais vos ventes ni vos clients. Refuser ne change rien à l’utilisation de Kaislo.`,
+    texte: `De petits cookies pour savoir quelles publicités (${nomsRegies(' et ')}) amènent de vrais commerces. Jamais vos ventes ni vos clients ; refuser ne change rien.`,
     accepter: 'Accepter', refuser: 'Refuser', plus: 'En savoir plus', lien: '/cookies/',
   }),
   en: () => ({
     titre: 'Measure our ads?',
-    texte: `Kaislo would like to know which ads (${nomsRegies(' and ')}) bring real businesses. This sets small measurement cookies: never your sales or your customers. Declining changes nothing about using Kaislo.`,
+    texte: `Small cookies to know which ads (${nomsRegies(' and ')}) bring real businesses. Never your sales or your customers; declining changes nothing.`,
     accepter: 'Accept', refuser: 'Decline', plus: 'Learn more', lien: '/cookies/',
   }),
 };
