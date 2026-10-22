@@ -2023,4 +2023,13 @@ export const EN = {
   "Les contacts ne sont pas accessibles sur ce téléphone : tapez le numéro.": "Contacts are not available on this phone: type the number.",
   "Choisir dans mes contacts": "Pick from my contacts",
   "quel numéro ?": "which number?",
+  "Exemple de ticket de caisse Kaislo": "Example of a Kaislo sales receipt",
+  "Épicerie Awa": "Awa Grocery",
+  "Abidjan · Ticket n° 0127": "Abidjan · Receipt no. 0127",
+  "Huile de table 1 L": "Table oil 1 L",
+  "Sucre en morceaux 1 kg": "Sugar cubes 1 kg",
+  "Riz parfumé 5 kg": "Fragrant rice 5 kg",
+  "Payé avec Wave": "Paid with Wave",
+  "Stock mis à jour : huile 1 L, il en reste 11.": "Stock updated: oil 1 L, 11 left.",
+  "Un ticket Kaislo, envoyé par WhatsApp au client.": "A Kaislo receipt, sent to the customer on WhatsApp.",
 };
