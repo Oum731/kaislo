@@ -451,7 +451,7 @@ export const EN = {
   "Modifier l’article": "Edit the item",
   "Photo (facultatif)": "Photo (optional)",
   "Photo de l’article": "Item photo",
-  "Prenez la photo avec le téléphone ou choisissez-la dans la galerie. Sans photo, l’icône est affichée.": "Take the photo with the phone or choose it from the gallery. Without a photo, the icon is shown.",
+  "Prenez la photo avec le téléphone ou choisissez-la dans la galerie : Kaislo la recadre, l’éclaircit et nettoie le fond tout seul. Sans photo, l’icône est affichée.": "Take the photo with the phone or choose it from the gallery: Kaislo crops it, brightens it and cleans the background by itself. Without a photo, the icon is shown.",
   "Nom": "Name",
   "Ex : Attiéké": "E.g. Attiéké",
   "Nouvelle": "New",
@@ -2023,4 +2023,6 @@ export const EN = {
   "Les contacts ne sont pas accessibles sur ce téléphone : tapez le numéro.": "Contacts are not available on this phone: type the number.",
   "Choisir dans mes contacts": "Pick from my contacts",
   "quel numéro ?": "which number?",
+  "Photo mise au propre · Voir l’originale": "Photo cleaned up · See the original",
+  "Originale · Remettre la photo propre": "Original · Use the cleaned-up photo",
 };

@@ -13,6 +13,7 @@
 import { genId } from '../utils/format.js';
 import { chemin } from '../../config.js';
 import { tr } from '../i18n/index.js';
+import { retoucher } from './retouche.js';
 
 const BASE = 'kaislo-images';
 const TABLE = 'images';
@@ -100,4 +101,41 @@ export function reduireImage(fichier, cote = 600, qualite = 0.8) {
     };
     img.src = url;
   });
+}
+
+/**
+ * Photo d'article « mise au propre » : carrée, lumière et couleurs corrigées, fond uni nettoyé (voir retouche.js).
+ * Renvoie { apres, avant, infos } : la photo retouchée, l'originale réduite (pour revenir en arrière) et ce qui a été fait.
+ * Si la retouche échoue (mémoire, navigateur ancien), la photo réduite est renvoyée telle quelle.
+ */
+export async function retoucherImage(fichier, { cote = 640, qualite = 0.82 } = {}) {
+  const avant = await reduireImage(fichier, cote, qualite);
+  try {
+    const source = await new Promise((ok, erreur) => {
+      const url = URL.createObjectURL(fichier);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); ok(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); erreur(new Error('lecture')); };
+      img.src = url;
+    });
+    const echelle = Math.min(1, 900 / Math.max(source.width, source.height));
+    const w = Math.round(source.width * echelle);
+    const h = Math.round(source.height * echelle);
+    const toile = document.createElement('canvas');
+    toile.width = w; toile.height = h;
+    const ctx = toile.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(source, 0, 0, w, h);
+    const { img, infos } = retoucher({ data: ctx.getImageData(0, 0, w, h).data, w, h });
+    const carre = document.createElement('canvas');
+    carre.width = img.w; carre.height = img.h;
+    carre.getContext('2d').putImageData(new ImageData(img.data, img.w, img.h), 0, 0);
+    const sortie = document.createElement('canvas');
+    sortie.width = sortie.height = Math.min(cote, img.w);
+    sortie.getContext('2d').drawImage(carre, 0, 0, sortie.width, sortie.height);
+    return { apres: sortie.toDataURL('image/jpeg', qualite), avant, infos };
+  } catch {
+    return { apres: avant, avant, infos: null };
+  }
 }

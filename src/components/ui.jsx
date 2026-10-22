@@ -4,7 +4,7 @@
 // interrupteurs, onglets, aperçu de ticket…
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
-import { lireImage, estImageLocale, adresseImage, reduireImage } from '@/lib/donnees/images';
+import { lireImage, estImageLocale, adresseImage, reduireImage, retoucherImage } from '@/lib/donnees/images';
 import { normaliserTelephone, exempleTelephone, indicatifPays } from '@/lib/donnees/telephone';
 import { tr, LANGUES } from '@/lib/i18n';
 
@@ -235,16 +235,26 @@ export function ChoixImage({ reference, nouvelle, retiree, surChoisir, surRetire
   const [erreur, setErreur] = useState('');
   const existante = useImage(retiree ? null : reference);
   const affichee = nouvelle || existante;
+  // Photos d'articles : mise au propre automatique (cadrage, lumière, fond), avec retour à l'originale en un geste
+  const [versions, setVersions] = useState(null); // { avant, apres, retouchee }
   const choisir = async (e) => {
     const fichier = e.target.files?.[0];
     e.target.value = '';
     if (!fichier) return;
     try {
       setErreur('');
-      surChoisir(await reduireImage(fichier, forme === 'logo' ? 500 : 600));
+      if (forme === 'logo') { surChoisir(await reduireImage(fichier, 500)); return; }
+      const r = await retoucherImage(fichier);
+      setVersions(r.infos ? { avant: r.avant, apres: r.apres, retouchee: true } : null);
+      surChoisir(r.apres);
     } catch (err) {
       setErreur(err.message);
     }
+  };
+  const basculer = () => {
+    const retouchee = !versions.retouchee;
+    setVersions({ ...versions, retouchee });
+    surChoisir(retouchee ? versions.apres : versions.avant);
   };
   return (
     <div className={`choix-image ${forme}`}>
@@ -260,7 +270,12 @@ export function ChoixImage({ reference, nouvelle, retiree, surChoisir, surRetire
         <button type="button" className="btn secondaire petit" onClick={() => champ.current.click()}>
           <Icone nom="photo" taille="sm" /> {affichee ? tr('Changer') : tr('Choisir')}
         </button>
-        {affichee && <button type="button" className="btn fantome petit" onClick={surRetirer}>{tr('Retirer')}</button>}
+        {affichee && <button type="button" className="btn fantome petit" onClick={() => { setVersions(null); surRetirer(); }}>{tr('Retirer')}</button>}
+        {nouvelle && versions && (
+          <button type="button" className="btn fantome petit" onClick={basculer}>
+            {versions.retouchee ? tr('Photo mise au propre · Voir l’originale') : tr('Originale · Remettre la photo propre')}
+          </button>
+        )}
       </div>
       {erreur && <p className="alerte">{erreur}</p>}
       <input ref={champ} type="file" accept="image/*" hidden onChange={choisir} />

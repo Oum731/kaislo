@@ -82,7 +82,7 @@ export function FeuilleProduit({ produit, categorieId }) {
             surRetirer={() => { setNouvelleImage(null); setImageRetiree(true); }}
             libelle={tr('Photo de l’article')}
           />
-          <p className="aide">{tr('Prenez la photo avec le téléphone ou choisissez-la dans la galerie. Sans photo, l’icône est affichée.')}</p>
+          <p className="aide">{tr('Prenez la photo avec le téléphone ou choisissez-la dans la galerie : Kaislo la recadre, l’éclaircit et nettoie le fond tout seul. Sans photo, l’icône est affichée.')}</p>
         </div>
         <div className="ligne" style={{ alignItems: 'flex-end' }}>
           <label className="champ grandit"><span>{tr('Nom')}</span><input value={b.nom} onChange={(e) => maj({ nom: e.target.value })} placeholder={tr('Ex : Attiéké')} autoFocus={!b.id} /></label>

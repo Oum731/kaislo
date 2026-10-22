@@ -223,6 +223,13 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
   tarif fondateur) ; on saisit le montant réellement reçu.
 - **Commerciaux**, **Tarifs** et **Équipe** (administrateurs seulement).
 
+## Photos des articles : mise au propre automatique
+
+`src/lib/donnees/retouche.js` (testé dans `tests/retouche.test.mjs`) : chaque photo d'article choisie par une vendeuse est recadrée en carré
+centré sur l'article, éclaircie et rééquilibrée (corrections douces, 75 % de force), et le fond uni (table, mur, drap) devient un blanc cassé
+net ; seuls les pixels du fond reliés au bord de la photo sont touchés. Fond chargé (marché, étagères) : recadrage au centre, fond laissé tel quel.
+Tout se fait sur le téléphone ; le bouton « Voir l'originale » (champ photo) remet la photo d'origine. Les logos ne sont pas retouchés.
+
 ## Tarifs et postes
 
 - Une **formule par métier** (`src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`, à garder identiques ; modifiables
