@@ -189,7 +189,7 @@ export default function Boutique() {
         <div className="vitrine-grille">
           {produits.map((p) => (
             <article key={p.id} className="vitrine-article">
-              <div className="vitrine-photo">{image(p) ? <img src={image(p)} alt={p.nom} loading="lazy" /> : <span aria-hidden="true">{p.emoji || '🛍️'}</span>}</div>
+              <div className="vitrine-photo">{image(p) ? <img src={image(p)} alt={p.nom} loading="lazy" /> : <span aria-hidden="true">{p.emoji || (p.nom || '?').trim().charAt(0).toUpperCase()}</span>}</div>
               <b>{p.nom}</b>
               <p className="vitrine-prix">
                 {formatPrix(p.promo ?? p.prix, devise)}{p.promo ? <>{' '}<s className="muet">{formatPrix(p.prix, devise)}</s></> : null}

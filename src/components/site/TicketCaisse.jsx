@@ -22,10 +22,6 @@ const PRIX = {
 // Moyen de paiement du pays : le premier moyen local (Wave, Payconiq, Interac…), sinon la carte
 const moyenLocal = (paiements = []) => paiements.find((m) => !['Espèces', 'Carte', 'Ticket resto'].includes(m));
 
-const nomEpicerie = (devise) => ({
-  MAD: tr('Épicerie Hassan'), EUR: tr('Épicerie Léa'), CAD: tr('Épicerie Marie'),
-}[devise] || tr('Épicerie Awa'));
-
 export default function TicketCaisse() {
   const [pays] = useSelectionPays();
   const devise = PRIX[pays.devise] ? pays.devise : 'USD';
@@ -36,7 +32,7 @@ export default function TicketCaisse() {
   return (
     <figure className="tk" aria-label={tr('Exemple de ticket de caisse Kaislo')}>
       <div className="tk-papier">
-        <p className="tk-nom">{nomEpicerie(devise)}</p>
+        <p className="tk-nom">Kaislo</p>
         <p className="tk-sous">{pays.ville || tr('Votre ville')} · {tr('Ticket n° 0127')}</p>
         <ul className="tk-lignes">
           {lignes.map(([nom, q, p]) => (
