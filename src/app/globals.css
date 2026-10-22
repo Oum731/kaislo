@@ -1433,3 +1433,9 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .tableau-tarifs.prix table { table-layout: fixed; }
 .tableau-tarifs.prix th:first-child { width: 54%; }
 @media (max-width: 600px) { .tableau-tarifs.prix th:first-child { width: 44%; } .tableau-tarifs.prix td, .tableau-tarifs.prix th { padding-left: 8px; padding-right: 8px; } }
+
+/* Bouton « Retour en haut » (site public) : en bas à gauche, au-dessus de la barre de mesure quand elle est affichée */
+.retour-haut { position: fixed; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 38; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); color: var(--encre); border: 1px solid var(--bordure-forte); box-shadow: 0 4px 14px rgba(20, 33, 28, 0.18); }
+.retour-haut:hover { background: var(--vert); color: #fff; border-color: var(--vert); }
+body:has(.bandeau-mesure) .retour-haut { bottom: calc(84px + env(safe-area-inset-bottom)); }
+@media (max-width: 600px) { body:has(.bandeau-mesure) .retour-haut { bottom: calc(150px + env(safe-area-inset-bottom)); } }

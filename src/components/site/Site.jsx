@@ -10,6 +10,7 @@ import MenuMobile from './MenuMobile';
 import { CONTACT_EMAIL, CONTACT_WHATSAPP, RESEAUX, SITE_URL, chemin } from '@/config';
 import Marque from '@/components/Marque';
 import BulleChat from '@/components/BulleChat';
+import RetourHaut from '@/components/site/RetourHaut';
 import { ACTIVITES } from './activites';
 import LangueSite from './LangueSite';
 import SelecteurLangueSite from './SelecteurLangueSite';
@@ -123,6 +124,7 @@ export function PiedSite() {
       </div>
     </footer>
     <BulleChat />
+    <RetourHaut />
     </>
   );
 }
