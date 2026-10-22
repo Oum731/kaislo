@@ -2033,4 +2033,5 @@ export const EN = {
   "Payé avec {0}": "Paid with {0}",
   "Stock mis à jour : huile 1 L, il en reste 11.": "Stock updated: oil 1 L, 11 left.",
   "Un ticket Kaislo, envoyé par WhatsApp au client.": "A Kaislo receipt, sent to the customer on WhatsApp.",
+  "Retour en haut": "Back to top",
 };
