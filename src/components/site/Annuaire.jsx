@@ -31,7 +31,7 @@ export function CarteBoutique({ b }) {
         {b.exemples.map((e, i) => (
           <div key={i} className="annuaire-exemple">
             <div className="annuaire-vignette">
-              {photo(b, e) ? <img src={photo(b, e)} alt={e.nom} loading="lazy" /> : <span aria-hidden="true">{e.emoji || '🛍️'}</span>}
+              {photo(b, e) ? <img src={photo(b, e)} alt={e.nom} loading="lazy" /> : <span aria-hidden="true">{e.emoji || (e.nom || '?').trim().charAt(0).toUpperCase()}</span>}
             </div>
             <span className="tres-petit annuaire-nom">{e.nom}</span>
             <b className="tres-petit">{formatPrix(e.promo ?? e.prix, b.devise)}</b>
@@ -129,13 +129,13 @@ export default function Annuaire() {
       {rayonsPresents.length > 1 && (
         <div className="vitrine-categories">
           <button className={'puce' + (!rayon ? ' actif' : '')} onClick={() => setRayon('')}>Tout</button>
-          {rayonsPresents.map((c) => <button key={c.id} className={'puce' + (rayon === c.id ? ' actif' : '')} onClick={() => setRayon(c.id)}>{c.emoji} {c.nom}</button>)}
+          {rayonsPresents.map((c) => <button key={c.id} className={'puce' + (rayon === c.id ? ' actif' : '')} onClick={() => setRayon(c.id)}>{c.nom}</button>)}
         </div>
       )}
       {!groupes.length && <p className="muet">Aucune boutique ne correspond à votre recherche.</p>}
       {groupes.map(({ categorie, boutiques: liste }) => (
         <section key={categorie.id} className="annuaire-rayon">
-          <h2>{categorie.emoji} {categorie.nom} <span className="petit muet">({liste.length})</span></h2>
+          <h2>{categorie.nom} <span className="petit muet">({liste.length})</span></h2>
           <div className="annuaire-grille">{liste.map((b) => <CarteBoutique key={b.slug} b={b} />)}</div>
         </section>
       ))}

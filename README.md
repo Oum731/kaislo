@@ -228,7 +228,7 @@ puis retirées. Si l'enregistrement échoue (mémoire de l'appareil pleine), un 
 Accueil : un vrai ticket de caisse (`TicketCaisse.jsx`, montants de la boutique de démonstration, total calculé) à la place des maquettes de
 téléphone ; un titre concret ; des listes séparées par un filet à la place des cartes ; plus de pictogrammes emoji dans les rayons ; bandeau
 de mesure réduit à une barre basse. Classes `.tk-*` (ne pas réutiliser `.ticket`, déjà pris par le reçu de l'application). Prochaine étape :
-les pages métiers, les tarifs et l'application.
+l'application. Page Tarifs : tableaux à filets, chiffres alignés à droite, règles communes sans cadre. Annuaire et vitrines : plus d'emoji, une initiale à la place d'une photo manquante. Le ticket affiche « Kaislo » (aucun nom propre).
 
 ## Tarifs et postes
 

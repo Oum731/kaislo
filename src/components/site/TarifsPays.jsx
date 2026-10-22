@@ -54,7 +54,7 @@ export default function TarifsPays() {
         return (
           <div key={famille}>
             <h2 style={{ fontSize: 24 }}>{tt(famille)}</h2>
-            <div className="tableau-tarifs">
+            <div className="tableau-tarifs prix">
               <table>
                 <thead><tr><th>{tr('Métier')}</th><th>{tr('Par mois')}</th>{catalogue && <th>{tr('Avec un code parrain')}</th>}</tr></thead>
                 <tbody>
@@ -68,7 +68,7 @@ export default function TarifsPays() {
           </div>
         );
       })}
-      <div className="carte pile">
+      <div className="encadre-regles pile">
         <h3>{tr('Pour toutes les formules')}</h3>
         <ul className="liste-points">
           {catalogue && <li><b>{tr('Code parrain')}</b> {tr(': un commercial Kaislo vous a présenté l’application ? Saisissez son code à la création de votre compte et payez le prix de la colonne « Avec un code parrain ».')}</li>}
