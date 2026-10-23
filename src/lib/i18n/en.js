@@ -2059,4 +2059,7 @@ export const EN = {
   "Lien copié : collez-le dans Chrome": "Link copied: paste it into Chrome",
   "Voir comment faire": "Show me how",
   "J’ai compris": "Got it",
+  "Plein écran, même sans internet.": "Full screen, even without internet.",
+  "Comment faire": "How to",
+  "Trois gestes, et Kaislo s’ouvre en plein écran comme une application.": "Three taps, and Kaislo opens full screen like an app.",
 };

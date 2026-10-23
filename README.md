@@ -230,15 +230,16 @@ téléphone ; un titre concret ; des listes séparées par un filet à la place 
 de mesure réduit à une barre basse. Classes `.tk-*` (ne pas réutiliser `.ticket`, déjà pris par le reçu de l'application). Prochaine étape :
 l'application. Page Tarifs : tableaux à filets, chiffres alignés à droite, règles communes sans cadre. Annuaire et vitrines : plus d'emoji, une initiale à la place d'une photo manquante. Le ticket affiche « Kaislo » (aucun nom propre).
 
-## Proposer l'installation sur le téléphone
+## Bouton « Installer Kaislo » sur le téléphone
 
 Presque personne ne sait qu'un site s'installe : `src/components/site/ProposerInstallation.jsx` (logique pure et testée dans `src/lib/installer-pwa.js`,
-`tests/installer-pwa.test.mjs`) propose l'installation à la première visite sur téléphone, 6 secondes après l'arrivée, sur toutes les pages
-du site public. Jamais sur ordinateur, jamais si Kaislo est déjà installé. Le geste dépend de l'appareil : bouton « Installer maintenant »
-(Chrome/Edge Android, via `beforeinstallprompt`), les 3 gestes expliqués un par un (iPhone : Partager → Sur l'écran d'accueil ; Android sans bouton :
-menu ⋮ → Installer l'application), ou « Ouvrez Kaislo dans votre navigateur » avec « Copier le lien » dans les navigateurs intégrés (Facebook,
-Instagram, WhatsApp, TikTok : c'est là qu'arrivent les clients des publicités). « Plus tard » : nouvelle proposition après 3 jours, puis 30 jours,
-puis plus jamais (`localStorage` : `kaislo_installation`). Le service worker est enregistré à ce moment-là (Chrome en a besoin pour proposer l'installation).
+`tests/installer-pwa.test.mjs`) affiche **tout de suite** une barre avec un bouton « Installer » en bas de chaque page du site public, sur téléphone
+seulement, tant que Kaislo n'est pas installé. Un toucher : Chrome/Edge Android ouvrent l'installation du navigateur (`beforeinstallprompt`) ; sinon
+une fiche explique les 3 gestes un par un (iPhone : Partager → Sur l'écran d'accueil ; Android sans bouton : menu ⋮ → Installer l'application), ou
+« Ouvrez Kaislo dans votre navigateur » avec « Copier le lien » dans les navigateurs intégrés (Facebook, Instagram, WhatsApp, TikTok : c'est là
+qu'arrivent les clients des publicités). Si le visiteur annule l'installation, le bouton reste et explique les gestes. La croix masque la barre :
+nouvelle apparition après 3 jours, puis 30 jours, puis plus jamais (`localStorage` : `kaislo_installation`). Le service worker est enregistré
+à l'affichage (Chrome en a besoin pour proposer l'installation).
 
 ## Tarifs et postes
 
