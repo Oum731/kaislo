@@ -1439,3 +1439,18 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .retour-haut:hover { background: var(--vert); color: #fff; border-color: var(--vert); }
 body:has(.bandeau-mesure) .retour-haut { bottom: calc(84px + env(safe-area-inset-bottom)); }
 @media (max-width: 600px) { body:has(.bandeau-mesure) .retour-haut { bottom: calc(150px + env(safe-area-inset-bottom)); } }
+
+/* « Installez Kaislo sur votre téléphone » (site public, téléphones) : fiche en bas de l'écran, au-dessus de la barre de mesure */
+.proposer-install { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 345; max-width: 460px; margin: 0 auto; background: var(--surface); color: var(--encre); border: 1px solid var(--bordure-forte); border-top: 3px solid var(--vert); border-radius: var(--rayon); padding: 16px; box-shadow: 0 -6px 30px rgba(20, 33, 28, 0.2); display: grid; gap: 12px; }
+body:has(.bandeau-mesure) .proposer-install { bottom: calc(96px + env(safe-area-inset-bottom)); }
+@media (max-width: 600px) { body:has(.bandeau-mesure) .proposer-install { bottom: calc(170px + env(safe-area-inset-bottom)); } }
+.proposer-install-fermer { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; display: grid; place-items: center; color: var(--encre-3); }
+.proposer-install-tete { display: flex; gap: 12px; align-items: center; padding-right: 26px; }
+.proposer-install-tete img { border-radius: 12px; flex: none; }
+.proposer-install-tete p { margin: 2px 0 0; }
+.proposer-install-etapes { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-size: 15px; }
+.proposer-install-etapes li::marker { font-weight: 700; color: var(--vert); }
+.proposer-install-etapes .ic { display: inline-block; vertical-align: -3px; color: var(--vert); }
+.proposer-install-actions { display: grid; gap: 8px; }
+.proposer-install-actions .btn { width: 100%; justify-content: center; text-align: center; }
+@media (min-width: 900px) { .proposer-install { display: none; } }
