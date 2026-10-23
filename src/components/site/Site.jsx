@@ -11,6 +11,7 @@ import { CONTACT_EMAIL, CONTACT_WHATSAPP, RESEAUX, SITE_URL, chemin } from '@/co
 import Marque from '@/components/Marque';
 import BulleChat from '@/components/BulleChat';
 import RetourHaut from '@/components/site/RetourHaut';
+import ProposerInstallation from '@/components/site/ProposerInstallation';
 import { ACTIVITES } from './activites';
 import LangueSite from './LangueSite';
 import SelecteurLangueSite from './SelecteurLangueSite';
@@ -125,6 +126,7 @@ export function PiedSite() {
     </footer>
     <BulleChat />
     <RetourHaut />
+    <ProposerInstallation />
     </>
   );
 }
