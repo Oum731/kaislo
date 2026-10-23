@@ -1454,3 +1454,15 @@ body:has(.bandeau-mesure) .proposer-install { bottom: calc(96px + env(safe-area-
 .proposer-install-actions { display: grid; gap: 8px; }
 .proposer-install-actions .btn { width: 100%; justify-content: center; text-align: center; }
 @media (min-width: 900px) { .proposer-install { display: none; } }
+
+/* Version directement visible : une barre compacte avec le bouton « Installer » (la fiche des gestes s'ouvre au toucher si besoin) */
+.proposer-install.compact { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border-top-width: 1px; box-shadow: 0 -2px 16px rgba(20, 33, 28, 0.16); }
+.proposer-install.compact img { border-radius: 10px; flex: none; }
+.proposer-install-texte { display: grid; line-height: 1.25; min-width: 0; flex: 1 1 auto; font-size: 14px; }
+.proposer-install-texte b { font-size: 14px; }
+.proposer-install.compact .btn { flex: none; width: auto; padding-left: 14px; padding-right: 14px; }
+.proposer-install-croix { flex: none; width: 32px; height: 32px; display: grid; place-items: center; color: var(--encre-3); }
+body:has(.proposer-install.compact) .retour-haut { bottom: calc(84px + env(safe-area-inset-bottom)); }
+body:has(.proposer-install.compact):has(.bandeau-mesure) .retour-haut { bottom: calc(150px + env(safe-area-inset-bottom)); }
+@media (max-width: 600px) { body:has(.proposer-install.compact):has(.bandeau-mesure) .retour-haut { bottom: calc(230px + env(safe-area-inset-bottom)); } }
+@media (max-width: 380px) { .proposer-install-texte .muet { display: none; } }

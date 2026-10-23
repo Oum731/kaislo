@@ -1,9 +1,9 @@
 'use client';
 // ------------------------------------------------------------
-// « Installez Kaislo sur votre téléphone » : proposé une fois aux nouveaux visiteurs sur téléphone (pas sur ordinateur),
-// seulement si Kaislo n'est pas déjà installé. Le geste proposé dépend de l'appareil (voir lib/installer-pwa.js) :
-// un bouton quand le navigateur sait installer, sinon les 3 gestes à faire, expliqués un par un.
-// « Plus tard » : on ne redemande qu'après 3 jours, puis 30 jours, puis plus jamais.
+// Bouton « Installer Kaislo » affiché tout de suite aux visiteurs sur téléphone (pas sur ordinateur), tant que Kaislo n'est pas
+// installé. Le geste dépend de l'appareil (voir lib/installer-pwa.js) : un toucher ouvre l'installation du navigateur (Chrome, Edge),
+// sinon une fiche explique les 3 gestes un par un (iPhone, Android sans bouton, navigateurs intégrés à Facebook/Instagram…).
+// La croix masque le bouton : on ne le remontre qu'après 3 jours, puis 30 jours, puis plus jamais.
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { Icone } from '@/components/ui';
@@ -13,7 +13,6 @@ import { enregistrerServiceWorker } from '@/lib/espace';
 import { choisirParcours, doitProposer } from '@/lib/installer-pwa';
 
 const CLE = 'kaislo_installation';
-const DELAI = 6000; // laisse d'abord lire la page
 
 // Le navigateur annonce très tôt qu'il sait installer : on garde son offre pour le bouton
 let offre = null;
@@ -53,7 +52,7 @@ const ETAPES = () => ({
 
 export default function ProposerInstallation() {
   const [parcours, setParcours] = useState(null); // null = rien à afficher
-  const [guide, setGuide] = useState(false);
+  const [guide, setGuide] = useState(false); // la fiche des gestes est ouverte
   const [copie, setCopie] = useState(false);
   const [, rafraichir] = useState(0);
 
@@ -64,10 +63,10 @@ export default function ProposerInstallation() {
     enregistrerServiceWorker(); // Chrome n'annonce l'installation qu'avec un service worker actif
     const f = () => { rafraichir((n) => n + 1); setParcours((p) => (p ? evaluer() : p)); };
     abonnes.add(f);
-    const minuterie = setTimeout(() => setParcours(evaluer()), DELAI);
+    setParcours(evaluer());
     const installee = () => { ecrire({ ...(lire() || {}), installe: true }); setParcours(null); };
     window.addEventListener('appinstalled', installee);
-    return () => { abonnes.delete(f); clearTimeout(minuterie); window.removeEventListener('appinstalled', installee); };
+    return () => { abonnes.delete(f); window.removeEventListener('appinstalled', installee); };
   }, []);
 
   if (!parcours) return null;
@@ -77,31 +76,42 @@ export default function ProposerInstallation() {
     offre.prompt();
     const choix = await offre.userChoice.catch(() => null);
     offre = null;
-    if (choix?.outcome === 'accepted') { ecrire({ ...(lire() || {}), installe: true }); setParcours(null); } else plusTard();
+    if (choix?.outcome === 'accepted') { ecrire({ ...(lire() || {}), installe: true }); setParcours(null); } else setParcours('android-menu'); // annulé : le bouton reste, il explique les gestes
   };
   const copier = async () => {
     try { await navigator.clipboard.writeText(window.location.href); setCopie(true); } catch { setGuide(true); }
   };
   const etapes = ETAPES()[parcours];
+  if (!guide) {
+    // Bouton directement visible : un toucher installe (Chrome/Edge) ou ouvre l'explication des gestes
+    return (
+      <div className="proposer-install compact" role="region" aria-label={tr('Installer Kaislo sur votre téléphone')}>
+        <img src={chemin('/icons/icone-192.png')} alt="" width="40" height="40" />
+        <div className="proposer-install-texte">
+          <b>{tr('Installer Kaislo sur votre téléphone')}</b>
+          <span className="tres-petit muet">{tr('Plein écran, même sans internet.')}</span>
+        </div>
+        <button type="button" className="btn" onClick={parcours === 'bouton' ? installer : () => setGuide(true)}>
+          <Icone nom="installer" taille="sm" /> {parcours === 'ouvrir' ? tr('Comment faire') : tr('Installer')}
+        </button>
+        <button type="button" className="proposer-install-croix icone-btn" onClick={plusTard} aria-label={tr('Masquer')}><Icone nom="fermer" taille="sm" /></button>
+      </div>
+    );
+  }
   return (
     <div className="proposer-install" role="dialog" aria-label={tr('Installer Kaislo sur votre téléphone')}>
-      <button type="button" className="proposer-install-fermer icone-btn" onClick={plusTard} aria-label={tr('Plus tard')}><Icone nom="fermer" taille="sm" /></button>
+      <button type="button" className="proposer-install-fermer icone-btn" onClick={plusTard} aria-label={tr('Masquer')}><Icone nom="fermer" taille="sm" /></button>
       <div className="proposer-install-tete">
         <img src={chemin('/icons/icone-192.png')} alt="" width="48" height="48" />
         <div>
           <b>{parcours === 'ouvrir' ? tr('Ouvrez Kaislo dans votre navigateur') : tr('Installez Kaislo sur votre téléphone')}</b>
-          <p className="petit muet">{parcours === 'ouvrir' ? tr('Cette fenêtre ne permet pas d’installer. Deux gestes et c’est réglé.') : tr('Un seul geste : Kaislo s’ouvre en plein écran, comme une application, même sans internet.')}</p>
+          <p className="petit muet">{parcours === 'ouvrir' ? tr('Cette fenêtre ne permet pas d’installer. Deux gestes et c’est réglé.') : tr('Trois gestes, et Kaislo s’ouvre en plein écran comme une application.')}</p>
         </div>
       </div>
-      {(guide || parcours === 'ouvrir') && etapes && (
-        <ol className="proposer-install-etapes">{etapes.map((e, i) => <li key={i}>{e}</li>)}</ol>
-      )}
+      {etapes && <ol className="proposer-install-etapes">{etapes.map((e, i) => <li key={i}>{e}</li>)}</ol>}
       <div className="proposer-install-actions">
-        {parcours === 'bouton' && <button type="button" className="btn grand" onClick={installer}><Icone nom="installer" taille="sm" /> {tr('Installer maintenant')}</button>}
         {parcours === 'ouvrir' && <button type="button" className="btn grand" onClick={copier}>{copie ? tr('Lien copié : collez-le dans Chrome') : tr('Copier le lien')}</button>}
-        {(parcours === 'ios' || parcours === 'android-menu') && !guide && <button type="button" className="btn grand" onClick={() => setGuide(true)}>{tr('Voir comment faire')}</button>}
-        {(parcours === 'ios' || parcours === 'android-menu') && guide && <button type="button" className="btn grand" onClick={plusTard}>{tr('J’ai compris')}</button>}
-        <button type="button" className="btn secondaire" onClick={plusTard}>{tr('Plus tard')}</button>
+        <button type="button" className={`btn ${parcours === 'ouvrir' ? 'secondaire' : 'grand'}`} onClick={plusTard}>{tr('J’ai compris')}</button>
       </div>
     </div>
   );
