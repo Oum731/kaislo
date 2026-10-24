@@ -378,7 +378,7 @@ Le serveur prévient chaque gérant par **e-mail** et/ou **WhatsApp** (code : `a
 - [ ] Acheter `kaislo.com`, le relier à Hostinger (hPanel → Domaines) et activer le certificat SSL.
 - [ ] `.env` du serveur complet (`Db`, `User`, `Password`, `CleAdmin`, `EmailEquipe`, `EmailExpediteur`) et **jamais** dans Git.
 - [ ] Premier compte Amorac créé dans `/admin`, puis changer ou retirer `CleAdmin` du `.env`.
-- [ ] `src/config.js` : vrai numéro WhatsApp (`CONTACT_WHATSAPP`) et informations de la société (`SOCIETE`).
+- [ ] `src/config.js` : informations de la société (`SOCIETE`). Le numéro WhatsApp (`CONTACT_WHATSAPP` et `CONTACT_WHATSAPP_AFFICHE`, +212 775 06 51 46) est provisoire : à remplacer par le numéro définitif dans `src/config.js`, puis régénérer le code QR (`outils/affiches/qr-whatsapp.svg`, adresse `https://wa.me/<numéro>`) et les affiches.
 - [ ] Tarifs en EUR, CAD, USD et GNF : conversions provisoires à confirmer dans `/admin` → Tarifs.
 - [ ] Montants des primes des commerciaux : `/admin` → Commerciaux → Règles.
 - [ ] Sauvegardes : hPanel → Bases de données → sauvegarde automatique activée ; exporter la base (phpMyAdmin) avant chaque grosse mise à jour.

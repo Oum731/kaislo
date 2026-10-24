@@ -38,7 +38,8 @@ export const chemin = (p) => BASE_PATH + p + (NUMERO_PUBLICATION && FICHIER_VERS
 
 export const SITE_NOM = 'Kaislo';
 export const SITE_SLOGAN = 'La gestion des ventes et du stock, simple, pour tous les commerces';
-export const CONTACT_WHATSAPP = '212600000000'; // numéro WhatsApp d'Amorac (sans +)
+export const CONTACT_WHATSAPP = '212775065146'; // numéro WhatsApp de Kaislo, provisoire (sans +) : +212 775 06 51 46
+export const CONTACT_WHATSAPP_AFFICHE = '+212 775 06 51 46'; // même numéro, tel qu'on l'écrit à l'écran
 export const CONTACT_EMAIL = 'contact@kaislo.com';
 // Pages officielles de Kaislo sur les réseaux (adresses publiques, sans suivi « ?si= »). Un champ vide n'est pas affiché.
 // Données structurées « sameAs » (lues par Google) et pied de page. Facebook et LinkedIn : ajouter l'adresse de la PAGE de l'entreprise

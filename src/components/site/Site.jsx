@@ -7,7 +7,7 @@
 import Link from 'next/link';
 import { Icone } from '@/components/ui';
 import MenuMobile from './MenuMobile';
-import { CONTACT_EMAIL, CONTACT_WHATSAPP, RESEAUX, SITE_URL, chemin } from '@/config';
+import { CONTACT_EMAIL, CONTACT_WHATSAPP, CONTACT_WHATSAPP_AFFICHE, RESEAUX, SITE_URL, chemin } from '@/config';
 import Marque from '@/components/Marque';
 import BulleChat from '@/components/BulleChat';
 import RetourHaut from '@/components/site/RetourHaut';
@@ -110,7 +110,7 @@ export function PiedSite() {
           </div>
           <div>
             <h4>{tr('Contact')}</h4>
-            <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noreferrer">{tr('WhatsApp')}</a>
+            <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noreferrer">{tr('WhatsApp')} {CONTACT_WHATSAPP_AFFICHE}</a>
             <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
             <a href="https://amorac.com" target="_blank" rel="noreferrer">{tr('amorac.com')}</a>
             {RESEAUX.youtube && <a href={RESEAUX.youtube} target="_blank" rel="noopener noreferrer me">YouTube</a>}
