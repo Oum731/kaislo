@@ -9,7 +9,7 @@ import { useKaislo } from '@/store/kaislo';
 import { appelApi } from '@/lib/api';
 import { estServeur } from '@/lib/donnees/synchro';
 import { formatDate, formatHeure } from '@/lib/utils/format';
-import { CONTACT_EMAIL, CONTACT_WHATSAPP, chemin } from '@/config';
+import { CONTACT_EMAIL, CONTACT_WHATSAPP, CONTACT_WHATSAPP_AFFICHE, chemin } from '@/config';
 import { Icone } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { tr } from '@/lib/i18n';
@@ -30,7 +30,7 @@ export default function Aide() {
         <div className="contacts-aide">
           <a className="contact-aide" href={'https://wa.me/' + CONTACT_WHATSAPP} target="_blank" rel="noreferrer">
             <span className="tuile-icone teinte-vert"><Icone nom="whatsapp" /></span>
-            <span>{tr('WhatsApp')}</span>
+            <span>{tr('WhatsApp')} <span className="tres-petit muet">{CONTACT_WHATSAPP_AFFICHE}</span></span>
           </a>
           <a className="contact-aide" href={'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent('Kaislo — ' + s.d.commerce.nom)}>
             <span className="tuile-icone teinte-bleu"><Icone nom="mail" /></span>

@@ -3,7 +3,7 @@
 // Les informations viennent de src/config.js (SOCIETE, HEBERGEUR).
 // ------------------------------------------------------------
 import PageLegale, { Info } from '@/components/site/PageLegale';
-import { SOCIETE, HEBERGEUR, CONTACT_EMAIL, CONTACT_WHATSAPP } from '@/config';
+import { SOCIETE, HEBERGEUR, CONTACT_EMAIL, CONTACT_WHATSAPP, CONTACT_WHATSAPP_AFFICHE } from '@/config';
 import CREDITS_PHOTOS from '@/lib/donnees/credits-photos.json';
 import { metaPage } from '@/lib/seo';
 
@@ -31,7 +31,7 @@ const SECTIONS = [
         <Info libelle="Immatriculation" valeur={SOCIETE.immatriculation} />
         <Info libelle="Responsable de la publication" valeur={SOCIETE.directeurPublication} />
         <li><b>E-mail :</b> <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
-        <li><b>WhatsApp :</b> <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noreferrer">+{CONTACT_WHATSAPP}</a></li>
+        <li><b>WhatsApp :</b> <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noreferrer">{CONTACT_WHATSAPP_AFFICHE}</a></li>
       </ul>
     ),
   },
