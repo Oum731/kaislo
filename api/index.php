@@ -61,6 +61,7 @@ header('Referrer-Policy: same-origin');
 $chemin = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $chemin = '/' . trim((string) preg_replace('#^.*?/api(?=/|$)#', '', $chemin), '/');
 $methode = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($methode === 'HEAD') $methode = 'GET'; // les aperçus de liens (WhatsApp, réseaux sociaux) testent souvent avec HEAD : même réponse que GET, sans le corps (le serveur le retire)
 // Pages réécrites par .htaccess (/boutique/nom/, /sitemap-boutiques.xml) : l'adresse demandée reste celle du visiteur, la page est choisie ici
 $chemin = ['boutique' => '/page-boutique', 'plan-boutiques' => '/plan-boutiques'][(string) ($_GET['kaislo-page'] ?? '')] ?? $chemin;
 

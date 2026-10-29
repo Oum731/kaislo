@@ -13,7 +13,7 @@ import { appelApi } from '@/lib/api';
 import { chemin } from '@/config';
 import { formatPrix } from '@/lib/utils/format';
 import { normaliserTelephone } from '@/lib/donnees/telephone';
-import { prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, lienCommandeWhatsApp, messageCommande, photosCommande } from '@/lib/donnees/boutique';
+import { prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, lienCommandeWhatsApp, photosCommande } from '@/lib/donnees/boutique';
 
 const cleStockage = (slug) => 'kaislo-panier-' + slug;
 const lirePanier = (slug) => { try { return JSON.parse(localStorage.getItem(cleStockage(slug))) || []; } catch { return []; } };
@@ -63,19 +63,23 @@ export default function Boutique() {
       .catch((e) => setErreur(e.statut === 404 ? 'Cette boutique n’existe pas ou est fermée pour le moment.' : (e.horsLigne ? 'Pas de connexion internet.' : e.message)));
   }, []);
 
-  // Partage avec les vraies photos jointes (téléphones qui le permettent) : le client choisit le contact WhatsApp du vendeur
+  // Les photos des articles arrivent en vraies images en deux temps (WhatsApp ne permet pas de les joindre dans le lien) :
+  // 1. la commande part par le lien WhatsApp (directement au numéro de la boutique) ; 2. « Joindre les photos » ouvre le partage du téléphone,
+  // où la discussion avec la boutique est tout en haut puisqu'on vient de lui écrire. Téléphones qui savent partager des images seulement.
   const peutPartagerPhotos = typeof navigator !== 'undefined' && !!navigator.share && !!navigator.canShare;
-  const partagerAvecPhotos = async () => {
+  const [photosEnvoyees, setPhotosEnvoyees] = useState(false);
+  const partagerPhotos = async () => {
     setMessage('');
     try {
       const fichiers = await Promise.all(photosCommande(envoi.commande).slice(0, 6).map(async (u, i) => {
         const blob = await (await fetch(u)).blob();
         return new File([blob], 'article-' + (i + 1) + '.jpg', { type: blob.type || 'image/jpeg' });
       }));
-      if (!navigator.canShare({ files: fichiers })) return setMessage('Votre téléphone ne permet pas d’envoyer les photos : utilisez « Ouvrir WhatsApp ».');
-      await navigator.share({ files: fichiers, text: messageCommande(envoi.commande, { liensPhotos: false }) });
+      if (!navigator.canShare({ files: fichiers })) return setMessage('Votre téléphone ne permet pas de joindre les photos : elles s’affichent avec les liens du message.');
+      await navigator.share({ files: fichiers, text: 'Photos de la commande n° ' + envoi.commande.numero });
+      setPhotosEnvoyees(true);
     } catch (e) {
-      if (e?.name !== 'AbortError') setMessage('Impossible d’envoyer les photos : utilisez « Ouvrir WhatsApp ».');
+      if (e?.name !== 'AbortError') setMessage('Impossible de joindre les photos : elles s’affichent avec les liens du message.');
     }
   };
 
@@ -151,9 +155,12 @@ export default function Boutique() {
         <div className="vitrine-centre">
           <h1>Commande n° {envoi.commande.numero}</h1>
           <p>{demo ? <>Dans la vraie boutique, WhatsApp s’ouvrirait ici avec la commande déjà écrite, à envoyer au commerçant. Essayez : le message s’ouvre sans destinataire, envoyez-le à vous-même.</> : <>Il reste une étape : <b>envoyez la commande sur WhatsApp</b> à {boutique.nom}. Le message est déjà écrit, appuyez sur « Envoyer ».</>}</p>
-          <a className="btn grand" href={envoi.lien}>Ouvrir WhatsApp</a>
-          {peutPartagerPhotos && photosCommande(envoi.commande).length > 0 && (
-            <button className="btn secondaire" onClick={partagerAvecPhotos}>Envoyer avec les photos des articles</button>
+          <a className="btn grand" href={envoi.lien}>{peutPartagerPhotos && !demo && photosCommande(envoi.commande).length > 0 ? '1. Envoyer la commande sur WhatsApp' : 'Ouvrir WhatsApp'}</a>
+          {peutPartagerPhotos && !demo && photosCommande(envoi.commande).length > 0 && (
+            <div className="pile" style={{ gap: 6 }}>
+              <button className={'btn grand ' + (photosEnvoyees ? 'secondaire' : '')} onClick={partagerPhotos}>{photosEnvoyees ? '✓ Photos envoyées : en renvoyer' : '2. Joindre les photos des articles'}</button>
+              <p className="petit muet">Une fois la commande envoyée, touchez ce bouton et choisissez la discussion avec {boutique.nom} : elle est en haut de la liste. Les photos arrivent comme de vraies images.</p>
+            </div>
           )}
           {message && <p className="alerte">{message}</p>}
           <p className="petit muet">Total : {formatPrix(envoi.commande.total, devise)}. Vous payez {boutique.nom} directement, à la livraison ou comme convenu avec le vendeur. Kaislo n’est pas le vendeur.</p>
