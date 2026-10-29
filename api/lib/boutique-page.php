@@ -112,6 +112,8 @@ function routePageBoutique(): never
     $urlImage = fn (string $ref) => $site . '/api/public/boutique-image?b=' . rawurlencode($d['slug']) . '&i=' . rawurlencode($ref);
     $premiereImage = null;
     foreach ($d['produits'] as $p) if ($p['image']) { $premiereImage = $urlImage($p['image']); break; }
+    $logo = !empty($d['logo']) ? $urlImage($d['logo']) : null;
+    if (!$premiereImage) $premiereImage = $logo; // boutique sans photo d'article : le logo sert d'image de partage
 
     // Données structurées : commerce local et liste d'articles avec prix
     $elements = [];
@@ -128,6 +130,7 @@ function routePageBoutique(): never
         'currenciesAccepted' => $iso, 'areaServed' => $d['ville'],
     ];
     if ($premiereImage) $commerce['image'] = $premiereImage;
+    if ($logo) $commerce['logo'] = $logo;
     $fil = ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => [
         ['@type' => 'ListItem', 'position' => 1, 'name' => 'Kaislo', 'item' => $site . '/'],
         ['@type' => 'ListItem', 'position' => 2, 'name' => 'Boutiques', 'item' => $site . '/boutiques/'],
@@ -143,6 +146,7 @@ function routePageBoutique(): never
     foreach (array_slice($d['produits'], 0, ARTICLES_DANS_LA_PAGE) as $p) $parCategorie[$noms[$p['categorieId']] ?? 'Articles'][] = $p;
     $html = '<div id="seo-boutique" style="max-width:760px;margin:0 auto;padding:16px;font-family:system-ui,sans-serif">'
         . '<nav aria-label="Fil d’Ariane"><a href="/">Kaislo</a> › <a href="/boutiques/">Boutiques</a> › ' . echapper($d['nom']) . '</nav>'
+        . ($logo ? '<img src="' . echapper($logo) . '" alt="Logo ' . echapper($d['nom']) . '" width="64" height="64">' : '')
         . '<h1>' . echapper($d['nom']) . '</h1><p>' . echapper($genre) . ' · ' . echapper($lieu) . '</p>'
         . ($d['description'] !== '' ? '<p>' . echapper($d['description']) . '</p>' : '')
         . ($d['livraison'] !== '' ? '<p><b>Livraison :</b> ' . echapper($d['livraison']) . '</p>' : '');

@@ -230,6 +230,16 @@ function imagePublique(string $ref): ?string
     return str_starts_with($ref, 'img_') ? $ref : null;
 }
 
+// Logo (ou photo de profil) du commerce, tel que le gérant l'a choisi dans ses réglages : référence d'image, ou null s'il n'y en a pas
+// (ou si l'image n'est pas arrivée sur le serveur : on n'affiche pas un logo cassé)
+function logoBoutique(string $commerceId): ?string
+{
+    $ref = imagePublique((string) (reglagesCommerce($commerceId)['logo'] ?? ''));
+    if (!$ref || !preg_match('/^img_[A-Za-z0-9_.:-]{1,36}$/', $ref)) return null;
+    $l = requete("SELECT 1 FROM elements WHERE commerce_id = ? AND type = 'images' AND id = ? AND supprime = 0", [$commerceId, $ref])->fetch();
+    return $l ? $ref : null;
+}
+
 function routeBoutiquePublique(): never
 {
     [$b, $c] = boutiqueParSlug(strtolower((string) ($_GET['b'] ?? '')));
@@ -270,7 +280,7 @@ function donneesBoutiquePublique(array $b, array $c, bool $gros = false): array
     }
     return [
         'slug' => $b['slug'], 'nom' => $c['nom'], 'type' => $c['type'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'devise' => $c['devise'], 'pays' => $c['pays'],
-        'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'], 'chat' => empty($b['chat_off']),
+        'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'], 'chat' => empty($b['chat_off']), 'logo' => logoBoutique($c['id']),
         'categories' => array_values(array_filter($categories, fn ($x) => isset($utilisees[$x['id']]))), 'produits' => $produits,
     ] + ($gros ? ['gros' => true] : []);
 }
@@ -297,7 +307,7 @@ function routeBoutiquesAnnuaire(): never
         ], array_slice($articles, 0, 4));
         $liste[] = [
             'slug' => $c['slug'], 'nom' => $c['nom'], 'type' => $c['type'], 'pays' => $c['pays'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '',
-            'devise' => $c['devise'], 'description' => (string) $c['description'], 'nbArticles' => count($articles), 'exemples' => $exemples,
+            'devise' => $c['devise'], 'description' => (string) $c['description'], 'nbArticles' => count($articles), 'exemples' => $exemples, 'logo' => logoBoutique($c['id']),
         ];
     }
     header('Cache-Control: private, max-age=60');
@@ -309,9 +319,9 @@ function routeBoutiqueImage(): never
     [, $c] = boutiqueParSlug(strtolower((string) ($_GET['b'] ?? '')));
     $ref = (string) ($_GET['i'] ?? '');
     if (!preg_match('/^img_[A-Za-z0-9_.:-]{1,36}$/', $ref)) throw new ErreurApi('Image introuvable', 404);
-    // Seules les photos des articles publiés sont accessibles
-    $autorisee = false;
-    foreach (articlesPublies($c['id']) as $p) if (($p['image'] ?? '') === $ref) { $autorisee = true; break; }
+    // Seules les photos des articles publiés et le logo de la boutique sont accessibles
+    $autorisee = $ref === logoBoutique($c['id']);
+    if (!$autorisee) foreach (articlesPublies($c['id']) as $p) if (($p['image'] ?? '') === $ref) { $autorisee = true; break; }
     if (!$autorisee) throw new ErreurApi('Image introuvable', 404);
     $l = requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'images' AND id = ? AND supprime = 0", [$c['id'], $ref])->fetch();
     $data = $l ? (json_decode($l['contenu'], true)['dataUrl'] ?? '') : '';
