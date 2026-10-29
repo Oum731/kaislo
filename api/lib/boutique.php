@@ -25,6 +25,7 @@
 const SLUGS_RESERVES = ['admin', 'app', 'api', 'commercial', 'boutique', 'kaislo', 'www', 'b', 'demo', 'en', 'pays', 'guides'];
 const STATUTS_COMMANDE = ['nouvelle', 'confirmee', 'prete', 'livree', 'annulee'];
 const LIGNES_COMMANDE_MAX = 40;
+const BOUTIQUES_ANNUAIRE_MAX = 300; // boutiques affichées dans la liste d'un pays
 const COMMANDES_AFFICHEES = 100;
 
 function slugBoutique(string $texte): string
@@ -43,9 +44,22 @@ function lienBoutique(string $slug): string
     return 'https://' . (domaineSite() ?: 'kaislo.com') . '/boutique/' . $slug . '/';
 }
 
+// Pourquoi une boutique n'est (ou n'est pas) dans la liste kaislo.com/boutiques : '' = elle y est, sinon la raison (affichée au gérant)
+function raisonAbsenceAnnuaire(?array $b, array $commerce, int $nbPublies): string
+{
+    if (!$b) return 'pasDeBoutique';
+    if (!$b['actif']) return 'desactivee';
+    if ($b['publique'] !== null && !(int) $b['publique']) return 'privee';
+    if (($commerce['statut'] ?? '') === 'suspendu') return 'suspendu';
+    if (abonnementExpire($commerce)) return 'abonnement';
+    if ($nbPublies < 1) return 'aucunArticle';
+    return '';
+}
+
 function versBoutique(?array $b, array $commerce): array
 {
     $nbPublies = count(articlesPublies($commerce['id']));
+    $raison = raisonAbsenceAnnuaire($b, $commerce, $nbPublies);
     return [
         'actif' => $b ? (bool) $b['actif'] : false,
         'slug' => $b['slug'] ?? '',
@@ -62,6 +76,8 @@ function versBoutique(?array $b, array $commerce): array
         'livraison' => $b['livraison'] ?? '',
         'lien' => $b ? lienBoutique($b['slug']) : '',
         'articlesPublies' => $nbPublies,
+        'dansAnnuaire' => $raison === '',
+        'raisonAnnuaire' => $raison,
     ];
 }
 
@@ -292,13 +308,20 @@ function routeBoutiquesAnnuaire(): never
     $pays = $demande ?? paysDeLAdresse(adresseIp());
     $liste = [];
     $disponibles = [];
-    $lignes = requete("SELECT b.slug, b.description, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu' ORDER BY b.modifie_le DESC LIMIT 300")->fetchAll();
+    // Pré-filtre SQL : boutiques actives et publiques qui ont au moins un article marqué « en ligne » (le détail est revérifié ci-dessous).
+    // Toutes les boutiques sont parcourues (pas de plafond partagé entre pays : un pays très actif ne doit pas cacher les autres) ;
+    // seul le pays du visiteur est détaillé, et la liste de ce pays est plafonnée.
+    $lignes = requete("SELECT b.slug, b.description, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id
+        WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu'
+        AND EXISTS (SELECT 1 FROM elements e WHERE e.commerce_id = c.id AND e.type = 'produits' AND e.supprime = 0 AND (e.contenu LIKE '%\"enLigne\":true%' OR e.contenu LIKE '%\"enLigne\":1%'))
+        ORDER BY b.modifie_le DESC LIMIT 5000")->fetchAll();
     foreach ($lignes as $c) {
         if (abonnementExpire($c)) continue;
+        if ($pays !== $c['pays']) { $disponibles[$c['pays']] = ($disponibles[$c['pays']] ?? 0) + 1; continue; } // un client ne voit que les boutiques de son pays
         $articles = array_values(articlesPublies($c['id']));
         if (!$articles) continue;
         $disponibles[$c['pays']] = ($disponibles[$c['pays']] ?? 0) + 1;
-        if ($pays !== $c['pays']) continue; // un client ne voit que les boutiques de son pays
+        if (count($liste) >= BOUTIQUES_ANNUAIRE_MAX) continue;
         // Exemples : les articles avec photo d'abord, quatre au plus
         usort($articles, fn ($x, $y) => (int) !empty($y['image']) <=> (int) !empty($x['image']));
         $exemples = array_map(fn ($p) => [

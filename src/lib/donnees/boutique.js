@@ -2,6 +2,7 @@
 // BOUTIQUE EN LIGNE : fonctions pures (panier du client, message WhatsApp de la commande, reprise dans la caisse).
 // Le serveur recalcule toujours les prix (api/lib/boutique.php) : ceux d'ici servent seulement à l'affichage.
 // ------------------------------------------------------------
+import { tr } from '../i18n/index.js';
 import { formatPrix } from '../utils/format.js';
 
 /** Prix d'un article pour le client : prix promo s'il y en a un, plus les options choisies. */
@@ -109,4 +110,23 @@ export function grouperBoutiques(boutiques, { texte = '', pays = '', categorie =
   return CATEGORIES_ANNUAIRE
     .map((c) => ({ categorie: c, boutiques: garde.filter((b) => categorieAnnuaire(b.type).id === c.id) }))
     .filter((g) => g.boutiques.length);
+}
+
+// ---------- Publier les articles en ligne ----------
+/** Articles qu'on peut publier d'un geste : actifs, avec un nom et un prix, pas encore « Vendre en ligne ». */
+export const articlesAPublier = (produits = []) => produits.filter((p) => !p.enLigne && p.actif !== false && String(p.nom || '').trim() && Number(p.prix) > 0);
+
+/** Message au gérant : où en est sa boutique par rapport à la liste kaislo.com/boutiques (raison envoyée par le serveur). */
+export function messageAnnuaire(b) {
+  if (!b) return null;
+  if (b.dansAnnuaire) return { ok: true, texte: tr('Votre boutique est dans la liste kaislo.com/boutiques : les clients de votre pays la trouvent.') };
+  const raisons = {
+    aucunArticle: tr('Votre boutique n’est pas encore dans la liste kaislo.com/boutiques : aucun article n’est publié en ligne. Publiez au moins un article.'),
+    desactivee: tr('Votre boutique n’est pas dans la liste kaislo.com/boutiques : elle est désactivée. Cochez « Boutique en ligne activée », puis Enregistrer.'),
+    privee: tr('Votre boutique n’est pas dans la liste kaislo.com/boutiques : vous avez choisi de ne pas l’afficher. Cochez « Afficher ma boutique sur kaislo.com/boutiques », puis Enregistrer.'),
+    abonnement: tr('Votre boutique est fermée : l’abonnement est expiré. Réglez-le pour qu’elle revienne dans la liste.'),
+    suspendu: tr('Votre commerce est suspendu : contactez Kaislo.'),
+    pasDeBoutique: tr('Votre boutique n’est pas encore créée : activez-la et enregistrez.'),
+  };
+  return raisons[b.raisonAnnuaire] ? { ok: false, raison: b.raisonAnnuaire, texte: raisons[b.raisonAnnuaire] } : null;
 }

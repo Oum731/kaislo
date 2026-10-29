@@ -250,6 +250,15 @@ encore arrivée : `null`, jamais un logo cassé. Il s'affiche dans l'en-tête de
 tant qu'il n'y a pas de logo), dans la page pour Google (`logo` des données structurées, image visible, et image de partage quand la
 boutique n'a aucune photo d'article). Tests : `tests/api-boutique-logo.test.mjs`.
 
+## Boutiques visibles dans la liste du site
+
+Une boutique apparaît sur `kaislo.com/boutiques` quand elle est **activée**, **affichée** (case « Afficher ma boutique… »), non suspendue, avec un
+abonnement valide et **au moins un article « Vendre en ligne »** (avec nom et prix). Chaque visiteur ne voit que les boutiques de son pays (choisi,
+sinon deviné par l'adresse IP), mais tous les pays sont parcourus : un pays très actif ne cache pas les autres (plafond de 300 boutiques par pays).
+`GET /api/boutique` renvoie `dansAnnuaire` et `raisonAnnuaire` (`aucunArticle`, `desactivee`, `privee`, `abonnement`, `suspendu`, `pasDeBoutique`) :
+la fiche « Boutique en ligne » de l'application explique au gérant pourquoi sa boutique n'est pas dans la liste, et le bouton « Publier mes N articles
+en ligne » coche « Vendre en ligne » sur tous les articles actifs qui ont un nom et un prix. Tests : `tests/api-boutique-annuaire.test.mjs`.
+
 ## Tarifs et postes
 
 - Une **formule par métier** (`src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`, à garder identiques ; modifiables

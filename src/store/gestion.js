@@ -17,6 +17,7 @@ import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs.js';
 
 import { stockDe, departStock } from '@/lib/donnees/stock.js';
 import { nettoyerGros, grosDisponible } from '@/lib/donnees/gros.js';
+import { articlesAPublier } from '@/lib/donnees/boutique.js';
 import { tr } from '@/lib/i18n';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
@@ -79,6 +80,13 @@ export const trancheGestion = (set, get) => ({
     }));
     get().message(tr('Produit enregistré'));
     return null;
+  },
+
+  // Publie d'un geste tous les articles actifs qui ont un nom et un prix (case « Vendre en ligne ») ; renvoie leur nombre
+  publierTousArticles() {
+    const ids = new Set(articlesAPublier(get().d.produits).map((p) => p.id));
+    if (ids.size) get().majDonnees((d) => ({ produits: d.produits.map((p) => (ids.has(p.id) ? { ...p, enLigne: true } : p)) }));
+    return ids.size;
   },
 
   supprimerProduit(id) {
