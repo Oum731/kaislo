@@ -349,9 +349,12 @@ function routeBoutiqueImage(): never
     $l = requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'images' AND id = ? AND supprime = 0", [$c['id'], $ref])->fetch();
     $data = $l ? (json_decode($l['contenu'], true)['dataUrl'] ?? '') : '';
     if (!preg_match('#^data:image/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$#', (string) $data, $m)) throw new ErreurApi('Image introuvable', 404);
+    $octets = base64_decode($m[2]);
     header('Content-Type: image/' . $m[1]);
-    header('Cache-Control: public, max-age=3600');
-    echo base64_decode($m[2]);
+    header('Content-Length: ' . strlen($octets));
+    header('Content-Disposition: inline; filename="article.' . ($m[1] === 'jpeg' ? 'jpg' : $m[1]) . '"');
+    header('Cache-Control: public, max-age=86400');
+    echo $octets;
     exit;
 }
 
