@@ -15,6 +15,7 @@ import { trouverPays, choisirPays, paysParGps } from '@/lib/pays-visiteur';
 import { CATEGORIES_ANNUAIRE, categorieAnnuaire, grouperBoutiques } from '@/lib/donnees/boutique';
 
 const lienBoutique = (b) => '/boutique/' + encodeURIComponent(b.slug) + '/';
+const logoBoutique = (b) => (b.logo ? chemin(b.logo.startsWith('/') ? b.logo : '/api/public/boutique-image?b=' + encodeURIComponent(b.slug) + '&i=' + encodeURIComponent(b.logo)) : null);
 const photo = (b, e) => (e.image ? chemin('/api/public/boutique-image?b=' + encodeURIComponent(b.slug) + '&i=' + encodeURIComponent(e.image)) : null);
 
 export function CarteBoutique({ b }) {
@@ -23,9 +24,13 @@ export function CarteBoutique({ b }) {
     // Lien ordinaire (pas next/link) : la page de la boutique est écrite par le serveur, elle n'existe pas dans l'export statique
     <a href={chemin(lienBoutique(b))} className="annuaire-carte">
       <div className="annuaire-entete">
-        <b>{b.nom}</b>
-        <span className="petit muet">{lieu}</span>
-        {b.description && <p className="petit annuaire-description">{b.description}</p>}
+        {/* Logo de la boutique, ou son initiale tant que le gérant n'en a pas choisi */}
+        {logoBoutique(b) ? <img className="annuaire-logo" src={logoBoutique(b)} alt={'Logo ' + b.nom} width="44" height="44" loading="lazy" /> : <span className="annuaire-logo vide" aria-hidden="true">{(b.nom || '?').trim().charAt(0).toUpperCase()}</span>}
+        <div className="annuaire-identite">
+          <b>{b.nom}</b>
+          <span className="petit muet">{lieu}</span>
+          {b.description && <p className="petit annuaire-description">{b.description}</p>}
+        </div>
       </div>
       <div className="annuaire-exemples">
         {b.exemples.map((e, i) => (
