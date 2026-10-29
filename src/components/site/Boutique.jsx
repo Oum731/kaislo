@@ -164,6 +164,8 @@ export default function Boutique() {
   }
 
   const total = totalPanier(panier);
+  // Logo ou photo de profil de la boutique : fichier du site (démo) ou image envoyée par le gérant ; rien tant qu'il n'y en a pas
+  const logo = !boutique.logo ? null : boutique.logo.startsWith('/') ? chemin(boutique.logo) : demo ? null : chemin('/api/public/boutique-image?b=' + encodeURIComponent(slug) + '&i=' + encodeURIComponent(boutique.logo));
   const image = (p) => (!p.image ? null : p.image.startsWith('/') ? chemin(p.image) : demo ? null : chemin('/api/public/boutique-image?b=' + encodeURIComponent(slug) + '&i=' + encodeURIComponent(p.image)));
 
   return (
@@ -172,8 +174,13 @@ export default function Boutique() {
       {pro && boutique.gros && <p className="vitrine-demo petit"><b>Espace grossistes</b> : prix de gros, vente au carton. Ce lien est réservé aux professionnels qui l’ont reçu de {boutique.nom}.</p>}
       <header className="vitrine-tete">
         <div className="vitrine-largeur">
-          <h1>{boutique.nom}</h1>
-          <p className="muet">{[boutique.quartier, boutique.ville].filter(Boolean).join(', ')}</p>
+          <div className="vitrine-identite">
+            {logo && <img className="vitrine-logo" src={logo} alt={'Logo ' + boutique.nom} width="72" height="72" />}
+            <div>
+              <h1>{boutique.nom}</h1>
+              <p className="muet">{[boutique.quartier, boutique.ville].filter(Boolean).join(', ')}</p>
+            </div>
+          </div>
           {boutique.description && <p>{boutique.description}</p>}
           {boutique.livraison && <p className="petit"><b>Livraison :</b> {boutique.livraison}</p>}
         </div>

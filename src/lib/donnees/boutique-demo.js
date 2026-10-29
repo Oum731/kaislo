@@ -18,7 +18,7 @@ export async function boutiqueDemo(commerceId) {
   const publies = d.produits.filter((p) => p.enLigne && p.actif !== false);
   const utilisees = new Set(publies.map((p) => p.categorieId));
   return {
-    slug: 'demo-' + commerceId, demo: true, nom: d.commerce.nom, ville: d.commerce.ville, quartier: '', devise: d.commerce.devise, pays: d.commerce.pays,
+    slug: 'demo-' + commerceId, demo: true, logo: d.commerce.logo || null, nom: d.commerce.nom, ville: d.commerce.ville, quartier: '', devise: d.commerce.devise, pays: d.commerce.pays,
     description: d.commerce.type === 'restaurant' ? 'Boutique de démonstration : plats et boissons à emporter.' : 'Boutique de démonstration : produits du quotidien.',
     livraison: 'Livraison à domicile selon le quartier (exemple).', whatsapp: '',
     categories: d.categories.filter((c) => utilisees.has(c.id)).map((c) => ({ id: c.id, nom: c.nom })),

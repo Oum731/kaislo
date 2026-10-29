@@ -241,6 +241,15 @@ qu'arrivent les clients des publicités). Si le visiteur annule l'installation, 
 nouvelle apparition après 3 jours, puis 30 jours, puis plus jamais (`localStorage` : `kaislo_installation`). Le service worker est enregistré
 à l'affichage (Chrome en a besoin pour proposer l'installation).
 
+## Logo des boutiques
+
+Le logo (ou la photo de profil) que le gérant choisit dans Réglages → Profil est envoyé au serveur avec le reste (élément `images`) et
+`api/lib/boutique.php` l'expose : champ `logo` de `GET /api/public/boutique` et de l'annuaire `GET /api/public/boutiques`, téléchargeable
+par `GET /api/public/boutique-image` (comme les photos des articles publiés ; aucune autre image n'est publique). Pas de logo ou image pas
+encore arrivée : `null`, jamais un logo cassé. Il s'affiche dans l'en-tête de la vitrine, sur la carte de l'annuaire (l'initiale de la boutique
+tant qu'il n'y a pas de logo), dans la page pour Google (`logo` des données structurées, image visible, et image de partage quand la
+boutique n'a aucune photo d'article). Tests : `tests/api-boutique-logo.test.mjs`.
+
 ## Tarifs et postes
 
 - Une **formule par métier** (`src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`, à garder identiques ; modifiables
