@@ -259,6 +259,14 @@ sinon deviné par l'adresse IP), mais tous les pays sont parcourus : un pays tr�
 la fiche « Boutique en ligne » de l'application explique au gérant pourquoi sa boutique n'est pas dans la liste, et le bouton « Publier mes N articles
 en ligne » coche « Vendre en ligne » sur tous les articles actifs qui ont un nom et un prix. Tests : `tests/api-boutique-annuaire.test.mjs`.
 
+## Commande en ligne : les photos des articles
+
+Le lien WhatsApp (`wa.me`) ne peut pas joindre d'image : la commande part donc en texte, avec un lien par photo (`/api/public/boutique-image`).
+Pour que les photos arrivent en vraies images, l'écran de confirmation propose, sur les téléphones qui savent partager des fichiers, deux temps :
+« 1. Envoyer la commande sur WhatsApp » (directement au numéro de la boutique), puis « 2. Joindre les photos des articles » (partage du téléphone :
+la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
+liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
+
 ## Tarifs et postes
 
 - Une **formule par métier** (`src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`, à garder identiques ; modifiables

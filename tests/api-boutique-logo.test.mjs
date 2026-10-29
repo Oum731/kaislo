@@ -91,3 +91,18 @@ test('page pour Google : le logo est dans les données structurées et sert d’
   assert.match(html, /<img src="https:\/\/[^"]*i=img_logo1" alt="Logo Boutique Logo"/);
   assert.match(html, /<meta property="og:image" content="https:\/\/[^"]*i=img_logo1"/, 'sans photo d’article, le logo sert d’image de partage');
 });
+
+test('adresse d’image publique : fonctionne aussi pour les aperçus de liens (HEAD, taille annoncée, affichage direct)', async () => {
+  const get = await fetch(U + '/public/boutique-image?b=boutique-logo&i=img_logo1', { headers: { 'User-Agent': 'WhatsApp/2.23.20.0 A' } });
+  assert.equal(get.status, 200);
+  assert.equal(get.headers.get('content-type'), 'image/png');
+  assert.equal(get.headers.get('content-length'), String(Buffer.from(PNG_BASE64, 'base64').length));
+  assert.match(get.headers.get('content-disposition'), /^inline/);
+  // Les robots d'aperçu (WhatsApp, Facebook…) testent souvent avec HEAD : même réponse, sans le corps
+  const head = await fetch(U + '/public/boutique-image?b=boutique-logo&i=img_logo1', { method: 'HEAD', headers: { 'User-Agent': 'WhatsApp/2.23.20.0 A' } });
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get('content-type'), 'image/png');
+  assert.equal((await head.arrayBuffer()).byteLength, 0);
+  // Image inconnue : toujours 404, en GET comme en HEAD
+  assert.equal((await fetch(U + '/public/boutique-image?b=boutique-logo&i=img_nexistepas', { method: 'HEAD' })).status, 404);
+});
