@@ -13,7 +13,7 @@ import { grosDisponible } from '@/lib/donnees/gros';
 import { tr } from '@/lib/i18n';
 import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
 import { lienWhatsApp } from '@/lib/donnees/whatsapp';
-import { choixDepuisCommande, STATUTS_COMMANDE } from '@/lib/donnees/boutique';
+import { choixDepuisCommande, STATUTS_COMMANDE, articlesAPublier, messageAnnuaire } from '@/lib/donnees/boutique';
 import { chemin } from '@/config';
 
 const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
@@ -63,6 +63,20 @@ export function FeuilleBoutique() {
     } catch (e) { setErreur(messageErreur(e)); }
     setOccupe(false);
   };
+  // Publie d'un geste les articles qui ne sont pas encore « Vendre en ligne » ; la boutique apparaît alors dans la liste du site
+  const aPublier = articlesAPublier(s.d.produits).length;
+  const publierTout = async () => {
+    if (!confirm(tr('Publier {0} article(s) sur votre boutique en ligne ? Vous pourrez en retirer un à tout moment : ouvrez sa fiche et décochez « Vendre en ligne ».', [aPublier]))) return;
+    setErreur(''); setMessage(''); setOccupe(true);
+    try {
+      s.publierTousArticles();
+      await s.synchroniser?.();
+      const r = await appelApi('GET', '/boutique', null, s.jetonServeur());
+      setB((x) => ({ ...x, ...r.boutique, slug: r.boutique.slug || x.slug }));
+      setMessage(tr('Articles publiés.'));
+    } catch (e) { setErreur(messageErreur(e)); }
+    setOccupe(false);
+  };
   const copier = async () => {
     try { await navigator.clipboard.writeText(b.lien); setMessage(tr('Lien copié.')); } catch { setErreur(tr('Copie impossible : utilisez le bouton WhatsApp.')); }
   };
@@ -109,6 +123,8 @@ export function FeuilleBoutique() {
             <label className="champ"><span>{tr('Présentation (facultatif)')}</span><textarea value={b.description} onChange={(e) => maj({ description: e.target.value })} maxLength={300} placeholder={tr('Ex : Boissons fraîches et jus naturels à Cocody')} /></label>
             <label className="champ"><span>{tr('Livraison (facultatif)')}</span><textarea value={b.livraison} onChange={(e) => maj({ livraison: e.target.value })} maxLength={300} placeholder={tr('Ex : Livraison à Cocody et Marcory, 1 000 FCFA')} /></label>
             <p className="petit">{tr('{0} article(s) publié(s) en ligne. Pour en publier d’autres : ouvrez la fiche de l’article et cochez « Vendre en ligne ».', [b.articlesPublies])}</p>
+            {messageAnnuaire(b) && <p className={messageAnnuaire(b).ok ? 'info-verte petit' : 'alerte petit'}>{messageAnnuaire(b).texte}</p>}
+            {aPublier > 0 && <button type="button" className="btn secondaire bloc" disabled={occupe} onClick={publierTout}>{tr('Publier mes {0} article(s) en ligne', [aPublier])}</button>}
             {b.lien && (
               <div className="carte pile">
                 <b>{tr('Lien public (prix de détail)')}</b>

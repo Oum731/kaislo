@@ -1,7 +1,7 @@
 // Boutique en ligne : panier du client, texte de la commande WhatsApp, reprise dans la caisse.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { photosCommande, prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, messageCommande, lienCommandeWhatsApp, choixDepuisCommande } from '../src/lib/donnees/boutique.js';
+import { articlesAPublier, messageAnnuaire, photosCommande, prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, messageCommande, lienCommandeWhatsApp, choixDepuisCommande } from '../src/lib/donnees/boutique.js';
 
 const jus = { id: 'p1', nom: 'Jus', prix: 1000, promo: null, groupes: [
   { id: 'g1', nom: 'Taille', type: 'unique', obligatoire: true, options: [{ id: 'o1', nom: 'Petit', prix: 0 }, { id: 'o2', nom: 'Grand', prix: 500 }] },
@@ -78,4 +78,31 @@ test('l\'annuaire range les boutiques par rayon, filtre par texte et par pays', 
   assert.deepEqual(grouperBoutiques(liste, { texte: 'rabat' }).map((g) => g.boutiques[0].nom), ['Tech Rabat']);
   assert.deepEqual(grouperBoutiques(liste, { categorie: 'restauration' }).map((g) => g.boutiques[0].nom), ['Maquis du Plateau']);
   assert.deepEqual(grouperBoutiques(liste, { texte: 'introuvable' }), []);
+});
+
+test('articles publiables d\'un geste : actifs, avec un nom et un prix, pas déjà en ligne', () => {
+  const produits = [
+    { id: 'a', nom: 'Pagne', prix: 2500, actif: true },
+    { id: 'b', nom: 'Déjà en ligne', prix: 100, enLigne: true },
+    { id: 'c', nom: 'Désactivé', prix: 100, actif: false },
+    { id: 'd', nom: 'Sans prix', prix: 0 },
+    { id: 'e', nom: '  ', prix: 500 },
+    { id: 'f', nom: 'Sac', prix: 4000 },
+  ];
+  assert.deepEqual(articlesAPublier(produits).map((p) => p.id), ['a', 'f']);
+  assert.deepEqual(articlesAPublier(), []);
+});
+
+test('message du gérant : la boutique est dans la liste, ou la raison précise de son absence', () => {
+  assert.equal(messageAnnuaire(null), null);
+  const ok = messageAnnuaire({ dansAnnuaire: true, raisonAnnuaire: '' });
+  assert.equal(ok.ok, true);
+  assert.match(ok.texte, /dans la liste kaislo\.com\/boutiques/);
+  for (const raison of ['aucunArticle', 'desactivee', 'privee', 'abonnement', 'suspendu', 'pasDeBoutique']) {
+    const m = messageAnnuaire({ dansAnnuaire: false, raisonAnnuaire: raison });
+    assert.equal(m.ok, false, raison);
+    assert.ok(m.texte.length > 20, raison);
+  }
+  assert.match(messageAnnuaire({ dansAnnuaire: false, raisonAnnuaire: 'aucunArticle' }).texte, /aucun article/);
+  assert.equal(messageAnnuaire({ dansAnnuaire: false, raisonAnnuaire: 'inconnue' }), null);
 });
