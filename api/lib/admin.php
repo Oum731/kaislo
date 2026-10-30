@@ -150,8 +150,13 @@ function resumesCommerces(?string $seulId = null): array
     $nbFilleuls = []; // commerce parrain -> nombre de commerces parrainés
     foreach ($identite as $x) if (!empty($x['parrain_commerce_id'])) $nbFilleuls[$x['parrain_commerce_id']] = ($nbFilleuls[$x['parrain_commerce_id']] ?? 0) + 1;
     $produitsDe = produitsParCommerce($seulId);
+    // Signaux déjà tranchés par l'équipe (« Ignorer ») : ils ne reviennent pas
+    $ignores = [];
+    foreach (requete("SELECT commerce_id, details FROM journal WHERE action = 'amorac-signal-ignorer'" . ($seulId ? ' AND commerce_id = ?' : ''), $seulId ? [$seulId] : [])->fetchAll() as $j) {
+        foreach ((array) (json_decode($j['details'] ?? '{}', true)['codes'] ?? []) as $code) $ignores[$j['commerce_id']][$code] = true;
+    }
 
-    return array_map(function ($c) use ($nbProduits, $derniere, $nbVendeurs, $nonLus, $ca, $paiements, $gerants, $groupes, $identite, $produitsDe, $nbFilleuls) {
+    return array_map(function ($c) use ($ignores, $nbProduits, $derniere, $nbVendeurs, $nonLus, $ca, $paiements, $gerants, $groupes, $identite, $produitsDe, $nbFilleuls) {
         $id = $c['id'];
         $reglages = reglagesCommerce($id);
         $commerce = versCommerce($c);
@@ -170,7 +175,7 @@ function resumesCommerces(?string $seulId = null): array
             'nbVendeurs' => (int) ($nbVendeurs[$id] ?? 0), 'messagesNonLus' => (int) ($nonLus[$id] ?? 0),
             // Autres commerces du même gérant (paiement groupé) et activité à vérifier (voir signauxActivite)
             'autresCommerces' => array_values(array_map(fn ($autre) => ['id' => $autre, 'nom' => $identite[$autre]['nom'], 'type' => $identite[$autre]['type'], 'statut' => $identite[$autre]['statut'], 'devise' => $identite[$autre]['devise'], 'tarif' => tarifCommerce($identite[$autre]), 'joursOfferts' => debutPeriodePayee($identite[$autre]) ? (int) ($identite[$autre]['jours_offerts'] ?? 0) : 0], array_filter($groupes[$gerants[$id]['cle_telephone'] ?? ''] ?? [], fn ($autre) => $autre !== $id && isset($identite[$autre])))),
-            'signaux' => signauxActivite($c, $produitsDe[$id] ?? [], $reglages),
+            'signaux' => array_values(array_filter(signauxActivite($c, $produitsDe[$id] ?? [], $reglages), fn ($x) => empty($ignores[$id][$x['code']]))),
             'parrainCommerce' => !empty($c['parrain_commerce_id']) ? ($identite[$c['parrain_commerce_id']]['nom'] ?? null) : null,
             'nbFilleuls' => $nbFilleuls[$id] ?? 0,
             'joursOfferts' => debutPeriodePayee($c) ? (int) ($c['jours_offerts'] ?? 0) : 0,
@@ -215,7 +220,7 @@ function prolongerDate(?string $date, int $jours): string
 }
 
 // ---------- POST /api/admin/commerce : actions sur un commerce ----------
-// { id, action: 'suspendre' | 'reactiver' | 'prolonger-essai' | 'notes' | 'telephone', ... }
+// { id, action: 'suspendre' | 'reactiver' | 'prolonger-essai' | 'notes' | 'telephone' | 'activite' | 'signal-ignorer', ... }
 function routeAdminActionCommerce(): never
 {
     $e = entree();
@@ -266,6 +271,19 @@ function routeAdminActionCommerce(): never
             if ($cid === '') requete("DELETE FROM commissions WHERE commerce_id = ? AND statut <> 'payee'", [$id]);
             else requete("UPDATE commissions SET commercial_id = ? WHERE commerce_id = ? AND statut <> 'payee'", [$cid, $id]);
             break;
+        case 'activite':
+            // Décision sur un signal « à vérifier » : le commerce passe à l'activité (donc à la formule) retenue par l'équipe
+            $f = formuleParId((string) ($e['formule'] ?? ''));
+            $type = $f ? (array_values(array_intersect($f['types'] ?? [], TYPES_COMMERCE_OFFERTS))[0] ?? null) : null;
+            if (!$type) throw new ErreurApi('Formule inconnue');
+            requete('UPDATE commerces SET type = ?, modifie_le = ? WHERE id = ?', [$type, maintenant(), $id]);
+            journaliser($id, $admin['id'], 'amorac-activite', ['par' => $admin['email'], 'de' => $c['type'], 'vers' => $type]);
+            repondre(['ok' => true, 'commerce' => resumesCommerces($id)[0]]);
+        case 'signal-ignorer':
+            // Fausse alerte : le signal n'est plus affiché pour ce commerce
+            $codes = array_map(fn ($x) => $x['code'], signauxActivite($c, produitsParCommerce($id)[$id] ?? [], reglagesCommerce($id)));
+            journaliser($id, $admin['id'], 'amorac-signal-ignorer', ['par' => $admin['email'], 'codes' => $codes]);
+            repondre(['ok' => true, 'commerce' => resumesCommerces($id)[0]]);
         default:
             throw new ErreurApi('Action inconnue');
     }
