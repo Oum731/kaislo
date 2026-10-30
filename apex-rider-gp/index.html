@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apex Rider GP</title>
+<style>
+:root{
+  --bg:#05070d; --panel:rgba(12,18,30,.72); --line:rgba(120,170,230,.22);
+  --cyan:#19d3ff; --orange:#ff7a1a; --red:#ff3b4e; --green:#37e07a;
+  --text:#e8f1ff; --muted:#8196b1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:"Rajdhani","Barlow Condensed","Segoe UI",Roboto,Arial,sans-serif;-webkit-user-select:none;user-select:none}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+#ui{position:fixed;inset:0;pointer-events:none}
+.screen{position:absolute;inset:0;pointer-events:none}
+.screen.hidden,.hidden{display:none!important}
+.screen button,.screen input,.screen .panel{pointer-events:auto}
+button{font:inherit;color:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.08em}
+
+/* ---------- Menu ---------- */
+.logo{position:absolute;left:5vw;top:5vh;font-size:clamp(34px,5.4vw,76px);font-weight:800;font-style:italic;letter-spacing:.04em;line-height:.9}
+.logo span{color:var(--cyan);text-shadow:0 0 24px rgba(25,211,255,.55);margin-left:.18em}
+.logo small{display:block;font-size:.2em;letter-spacing:.5em;color:var(--muted);font-style:normal;font-weight:600;margin-top:.8em}
+.menu-list{position:absolute;left:5vw;top:30vh;display:flex;flex-direction:column;gap:10px;width:min(360px,80vw)}
+.menu-list button{display:flex;justify-content:space-between;align-items:center;text-align:left;font-size:22px;font-weight:600;
+  padding:12px 18px;background:rgba(14,20,34,.7);border:1px solid var(--line);border-left:3px solid transparent;backdrop-filter:blur(6px);transition:.15s}
+.menu-list button:hover:not(:disabled),.menu-list button.primary{border-color:var(--cyan);border-left-color:var(--cyan);background:rgba(25,211,255,.12);box-shadow:0 0 22px rgba(25,211,255,.18)}
+.menu-list button:disabled{opacity:.45;cursor:not-allowed}
+.menu-list em{font-size:12px;font-style:normal;color:var(--orange);letter-spacing:.2em}
+.side{position:absolute;right:4vw;top:12vh;width:min(340px,40vw);display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px)}
+.card h4{font-size:13px;letter-spacing:.25em;color:var(--muted);padding:8px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.25)}
+.card .body{padding:12px 14px;font-size:16px;line-height:1.35}
+.card .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+.card .row b{color:var(--cyan);font-weight:600}
+.hint{position:absolute;left:5vw;bottom:4vh;color:var(--muted);font-size:14px;letter-spacing:.1em}
+
+/* ---------- Garage ---------- */
+#garage .left{position:absolute;left:2.5vw;top:3vh;bottom:3vh;width:min(380px,92vw);display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.gtitle{display:flex;align-items:center;justify-content:space-between;font-size:24px;font-weight:700;letter-spacing:.1em;padding:8px 16px;background:var(--panel);border:1px solid var(--line)}
+.gtitle small{font-size:14px;color:var(--orange);letter-spacing:.1em}
+.cats{display:flex;flex-direction:column;gap:4px}
+.cats button{display:flex;justify-content:space-between;align-items:center;padding:6px 14px;font-size:17px;font-weight:600;background:rgba(14,20,34,.78);border:1px solid var(--line);transition:.12s}
+.cats button::after{content:"›";font-size:26px;color:var(--muted);line-height:1}
+.cats button:hover,.cats button.on{border-color:var(--cyan);background:rgba(25,211,255,.12)}
+.cats button.on::after{color:var(--cyan)}
+.opts{flex:1;min-height:150px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px;scrollbar-width:thin}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:rgba(10,14,24,.82);border:1px solid var(--line);text-align:left;text-transform:none;letter-spacing:.02em}
+.opt .n{font-size:17px;font-weight:600}.opt .d{font-size:13px;color:var(--muted);display:block}
+.opt .tag{font-size:13px;letter-spacing:.12em;white-space:nowrap;color:var(--orange);text-transform:uppercase}
+.opt.eq{border-color:var(--green)}.opt.eq .tag{color:var(--green)}
+.opt:hover{border-color:var(--cyan)}.opt:disabled{opacity:.5}
+.sw{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}
+.sw i{width:30px;height:30px;border:2px solid rgba(255,255,255,.25);cursor:pointer;pointer-events:auto;display:block}
+.sw i.on{border-color:#fff;box-shadow:0 0 10px #fff}
+.lbl{font-size:13px;letter-spacing:.2em;color:var(--muted);padding:2px 2px}
+.numin{width:90px;font:700 28px inherit;font-family:inherit;text-align:center;background:rgba(0,0,0,.4);color:var(--text);border:1px solid var(--cyan);padding:6px;margin:4px 0 8px}
+#garage .right{position:absolute;right:2.5vw;top:3vh;width:min(330px,44vw);display:flex;flex-direction:column;gap:12px}
+.stat{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:16px;padding:10px 14px}
+.stat span{color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-size:13px}.stat b{text-align:right;font-weight:600}
+.bar{grid-column:1/3;height:5px;background:rgba(255,255,255,.08);margin-bottom:6px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--orange))}
+.gbtns{position:absolute;right:2.5vw;bottom:3vh;display:flex;gap:10px}
+.cta{padding:14px 28px;font-size:20px;font-weight:700;background:linear-gradient(90deg,rgba(25,211,255,.25),rgba(255,122,26,.25));border:1px solid var(--cyan);letter-spacing:.14em}
+.cta:hover{box-shadow:0 0 24px rgba(25,211,255,.4)}
+.cta.sec{background:rgba(14,20,34,.8);border-color:var(--line)}
+.gcredits{color:var(--orange)}
+
+/* ---------- Settings / pause / results ---------- */
+.modal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(3,5,10,.62);backdrop-filter:blur(4px);pointer-events:auto}
+.dlg{width:min(560px,92vw);background:rgba(10,15,26,.95);border:1px solid var(--line);box-shadow:0 0 60px rgba(25,211,255,.12)}
+.dlg h2{padding:16px 22px;font-size:28px;letter-spacing:.14em;border-bottom:1px solid var(--line);background:rgba(0,0,0,.3)}
+.dlg .in{padding:18px 22px;display:flex;flex-direction:column;gap:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;padding:9px 12px;background:rgba(14,20,34,.9);border:1px solid var(--line);font-size:15px;min-width:90px}
+.seg button.on{border-color:var(--cyan);background:rgba(25,211,255,.16)}
+.dlg .btns{display:flex;gap:10px;padding:0 22px 20px;flex-wrap:wrap}
+.dlg .btns button{flex:1;min-width:130px}
+table.res{width:100%;border-collapse:collapse;font-size:17px}
+table.res td{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.06)}
+table.res tr.me td{color:var(--cyan);font-weight:700;background:rgba(25,211,255,.08)}
+table.res td:first-child{width:36px;color:var(--muted)}
+.big{font-size:42px;font-weight:800;font-style:italic;letter-spacing:.06em}
+
+/* ---------- HUD ---------- */
+.hud{position:absolute;font-weight:600}
+.hud .lab{font-size:13px;letter-spacing:.3em;color:var(--cyan)}
+.hud .val{font-size:34px;letter-spacing:.04em;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+#hTL{left:2.2vw;top:3vh;border-top:1px solid var(--line);padding-top:4px}
+#hTR{right:2.2vw;top:3vh;text-align:right;border-top:1px solid var(--line);padding-top:4px}
+#hBoard{right:2.2vw;top:17vh;width:210px;font-size:15px;background:rgba(5,9,16,.55);border:1px solid var(--line)}
+#hBoard div{display:flex;justify-content:space-between;padding:2px 8px}
+#hBoard div.me{background:rgba(25,211,255,.2);color:#fff}
+#hBoard span.g{color:var(--orange)}
+#hBL{left:2.2vw;bottom:3vh}
+#hBR{right:1.5vw;bottom:2vh;display:flex;gap:10px;align-items:flex-end}
+canvas.hc{background:rgba(5,9,16,.5);border:1px solid var(--line)}
+#hWeather{left:2.2vw;top:17vh;font-size:16px;color:var(--muted);letter-spacing:.14em}
+#hGap{left:50%;top:3vh;transform:translateX(-50%);font-size:26px;text-align:center;text-shadow:0 2px 8px #000}
+#hGap small{display:block;font-size:12px;letter-spacing:.3em;color:var(--muted)}
+#hKeys{left:50%;bottom:1.4vh;transform:translateX(-50%);font-size:12px;color:rgba(200,220,255,.5);letter-spacing:.12em;white-space:nowrap}
+#toast{position:absolute;left:50%;top:22vh;transform:translateX(-50%);font-size:34px;font-weight:800;font-style:italic;letter-spacing:.12em;text-shadow:0 0 22px rgba(25,211,255,.8),0 3px 10px #000;opacity:0;transition:opacity .25s;white-space:nowrap}
+#toast.show{opacity:1}
+#countdown{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:min(22vw,200px);font-weight:900;font-style:italic;color:#fff;text-shadow:0 0 50px var(--cyan);letter-spacing:.05em}
+#pit{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;background:rgba(5,9,16,.8);border:1px solid var(--cyan);padding:20px 40px;min-width:min(480px,90vw)}
+#pit .arrow{font-size:110px;line-height:1;color:var(--orange);text-shadow:0 0 30px rgba(255,122,26,.7)}
+#pit .pips{display:flex;justify-content:center;gap:10px;margin:8px 0}
+#pit .pips i{width:46px;height:8px;background:rgba(255,255,255,.15)}#pit .pips i.on{background:var(--green)}
+@media (max-width:760px){
+  #garage .right{display:none}.side{display:none}#hBoard{display:none}#hKeys{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="ui">
+
+  <!-- MENU -->
+  <section id="menu" class="screen">
+    <div class="logo">APEX<span>RIDER</span> GP<small>SIMULATION · GESTION · COURSE</small></div>
+    <nav class="menu-list">
+      <button data-act="career" class="primary">Mode carrière</button>
+      <button data-act="quick">Course rapide</button>
+      <button data-act="multi" disabled>Multijoueur <em>bientôt</em></button>
+      <button data-act="garage">Garage</button>
+      <button data-act="settings">Réglages</button>
+    </nav>
+    <aside class="side">
+      <div class="card"><h4>ACTUALITÉS</h4><div class="body" id="news"></div></div>
+      <div class="card"><h4>PROFIL PILOTE</h4><div class="body" id="profile"></div></div>
+    </aside>
+    <div class="hint">Clavier : ← → incliner · ↑ gaz · ↓ frein avant · Espace frein arrière · B stand · Échap pause — Manette compatible</div>
+  </section>
+
+  <!-- GARAGE -->
+  <section id="garage" class="screen hidden">
+    <div class="left">
+      <div class="gtitle">GARAGE <small class="gcredits" id="gCredits"></small></div>
+      <div class="cats" id="cats"></div>
+      <div class="opts" id="opts"></div>
+    </div>
+    <div class="right">
+      <div class="card"><h4>COURBE DE PUISSANCE</h4><canvas id="dyno" width="320" height="130" style="width:100%;display:block"></canvas>
+        <div class="stat" id="gStats"></div></div>
+    </div>
+    <div class="gbtns">
+      <button class="cta sec" id="gBack">Retour</button>
+      <button class="cta" id="gRace">Course ▶</button>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <section id="hud" class="screen hidden">
+    <div class="hud" id="hTL"><div class="lab">TEMPS</div><div class="val" id="hTime">0:00.000</div><div class="lab" style="margin-top:6px">MEILLEUR</div><div class="val" id="hBest" style="font-size:26px">--:--.---</div></div>
+    <div class="hud" id="hTR"><div class="lab">POSITION</div><div class="val" id="hPos">6/12</div><div class="lab" style="margin-top:6px">TOUR</div><div class="val" id="hLap" style="font-size:26px">1/3</div></div>
+    <div class="hud" id="hBoard"></div>
+    <div class="hud" id="hWeather"></div>
+    <div class="hud" id="hGap"></div>
+    <div class="hud" id="hBL"><canvas class="hc" id="hMap" width="230" height="160" style="width:230px;height:160px"></canvas></div>
+    <div class="hud" id="hBR">
+      <canvas class="hc" id="hTyres" width="110" height="190" style="width:110px;height:190px"></canvas>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+        <canvas class="hc" id="hLean" width="170" height="86" style="width:170px;height:86px"></canvas>
+        <canvas class="hc" id="hGauge" width="320" height="230" style="width:320px;height:230px"></canvas>
+      </div>
+    </div>
+    <div class="hud" id="hKeys">← → INCLINER · ↑ GAZ · ↓ FREIN AV · ESPACE FREIN AR · B STAND · 1-4 PNEUS · ÉCHAP PAUSE</div>
+    <div id="toast"></div>
+    <div id="countdown" class="hidden"></div>
+    <div id="pit" class="hidden"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings" class="screen hidden"><div class="modal"><div class="dlg">
+    <h2>RÉGLAGES</h2>
+    <div class="in">
+      <div><div class="lbl">MÉTÉO</div><div class="seg" data-key="weather"><button data-v="dynamic">Dynamique</button><button data-v="dry">Sec</button><button data-v="wet">Pluie</button></div></div>
+      <div><div class="lbl">NOMBRE DE TOURS</div><div class="seg" data-key="laps"><button data-v="2">2</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
+      <div><div class="lbl">AIDE AU PILOTAGE</div><div class="seg" data-key="assist"><button data-v="0">Élevée</button><button data-v="1">Moyenne</button><button data-v="2">Faible</button><button data-v="3">Expert</button></div></div>
+      <div><div class="lbl">VOLUME</div><div class="seg" data-key="volume"><button data-v="0">Muet</button><button data-v="0.3">Bas</button><button data-v="0.6">Moyen</button><button data-v="1">Fort</button></div></div>
+    </div>
+    <div class="btns"><button class="cta" id="sClose">OK</button><button class="cta sec" id="sReset">Réinitialiser la sauvegarde</button></div>
+  </div></div></section>
+
+  <!-- PAUSE -->
+  <section id="pause" class="screen hidden"><div class="modal"><div class="dlg">
+    <h2>PAUSE</h2>
+    <div class="btns" style="padding-top:20px"><button class="cta" id="pResume">Reprendre</button><button class="cta sec" id="pRestart">Recommencer</button><button class="cta sec" id="pQuit">Quitter</button></div>
+  </div></div></section>
+
+  <!-- RESULTS -->
+  <section id="results" class="screen hidden"><div class="modal"><div class="dlg">
+    <h2 id="rTitle">RÉSULTATS</h2>
+    <div class="in"><div class="big" id="rPos"></div><div id="rBody"></div></div>
+    <div class="btns"><button class="cta" id="rGarage">Garage</button><button class="cta sec" id="rAgain">Rejouer</button><button class="cta sec" id="rMenu">Menu</button></div>
+  </div></div></section>
+</div>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
