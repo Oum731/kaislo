@@ -1,0 +1,40 @@
+=== APEX RIDER GP — FICHE DE SOUMISSION / SUBMISSION SHEET ===
+
+TITLE
+Apex Rider GP
+
+CATEGORY (suggested)
+Racing / Sports (Motorcycle)
+
+TAGS
+motorcycle, moto, racing, motogp, bike, 3d, simulation, career, rain, night, neon, tuning, garage, pit stop
+
+SHORT DESCRIPTION (EN)
+Race a superbike through a neon city at night. Tune your bike in the garage, manage tyre wear, survive the rain and climb from 300cc to the 1000cc Apex GP class.
+
+DESCRIPTION (EN)
+Apex Rider GP is a 3D motorcycle racing game with a full career loop. Upgrade your engine, exhaust, suspension and brakes, choose your tyres, pick a sponsor and hit the track. Tyres wear and heat up differently on the left and right sides, brakes fade, and the weather turns to heavy rain mid-race: the racing line dries first, so stay on it. Crash hard enough and your bike is out. Call a pit stop and win time back with the tyre-change mini-game. Spend your XP in the rider skill tree and unlock the 600cc and 1000cc classes.
+
+DESCRIPTION COURTE (FR)
+Pilotez une superbike dans une ville néon de nuit. Réglez votre moto au garage, gérez l'usure des pneus, survivez à la pluie et passez du 300cc au 1000cc Apex GP.
+
+INSTRUCTIONS / CONTROLS
+Keyboard: Left/Right (or A/D) lean - Up (or W) throttle - Down (or S) front brake - Space rear brake - Q/E shift weight forward/back - B pit stop - 1-4 choose next tyres - Esc pause.
+Gamepad: left stick lean - RT throttle - LT front brake - A rear brake - right stick weight.
+Mobile: on-screen buttons (arrows, throttle, brakes, pit stop, pause).
+
+LANGUAGE
+No text in the interface (icons and numbers only) - playable in any language.
+
+CONTROLS TYPE
+Keyboard, gamepad, touch.
+
+ORIENTATION
+Landscape.
+
+RECOMMENDED SIZE
+960 x 540 (responsive, supports fullscreen)
+
+SDK
+GameMonetize SDK integrated (pause/resume events + interstitial between races, never before the 2nd race and at most every 2 minutes).
+Replace VOTRE_GAME_ID by your Game ID: GM_ID=<your id> npm run build

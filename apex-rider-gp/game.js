@@ -1432,7 +1432,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; tAcc += dt;
   if (R && (screen === 'hud' || screen === 'results' || screen === 'pause')) {
     canvas.style.visibility = 'visible';
-    if (!R.paused && !GM.held) updateRace(dt); else justPressed.length = 0;
+    if (!R.paused && !GM.held && !window.__manual) updateRace(dt); else if (!window.__manual) justPressed.length = 0;
     renderer.render(raceScene, raceCam);
   } else if (screen === 'menu' || screen === 'settings') {
     justPressed.length = 0; canvas.style.visibility = 'hidden';

@@ -21,9 +21,19 @@ const dist = join(here, 'dist'); rmSync(dist, { recursive: true, force: true });
 writeFileSync(join(dist, 'apex-rider-gp.html'), html.replace('<!--GM_SDK-->', ''));
 console.log('standalone OK', (html.length / 1024).toFixed(0), 'Ko');
 
-const gm = join(dist, 'gamemonetize'); mkdirSync(gm, { recursive: true });
+
+// ---- livraison par portail : un dossier par site, chacun avec zip + miniatures + captures + vidéo + fiche
+const gm = join(dist, 'gamemonetize'), gen = join(dist, 'generic');
+mkdirSync(gm, { recursive: true }); mkdirSync(gen, { recursive: true });
 const id = process.env.GM_ID || 'VOTRE_GAME_ID';
-writeFileSync(join(gm, 'index.html'), html.replace('<!--GM_SDK-->', sdk(id)));
-try { execFileSync('zip', ['-j', '-q', join(gm, 'apex-rider-gp-gamemonetize.zip'), join(gm, 'index.html')]); console.log('zip OK (gameId =', id + ')'); }
-catch { console.log('zip indisponible : compressez dist/gamemonetize/index.html à la main'); }
-for (const f of readdirSync(join(here, 'store'))) copyFileSync(join(here, 'store', f), join(gm, f));
+const pack = (dir, name, content) => {
+  const tmp = join(dir, 'index.html'); writeFileSync(tmp, content);
+  try { execFileSync('zip', ['-j', '-q', join(dir, name), tmp]); console.log('zip OK', name); }
+  catch { console.log('zip indisponible : compressez index.html à la main'); }
+  rmSync(tmp, { force: true });
+};
+pack(gm, 'apex-rider-gp-gamemonetize.zip', html.replace('<!--GM_SDK-->', sdk(id)));
+pack(gen, 'apex-rider-gp.zip', html.replace('<!--GM_SDK-->', ''));
+const media = readdirSync(join(here, 'store')).filter(f => !/^f_/.test(f));
+for (const f of media) { copyFileSync(join(here, 'store', f), join(gm, f)); copyFileSync(join(here, 'store', f), join(gen, f)); }
+console.log('gameId =', id);
