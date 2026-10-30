@@ -133,6 +133,30 @@ test('une épicerie qui vend des plats à la portion est signalée, une vraie é
   assert.deepEqual(parNom['Épicerie Awa'].autresCommerces.map((c) => c.nom), ['Chez Awa Maquis']);
 });
 
+test('l’équipe tranche un signal : mettre à jour l’activité ou l’ignorer', async () => {
+  const plats = ['Attiéké poisson', 'Riz sauce', 'Foutou', 'Poulet braisé', 'Garba', 'Alloco'].map((nom, i) => produit('dec' + i, nom, { unite: 'portion', groupes: [{ id: 'g', nom: 'Accompagnement', obligatoire: true, options: [{ id: 'o', nom: 'Alloco', prix: 0 }] }] }));
+  const fausse = async (nom, tel, telGerant) => {
+    const r = await api('POST', '/inscription', { commerce: { nom, type: 'boutique', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: tel }, gerant: { nom, telephone: telGerant, pin: '3333' }, conditionsAcceptees: true });
+    assert.equal((await api('POST', '/donnees', { elements: plats }, r.jeton)).ok, true);
+    return r.commerce.id;
+  };
+  const trouver = async (id) => (await api('GET', '/admin/commerces', null, admin)).commerces.find((c) => c.id === id);
+  const aMettreAJour = await fausse('Doute Un', '0712345730', '0712345731');
+  const aIgnorer = await fausse('Doute Deux', '0712345732', '0712345733');
+  assert.equal((await trouver(aMettreAJour)).signaux.length, 1);
+  const maj = await api('POST', '/admin/commerce', { id: aMettreAJour, action: 'activite', formule: 'maquis' }, admin);
+  assert.equal(maj.ok, true, JSON.stringify(maj));
+  const apres = await trouver(aMettreAJour);
+  assert.equal(apres.commerce.type, 'maquis');
+  assert.deepEqual(apres.signaux, []);
+  assert.equal((await api('POST', '/admin/commerce', { id: aMettreAJour, action: 'activite', formule: 'inconnue' }, admin)).statut, 400);
+  const ign = await api('POST', '/admin/commerce', { id: aIgnorer, action: 'signal-ignorer' }, admin);
+  assert.equal(ign.ok, true, JSON.stringify(ign));
+  const reste = await trouver(aIgnorer);
+  assert.deepEqual(reste.signaux, []);
+  assert.equal(reste.commerce.type, 'boutique');
+});
+
 test('l’équipe voit les produits d’un commerce sans aucun chiffre, et la consultation est notée', async () => {
   const r = await api('GET', '/admin/catalogue?commerceId=' + resto.commerce.id, null, admin);
   assert.equal(r.ok, true, JSON.stringify(r));
