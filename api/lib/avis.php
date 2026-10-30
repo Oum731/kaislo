@@ -70,6 +70,12 @@ function routeAvisEnvoyer(): never
             [nouvelId('av'), $u['commerce_id'], $u['id'], $note, $texte, nomPourAvis($u['nom']), $c['type'], $c['ville'], $c['pays'], maintenant(), maintenant()]);
     }
     journaliser($u['commerce_id'], $u['id'], 'avis', ['note' => $note]);
+    // L'équipe est prévenue par e-mail (comme pour les messages des visiteurs) : l'avis est à relire dans l'espace Amorac → Avis
+    envoyerEmail(
+        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
+        'Kaislo — nouvel avis (' . $note . '/5) : ' . $c['nom'],
+        "Avis de " . nomPourAvis($u['nom']) . " ({$c['nom']}, {$c['ville']}) : $note/5\n\n$texte\n\nÀ relire et publier dans l'espace Amorac → Avis : https://" . (domaineSite() ?: 'kaislo.com') . '/admin/'
+    );
     repondre(['ok' => true, 'etat' => 'attente'], 201);
 }
 
