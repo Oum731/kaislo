@@ -2,7 +2,7 @@
 // Un détaillant (lien public) ne voit jamais un prix de gros ; un grossiste (lien privé) ne voit que le gros.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -125,6 +125,16 @@ test('un client qui commande pour la première fois est ajouté au carnet de cli
   assert.equal(autre.statut, 201, JSON.stringify(autre));
   liste = await clients();
   assert.deepEqual(liste.map((e) => e.contenu.nom).sort(), ['Awa Nouvelle', 'Koffi Gros']);
+});
+
+test('migration : les clients des commandes déjà reçues entrent dans le carnet, sans doublon', async () => {
+  // On remet la base comme avant : version 22, aucun client dans le carnet
+  execFileSync('php', ['-r', `$p = new PDO('sqlite:${fichierBase}'); $p->exec("DELETE FROM elements WHERE type = 'clients'"); $p->exec("DELETE FROM kaislo_version"); $p->exec("INSERT INTO kaislo_version (version) VALUES (22)");`]);
+  const liste = ((await api('GET', '/donnees', null, gerant.jeton)).elements).filter((e) => e.type === 'clients' && !e.supprime);
+  assert.deepEqual(liste.map((e) => e.contenu.nom).sort(), ['Awa Nouvelle', 'Koffi Gros']);
+  assert.ok(liste.every((e) => e.contenu.source === 'boutique'));
+  // Une seconde lecture ne recrée rien
+  assert.equal(((await api('GET', '/donnees', null, gerant.jeton)).elements).filter((e) => e.type === 'clients' && !e.supprime).length, 2);
 });
 
 test('commande par le lien public : toujours le prix de détail, jamais le gros', async () => {

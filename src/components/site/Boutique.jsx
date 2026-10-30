@@ -19,6 +19,18 @@ const cleStockage = (slug) => 'kaislo-panier-' + slug;
 const lirePanier = (slug) => { try { return JSON.parse(localStorage.getItem(cleStockage(slug))) || []; } catch { return []; } };
 const garderPanier = (slug, panier) => { try { localStorage.setItem(cleStockage(slug), JSON.stringify(panier)); } catch { /* panier gardé en mémoire seulement */ } };
 
+// Les personnes qui ont déjà commandé dans cette boutique depuis cet appareil (nom, numéro, adresse) : proposées à la commande suivante.
+// Gardé dans l'appareil seulement : la liste des clients d'une boutique n'est jamais montrée au public.
+const cleClients = (slug) => 'kaislo-clients-' + slug;
+const lireClients = (slug) => { try { const l = JSON.parse(localStorage.getItem(cleClients(slug))); return Array.isArray(l) ? l : []; } catch { return []; } };
+const chiffres = (t) => String(t || '').replace(/\D/g, '').slice(-8);
+const garderClient = (slug, c) => {
+  try {
+    const autres = lireClients(slug).filter((x) => chiffres(x.telephone) !== chiffres(c.telephone));
+    localStorage.setItem(cleClients(slug), JSON.stringify([c, ...autres].slice(0, 5)));
+  } catch { /* non gardé */ }
+};
+
 export default function Boutique() {
   const [slug, setSlug] = useState(null);
   const [boutique, setBoutique] = useState(null);
@@ -31,6 +43,8 @@ export default function Boutique() {
   const [occupe, setOccupe] = useState(false);
   const [form, setForm] = useState({ nom: '', telephone: '', adresse: '', note: '', site: '' });
   const [message, setMessage] = useState('');
+  const [anciens, setAnciens] = useState([]); // clients déjà venus depuis cet appareil
+  const [choisi, setChoisi] = useState(null); // numéro du client choisi dans la liste, '' = un autre numéro
 
   const [demo, setDemo] = useState(null); // identifiant du commerce de démo, ou null
   const [pro, setPro] = useState(''); // clé du lien privé des grossistes (?pro=…) : prix de gros, au carton
@@ -58,6 +72,9 @@ export default function Boutique() {
     setSlug(s);
     if (!s) { setErreur('Adresse de boutique incomplète.'); return; }
     setPanier(lirePanier(cleStock));
+    const deja = lireClients(s);
+    setAnciens(deja);
+    if (deja[0]) { setChoisi(deja[0].telephone); setForm((f) => ({ ...f, nom: deja[0].nom, telephone: deja[0].telephone, adresse: deja[0].adresse || '' })); }
     appelApi('GET', '/public/boutique?b=' + encodeURIComponent(s) + (cle ? '&pro=' + encodeURIComponent(cle) : ''))
       .then((r) => setBoutique(r.boutique))
       .catch((e) => setErreur(e.statut === 404 ? 'Cette boutique n’existe pas ou est fermée pour le moment.' : (e.horsLigne ? 'Pas de connexion internet.' : e.message)));
@@ -135,6 +152,7 @@ export default function Boutique() {
         lignes: panier.map((l) => ({ produitId: l.produitId, quantite: l.quantite, options: l.optionIds })),
       });
       if (!r.commande) { setOccupe(false); return; }
+      garderClient(slug, { nom: form.nom.trim(), telephone: r.commande.client?.telephone || form.telephone, adresse: form.adresse.trim() });
       const lien = lienCommandeWhatsApp(r.commande);
       majPanier([]);
       setPanierOuvert(false);
@@ -262,6 +280,17 @@ export default function Boutique() {
               </div>
             ))}
             <p className="vitrine-total">Total : <b>{formatPrix(total, devise)}</b></p>
+            {anciens.length > 0 && (
+              <div className="pile" role="group" aria-label="Qui commande ?">
+                <span className="petit"><b>Qui commande ?</b></span>
+                {anciens.map((c) => (
+                  <button key={c.telephone} type="button" className={'btn petit ' + (choisi === c.telephone ? '' : 'secondaire')} aria-pressed={choisi === c.telephone}
+                    onClick={() => { setChoisi(c.telephone); setForm({ ...form, nom: c.nom, telephone: c.telephone, adresse: c.adresse || form.adresse }); }}>{c.nom} · {c.telephone}</button>
+                ))}
+                <button type="button" className={'btn petit ' + (choisi === '' ? '' : 'secondaire')} aria-pressed={choisi === ''}
+                  onClick={() => { setChoisi(''); setForm({ ...form, nom: '', telephone: '', adresse: '' }); }}>Un autre client, un autre numéro</button>
+              </div>
+            )}
             <label className="champ"><span>Votre nom</span><input value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} autoComplete="name" /></label>
             <ChampTelephone libelle="Votre numéro (WhatsApp)" pays={boutique.pays} valeur={form.telephone} surChanger={(v) => setForm({ ...form, telephone: v })} verifier={!demo} />
             <label className="champ"><span>Adresse de livraison</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>
