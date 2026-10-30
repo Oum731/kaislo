@@ -120,13 +120,24 @@ function tex(c, rep) {
   if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
   return t;
 }
-function neonText(txt, col, w = 512, h = 160, bg = '#05070d') {
+function neonGlyph(k, col, w = 512, h = 160) {
   const [c, x] = cv(w, h);
-  x.fillStyle = bg; x.fillRect(0, 0, w, h);
+  x.fillStyle = '#05070d'; x.fillRect(0, 0, w, h);
   x.strokeStyle = col; x.lineWidth = 6; x.strokeRect(8, 8, w - 16, h - 16);
-  x.font = `italic 800 ${h * 0.46}px Rajdhani, Segoe UI, Arial`; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.shadowColor = col; x.shadowBlur = 24; x.fillStyle = '#fff';
-  x.fillText(txt, w / 2, h / 2 + 4); x.fillText(txt, w / 2, h / 2 + 4);
+  x.shadowColor = col; x.shadowBlur = 24; x.lineWidth = 12; x.lineJoin = 'round'; x.lineCap = 'round';
+  const cx = w / 2, cy = h / 2, s = h * 0.28;
+  for (let pass = 0; pass < 2; pass++) {
+    x.strokeStyle = pass ? '#fff' : col; x.lineWidth = pass ? 4 : 12; x.beginPath();
+    switch (k % 6) {
+      case 0: for (let i = -1; i <= 1; i++) { x.moveTo(cx + i * 70 - 28, cy - s); x.lineTo(cx + i * 70 + 12, cy); x.lineTo(cx + i * 70 - 28, cy + s); } break;
+      case 1: x.arc(cx, cy, s, 0, TAU); x.moveTo(cx + 8, cy - s * 0.7); x.lineTo(cx - 14, cy + 4); x.lineTo(cx + 12, cy + 4); x.lineTo(cx - 8, cy + s * 0.7); break;
+      case 2: x.moveTo(cx, cy - s); x.lineTo(cx + s * 1.1, cy + s * 0.8); x.lineTo(cx - s * 1.1, cy + s * 0.8); x.closePath(); break;
+      case 3: x.moveTo(cx, cy - s); x.lineTo(cx + s * 1.3, cy); x.lineTo(cx, cy + s); x.lineTo(cx - s * 1.3, cy); x.closePath(); break;
+      case 4: for (let i = 0; i < 6; i++) { const a = i * TAU / 6; x[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * s * 1.2, cy + Math.sin(a) * s * 1.2); } x.closePath(); break;
+      default: for (let i = -2; i <= 2; i++) { x.moveTo(cx + i * 50 - 16, cy + s); x.lineTo(cx + i * 50 + 16, cy - s); } break;
+    }
+    x.stroke();
+  }
   return tex(c);
 }
 
@@ -303,13 +314,12 @@ function buildWorld() {
   }
   lamps.count = heads.count = li; sc.add(lamps, heads);
 
-  const names = ['NEXUS', 'QUANTUM', 'AURA', 'CYBERNETICS', 'ENERGY FUEL', 'VELOCITRON', 'NEO-TOKYO', 'APEX GP'];
-  const cols = ['#19d3ff', '#ff3bb0', '#ff7a1a', '#37e07a', '#8a4dff', '#ffd23b'];
+    const cols = ['#19d3ff', '#ff3bb0', '#ff7a1a', '#37e07a', '#8a4dff', '#ffd23b'];
   for (let k = 0; k < 26; k++) {
     const i = Math.floor((k / 26) * N + 6) % N, side = k % 2 ? 1 : -1;
     const s = at(i * DS, {});
     const off = side * (W / 2 + 20 + srand() * 8);
-    const bb = new THREE.Mesh(new THREE.PlaneGeometry(22, 7), new THREE.MeshBasicMaterial({ map: neonText(names[k % names.length], cols[k % cols.length], 512, 160), toneMapped: false, side: THREE.DoubleSide }));
+    const bb = new THREE.Mesh(new THREE.PlaneGeometry(22, 7), new THREE.MeshBasicMaterial({ map: neonGlyph(k, cols[k % cols.length], 512, 160), toneMapped: false, side: THREE.DoubleSide }));
     bb.position.set(s.x + s.nx * off, 11 + srand() * 5, s.z + s.nz * off);
     bb.rotation.y = Math.atan2(s.nx * -side, s.nz * -side);
     sc.add(bb);
@@ -324,7 +334,7 @@ function buildWorld() {
     const s = at((k / 7) * TL, {});
     const g = new THREE.Group();
     for (const sd of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.7, 9, 0.7), darkMat); p.position.set(sd * (W / 2 + 3), 4.5, 0); g.add(p); }
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(W + 6.7, 0.7, 0.7), k === 0 ? new THREE.MeshBasicMaterial({ map: neonText('APEX RIDER GP', '#ff7a1a', 1024, 128), toneMapped: false }) : gateMat);
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(W + 6.7, 0.7, 0.7), k === 0 ? new THREE.MeshBasicMaterial({ map: (() => { const [cc, cx] = cv(1024, 128); for (let i = 0; i < 64; i++) for (let j = 0; j < 8; j++) { cx.fillStyle = (i + j) % 2 ? '#ff7a1a' : '#10131c'; cx.fillRect(i * 16, j * 16, 16, 16); } return tex(cc); })(), toneMapped: false }) : gateMat);
     bar.position.y = 9; if (k === 0) { bar.geometry = new THREE.BoxGeometry(W + 6.7, 2.4, 0.7); bar.position.y = 9.5; }
     g.add(bar);
     g.position.set(s.x, 0, s.z); g.rotation.y = Math.atan2(s.tx, s.tz) + Math.PI / 2 - Math.PI / 2;
@@ -437,9 +447,20 @@ function decalTexture(cfg) {
   x.fillStyle = '#fff'; x.beginPath(); x.arc(420, 120, 66, 0, TAU); x.fill();
   x.fillStyle = '#0d1018'; x.font = `800 ${cfg.number.length > 1 ? 86 : 110}px Rajdhani, Segoe UI, Arial`; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText(cfg.number || '0', 420, 128);
-  x.font = `italic 800 ${Math.round(58 * sp.scale)}px Rajdhani, Segoe UI, Arial`; x.textAlign = 'left';
-  x.lineWidth = 5; x.strokeStyle = '#000'; x.strokeText(sp.n, 18, 70); x.fillStyle = '#fff'; x.fillText(sp.n, 18, 70);
-  x.font = '600 20px Rajdhani, Arial'; x.fillStyle = cfg.neon; x.fillText('APEX RIDER GP', 20, 120);
+  // emblème de sponsor (forme géométrique, sans texte) : plus il paie, plus il est grand
+  const si = Math.max(0, SPONSORS.indexOf(sp)), r = 30 * sp.scale;
+  x.save(); x.translate(70, 78); x.lineWidth = 9; x.lineJoin = 'round'; x.strokeStyle = '#000'; x.fillStyle = '#fff';
+  for (let pass = 0; pass < 2; pass++) {
+    x.beginPath();
+    if (si === 0) x.arc(0, 0, r, 0, TAU);
+    else if (si === 1) { x.moveTo(0, -r); x.lineTo(r, r * 0.8); x.lineTo(-r, r * 0.8); x.closePath(); }
+    else if (si === 2) { x.moveTo(5, -r); x.lineTo(-r * 0.7, 4); x.lineTo(4, 4); x.lineTo(-5, r); x.lineTo(r * 0.7, -4); x.lineTo(-4, -4); x.closePath(); }
+    else if (si === 3) { x.moveTo(0, -r); x.lineTo(r * 1.2, 0); x.lineTo(0, r); x.lineTo(-r * 1.2, 0); x.closePath(); }
+    else for (let i = 0; i < 6; i++) { const a = i * TAU / 6; x[i ? 'lineTo' : 'moveTo'](Math.cos(a) * r * 1.2, Math.sin(a) * r * 1.2); }
+    if (!pass) x.stroke(); else x.fill();
+  }
+  x.restore();
+  x.fillStyle = cfg.neon; x.fillRect(120, 70, 150 * sp.scale, 10);
   return tex(c);
 }
 
