@@ -110,6 +110,23 @@ test('commande de gros : minimum respecté, prix de gros recalculé par le serve
   assert.equal(liste.commandes[1].total, 32400);
 });
 
+test('un client qui commande pour la première fois est ajouté au carnet de clients, une seule fois', async () => {
+  const clients = async () => ((await api('GET', '/donnees', null, gerant.jeton)).elements).filter((e) => e.type === 'clients' && !e.supprime);
+  // Trois commandes de gros ont été passées avec le même numéro : un seul client
+  let liste = await clients();
+  assert.equal(liste.length, 1, JSON.stringify(liste));
+  assert.equal(liste[0].contenu.nom, 'Koffi Gros');
+  assert.equal(liste[0].contenu.source, 'boutique');
+  // Même numéro écrit autrement : toujours le même client
+  await api('POST', '/public/commande', { b: 'depot-awa', pro: cle, client: { ...client, telephone: '07 01 02 03 04' }, lignes: [{ produitId: 'p1', quantite: 3 }] });
+  assert.equal((await clients()).length, 1);
+  // Nouveau numéro : nouveau client
+  const autre = await api('POST', '/public/commande', { b: 'depot-awa', pro: cle, client: { nom: 'Awa Nouvelle', telephone: '0705060708', adresse: 'Treichville, rue 12' }, lignes: [{ produitId: 'p1', quantite: 3 }] });
+  assert.equal(autre.statut, 201, JSON.stringify(autre));
+  liste = await clients();
+  assert.deepEqual(liste.map((e) => e.contenu.nom).sort(), ['Awa Nouvelle', 'Koffi Gros']);
+});
+
 test('commande par le lien public : toujours le prix de détail, jamais le gros', async () => {
   const r = await api('POST', '/public/commande', { b: 'depot-awa', client, lignes: [{ produitId: 'p1', quantite: 1 }] });
   assert.equal(r.statut, 201);
