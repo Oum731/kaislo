@@ -856,6 +856,8 @@ function FicheCommerce({ c, ctx, fermer }) {
               <p className="tres-petit muet">Ce n’est qu’un signal : regardez les produits, puis posez la question au gérant. S’il a bien deux activités, proposez-lui un second commerce (remise de {ctx.regles.remiseMultiCommerce ?? 10} %) ou la formule adaptée.</p>
               <div className="grille-2">
                 <button className="btn secondaire petit" onClick={() => setCatalogue(true)}>Voir les produits</button>
+                {ctx.estAdmin && <button className="btn petit" onClick={() => { if (window.confirm('Passer « ' + c.commerce.nom + ' » à l’activité ' + c.signaux[0].formuleSuggeree.nom + ' ? Son tarif sera recalculé.')) action({ action: 'activite', formule: c.signaux[0].formuleSuggeree.id }, 'Activité mise à jour : ' + c.signaux[0].formuleSuggeree.nom); }}>Mettre à jour : {c.signaux[0].formuleSuggeree.nom}</button>}
+                {ctx.estAdmin && <button className="btn secondaire petit" onClick={() => action({ action: 'signal-ignorer' }, 'Signal ignoré : le commerce reste tel quel')}>Ignorer, tout est normal</button>}
                 {lienWhatsApp && <a className="btn secondaire petit" target="_blank" rel="noreferrer" href={lienWhatsApp + '?text=' + encodeURIComponent('Bonjour, nous avons remarqué que « ' + c.commerce.nom + ' » semble avoir une autre activité (' + c.signaux[0].formuleSuggeree.nom + '). Pouvons-nous en parler ? Vous pouvez créer un second commerce dans Kaislo (Mon compte → Mes commerces) avec 10 % de remise.')}><Icone nom="whatsapp" taille="sm" /> Écrire au gérant</a>}
               </div>
             </div>
