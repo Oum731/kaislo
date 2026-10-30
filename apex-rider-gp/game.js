@@ -470,8 +470,8 @@ function makeBike(cfg, flip = false) {
   const geo = new THREE.PlaneGeometry(w, h); geo.translate(0, h / 2, 0);
   const mat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.06, side: THREE.DoubleSide, color: 0xdde3f5 });
   const mesh = new THREE.Mesh(geo, mat); lean.add(mesh);
-  const sh = new THREE.Mesh(new THREE.CircleGeometry(0.6, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5, depthWrite: false }));
-  sh.rotation.x = -Math.PI / 2; sh.position.y = 0.02; sh.scale.set(0.45, 1.0, 1); g.add(sh);
+  const sh = new THREE.Mesh(new THREE.CircleGeometry(0.6, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.38, depthWrite: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.y = 0.02; sh.scale.set(0.36, 0.7, 1); g.add(sh);
   const b = { group: g, lean, wheels: [], rider: new THREE.Group(), M: { paint: new THREE.MeshStandardMaterial({ color: cfg.main }) }, helmet: null, cfg, mat, flip };
   lean.add(b.rider);
   applyLivery(b, cfg);
