@@ -153,6 +153,26 @@ body.touch #hGap{display:none}
 .dlg{max-height:94vh;overflow:auto}table.res td{padding:2px 8px}
 .dlg h2:empty,#rTitle{display:none}.dlg h2 svg{vertical-align:middle}
 #rPos svg{vertical-align:middle}
+.menu-list button{justify-content:center;gap:14px;padding:10px 18px}.menu-list button svg{display:block}
+.card h4{padding:2px 14px;min-height:6px;font-size:6px}
+.card .row span{display:inline-flex;align-items:center;color:var(--cyan)}
+.cats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.cats button{justify-content:center;padding:8px 0}.cats button::after{display:none}
+.opt .oc{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.opt .tag{display:flex;align-items:center}
+.opt{min-height:50px}.st{display:inline-flex;align-items:center;gap:4px;color:var(--text);font-weight:600;font-size:17px}
+.pps{display:inline-flex;gap:3px}.pp{width:10px;height:18px;background:rgba(255,255,255,.14);border-radius:2px;display:block}.pp.on{background:var(--cyan)}
+.mb{display:inline-block;width:44px;height:6px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}.mb i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--orange))}
+.icl{padding:6px 2px 0;color:var(--muted)}
+.fins{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0}
+.fin{width:48px;height:48px;border:2px solid var(--line);background:rgba(14,20,34,.9);color:#fff;display:flex;align-items:center;justify-content:center;border-radius:6px}.fin.on{border-color:#fff;box-shadow:0 0 10px #fff}
+.f-carbon{background:repeating-linear-gradient(45deg,#2a2d34 0 5px,#16181d 5px 10px)}
+.f-gloss{background:radial-gradient(circle at 30% 28%,#fff 0 8%,#5a6a8a 28%,#171d2e 80%)}
+.f-matte{background:#3a3f4a}
+.f-chrome{background:linear-gradient(135deg,#fff,#8c97a8 40%,#e6ecf5 55%,#59627a)}
+.f-pearl{background:conic-gradient(#f6e9ff,#9be8ff,#ffd6f0,#fff2c9,#f6e9ff)}
+.numrow{display:flex;align-items:center;gap:10px;color:var(--cyan)}
+#gStats.stat{grid-template-columns:28px 1fr}#gStats.stat b{text-align:left;font-size:19px}
+#gStats .bar{grid-column:1/3}
 </style>
 </head>
 <body>
@@ -162,41 +182,41 @@ body.touch #hGap{display:none}
 <div id="ui">
 
   <section id="splash">
-    <div class="logo">APEX<span>RIDER</span> GP<small>SIMULATION · GESTION · COURSE</small></div>
+    <div class="logo">APEX<span>RIDER</span> GP</div>
     <button class="cta" id="bPlay" aria-label="Jouer"></button>
   </section>
 
   <!-- MENU -->
   <section id="menu" class="screen">
-    <div class="logo">APEX<span>RIDER</span> GP<small>SIMULATION · GESTION · COURSE</small></div>
+    <div class="logo">APEX<span>RIDER</span> GP</div>
     <nav class="menu-list">
-      <button data-act="career" class="primary">Mode carrière</button>
-      <button data-act="quick">Course rapide</button>
-      <button data-act="multi" disabled>Multijoueur <em>bientôt</em></button>
-      <button data-act="garage">Garage</button>
-      <button data-act="settings">Réglages</button>
+      <button data-act="career" class="primary"></button>
+      <button data-act="quick"></button>
+      <button data-act="multi" disabled></button>
+      <button data-act="garage"></button>
+      <button data-act="settings"></button>
     </nav>
     <aside class="side">
-      <div class="card"><h4>ACTUALITÉS</h4><img src="assets/garage.jpg" alt=""><div class="body" id="news"></div></div>
-      <div class="card"><h4>PROFIL PILOTE</h4><div class="body" id="profile"></div></div>
+      <div class="card"><h4>&nbsp;</h4><img src="assets/garage.jpg" alt=""><div class="body" id="news"></div></div>
+      <div class="card"><h4>&nbsp;</h4><div class="body" id="profile"></div></div>
     </aside>
-    <div class="hint">Clavier : ← → incliner · ↑ gaz · ↓ frein avant · Espace frein arrière · B stand · Échap pause — Manette compatible</div>
+    
   </section>
 
   <!-- GARAGE -->
   <section id="garage" class="screen hidden">
     <div class="left">
-      <div class="gtitle">GARAGE <small class="gcredits" id="gCredits"></small></div>
+      <div class="gtitle"><span></span><small class="gcredits" id="gCredits"></small></div>
       <div class="cats" id="cats"></div>
       <div class="opts" id="opts"></div>
     </div>
     <div class="right">
-      <div class="card"><h4>COURBE DE PUISSANCE</h4><canvas id="dyno" width="320" height="130" style="width:100%;display:block"></canvas>
+      <div class="card"><h4>&nbsp;</h4><canvas id="dyno" width="320" height="130" style="width:100%;display:block"></canvas>
         <div class="stat" id="gStats"></div></div>
     </div>
     <div class="gbtns">
-      <button class="cta sec" id="gBack">Retour</button>
-      <button class="cta" id="gRace">Course ▶</button>
+      <button class="cta sec" id="gBack" aria-label="Retour"></button>
+      <button class="cta" id="gRace" aria-label="Course"></button>
     </div>
   </section>
 
@@ -227,14 +247,14 @@ body.touch #hGap{display:none}
 
   <!-- SETTINGS -->
   <section id="settings" class="screen hidden"><div class="modal"><div class="dlg">
-    <h2>RÉGLAGES</h2>
+    <h2></h2>
     <div class="in">
-      <div><div class="lbl">MÉTÉO</div><div class="seg" data-key="weather"><button data-v="dynamic">Dynamique</button><button data-v="dry">Sec</button><button data-v="wet">Pluie</button></div></div>
-      <div><div class="lbl">NOMBRE DE TOURS</div><div class="seg" data-key="laps"><button data-v="2">2</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
-      <div><div class="lbl">AIDE AU PILOTAGE</div><div class="seg" data-key="assist"><button data-v="0">Élevée</button><button data-v="1">Moyenne</button><button data-v="2">Faible</button><button data-v="3">Expert</button></div></div>
-      <div><div class="lbl">VOLUME</div><div class="seg" data-key="volume"><button data-v="0">Muet</button><button data-v="0.3">Bas</button><button data-v="0.6">Moyen</button><button data-v="1">Fort</button></div></div>
+      <div><div class="lbl"></div><div class="seg" data-key="weather"><button data-v="dynamic"></button><button data-v="dry"></button><button data-v="wet"></button></div></div>
+      <div><div class="lbl"></div><div class="seg" data-key="laps"><button data-v="2"></button><button data-v="3"></button><button data-v="5"></button></div></div>
+      <div><div class="lbl"></div><div class="seg" data-key="assist"><button data-v="0"></button><button data-v="1"></button><button data-v="2"></button><button data-v="3"></button></div></div>
+      <div><div class="lbl"></div><div class="seg" data-key="volume"><button data-v="0"></button><button data-v="0.3"></button><button data-v="0.6"></button><button data-v="1"></button></div></div>
     </div>
-    <div class="btns"><button class="cta" id="sClose">OK</button><button class="cta sec" id="sReset">Réinitialiser la sauvegarde</button></div>
+    <div class="btns"><button class="cta" id="sClose" aria-label="OK"></button><button class="cta sec" id="sReset"></button></div>
   </div></div></section>
 
   <!-- PAUSE -->

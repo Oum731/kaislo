@@ -324,7 +324,7 @@ function buildWorld() {
     const s = at((k / 7) * TL, {});
     const g = new THREE.Group();
     for (const sd of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.7, 9, 0.7), darkMat); p.position.set(sd * (W / 2 + 3), 4.5, 0); g.add(p); }
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(W + 6.7, 0.7, 0.7), k === 0 ? new THREE.MeshBasicMaterial({ map: neonText('APEX RIDER GP — DÉPART', '#ff7a1a', 1024, 128), toneMapped: false }) : gateMat);
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(W + 6.7, 0.7, 0.7), k === 0 ? new THREE.MeshBasicMaterial({ map: neonText('APEX RIDER GP', '#ff7a1a', 1024, 128), toneMapped: false }) : gateMat);
     bar.position.y = 9; if (k === 0) { bar.geometry = new THREE.BoxGeometry(W + 6.7, 2.4, 0.7); bar.position.y = 9.5; }
     g.add(bar);
     g.position.set(s.x, 0, s.z); g.rotation.y = Math.atan2(s.tx, s.tz) + Math.PI / 2 - Math.PI / 2;
@@ -641,6 +641,36 @@ const ICO = {
   coin: '<circle cx="24" cy="24" r="16"/><path d="M24 13v22M18 19c0-4 12-4 12 0s-12 4-12 8 12 4 12 0"/>',
   star: '<path d="M24 5l5.5 12 13 1.5-9.6 9 2.6 13L24 33l-11.5 6.5 2.6-13-9.6-9 13-1.5z"/>',
   people: '<circle cx="18" cy="16" r="6"/><circle cx="33" cy="18" r="5"/><path d="M6 40c0-9 6-13 12-13s12 4 12 13M30 29c6 0 12 3 12 11"/>',
+  engine: '<path d="M8 20h4v-6h8v6h8v-6h8v6h4v14H8z"/><path d="M14 34v6h20v-6"/>',
+  exhaust: '<path d="M4 28h20c8 0 8-10 0-10h-6"/><rect x="30" y="20" width="14" height="16" rx="3"/>',
+  palette: '<path d="M24 5C13 5 5 13 5 23s8 19 17 19c4 0 5-3 3-6s0-6 4-6h6c5 0 8-3 8-8C43 13 35 5 24 5z"/><circle cx="14" cy="22" r="2.2"/><circle cx="22" cy="14" r="2.2"/><circle cx="32" cy="16" r="2.2"/>',
+  spring: '<path d="M14 6h20M14 42h20M16 10l16 5-16 5 16 5-16 5 16 5"/>',
+  disc: '<circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="5"/><path d="M24 9v3M24 36v3M9 24h3M36 24h3"/>',
+  helmet: '<path d="M8 28a16 16 0 0 1 32 0v8a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z"/><path d="M8 28h18l8 4h6"/>',
+  sticker: '<path d="M8 8h24l8 8v24H8z"/><path d="M32 8v8h8"/><path d="M16 28l5 5 9-11"/>',
+  gear: '<circle cx="24" cy="24" r="6"/><circle cx="24" cy="24" r="14"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6M10 10l4 4M34 34l4 4M38 10l-4 4M14 34l-4 4"/>',
+  bolt: '<path d="M27 4L10 27h12l-3 17 19-25H26z"/>',
+  gauge: '<path d="M8 36a16 16 0 1 1 32 0"/><path d="M24 36l8-12"/>',
+  shield: '<path d="M24 5l16 6v12c0 10-7 17-16 20C15 40 8 33 8 23V11z"/>',
+  plus: '<path d="M24 10v28M10 24h28"/>',
+  lock: '<rect x="10" y="22" width="28" height="20" rx="3"/><path d="M16 22v-6a8 8 0 0 1 16 0v6"/>',
+  back: '<path d="M30 8L14 24l16 16"/>',
+  trash: '<path d="M8 12h32M18 12V7h12v5M12 12l2 30h20l2-30M20 20v16M28 20v16"/>',
+  cloudsun: '<circle cx="17" cy="16" r="6"/><path d="M17 4v3M5 16h3M8 7l2 2M26 7l-2 2"/><path d="M16 40a8 8 0 0 1 1-16 11 11 0 0 1 21 3 7 7 0 0 1-1 13z"/>',
+  hash: '<path d="M18 8l-4 32M34 8l-4 32M8 18h32M6 30h32"/>',
+  stripes: '<path d="M8 40L22 8M20 40L34 8M32 40L44 12"/>',
+  glow: '<circle cx="24" cy="24" r="8"/><circle cx="24" cy="24" r="16" stroke-dasharray="3 5"/>',
+  thermo: '<path d="M20 28V10a4 4 0 0 1 8 0v18a8 8 0 1 1-8 0z"/>',
+  medal: '<circle cx="24" cy="30" r="11"/><path d="M16 4l6 14M32 4l-6 14M24 25v10"/>',
+  spk0: '<path d="M6 19h8l10-8v26l-10-8H6z"/><path d="M32 18l12 12M44 18L32 30"/>',
+  spk1: '<path d="M6 19h8l10-8v26l-10-8H6z"/><path d="M30 18a8 8 0 0 1 0 12"/>',
+  spk2: '<path d="M6 19h8l10-8v26l-10-8H6z"/><path d="M30 18a8 8 0 0 1 0 12M35 13a15 15 0 0 1 0 22"/>',
+  spk3: '<path d="M6 19h8l10-8v26l-10-8H6z"/><path d="M30 18a8 8 0 0 1 0 12M35 13a15 15 0 0 1 0 22M40 8a22 22 0 0 1 0 32"/>',
+  s0: '<path d="M10 10l28 28M38 10L10 38"/>',
+  s1: '<path d="M8 40L18 8M18 40L28 8M28 40L38 8"/>',
+  s2: '<path d="M6 38l8-14 8 14zM22 38l8-14 8 14zM38 38l4-8"/>',
+  s3: '<path d="M6 28h36M6 38h36"/>',
+  s4: '<path d="M6 38c14 0 22-14 36-18M6 28c14 0 22-12 36-16"/>',
   bike: '<circle cx="11" cy="34" r="7"/><circle cx="37" cy="34" r="7"/><path d="M11 34l9-14h11l6 14M20 20l-3-6h-5M31 20l3-6"/>',
 };
 const ic = (k, s = 40) => `<svg viewBox="0 0 48 48" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k]}</svg>`;
@@ -1266,77 +1296,86 @@ function setPause(on) {
   if (!R) return;
   if (on) { R.paused = true; setScreen('pause'); } else { R.paused = false; setScreen('hud'); }
 }
+const pips = (n, max) => `<span class="pps">${Array.from({ length: max }, (_, k) => `<i class="pp${k < n ? ' on' : ''}"></i>`).join('')}</span>`;
+const mbar = v => `<span class="mb"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></span>`;
 function refreshMenu() {
   const c = CLASSES[save.cls];
-  $('#news').innerHTML = `<b style="color:var(--cyan)">Neo-Tokyo Night GP</b><br>Pluie annoncée dès le 2<sup>e</sup> tour. Pneus pluie ou prise de risque ?<br><span style="color:var(--muted)">Astuce : la trajectoire sèche en premier — gardez la ligne quand la piste est détrempée.</span>`;
-  $('#profile').innerHTML = `<div class="row"><span>Catégorie</span><b>${c.n}</b></div><div class="row"><span>Crédits</span><b>${save.credits} cr</b></div>
-    <div class="row"><span>Courses / victoires</span><b>${save.races} / ${save.wins}</b></div><div class="row"><span>Podiums</span><b>${save.podiums}</b></div>
-    <div class="row"><span>Points XP</span><b>${save.xp}</b></div><div class="row"><span>Meilleur tour</span><b>${fmt(save.bestLap)}</b></div>`;
+  $('#news').innerHTML = `<span class="wi">${ic('cloudsun', 30)}</span><span class="wi">${ic('flag', 26)}2</span><span class="wi" style="color:#2aa8ff">${ic('rain', 30)}${ic('tyre', 26)}</span>`;
+  const row = (k, v, col) => `<div class="row"><span${col ? ` style="color:${col}"` : ''}>${ic(k, 22)}</span><b>${v}</b></div>`;
+  $('#profile').innerHTML = row('bike', parseInt(c.n)) + row('coin', save.credits) + row('flag', save.races) + row('trophy', save.wins) + row('medal', save.podiums) + row('star', save.xp) + row('stopwatch', fmt(save.bestLap));
 }
 
 /* --- garage --- */
 const CATS = [
-  { id: 'cls', n: 'Catégorie' }, { id: 'engine', n: 'Moteur' }, { id: 'tyre', n: 'Pneus' }, { id: 'exhaust', n: 'Échappement' },
-  { id: 'paint', n: 'Peinture carénage' }, { id: 'decal', n: 'Décalcomanies & sponsors' }, { id: 'suspension', n: 'Suspension' }, { id: 'brakes', n: 'Freins' }, { id: 'skills', n: 'Pilote' },
+  { id: 'cls', i: 'medal', t: 'Catégorie' }, { id: 'engine', i: 'engine', t: 'Moteur' }, { id: 'tyre', i: 'tyre', t: 'Pneus' }, { id: 'exhaust', i: 'exhaust', t: 'Échappement' },
+  { id: 'paint', i: 'palette', t: 'Peinture' }, { id: 'decal', i: 'sticker', t: 'Décalcomanies et sponsors' }, { id: 'suspension', i: 'spring', t: 'Suspension' },
+  { id: 'brakes', i: 'disc', t: 'Freins' }, { id: 'skills', i: 'helmet', t: 'Pilote' },
 ];
 let gcat = 'engine';
 function refreshGarage() {
-  $('#gCredits').textContent = `${save.credits} CR · ${save.xp} XP`;
-  $('#cats').innerHTML = CATS.map(c => `<button data-c="${c.id}" class="${c.id === gcat ? 'on' : ''}">${c.n}</button>`).join('');
+  $('#gCredits').innerHTML = `<span class="wi">${ic('coin', 20)}${save.credits}</span><span class="wi">${ic('star', 20)}${save.xp}</span>`;
+  $('#cats').innerHTML = CATS.map(c => `<button data-c="${c.id}" title="${c.t}" aria-label="${c.t}" class="${c.id === gcat ? 'on' : ''}">${ic(c.i, 30)}</button>`).join('');
   $$('#cats button').forEach(b => (b.onclick = () => { gcat = b.dataset.c; refreshGarage(); }));
   const o = $('#opts'); o.innerHTML = '';
   const b = save.bike;
-  const opt = (name, desc, tag, eq, fn, dis) => {
-    const el = document.createElement('button'); el.className = 'opt' + (eq ? ' eq' : ''); el.disabled = !!dis;
-    el.innerHTML = `<span><span class="n">${name}</span><span class="d">${desc}</span></span><span class="tag">${tag}</span>`; el.onclick = fn; o.appendChild(el); return el;
+  const opt = (html, tag, eq, fn, dis, title) => {
+    const el = document.createElement('button'); el.className = 'opt' + (eq ? ' eq' : ''); el.disabled = !!dis; if (title) { el.title = title; el.setAttribute('aria-label', title); }
+    el.innerHTML = `<span class="oc">${html}</span><span class="tag">${tag}</span>`; el.onclick = fn; o.appendChild(el); return el;
   };
+  const price = (cost, ok) => `<span style="color:${ok ? 'var(--orange)' : 'var(--red)'}" class="wi">${ic('coin', 18)}${cost}</span>`;
+  const st = (k, v) => `<span class="st">${ic(k, 20)}${v}</span>`;
+  const OK = ic('check', 22);
   if (['engine', 'exhaust', 'suspension', 'brakes'].includes(gcat)) {
     PARTS[gcat].forEach((p, i) => {
-      const owned = save.owned[gcat].includes(i), eq = b[gcat] === i;
-      opt(p.n, p.d, eq ? 'équipé' : owned ? 'installer' : `${p.cost} cr`, eq, () => {
-        if (owned) b[gcat] = i; else if (save.credits >= p.cost) { save.credits -= p.cost; save.owned[gcat].push(i); b[gcat] = i; } else { return; }
+      const owned = save.owned[gcat].includes(i), eq = b[gcat] === i, can = owned || save.credits >= p.cost;
+      const stats = { engine: st('bolt', 200 + p.hp), exhaust: st('bolt', `+${p.hp}`) + st('gauge', `+${Math.round(p.acc * 100)}`),
+        suspension: st('bike', `${58 + p.stab * 4}°`), brakes: st('disc', `${Math.round(p.f * 100)}`) + st('thermo', `${Math.round((1 - p.fade) * 100)}%`) }[gcat];
+      opt(pips(i + 1, 3) + stats, eq ? OK : owned ? '' : price(p.cost, can), eq, () => {
+        if (owned) b[gcat] = i; else if (save.credits >= p.cost) { save.credits -= p.cost; save.owned[gcat].push(i); b[gcat] = i; } else return;
         persist(); refreshGarage();
-      }, !owned && save.credits < p.cost);
+      }, !owned && save.credits < p.cost, p.n);
     });
   } else if (gcat === 'tyre') {
-    TYRES.forEach((t, i) => opt(t.n, t.d, b.tyre === i ? 'équipé' : 'choisir', b.tyre === i, () => { b.tyre = i; persist(); refreshGarage(); }));
+    TYRES.forEach((t, i) => opt(`<span style="color:${t.col}">${ic('tyre', 30)}</span>${st('sun', '')}${mbar((t.dry - 0.8) / 0.3)}${st('drop', '')}${mbar((t.wet - 0.6) / 0.42)}${st('shield', '')}${mbar(1 - (t.wear - 0.6) / 1.2)}`,
+      b.tyre === i ? OK : '', b.tyre === i, () => { b.tyre = i; persist(); refreshGarage(); }, false, t.n));
   } else if (gcat === 'cls') {
-    CLASSES.forEach((c, i) => opt(c.n, `Primes ×${c.pay} · adversaires plus ${i ? 'rapides' : 'lents'}`, i >= save.unlocked ? 'verrouillé (podium requis)' : save.cls === i ? 'actif' : 'choisir', save.cls === i, () => { save.cls = i; persist(); refreshGarage(); }, i >= save.unlocked));
+    CLASSES.forEach((c, i) => opt(`<b class="chip" style="background:#1d3b66">${parseInt(c.n)}</b>${st('coin', `×${c.pay}`)}`,
+      i >= save.unlocked ? ic('lock', 22) : save.cls === i ? OK : '', save.cls === i, () => { save.cls = i; persist(); refreshGarage(); }, i >= save.unlocked, c.n));
   } else if (gcat === 'paint') {
-    const sw = (lbl, key) => {
-      o.insertAdjacentHTML('beforeend', `<div class="lbl">${lbl}</div><div class="sw" data-k="${key}">${PALETTE.map(c => `<i data-c="${c}" style="background:${c}" class="${b[key] === c ? 'on' : ''}"></i>`).join('')}</div>`);
-    };
-    sw('COULEUR PRINCIPALE', 'main'); sw('COULEUR D’ACCENT', 'accent'); sw('NÉON (JANTES, CASQUE)', 'neon');
+    const sw = (icon, key) => o.insertAdjacentHTML('beforeend', `<div class="icl">${ic(icon, 20)}</div><div class="sw" data-k="${key}">${PALETTE.map(c => `<i data-c="${c}" style="background:${c}" class="${b[key] === c ? 'on' : ''}"></i>`).join('')}</div>`);
+    sw('bike', 'main'); sw('stripes', 'accent'); sw('glow', 'neon');
     $$('.sw i', o).forEach(i => (i.onclick = () => { b[i.parentElement.dataset.k] = i.dataset.c; applyLivery(gar.bike, b); persist(); refreshGarage(); }));
-    o.insertAdjacentHTML('beforeend', '<div class="lbl">FINITION</div>');
-    Object.entries(FINISHES).forEach(([k, f]) => opt(f.n, '', b.finish === k ? 'actif' : '', b.finish === k, () => { b.finish = k; applyLivery(gar.bike, b); persist(); refreshGarage(); }));
+    o.insertAdjacentHTML('beforeend', '<div class="fins"></div>');
+    Object.entries(FINISHES).forEach(([k, f]) => {
+      const d = document.createElement('button'); d.className = `fin f-${k}${b.finish === k ? ' on' : ''}`; d.title = f.n; d.setAttribute('aria-label', f.n);
+      d.onclick = () => { b.finish = k; applyLivery(gar.bike, b); persist(); refreshGarage(); }; $('.fins', o).appendChild(d);
+    });
   } else if (gcat === 'decal') {
-    o.insertAdjacentHTML('beforeend', `<div class="lbl">NUMÉRO</div><input class="numin" id="numin" maxlength="2" value="${b.number}">`);
+    o.insertAdjacentHTML('beforeend', `<div class="numrow">${ic('hash', 26)}<input class="numin" id="numin" maxlength="2" value="${b.number}"></div>`);
     $('#numin').oninput = e => { b.number = (e.target.value.replace(/\D/g, '') || '0').slice(0, 2); applyLivery(gar.bike, b); persist(); };
-    o.insertAdjacentHTML('beforeend', '<div class="lbl">SPONSOR PRINCIPAL (carénage latéral)</div>');
-    SPONSORS.forEach((s, i) => opt(s.n, `${s.pay} cr/course si top ${s.need} — logo ${i > 2 ? 'imposant' : 'discret'}`, b.sponsor === i ? 'actif' : '', b.sponsor === i, () => { b.sponsor = i; applyLivery(gar.bike, b); persist(); refreshGarage(); }));
-    o.insertAdjacentHTML('beforeend', '<div class="lbl" style="margin-top:6px">MOTIF / CALQUE</div>');
-    STRIPES.forEach((s, i) => opt(s, '', b.stripes === i ? 'actif' : '', b.stripes === i, () => { b.stripes = i; applyLivery(gar.bike, b); persist(); refreshGarage(); }));
+    SPONSORS.forEach((s, i) => opt(`${pips(i + 1, 5)}${st('coin', s.pay)}${st('trophy', s.need)}`, b.sponsor === i ? OK : '', b.sponsor === i, () => { b.sponsor = i; applyLivery(gar.bike, b); persist(); refreshGarage(); }, false, s.n));
+    o.insertAdjacentHTML('beforeend', '<div class="fins"></div>');
+    STRIPES.forEach((s, i) => {
+      const d = document.createElement('button'); d.className = 'fin' + (b.stripes === i ? ' on' : ''); d.title = s; d.setAttribute('aria-label', s); d.innerHTML = ic('s' + i, 34);
+      d.onclick = () => { b.stripes = i; applyLivery(gar.bike, b); persist(); refreshGarage(); }; $$('.fins', o).pop().appendChild(d);
+    });
   } else if (gcat === 'skills') {
+    const ico = { agi: 'bike', tyre: 'tyre', brake: 'disc', res: 'shield' };
     SKILLS.forEach(s => {
       const lv = save.skills[s.id];
-      opt(`${s.n} — niv. ${lv}/5`, s.d, lv >= 5 ? 'max' : '+1 (1 XP)', false, () => { if (save.xp > 0 && lv < 5) { save.xp--; save.skills[s.id]++; persist(); refreshGarage(); } }, save.xp < 1 || lv >= 5);
+      opt(`${ic(ico[s.id], 30)}${pips(lv, 5)}`, lv >= 5 ? OK : ic('plus', 24), false, () => { if (save.xp > 0 && lv < 5) { save.xp--; save.skills[s.id]++; persist(); refreshGarage(); } }, save.xp < 1 || lv >= 5, s.n);
     });
   }
-  // stats
-  const st = bikeStats();
-  const bar = v => `<div class="bar"><i style="width:${clamp(v, 0, 1) * 100}%"></i></div>`;
-  const acc0100 = (27.8 / (st.accel * 0.8)).toFixed(1);
-  $('#gStats').innerHTML = `
-    <span>Puissance</span><b>${st.hpShown} ch</b>${bar((st.hp - 200) / 70)}
-    <span>Vitesse max</span><b>${Math.round(st.vmax * 3.6)} km/h</b>${bar((st.vmax * 3.6 - 200) / 150)}
-    <span>0–100 km/h</span><b>${acc0100} s</b>${bar(1 - (acc0100 - 2) / 3)}
-    <span>Freinage</span><b>${Math.round(st.brake * 100)} %</b>${bar((st.brake - 0.9) / 0.3)}
-    <span>Résist. fading</span><b>${Math.round((1 - st.fade) * 100)} %</b>${bar(1 - st.fade)}
-    <span>Maniabilité</span><b>${Math.round(58 + st.stab * 4)}° max</b>${bar(st.stab)}
-    <span>Pneus</span><b style="color:${curTyre().col}">${curTyre().n}</b><i></i><i></i>`;
-  drawDyno(st);
+  // statistiques
+  const sx = bikeStats();
+  const acc0100 = (27.8 / (sx.accel * 0.8)).toFixed(1);
+  const sr = (k, v, bar, col) => `<span${col ? ` style="color:${col}"` : ''}>${ic(k, 20)}</span><b>${v}</b>${mbarW(bar)}`;
+  $('#gStats').innerHTML = sr('bolt', sx.hpShown, (sx.hp - 200) / 70) + sr('gauge', Math.round(sx.vmax * 3.6), (sx.vmax * 3.6 - 200) / 150) + sr('stopwatch', acc0100, 1 - (acc0100 - 2) / 3)
+    + sr('disc', Math.round(sx.brake * 100), (sx.brake - 0.9) / 0.3) + sr('thermo', `${Math.round((1 - sx.fade) * 100)}%`, 1 - sx.fade) + sr('bike', `${58 + sx.stab * 4}°`, sx.stab)
+    + sr('tyre', '', 1, curTyre().col).replace('<b></b>', `<b>${dot(curTyre().col)}</b>`).replace(/<div class="bar">.*?<\/div>/, '');
+  drawDyno(sx);
 }
+const mbarW = v => `<div class="bar"><i style="width:${clamp(v, 0, 1) * 100}%"></i></div>`;
 function drawDyno(st) {
   const c = $('#dyno'), x = c.getContext('2d'), w = c.width, h = c.height;
   x.clearRect(0, 0, w, h); x.strokeStyle = 'rgba(255,255,255,.1)'; x.lineWidth = 1;
@@ -1349,7 +1388,6 @@ function drawDyno(st) {
   };
   curveFor(r => dynoHp(200, r), 'rgba(200,220,255,.55)');
   curveFor(r => dynoHp(pm, r), '#ff5a3c');
-  x.fillStyle = '#8196b1'; x.font = '11px Rajdhani, Arial'; x.fillText('3000', 30, h - 5); x.fillText('14000 tr/min', w - 70, h - 5); x.fillText('gris : origine', 36, 14);
 }
 
 /* --- cycle de menu --- */
@@ -1366,7 +1404,6 @@ const carry = { mode: 'career' };
 $('#gBack').onclick = () => setScreen('menu');
 $('#gRace').onclick = () => { initAudio(); startRace(carry.mode === 'career' ? 'career' : 'quick'); };
 $('#sClose').onclick = () => setScreen('menu');
-$('#sReset').onclick = () => { if (confirm('Effacer toute la progression ?')) { try { localStorage.removeItem(KEY); } catch (e) { /* */ } location.reload(); } };
 $$('#settings .seg').forEach(seg => {
   const k = seg.dataset.key;
   const paint = () => $$('button', seg).forEach(b => b.classList.toggle('on', String(save.settings[k]) === b.dataset.v));
@@ -1381,7 +1418,7 @@ $('#rAgain').onclick = () => { const m = R.mode; startRace(m); };
 $('#rMenu').onclick = () => { disposeRace(); setScreen('menu'); };
 // bouton contre-la-montre
 {
-  const b = document.createElement('button'); b.dataset.act = 'tt'; b.textContent = 'Contre-la-montre';
+  const b = document.createElement('button'); b.dataset.act = 'tt';
   $('.menu-list').insertBefore(b, $('.menu-list button[data-act="multi"]'));
 }
 
@@ -1409,6 +1446,28 @@ window.__gm = {
 };
 [['#pResume', 'play', 34], ['#pRestart', 'restart', 34], ['#pQuit', 'home', 34], ['#rGarage', 'wrench', 34], ['#rAgain', 'restart', 34], ['#rMenu', 'home', 34], ['#bPlay', 'play', 44]]
   .forEach(([s, k, z]) => ($(s).innerHTML = ic(k, z)));
+const MENU_IC = { career: ['trophy', 'Carrière'], quick: ['flag', 'Course rapide'], tt: ['stopwatch', 'Contre-la-montre'], multi: ['people', 'Multijoueur (bientôt)'], garage: ['wrench', 'Garage'], settings: ['gear', 'Réglages'] };
+$$('.menu-list button').forEach(b => { const [k, t] = MENU_IC[b.dataset.act]; b.innerHTML = ic(k, 34) + (b.dataset.act === 'multi' ? ic('lock', 22) : ''); b.title = t; b.setAttribute('aria-label', t); });
+$('.gtitle span').innerHTML = ic('wrench', 30);
+$('#gBack').innerHTML = ic('back', 30); $('#gRace').innerHTML = ic('play', 30);
+$('#sClose').innerHTML = ic('check', 30);
+{
+  const sr = $('#sReset'); sr.innerHTML = ic('trash', 28); sr.title = 'Effacer la sauvegarde';
+  let armed = 0;
+  sr.onclick = () => {
+    if (!armed) { armed = setTimeout(() => { armed = 0; sr.style.color = ''; }, 3000); sr.style.color = '#ff3b4e'; return; }
+    try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } location.reload();
+  };
+  const SET = { weather: { dynamic: ic('cloudsun', 30), dry: ic('sun', 30), wet: ic('rain', 30) }, laps: { 2: '2', 3: '3', 5: '5' },
+    assist: { 0: pips(4, 4), 1: pips(3, 4), 2: pips(2, 4), 3: pips(1, 4) }, volume: { 0: ic('spk0', 30), 0.3: ic('spk1', 30), 0.6: ic('spk2', 30), 1: ic('spk3', 30) } };
+  const LBL = { weather: 'cloudsun', laps: 'flag', assist: 'bike', volume: 'spk2' };
+  $$('#settings .seg').forEach(seg => {
+    const k = seg.dataset.key;
+    $$('button', seg).forEach(bt => { bt.innerHTML = SET[k][bt.dataset.v]; });
+    seg.previousElementSibling.innerHTML = ic(LBL[k], 24);
+  });
+  $('#settings h2').innerHTML = ic('gear', 30);
+}
 const bMute = $('#bMute');
 const paintMute = () => (bMute.textContent = save.settings.volume > 0 ? '🔊' : '🔇');
 bMute.onclick = () => { save.settings.volume = save.settings.volume > 0 ? 0 : 0.6; persist(); paintMute(); $$('#settings .seg[data-key=volume] button').forEach(b => b.classList.toggle('on', +b.dataset.v === save.settings.volume)); };
