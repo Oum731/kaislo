@@ -18,7 +18,7 @@ Tout est généré par `npm install && GM_ID=<votre_game_id> npm run build` :
 4. Si GameMonetize vous donne un extrait de SDK différent, remplacez la fonction `sdk()` dans `build.mjs`.
 
 ### Images
-La moto et le pilote viennent de l'image 10 fournie (détourée). Les logos de marques réelles (Ducati, Alpinestars, Michelin, Arai, Brembo, Akrapovič…) ont été effacés par retouche et remplacés par des emblèmes fictifs ; restent les marques fictives de la combinaison (CYBERNETIC, NEXUS, VELOCITA). Vérifiez `assets/bike.png` en grand avant soumission : de très petits autocollants ont pu subsister.
+La moto et le pilote viennent de l'image 10 fournie (détourée). Les logos de marques réelles (Ducati, Alpinestars, Michelin, Arai, Brembo, Akrapovič…) ont été effacés par retouche et remplacés par des emblèmes fictifs ; les textes de la combinaison (CYBERNETIC, NEXUS, VELOCITA, ARYTUN) sont aussi effacés. Seul le numéro 88 du casque et de la moto reste. Vérifiez `assets/bike.png` en grand avant soumission : de très petits autocollants ont pu subsister.
 
 Les visuels du menu, de l'aperçu garage, de la bannière de résultats et **toutes les miniatures** sont recadrés à partir des images que vous avez fournies (`assets/`, `store/`) : rien n'est généré. J'ai volontairement écarté celles qui montrent des marques réelles (Red Bull/KTM/Yamaha, Yokohama, logo MotoGP), car les portails refusent ce type de contenu.
 
