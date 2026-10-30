@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 22;
+const VERSION_BASE = 23;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -417,7 +417,34 @@ function migrer(PDO $pdo, string $driver): void
                 ->execute([json_encode(FORMULES_DEFAUT, JSON_UNESCAPED_UNICODE), gmdate('Y-m-d\TH:i:s\Z')]);
         } catch (PDOException) { /* table absente : rien à mettre à jour */ }
     }
+    // Bases en version 1 à 22 : les clients des commandes en ligne déjà reçues entrent dans le carnet de clients du commerce
+    // (ensuite, chaque nouvelle commande y ajoute son client : voir ajouterClientDeCommande)
+    if ($version >= 1 && $version < 23) clientsDesCommandesExistantes($pdo);
     $pdo->prepare('INSERT INTO kaislo_version (version) VALUES (?)')->execute([VERSION_BASE]);
+}
+
+// Un client par numéro et par commerce, à partir des commandes en ligne déjà enregistrées (la plus ancienne en premier)
+function clientsDesCommandesExistantes(PDO $pdo): void
+{
+    try {
+        $fin = fn (string $t) => substr(preg_replace('/\D+/', '', $t), -8);
+        $connus = []; // commerce -> [fin du numéro => true]
+        foreach ($pdo->query("SELECT commerce_id, contenu FROM elements WHERE type = 'clients' AND supprime = 0")->fetchAll() as $l) {
+            $k = json_decode($l['contenu'], true);
+            if (is_array($k)) $connus[$l['commerce_id']][$fin((string) ($k['telephone'] ?? ''))] = true;
+        }
+        $ajout = $pdo->prepare("INSERT INTO elements (contenu, modifie_le, supprime, recu_le, commerce_id, type, id) VALUES (?, ?, 0, ?, ?, 'clients', ?)");
+        foreach ($pdo->query('SELECT commerce_id, client_nom, client_telephone, adresse FROM commandes_en_ligne ORDER BY cree_le')->fetchAll() as $c) {
+            $cle = $fin((string) $c['client_telephone']);
+            if (strlen($cle) < 6 || isset($connus[$c['commerce_id']][$cle])) continue;
+            $connus[$c['commerce_id']][$cle] = true;
+            $id = 'kl' . bin2hex(random_bytes(10));
+            $t = microtime(true);
+            $maintenant = gmdate('Y-m-d\TH:i:s', (int) $t) . sprintf('.%06dZ', (int) (($t - floor($t)) * 1e6));
+            $contenu = ['id' => $id, 'nom' => (string) $c['client_nom'], 'telephone' => (string) $c['client_telephone'], 'adresse' => (string) $c['adresse'], 'note' => 'Client de la boutique en ligne', 'source' => 'boutique'];
+            $ajout->execute([json_encode($contenu, JSON_UNESCAPED_UNICODE), gmdate('Y-m-d\TH:i:s\Z'), $maintenant, $c['commerce_id'], $id]);
+        }
+    } catch (PDOException) { /* tables absentes (toute première installation) : rien à reprendre */ }
 }
 
 // Bases installées avant octobre 2026 : la table de version avait l'ancien nom du produit
