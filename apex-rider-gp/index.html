@@ -144,6 +144,15 @@ body.touch #hGap{display:none}
 @media (max-height:640px){#hBR{transform:scale(.66);transform-origin:bottom right}#hBoard{top:30vh!important;font-size:13px}}
 @media (max-height:520px){.logo{font-size:36px!important}.menu-list{top:24vh!important;gap:6px}.menu-list button{padding:7px 14px!important;font-size:17px!important}
   #hTL .val,#hTR .val{font-size:24px}#hBR{transform:scale(.7);transform-origin:bottom right}}
+.chip{display:inline-block;min-width:28px;text-align:center;padding:0 5px;border-radius:4px;color:#fff;font-weight:700;text-shadow:0 1px 2px #000,0 0 3px #000;border:1px solid rgba(255,255,255,.35)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle;border:1px solid rgba(255,255,255,.6)}
+.wi{display:inline-flex;align-items:center;gap:4px;margin-right:12px}
+#toast{display:flex;align-items:center;gap:12px}#toast span{display:flex;align-items:center;gap:8px}
+.pitic{display:flex;justify-content:center;align-items:center;gap:14px;color:var(--cyan)}
+.cta{display:flex;align-items:center;justify-content:center}.cta svg{display:block}
+.dlg{max-height:94vh;overflow:auto}table.res td{padding:2px 8px}
+.dlg h2:empty,#rTitle{display:none}.dlg h2 svg{vertical-align:middle}
+#rPos svg{vertical-align:middle}
 </style>
 </head>
 <body>
@@ -154,8 +163,7 @@ body.touch #hGap{display:none}
 
   <section id="splash">
     <div class="logo">APEX<span>RIDER</span> GP<small>SIMULATION · GESTION · COURSE</small></div>
-    <button class="cta" id="bPlay">JOUER ▶</button>
-    <p>← → INCLINER · ↑ GAZ · ↓ FREIN · ESPACE FREIN ARRIÈRE — OU BOUTONS TACTILES</p>
+    <button class="cta" id="bPlay" aria-label="Jouer"></button>
   </section>
 
   <!-- MENU -->
@@ -207,8 +215,7 @@ body.touch #hGap{display:none}
         <canvas class="hc" id="hGauge" width="320" height="230" style="width:320px;height:230px"></canvas>
       </div>
     </div>
-    <div class="hud" id="hKeys">← → INCLINER · ↑ GAZ · ↓ FREIN AV · ESPACE FREIN AR · B STAND · 1-4 PNEUS · ÉCHAP PAUSE</div>
-    <div id="touch" class="hidden">
+        <div id="touch" class="hidden">
       <button id="tL" data-k="ArrowLeft">◀</button><button id="tR" data-k="ArrowRight">▶</button>
       <button id="tG" data-k="ArrowUp" aria-label="Gaz" title="Gaz"><svg viewBox="0 0 48 48" width="54" height="54" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 33a14 14 0 0 1 28 0"/><path d="M24 33l7-11"/><circle cx="24" cy="33" r="2.4" fill="currentColor"/><path d="M17 12l7-6 7 6"/></svg></button><button id="tB" data-k="ArrowDown" aria-label="Frein avant" title="Frein avant"><svg viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="4"/><path d="M24 10v5M24 33v5M10 24h5M33 24h5"/><path d="M36 8a18 18 0 0 1 4 10"/></svg></button>
       <button id="tX" data-k="Space" aria-label="Frein arrière" title="Frein arrière"><svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="24" r="13"/><circle cx="24" cy="24" r="3.5"/><path d="M12 38h24"/><path d="M17 38v-4M31 38v-4"/></svg></button><button id="tBox" data-tap="KeyB" aria-label="Stand" title="Stand"><svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M33 8a8 8 0 0 0-9 11L9 34a4 4 0 0 0 5 5l15-15a8 8 0 0 0 11-9l-5 5-5-1-1-5z"/></svg></button><button id="tP" data-pause="1">❚❚</button>
@@ -232,15 +239,14 @@ body.touch #hGap{display:none}
 
   <!-- PAUSE -->
   <section id="pause" class="screen hidden"><div class="modal"><div class="dlg">
-    <h2>PAUSE</h2>
-    <div class="btns" style="padding-top:20px"><button class="cta" id="pResume">Reprendre</button><button class="cta sec" id="pRestart">Recommencer</button><button class="cta sec" id="pQuit">Quitter</button></div>
+    <div class="btns" style="padding:24px 22px"><button class="cta" id="pResume" aria-label="Reprendre"></button><button class="cta sec" id="pRestart" aria-label="Recommencer"></button><button class="cta sec" id="pQuit" aria-label="Quitter"></button></div>
   </div></div></section>
 
   <!-- RESULTS -->
   <section id="results" class="screen hidden"><div class="modal"><div class="dlg">
-    <img class="ban" src="assets/banner.jpg" alt=""><h2 id="rTitle">RÉSULTATS</h2>
+    <img class="ban" src="assets/banner.jpg" alt=""><h2 id="rTitle"></h2>
     <div class="in"><div class="big" id="rPos"></div><div id="rBody"></div></div>
-    <div class="btns"><button class="cta" id="rGarage">Garage</button><button class="cta sec" id="rAgain">Rejouer</button><button class="cta sec" id="rMenu">Menu</button></div>
+    <div class="btns"><button class="cta" id="rGarage" aria-label="Garage"></button><button class="cta sec" id="rAgain" aria-label="Rejouer"></button><button class="cta sec" id="rMenu" aria-label="Menu"></button></div>
   </div></div></section>
 </div>
 <script type="module" src="./game.js"></script>

@@ -617,8 +617,36 @@ function audioUpdate(on, rpm, thr) {
 
 /* ================================================================ COURSE */
 let R = null;
-const toast = (msg, ms = 1800, col) => {
-  const t = $('#toast'); t.textContent = msg; t.style.color = col || '#fff'; t.classList.add('show');
+const ICO = {
+  rain: '<path d="M14 28a8 8 0 0 1 1-16 11 11 0 0 1 21 3 7 7 0 0 1-1 13z"/><path d="M16 36l-2 6M24 36l-2 6M32 36l-2 6"/>',
+  sun: '<circle cx="24" cy="24" r="8"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6M10 10l4 4M34 34l4 4M38 10l-4 4M14 34l-4 4"/>',
+  crash: '<path d="M24 5l4 10 10-5-5 10 10 4-10 4 5 10-10-5-4 10-4-10-10 5 5-10-10-4 10-4-5-10 10 5z"/>',
+  wall: '<path d="M4 16h40v9H4zM4 29h40v9H4zM16 16v9M30 29v9M34 16v9"/>',
+  contact: '<circle cx="17" cy="24" r="10"/><circle cx="31" cy="24" r="10"/>',
+  flag: '<path d="M12 6v38"/><path d="M12 8h26l-6 9 6 9H12"/>',
+  trophy: '<path d="M14 8h20v10a10 10 0 0 1-20 0zM14 12H7v3a7 7 0 0 0 7 7M34 12h7v3a7 7 0 0 1-7 7M24 28v8M16 40h16M19 36h10"/>',
+  stopwatch: '<circle cx="24" cy="27" r="14"/><path d="M24 27V18M19 6h10M24 6v7M38 12l-3 3"/>',
+  wrench: '<path d="M33 8a8 8 0 0 0-9 11L9 34a4 4 0 0 0 5 5l15-15a8 8 0 0 0 11-9l-5 5-5-1-1-5z"/>',
+  tyre: '<circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="8"/><path d="M24 7v9M24 32v9M7 24h9M32 24h9"/>',
+  cross: '<path d="M12 12l24 24M36 12L12 36"/>',
+  check: '<path d="M10 25l9 9 19-20"/>',
+  unlock: '<rect x="10" y="22" width="28" height="20" rx="3"/><path d="M16 22v-6a8 8 0 0 1 15-4"/>',
+  pitin: '<path d="M6 24h26M22 12l12 12-12 12M42 8v32"/>',
+  play: '<path d="M14 8l26 16-26 16z" fill="currentColor"/>',
+  pause: '<path d="M16 10v28M32 10v28"/>',
+  restart: '<path d="M38 20a14 14 0 1 0 2 8"/><path d="M40 8v12H28"/>',
+  home: '<path d="M6 24L24 8l18 16M12 21v21h24V21"/>',
+  drop: '<path d="M24 5C16 16 12 22 12 29a12 12 0 0 0 24 0c0-7-4-13-12-24z"/>',
+  warn: '<path d="M24 6L5 40h38z"/><path d="M24 18v11M24 34v1"/>',
+  coin: '<circle cx="24" cy="24" r="16"/><path d="M24 13v22M18 19c0-4 12-4 12 0s-12 4-12 8 12 4 12 0"/>',
+  star: '<path d="M24 5l5.5 12 13 1.5-9.6 9 2.6 13L24 33l-11.5 6.5 2.6-13-9.6-9 13-1.5z"/>',
+  people: '<circle cx="18" cy="16" r="6"/><circle cx="33" cy="18" r="5"/><path d="M6 40c0-9 6-13 12-13s12 4 12 13M30 29c6 0 12 3 12 11"/>',
+  bike: '<circle cx="11" cy="34" r="7"/><circle cx="37" cy="34" r="7"/><path d="M11 34l9-14h11l6 14M20 20l-3-6h-5M31 20l3-6"/>',
+};
+const ic = (k, s = 40) => `<svg viewBox="0 0 48 48" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k]}</svg>`;
+const dot = c => `<i class="dot" style="background:${c}"></i>`;
+const toast = (kind, ms = 1800, col, extra = '') => {
+  const t = $('#toast'); t.innerHTML = ic(kind, 46) + (extra ? `<span>${extra}</span>` : ''); t.style.color = col || '#fff'; t.classList.add('show');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), ms);
 };
 const fmt = t => { if (t == null || !isFinite(t)) return '--:--.---'; const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s < 10 ? '0' : ''}${s.toFixed(3)}`; };
@@ -782,7 +810,7 @@ function stepPlayer(dt, inp) {
     P.d = clamp(P.d, -lim, limL); P.vd = 0;
     if (R.contactCd <= 0) {
       R.contactCd = 0.6;
-      if (hard) { P.damage += 0.12 * (1 - 0.08 * resLvl); P.v *= 0.55; toast('IMPACT BARRIÈRE', 1200, '#ff7a1a'); if (P.v > 28 || Math.random() < 0.5 - resLvl * 0.07) doCrash('wall'); }
+      if (hard) { P.damage += 0.12 * (1 - 0.08 * resLvl); P.v *= 0.55; toast('wall', 1200, '#ff7a1a'); if (P.v > 28 || Math.random() < 0.5 - resLvl * 0.07) doCrash('wall'); }
       else P.v *= 0.85;
     }
   }
@@ -831,7 +859,7 @@ function doCrash(why) {
     m.position.copy(P.pos).add(new THREE.Vector3(0, 0.6, 0));
     raceScene.add(m); R.debris.push({ m, v: new THREE.Vector3((Math.random() - 0.5) * 10 + R.rv.x * 0.3, 2 + Math.random() * 4, (Math.random() - 0.5) * 10 + R.rv.z * 0.3), t: 4 });
   }
-  toast(P.damage >= 1 ? 'ABANDON TECHNIQUE' : 'CHUTE !', 2200, '#ff3b4e');
+  toast(P.damage >= 1 ? 'cross' : 'crash', 2200, '#ff3b4e');
 }
 function stepCrash(dt) {
   const P = R.P, c = P.crash; c.t += dt;
@@ -869,7 +897,7 @@ function qteKey(code) {
     P.pit.qte = null; $('#pit').classList.add('hidden');
     P.tyre = P.nextTyre; save.bike.tyre = P.nextTyre; persist();
     P.wear = [1, 1, 1, 1]; P.temp = [0.3, 0.3, 0.3, 0.3]; P.bt = 0;
-    const tot = R.t - q.t0; toast(`ARRÊT ${tot.toFixed(1)} s · ${TYRES[P.tyre].n.toUpperCase()}`, 2000, '#37e07a');
+    const tot = R.t - q.t0; toast('check', 2000, '#37e07a', `${dot(TYRES[P.tyre].col)} ${tot.toFixed(1)}`);
     P.pit.hold = 0.35;
   }
 }
@@ -921,15 +949,15 @@ function updateRace(dt) {
     const c = justPressed.shift();
     if (c === 'Escape' || c === 'KeyP') { if (R.state !== 'over') setPause(true); continue; }
     if (c === 'KeyB' && !P.pit && !P.finished && R.mode !== 'tt') {
-      P.pitReq = !P.pitReq; toast(P.pitReq ? 'STAND DEMANDÉ — prochain passage' : 'STAND ANNULÉ', 1500, P.pitReq ? '#ffd23b' : '#fff');
+      P.pitReq = !P.pitReq; toast('wrench', 1500, P.pitReq ? '#ffd23b' : '#fff', ic(P.pitReq ? 'check' : 'cross', 40));
     }
-    if (/^Digit[1-4]$/.test(c)) { P.nextTyre = +c[5] - 1; toast(`PROCHAINS PNEUS : ${TYRES[P.nextTyre].n.toUpperCase()}`, 1200, TYRES[P.nextTyre].col); }
+    if (/^Digit[1-4]$/.test(c)) { P.nextTyre = +c[5] - 1; toast('tyre', 1200, TYRES[P.nextTyre].col); }
   }
   const inp = readInput();
   if (R.state === 'countdown') {
     R.cd -= dt;
     const n = Math.ceil(R.cd - 0.2); const cd = $('#countdown');
-    cd.textContent = n > 0 ? n : 'GO'; cd.style.color = n > 0 ? '#fff' : '#37e07a';
+    if (n > 0) cd.textContent = n; else cd.innerHTML = ic('flag', 170); cd.style.color = n > 0 ? '#fff' : '#37e07a';
     if (R.cd <= 0.2 && R.state === 'countdown') { R.state = 'go'; setTimeout(() => $('#countdown').classList.add('hidden'), 700); }
     inp.thr = 0; inp.bf = 1;
     if (inp.thr) P.rpm = 9000;
@@ -937,14 +965,14 @@ function updateRace(dt) {
 
   // météo
   const rt = R.rainTarget ? R.rainTarget() : 0;
-  if (rt > R.rain && R.rain < 0.02 && R.mode !== 'tt') toast('LA PLUIE ARRIVE !', 2500, '#2aa8ff');
+  if (rt > R.rain && R.rain < 0.02 && R.mode !== 'tt') toast('rain', 2500, '#2aa8ff');
   R.rain += clamp(rt - R.rain, -dt / 40, dt / 18);
   R.wet += clamp(R.rain - R.wet, -dt / 90, dt / 25);
 
   // stand : déclenchement
   if (P.pitReq && !P.pit && !P.finished && !P.crash) {
     const nl = Math.max(0, Math.ceil((P.sTotal + 1) / TL)) * TL;
-    if (nl / TL < R.laps && nl - P.sTotal < 360 && nl > P.sTotal) { R.nextBox = nl + PIT_BOX_S; P.pit = { phase: 'in' }; toast('ENTRÉE AUX STANDS', 1400, '#ffd23b'); }
+    if (nl / TL < R.laps && nl - P.sTotal < 360 && nl > P.sTotal) { R.nextBox = nl + PIT_BOX_S; P.pit = { phase: 'in' }; toast('pitin', 1400, '#ffd23b'); }
   }
   if (R.state !== 'countdown') {
     for (let s = 0; s < 2; s++) stepPlayer(dt / 2, inp);
@@ -957,11 +985,11 @@ function updateRace(dt) {
   if (lapNow > P.lap && lapNow >= 1 && !P.finished) {
     if (P.lap >= 1) {
       const lt = R.t - P.lapStart; P.last = lt; P.lapTimes.push(lt);
-      if (P.best == null || lt < P.best) { P.best = lt; if (P.lap >= 1) toast(`MEILLEUR TOUR ${fmt(lt)}`, 2000, '#c58bff'); }
+      if (P.best == null || lt < P.best) { P.best = lt; if (P.lap >= 1) toast('stopwatch', 2000, '#c58bff', fmt(lt)); }
       if (save.bestLap == null || lt < save.bestLap) { save.bestLap = lt; }
     }
     P.lap = lapNow; P.lapStart = R.t;
-    if (P.lap === R.laps) toast('DERNIER TOUR', 1800, '#ffd23b');
+    if (P.lap === R.laps) toast('flag', 1800, '#ffd23b');
   }
   if (!P.finished && P.sTotal >= R.laps * TL && !P.crash) finishRace(false);
 
@@ -974,7 +1002,7 @@ function updateRace(dt) {
       P.vd += (P.d >= a.d ? 1 : -1) * 3; a.d += (P.d >= a.d ? -1 : 1) * 0.5;
       if (ds > 0) P.v = Math.min(P.v, a.v + 1); else a.v = Math.min(a.v + 2, P.v + 4);
       P.damage += 0.03 * (1 - 0.08 * save.skills.res);
-      if (rel > 14 && Math.random() < 0.5 - save.skills.res * 0.08) doCrash('contact'); else toast('CONTACT', 700, '#ff7a1a');
+      if (rel > 14 && Math.random() < 0.5 - save.skills.res * 0.08) doCrash('contact'); else toast('contact', 700, '#ff7a1a');
     }
   }
 
@@ -1073,8 +1101,8 @@ function updateCamera(dt, tr) {
 
 /* ---------------------------------------------------------------- classement */
 function standings() {
-  const arr = [{ me: true, name: 'VOUS', s: R.P.sTotal, v: R.P.v }];
-  R.ai.forEach(a => arr.push({ me: false, name: a.name, s: a.sTotal, v: a.v, fin: a.finT }));
+  const arr = [{ me: true, name: 'VOUS', num: save.bike.number, col: '#19d3ff', s: R.P.sTotal, v: R.P.v }];
+  R.ai.forEach(a => arr.push({ me: false, name: a.name, num: a.bike.cfg.number, col: a.bike.cfg.main, s: a.sTotal, v: a.v, fin: a.finT }));
   arr.sort((a, b) => b.s - a.s);
   return arr;
 }
@@ -1095,16 +1123,16 @@ function showResults() {
   const arr = standings();
   let rows = '';
   if (mode === 'tt') {
-    rows = P.lapTimes.map((t, i) => `<tr${t === P.best ? ' class="me"' : ''}><td>${i + 1}</td><td>Tour ${i + 1}</td><td>${fmt(t)}</td></tr>`).join('');
+    rows = P.lapTimes.map((t, i) => `<tr${t === P.best ? ' class="me"' : ''}><td>${i + 1}</td><td>${ic('flag', 18)}</td><td>${fmt(t)}</td></tr>`).join('');
     save.board.push(P.best); save.board = save.board.filter(x => x != null).sort((a, b) => a - b).slice(0, 5);
-    $('#rTitle').textContent = 'CONTRE-LA-MONTRE'; $('#rPos').textContent = P.best ? fmt(P.best) : 'ABANDON';
-    $('#rBody').innerHTML = `<table class="res">${rows}</table><div class="lbl" style="margin-top:10px">MEILLEURS TEMPS LOCAUX</div><div>${save.board.map((t, i) => `${i + 1}. ${fmt(t)}`).join(' &nbsp;·&nbsp; ')}</div>`;
+    $('#rTitle').innerHTML = ic('stopwatch', 30); $('#rPos').innerHTML = P.best ? fmt(P.best) : ic('cross', 40);
+    $('#rBody').innerHTML = `<table class="res">${rows}</table><div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted)">${ic('trophy', 22)}${save.board.map((t, i) => `${i + 1} ${fmt(t)}`).join(' · ')}</div>`;
     persist(); setScreen('results'); return;
   }
   const finished = [...R.ai.filter(a => a.finT != null)].sort((a, b) => a.finT - b.finT);
   const ordered = []; let placed = false;
   const base = arr.map(x => x);
-  base.forEach((x, i) => { rows += `<tr${x.me ? ' class="me"' : ''}><td>${i + 1}</td><td>${x.name}</td><td>${x.me ? (P.dnf ? 'ABD' : fmt(P.finalTime)) : x.fin != null ? fmt(x.fin) : ''}</td></tr>`; });
+  base.forEach((x, i) => { rows += `<tr${x.me ? ' class="me"' : ''}><td>${i + 1}</td><td><b class="chip" style="background:${x.col}">${x.num}</b></td><td>${x.me ? (P.dnf ? ic('cross', 18) : fmt(P.finalTime)) : x.fin != null ? fmt(x.fin) : ''}</td></tr>`; });
   const prize = Math.round((PRIZES[pos - 1] || 0) * cls.pay * (P.dnf ? 0 : 1));
   const sp = SPONSORS[save.bike.sponsor];
   const spPay = !P.dnf && pos <= sp.need ? sp.pay : 0;
@@ -1113,17 +1141,17 @@ function showResults() {
   const pts = P.dnf ? 0 : clamp(7 - Math.floor((pos - 1) / 2), 1, 6);
   save.credits = Math.max(0, save.credits + net); save.xp += pts; save.races++;
   if (pos === 1 && !P.dnf) save.wins++;
-  if (pos <= 3 && !P.dnf) { save.podiums++; if (save.cls === save.unlocked - 1 && save.unlocked < 3) { save.unlocked++; setTimeout(() => toast('NOUVELLE CATÉGORIE DÉBLOQUÉE', 2500, '#37e07a'), 300); } }
+  if (pos <= 3 && !P.dnf) { save.podiums++; if (save.cls === save.unlocked - 1 && save.unlocked < 3) { save.unlocked++; setTimeout(() => toast('unlock', 2500, '#37e07a'), 300); } }
   persist();
-  $('#rTitle').textContent = P.dnf ? 'ABANDON TECHNIQUE' : 'ARRIVÉE';
-  $('#rPos').textContent = P.dnf ? 'DNF' : `P${pos}${pos === 1 ? ' — VICTOIRE !' : pos <= 3 ? ' — PODIUM' : ''}`;
+  $('#rTitle').innerHTML = P.dnf ? ic('cross', 30) : ic('flag', 30);
+  $('#rPos').innerHTML = P.dnf ? ic('cross', 44) : `${pos <= 3 ? ic('trophy', 44) : ic('flag', 44)} ${pos}`;
   $('#rBody').innerHTML = `<table class="res">${rows}</table>
     <div class="card" style="margin-top:12px"><div class="body">
-      <div class="row"><span>Prime de course</span><b>+${prize} cr</b></div>
-      <div class="row"><span>Sponsor ${sp.n} ${spPay ? '' : `(exige un top ${sp.need})`}</span><b>+${spPay} cr</b></div>
-      <div class="row"><span>Salaires de l’équipe</span><b style="color:var(--red)">−${salary} cr</b></div>
-      <div class="row"><span>Bilan</span><b>${net >= 0 ? '+' : ''}${net} cr</b></div>
-      <div class="row"><span>Points d’expérience</span><b>+${pts}</b></div></div></div>`;
+      <div class="row"><span>${ic('trophy', 22)}</span><b>+${prize}</b></div>
+      <div class="row"><span>${ic('star', 22)}${spPay ? '' : ` <small style="color:var(--muted)">${ic('trophy', 14)}${sp.need}</small>`}</span><b>+${spPay}</b></div>
+      <div class="row"><span>${ic('people', 22)}</span><b style="color:var(--red)">−${salary}</b></div>
+      <div class="row"><span>${ic('coin', 22)}</span><b>${net >= 0 ? '+' : ''}${net}</b></div>
+      <div class="row"><span>${ic('bike', 22)}</span><b>+${pts}</b></div></div></div>`;
   setScreen('results');
 }
 
@@ -1143,9 +1171,7 @@ function drawGauge(x, w, h, kmh, rpm, gear) {
   x.fillStyle = '#d6e6ff'; x.font = '600 15px Rajdhani, Segoe UI, Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
   for (let i = 0; i <= 14; i += 2) { const a = a0 + ((a1 - a0) * i) / 14; x.fillText(i, cx + Math.cos(a) * (r - 22), cy + Math.sin(a) * (r - 22)); }
   x.fillStyle = '#fff'; x.font = '800 62px Rajdhani, Segoe UI, Arial'; x.fillText(Math.round(kmh), cx, cy - 4);
-  x.fillStyle = '#8196b1'; x.font = '600 15px Rajdhani, Arial'; x.fillText('KM/H', cx, cy + 28);
-  x.fillStyle = '#19d3ff'; x.font = '800 36px Rajdhani, Arial'; x.fillText(gear, cx, cy + 62);
-  x.fillStyle = '#8196b1'; x.font = '600 12px Rajdhani, Arial'; x.fillText('RAPPORT', cx, cy + 86);
+  x.fillStyle = '#19d3ff'; x.font = '800 36px Rajdhani, Arial'; x.fillText(gear, cx, cy + 50);
 }
 function drawLean(x, w, h, lean, max) {
   x.clearRect(0, 0, w, h);
@@ -1162,14 +1188,14 @@ function drawLean(x, w, h, lean, max) {
   const a = Math.PI * 1.5 - clamp(lean, -rad(60), rad(60));
   x.strokeStyle = '#19d3ff'; x.lineWidth = 4; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(a) * (r - 4), cy + Math.sin(a) * (r - 4)); x.stroke();
   x.fillStyle = '#fff'; x.font = '800 22px Rajdhani, Arial'; x.textAlign = 'center'; x.fillText(`${Math.round(Math.abs(lean) * 180 / Math.PI)}°`, cx, cy - 16);
-  x.fillStyle = '#8196b1'; x.font = '600 11px Rajdhani, Arial'; x.fillText('INCLINAISON', cx, 12);
+  x.save(); x.translate(24, 24); x.rotate(-clamp(lean, -rad(60), rad(60))); x.strokeStyle = '#d6e6ff'; x.lineWidth = 2.5; x.lineCap = 'round';
+  x.beginPath(); x.arc(-9, 0, 5, 0, TAU); x.arc(9, 0, 5, 0, TAU); x.moveTo(-9, 0); x.lineTo(-3, -8); x.lineTo(5, -8); x.lineTo(9, 0); x.stroke(); x.restore();
 }
 function tempColor(t) {
   if (t < 0.4) return '#2f8bff'; if (t < 0.5) return '#2fd0c8'; if (t < 0.72) return '#37e07a'; if (t < 0.85) return '#ffb02e'; return '#ff3b4e';
 }
 function drawTyres(x, w, h, P) {
   x.clearRect(0, 0, w, h);
-  x.fillStyle = '#8196b1'; x.font = '600 11px Rajdhani, Arial'; x.textAlign = 'center'; x.fillText('PNEUS', w / 2, 12);
   x.fillStyle = 'rgba(255,255,255,.12)'; x.fillRect(w / 2 - 5, 30, 10, 120);
   const dr = (k, X, Y) => {
     x.fillStyle = tempColor(P.temp[k]); x.fillRect(X, Y, 18, 44);
@@ -1177,10 +1203,9 @@ function drawTyres(x, w, h, P) {
     x.strokeStyle = 'rgba(255,255,255,.4)'; x.strokeRect(X, Y, 18, 44);
   };
   dr(0, w / 2 - 22, 20); dr(1, w / 2 + 4, 20); dr(2, w / 2 - 22, 122); dr(3, w / 2 + 4, 122);
-  x.fillStyle = '#d6e6ff'; x.font = '600 11px Rajdhani, Arial';
-  x.fillText(`G ${Math.round(P.wear[0] * 100)}%  D ${Math.round(P.wear[1] * 100)}%`, w / 2, 82);
-  x.fillText(`G ${Math.round(P.wear[2] * 100)}%  D ${Math.round(P.wear[3] * 100)}%`, w / 2, 184);
-  x.fillStyle = TYRES[P.tyre].col; x.fillText(TYRES[P.tyre].n.toUpperCase(), w / 2, 100);
+  // gomme montée : anneau de la couleur du compound
+  x.strokeStyle = TYRES[P.tyre].col; x.lineWidth = 5; x.beginPath(); x.arc(w / 2, 100, 11, 0, TAU); x.stroke();
+  x.fillStyle = TYRES[P.tyre].col; x.beginPath(); x.arc(w / 2, 100, 3, 0, TAU); x.fill();
 }
 function drawMap(x) {
   x.clearRect(0, 0, 230, 160); x.drawImage(world.mapCanvas, 0, 0);
@@ -1188,14 +1213,13 @@ function drawMap(x) {
   R.ai.forEach(a => { const t = at(a.sTotal, {}); const [mx, my] = world.mapT(t.x + t.nx * a.d, t.z + t.nz * a.d); x.beginPath(); x.arc(mx, my, 3, 0, TAU); x.fill(); });
   const [px_, py_] = world.mapT(R.P.pos.x, R.P.pos.z);
   x.fillStyle = '#19d3ff'; x.shadowColor = '#19d3ff'; x.shadowBlur = 8; x.beginPath(); x.arc(px_, py_, 5, 0, TAU); x.fill(); x.shadowBlur = 0;
-  x.fillStyle = '#8196b1'; x.font = '600 11px Rajdhani, Arial'; x.textAlign = 'left'; x.fillText('NEO-TOKYO CIRCUIT', 8, 14);
 }
 function drawPit(q) {
   const el = $('#pit');
   const cur = q.seq[q.i];
-  el.innerHTML = `<div class="lbl">STAND — CHANGEMENT DE ROUES</div><div class="arrow" style="${q.lock > 0 ? 'color:#ff3b4e' : ''}">${q.lock > 0 ? '✕' : ARW[cur]}</div>
+  el.innerHTML = `<div class="pitic">${ic('wrench', 34)}${ic('tyre', 34)}</div><div class="arrow" style="${q.lock > 0 ? 'color:#ff3b4e' : ''}">${q.lock > 0 ? ic('cross', 100) : ARW[cur]}</div>
     <div class="pips">${q.seq.map((_, i) => `<i class="${i < q.i ? 'on' : ''}"></i>`).join('')}</div>
-    <div class="lbl">${(R.t - q.t0).toFixed(1)} s · pneus ${TYRES[R.P.nextTyre].n.toUpperCase()} · une erreur coûte 0,7 s</div>`;
+    <div class="pitic" style="font-size:26px">${ic('stopwatch', 26)} ${(R.t - q.t0).toFixed(1)} ${dot(TYRES[R.P.nextTyre].col)}</div>`;
 }
 function drawHud(dt) {
   const P = R.P;
@@ -1203,22 +1227,22 @@ function drawHud(dt) {
   $('#hTime').textContent = fmt(Math.max(0, R.t - (P.lapStart || 0)));
   $('#hBest').textContent = fmt(P.best != null ? P.best : save.bestLap);
   const arr = standings(); const my = arr.findIndex(x => x.me);
-  $('#hPos').textContent = R.mode === 'tt' ? 'SOLO' : `${my + 1}/${arr.length}`;
+  $('#hPos').textContent = R.mode === 'tt' ? '—' : `${my + 1}/${arr.length}`;
   $('#hLap').textContent = `${clamp(Math.max(P.lap, 1), 1, R.laps)}/${R.laps}`;
   if (R.mode !== 'tt') {
     let html = ''; const show = arr.slice(0, 6);
     if (my >= 6) show.push(arr[my]);
     show.forEach(e => {
-      const idx = arr.indexOf(e); const g = e === arr[0] ? '' : `+${(Math.abs(arr[0].s - e.s) / Math.max(e.v, 25)).toFixed(1)}s`;
-      html += `<div class="${e.me ? 'me' : ''}"><span>${idx + 1} ${e.name}</span><span class="g">${g}</span></div>`;
+      const idx = arr.indexOf(e); const g = e === arr[0] ? '' : `+${(Math.abs(arr[0].s - e.s) / Math.max(e.v, 25)).toFixed(1)}`;
+      html += `<div class="${e.me ? 'me' : ''}"><span>${idx + 1} <b class="chip" style="background:${e.col}">${e.num}</b></span><span class="g">${g}</span></div>`;
     });
     $('#hBoard').innerHTML = html;
     const ahead = my > 0 ? arr[my - 1] : null, behind = my < arr.length - 1 ? arr[my + 1] : null;
-    const gp = ahead ? `▲ ${(ahead.s - P.sTotal) / Math.max(P.v, 25) > 99 ? '99' : ((ahead.s - P.sTotal) / Math.max(P.v, 25)).toFixed(2)}s` : '';
-    const gb = behind ? `▼ ${((P.sTotal - behind.s) / Math.max(P.v, 25)).toFixed(2)}s` : '';
-    $('#hGap').innerHTML = `<small>ÉCART</small>${gp} &nbsp; ${gb}`;
+    const gp = ahead ? `▲ ${(ahead.s - P.sTotal) / Math.max(P.v, 25) > 99 ? '99' : ((ahead.s - P.sTotal) / Math.max(P.v, 25)).toFixed(2)}` : '';
+    const gb = behind ? `▼ ${((P.sTotal - behind.s) / Math.max(P.v, 25)).toFixed(2)}` : '';
+    $('#hGap').innerHTML = `${gp} &nbsp; ${gb}`;
   } else $('#hGap').innerHTML = '';
-  $('#hWeather').innerHTML = `${R.rain > 0.5 ? 'PLUIE' : R.rain > 0.05 ? 'AVERSE' : 'SEC'} · PISTE ${Math.round(R.wet * 100)}% HUMIDE${P.pitReq ? ' · <span style="color:#ffd23b">BOX</span>' : ''}${P.damage > 0.05 ? ` · DÉGÂTS ${Math.round(P.damage * 100)}%` : ''}`;
+  $('#hWeather').innerHTML = `<span class="wi">${ic(R.rain > 0.05 ? 'rain' : 'sun', 24)}</span><span class="wi">${ic('drop', 20)}${Math.round(R.wet * 100)}%</span>${P.pitReq ? `<span class="wi" style="color:#ffd23b">${ic('wrench', 24)}</span>` : ''}${P.damage > 0.05 ? `<span class="wi" style="color:#ff3b4e">${ic('warn', 22)}${Math.round(P.damage * 100)}%</span>` : ''}`;
   drawGauge(hud.g, 320, 230, P.v * 3.6, P.rpm, P.gear);
   drawLean(hud.lean, 170, 86, P.lean, P.maxLean);
   drawTyres(hud.tyres, 110, 190, P);
@@ -1383,6 +1407,8 @@ window.__gm = {
   pause() { GM.held = true; if (R) R.paused = true; if (audio) audio.ac.suspend(); },
   resume() { GM.held = false; if (R && screen === 'hud') R.paused = false; if (audio) audio.ac.resume(); },
 };
+[['#pResume', 'play', 34], ['#pRestart', 'restart', 34], ['#pQuit', 'home', 34], ['#rGarage', 'wrench', 34], ['#rAgain', 'restart', 34], ['#rMenu', 'home', 34], ['#bPlay', 'play', 44]]
+  .forEach(([s, k, z]) => ($(s).innerHTML = ic(k, z)));
 const bMute = $('#bMute');
 const paintMute = () => (bMute.textContent = save.settings.volume > 0 ? '🔊' : '🔇');
 bMute.onclick = () => { save.settings.volume = save.settings.volume > 0 ? 0 : 0.6; persist(); paintMute(); $$('#settings .seg[data-key=volume] button').forEach(b => b.classList.toggle('on', +b.dataset.v === save.settings.volume)); };
