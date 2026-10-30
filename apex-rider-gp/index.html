@@ -127,6 +127,7 @@ canvas.hc{background:rgba(5,9,16,.5);border:1px solid var(--line)}
 #touch{position:absolute;inset:0;pointer-events:none}
 #touch button{position:absolute;pointer-events:auto;touch-action:none;background:rgba(10,15,26,.55);border:2px solid rgba(25,211,255,.55);color:#fff;
   font-size:30px;font-weight:700;border-radius:18px;display:flex;align-items:center;justify-content:center;letter-spacing:0;-webkit-tap-highlight-color:transparent}
+#touch button svg{pointer-events:none;display:block}
 #touch button:active,#touch button.dn{background:rgba(25,211,255,.35)}
 #tL{left:12px;bottom:14px;width:92px;height:92px}#tR{left:114px;bottom:14px;width:92px;height:92px}
 #touch #tG{right:14px;bottom:14px;width:104px;height:104px;border-color:rgba(55,224,122,.7);font-size:16px}
@@ -207,8 +208,8 @@ body.touch #hGap{display:none}
     <div class="hud" id="hKeys">← → INCLINER · ↑ GAZ · ↓ FREIN AV · ESPACE FREIN AR · B STAND · 1-4 PNEUS · ÉCHAP PAUSE</div>
     <div id="touch" class="hidden">
       <button id="tL" data-k="ArrowLeft">◀</button><button id="tR" data-k="ArrowRight">▶</button>
-      <button id="tG" data-k="ArrowUp">GAZ</button><button id="tB" data-k="ArrowDown">FREIN</button>
-      <button id="tX" data-k="Space">ARR.</button><button id="tBox" data-tap="KeyB">STAND</button><button id="tP" data-pause="1">❚❚</button>
+      <button id="tG" data-k="ArrowUp" aria-label="Gaz" title="Gaz"><svg viewBox="0 0 48 48" width="54" height="54" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 33a14 14 0 0 1 28 0"/><path d="M24 33l7-11"/><circle cx="24" cy="33" r="2.4" fill="currentColor"/><path d="M17 12l7-6 7 6"/></svg></button><button id="tB" data-k="ArrowDown" aria-label="Frein avant" title="Frein avant"><svg viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="4"/><path d="M24 10v5M24 33v5M10 24h5M33 24h5"/><path d="M36 8a18 18 0 0 1 4 10"/></svg></button>
+      <button id="tX" data-k="Space" aria-label="Frein arrière" title="Frein arrière"><svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="24" r="13"/><circle cx="24" cy="24" r="3.5"/><path d="M12 38h24"/><path d="M17 38v-4M31 38v-4"/></svg></button><button id="tBox" data-tap="KeyB" aria-label="Stand" title="Stand"><svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M33 8a8 8 0 0 0-9 11L9 34a4 4 0 0 0 5 5l15-15a8 8 0 0 0 11-9l-5 5-5-1-1-5z"/></svg></button><button id="tP" data-pause="1">❚❚</button>
     </div>
     <div id="toast"></div>
     <div id="countdown" class="hidden"></div>
