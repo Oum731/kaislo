@@ -23,8 +23,8 @@ console.log('standalone OK', (html.length / 1024).toFixed(0), 'Ko');
 
 
 // ---- livraison par portail : un dossier par site, chacun avec zip + miniatures + captures + vidéo + fiche
-const gm = join(dist, 'gamemonetize'), gen = join(dist, 'generic');
-mkdirSync(gm, { recursive: true }); mkdirSync(gen, { recursive: true });
+const gm = join(dist, 'gamemonetize'), gen = join(dist, 'generic'), cg = join(dist, 'crazygames');
+mkdirSync(gm, { recursive: true }); mkdirSync(gen, { recursive: true }); mkdirSync(cg, { recursive: true });
 const id = process.env.GM_ID || 'VOTRE_GAME_ID';
 const pack = (dir, name, content) => {
   const tmp = join(dir, 'index.html'); writeFileSync(tmp, content);
@@ -34,6 +34,12 @@ const pack = (dir, name, content) => {
 };
 pack(gm, 'apex-rider-gp-gamemonetize.zip', html.replace('<!--GM_SDK-->', sdk(id)));
 pack(gen, 'apex-rider-gp.zip', html.replace('<!--GM_SDK-->', ''));
+// CrazyGames : SDK v3 + pas de bouton plein écran propre (le portail fournit le sien)
+pack(cg, 'apex-rider-gp-crazygames.zip', html.replace('<!--GM_SDK-->', '<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>\n<style>#bFull{display:none}</style>'));
 const media = readdirSync(join(here, 'store')).filter(f => !/^f_/.test(f));
-for (const f of media) { copyFileSync(join(here, 'store', f), join(gm, f)); copyFileSync(join(here, 'store', f), join(gen, f)); }
+const CGF = /^(cg_|shot_|video|listing)/;   // CrazyGames : ses propres couvertures + captures + vidéo
+for (const f of media) {
+  if (!/^cg_/.test(f)) { copyFileSync(join(here, 'store', f), join(gm, f)); copyFileSync(join(here, 'store', f), join(gen, f)); }
+  if (CGF.test(f)) copyFileSync(join(here, 'store', f), join(cg, f));
+}
 console.log('gameId =', id);

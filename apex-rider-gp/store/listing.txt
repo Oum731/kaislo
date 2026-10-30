@@ -38,3 +38,13 @@ RECOMMENDED SIZE
 SDK
 GameMonetize SDK integrated (pause/resume events + interstitial between races, never before the 2nd race and at most every 2 minutes).
 Replace VOTRE_GAME_ID by your Game ID: GM_ID=<your id> npm run build
+
+
+=== CRAZYGAMES ===
+Files: apex-rider-gp-crazygames.zip (index.html at the root, CrazyGames SDK v3 integrated)
+Covers: cg_cover_16x9_1920x1080.jpg, cg_cover_2x3_800x1200.jpg, cg_cover_1x1_800x800.jpg
+Screenshots 1280x720: shot_*.jpg - Gameplay video: video_gameplay_1280x720.mp4 (20 s, H.264, no audio)
+SDK calls: init, game.gameplayStart/Stop (race start, pause, finish), ad.requestAd('midgame') at race start (never before the 2nd race, max once every 2 minutes; game and sound paused during the ad), game.happytime on a win.
+The built-in fullscreen button is hidden in this build (the portal provides its own).
+Disclose in the CrazyGames form: the game contains no text; moto/rider picture and covers come from the developer's own supplied images (real-brand logos erased from the rider sprite).
+Sizes/formats above are from memory of the CrazyGames developer portal: check them against the upload form before submitting.

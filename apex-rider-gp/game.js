@@ -74,6 +74,18 @@ const PRIZES = [1500, 1100, 850, 650, 500, 400, 300, 250, 200, 150, 100, 50];
 const AI_NAMES = ['M. Hale', 'F. Okoro', 'B. Lindqvist', 'G. Moretti', 'L. Bahia', 'K. Tanaka', 'S. Novak', 'R. Duarte', 'A. Petrov', 'J. Whitlock', 'T. Abara'];
 const ASSIST = [0.78, 0.55, 0.32, 0.1];
 
+/* ---------------------------------------------------------------- portail CrazyGames (SDK v3, optionnel) */
+let cgOn = false, gpOn = false;
+const CGS = () => (window.CrazyGames && window.CrazyGames.SDK) || null;
+(function cgInit() {
+  try { const s = CGS(); if (s && s.init) s.init().then(() => { cgOn = true; }).catch(() => {}); } catch (e) { /* hors CrazyGames */ }
+})();
+// gameplayStart / gameplayStop : appelés uniquement quand l'état change réellement
+function gp(on) {
+  if (gpOn === on) return; gpOn = on;
+  try { const s = CGS(); if (cgOn && s && s.game) on ? s.game.gameplayStart() : s.game.gameplayStop(); } catch (e) { /* ignore */ }
+}
+
 /* ---------------------------------------------------------------- sauvegarde */
 const KEY = 'apexRiderGP.v3';
 const DEFAULT = {
@@ -639,6 +651,7 @@ function aiLivery(i) {
 }
 
 function disposeRace() {
+  gp(false);
   if (!R) return;
   for (const a of R.ai) raceScene.remove(a.bike.group);
   if (R.pb) raceScene.remove(R.pb.group);
@@ -938,7 +951,7 @@ function updateRace(dt) {
     R.cd -= dt;
     const n = Math.ceil(R.cd - 0.2); const cd = $('#countdown');
     if (n > 0) cd.textContent = n; else cd.innerHTML = ic('flag', 170); cd.style.color = n > 0 ? '#fff' : '#37e07a';
-    if (R.cd <= 0.2 && R.state === 'countdown') { R.state = 'go'; setTimeout(() => $('#countdown').classList.add('hidden'), 700); }
+    if (R.cd <= 0.2 && R.state === 'countdown') { R.state = 'go'; gp(true); setTimeout(() => $('#countdown').classList.add('hidden'), 700); }
     inp.thr = 0; inp.bf = 1;
     if (inp.thr) P.rpm = 9000;
   } else R.t += dt;
@@ -1090,7 +1103,7 @@ function standings() {
 /* ---------------------------------------------------------------- fin de course */
 function finishRace(dnf) {
   const P = R.P; if (P.finished) return;
-  P.finished = true; R.state = 'over'; R.over = 0;
+  P.finished = true; R.state = 'over'; R.over = 0; gp(false);
   const arr = standings();
   P.finalPos = dnf ? arr.length : arr.findIndex(x => x.me) + 1;
   if (R.mode === 'tt') P.finalPos = 1;
@@ -1120,7 +1133,7 @@ function showResults() {
   const net = prize + spPay - salary;
   const pts = P.dnf ? 0 : clamp(7 - Math.floor((pos - 1) / 2), 1, 6);
   save.credits = Math.max(0, save.credits + net); save.xp += pts; save.races++;
-  if (pos === 1 && !P.dnf) save.wins++;
+  if (pos === 1 && !P.dnf) { save.wins++; try { const s = CGS(); if (cgOn && s && s.game && s.game.happytime) s.game.happytime(); } catch (e) { /* ignore */ } }
   if (pos <= 3 && !P.dnf) { save.podiums++; if (save.cls === save.unlocked - 1 && save.unlocked < 3) { save.unlocked++; setTimeout(() => toast('unlock', 2500, '#37e07a'), 300); } }
   persist();
   $('#rTitle').innerHTML = P.dnf ? ic('cross', 30) : ic('flag', 30);
@@ -1244,7 +1257,7 @@ function setScreen(name) {
 }
 function setPause(on) {
   if (!R) return;
-  if (on) { R.paused = true; setScreen('pause'); } else { R.paused = false; setScreen('hud'); }
+  if (on) { R.paused = true; gp(false); setScreen('pause'); } else { R.paused = false; if (R.state === 'go') gp(true); setScreen('hud'); }
 }
 const pips = (n, max) => `<span class="pps">${Array.from({ length: max }, (_, k) => `<i class="pp${k < n ? ' on' : ''}"></i>`).join('')}</span>`;
 const mbar = v => `<span class="mb"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></span>`;
@@ -1377,6 +1390,10 @@ function showAd() {
   if (GM.races < 2 || now - GM.lastAd < 120000) return;
   GM.lastAd = now;
   try { if (window.sdk && typeof window.sdk.showBanner === 'function') window.sdk.showBanner(); } catch (e) { /* pas de SDK */ }
+  try {
+    const s = CGS();
+    if (cgOn && s && s.ad) s.ad.requestAd('midgame', { adStarted: () => window.__gm.pause(), adFinished: () => window.__gm.resume(), adError: () => window.__gm.resume() });
+  } catch (e) { window.__gm.resume(); }
 }
 window.__gm = {
   pause() { GM.held = true; if (R) R.paused = true; if (audio) audio.ac.suspend(); },
