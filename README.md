@@ -267,6 +267,15 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Avis des commerçants : arrivée au tableau de bord et invitation
+
+Un gérant envoie son avis dans l'application (Compte → « Donner mon avis sur Kaislo », une fois par commerce, modifiable). L'avis arrive tout de suite
+dans l'espace Amorac → **Avis** (pastille du nombre d'avis à relire, carte « N avis à relire » sur le tableau de bord, résumé avec la note moyenne),
+et l'équipe reçoit un e-mail (`EmailEquipe`). Seuls les avis publiés apparaissent sur le site. **Invitation** : le gérant qui a utilisé Kaislo au moins
+3 jours différents (un jour = un jour où il a ouvert son commerce, compté sur son téléphone) voit sur l'accueil une carte « Kaislo vous est utile ? Donnez votre
+avis » (`InvitationAvis.jsx`, règles dans `lib/donnees/invitation-avis.js`) : « Plus tard » ne redemande qu'après 7 jours, puis 30 jours, puis plus jamais ;
+« Ne plus me le demander » et l'envoi d'un avis arrêtent tout. Jamais en démo, jamais aux vendeurs. Tests : `tests/invitation-avis.test.mjs`, `tests/api-commerces.test.mjs`.
+
 ## Tarifs et postes
 
 - Une **formule par métier** (`src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`, à garder identiques ; modifiables

@@ -2072,4 +2072,8 @@ export const EN = {
   "Votre boutique est fermée : l’abonnement est expiré. Réglez-le pour qu’elle revienne dans la liste.": "Your shop is closed: the subscription has expired. Pay it for the shop to come back to the list.",
   "Votre commerce est suspendu : contactez Kaislo.": "Your business is suspended: contact Kaislo.",
   "Votre boutique n’est pas encore créée : activez-la et enregistrez.": "Your shop is not created yet: switch it on and save.",
+  "Kaislo vous est utile ? Donnez votre avis": "Is Kaislo useful to you? Share your opinion",
+  "Trente secondes : une note et quelques lignes. Votre expérience aide d’autres commerçants à choisir, et nous aide à améliorer Kaislo.": "Thirty seconds: a rating and a few lines. Your experience helps other business owners choose, and helps us improve Kaislo.",
+  "Donner mon avis": "Give my opinion",
+  "Ne plus me le demander": "Don’t ask me again",
 };
