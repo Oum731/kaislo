@@ -1,1 +1,3 @@
 node_modules
+!apex-rider-gp/dist
+!apex-rider-gp/dist/**
