@@ -358,6 +358,27 @@ function routeBoutiqueImage(): never
     exit;
 }
 
+// Carnet de clients : un client qui commande en ligne pour la première fois (numéro encore inconnu du commerce) y est ajouté tout seul.
+// L'élément arrive sur les appareils du commerce par la synchronisation habituelle. Une erreur ici ne bloque jamais la commande.
+function ajouterClientDeCommande(string $commerceId, string $nom, string $telephone, string $adresse): void
+{
+    try {
+        $fin = fn (string $t) => substr(preg_replace('/\D+/', '', $t), -8);
+        $cle = $fin($telephone);
+        if (strlen($cle) < 6) return;
+        foreach (requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'clients' AND supprime = 0", [$commerceId])->fetchAll() as $l) {
+            $k = json_decode($l['contenu'], true);
+            if (is_array($k) && $fin((string) ($k['telephone'] ?? '')) === $cle) return;
+        }
+        $id = nouvelId('kl');
+        $contenu = ['id' => $id, 'nom' => $nom, 'telephone' => $telephone, 'adresse' => $adresse, 'note' => 'Client de la boutique en ligne', 'source' => 'boutique'];
+        requete('INSERT INTO elements (contenu, modifie_le, supprime, recu_le, commerce_id, type, id) VALUES (?, ?, 0, ?, ?, ?, ?)',
+            [json_encode($contenu, JSON_UNESCAPED_UNICODE), maintenant(), maintenantPrecis(), $commerceId, 'clients', $id]);
+    } catch (Throwable $err) {
+        // le carnet est un plus : la commande, elle, est déjà enregistrée
+    }
+}
+
 // POST /api/public/commande
 function routeCommandePublique(): never
 {
@@ -422,6 +443,7 @@ function routeCommandePublique(): never
         throw $err;
     }
     journaliser($c['id'], null, 'commande-en-ligne', ['numero' => $numero, 'total' => $total]);
+    ajouterClientDeCommande($c['id'], $nom, $tel['affichage'], $adresse);
     $commande = [
         'numero' => $numero, 'total' => $total, 'devise' => $c['devise'], 'lignes' => $lignes,
         'client' => ['nom' => $nom, 'telephone' => $tel['affichage'], 'adresse' => $adresse], 'note' => $note,
