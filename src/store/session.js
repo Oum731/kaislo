@@ -299,7 +299,8 @@ export const trancheSession = (set, get) => ({
       memoriserEspace('app'); // arrivera directement dans l'application, pas sur la page publique du site
       // Compte ouvert depuis un lien d'inscription (?inscription=1&ref=…) : on retire ces paramètres de l'adresse,
       // pour qu'un rechargement ou un retour en avant ne ramène pas à l'écran d'inscription
-      if (typeof window !== 'undefined' && /[?&](inscription|ref)=/.test(window.location.search)) {
+      // (idem pour ?demo=… : une démo ouverte avant la connexion ne doit pas rester dans l'adresse d'un vrai commerce)
+      if (typeof window !== 'undefined' && /[?&](inscription|ref|demo|pays)=/.test(window.location.search)) {
         window.history.replaceState(window.history.state, '', window.location.pathname);
       }
     }

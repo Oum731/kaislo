@@ -82,7 +82,15 @@ const trancheCommune = (set, get) => ({
         if (p && p !== get().prefs.paysDemo && !get().utilisateur && !get().prefs.paysDemoManuel) get().choisirPaysDemo(p);
       });
     }
-    const demo = params.get('demo');
+    let demo = params.get('demo');
+    // Adresse de démo gardée par un rechargement ou un retour arrière alors qu'un vrai commerce est ouvert : on garde le vrai
+    // commerce (un lien de démo cliqué volontairement est une nouvelle navigation, il reste respecté)
+    const p0 = get().prefs;
+    if (demo && p0.session && p0.commerceAppareil && !estDemo(p0.commerceAppareil)
+      && ['reload', 'back_forward'].includes(window.performance?.getEntriesByType?.('navigation')?.[0]?.type)) {
+      demo = null;
+      window.history.replaceState(window.history.state, '', window.location.pathname);
+    }
     // Lien de démo rouvert (ou page rechargée) : on garde la session en cours
     if (demo && estDemo(demo) && get().prefs.commerceAppareil === demo) get().restaurerSession();
     else if (demo && estDemo(demo)) get().relierAppareil(demo);
