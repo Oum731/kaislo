@@ -11,7 +11,7 @@ const out = await build({ entryPoints: [join(here, 'game.js')], bundle: true, mi
 const js = out.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 let html = readFileSync(join(here, 'index.html'), 'utf8').replace(/<script type="module" src=".\/game.js"><\/script>/, () => `<script>${js}</script>`);
 // images locales -> data URI (un seul fichier, aucun chargement externe)
-html = html.replace(/assets\/([\w.-]+\.jpg)/g, (_, f) => `data:image/jpeg;base64,${readFileSync(join(here, 'assets', f)).toString('base64')}`);
+html = html.replace(/assets\/([\w.-]+\.(?:jpg|png))/g, (_, f) => `data:image/${f.endsWith('png') ? 'png' : 'jpeg'};base64,${readFileSync(join(here, 'assets', f)).toString('base64')}`);
 
 const sdk = id => `<script>
 window.SDK_OPTIONS={gameId:"${id}",onEvent:function(a){switch(a.name){case"SDK_GAME_PAUSE":window.__gm&&window.__gm.pause();break;case"SDK_GAME_START":window.__gm&&window.__gm.resume();break;}}};

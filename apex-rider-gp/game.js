@@ -75,11 +75,11 @@ const AI_NAMES = ['M. Hale', 'F. Okoro', 'B. Lindqvist', 'G. Moretti', 'L. Bahia
 const ASSIST = [0.78, 0.55, 0.32, 0.1];
 
 /* ---------------------------------------------------------------- sauvegarde */
-const KEY = 'apexRiderGP.v2';
+const KEY = 'apexRiderGP.v3';
 const DEFAULT = {
   credits: 4000, xp: 2, skills: { agi: 0, tyre: 0, brake: 0, res: 0 }, races: 0, wins: 0, podiums: 0, cls: 0, unlocked: 1,
   bestLap: null, board: [],
-  bike: { main: '#1b1f2a', accent: '#ff7a1a', neon: '#19d3ff', finish: 'carbon', number: '88', sponsor: 0, stripes: 1, engine: 0, exhaust: 0, suspension: 0, brakes: 0, tyre: 1 },
+  bike: { main: '#d92b2b', accent: '#2f6bff', neon: '#19d3ff', finish: 'gloss', number: '88', sponsor: 0, stripes: 0, engine: 0, exhaust: 0, suspension: 0, brakes: 0, tyre: 1 },
   owned: { engine: [0], exhaust: [0], suspension: [0], brakes: [0] },
   settings: { weather: 'dynamic', laps: 3, assist: 1, volume: 0.6 },
 };
@@ -429,128 +429,64 @@ function buildWorld() {
 }
 
 /* ================================================================ MOTO */
-const carbonTex = (() => {
-  const [c, x] = cv(64, 64); x.fillStyle = '#2a2d34'; x.fillRect(0, 0, 64, 64);
-  for (let i = 0; i < 64; i += 8) for (let j = 0; j < 64; j += 8) { x.fillStyle = ((i + j) / 8) % 2 ? '#3b3f48' : '#1d2026'; x.fillRect(i, j, 8, 8); x.fillStyle = 'rgba(255,255,255,.07)'; x.fillRect(i, j, 8, 2); }
-  const t = tex(c, true); t.repeat.set(3, 3); return t;
-})();
-
-function decalTexture(cfg) {
-  const [c, x] = cv(512, 256);
-  const sp = SPONSORS[cfg.sponsor] || SPONSORS[0];
-  x.fillStyle = cfg.accent; x.strokeStyle = cfg.accent;
-  const st = cfg.stripes;
-  if (st === 1) { for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(20 + i * 34, 256); x.lineTo(70 + i * 34, 0); x.lineTo(90 + i * 34, 0); x.lineTo(40 + i * 34, 256); x.fill(); } }
-  if (st === 2) { for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(30 + i * 60, 230); x.lineTo(60 + i * 60, 170); x.lineTo(90 + i * 60, 230); x.closePath(); x.fill(); } }
-  if (st === 3) { x.fillRect(0, 196, 512, 16); x.fillRect(0, 224, 512, 8); }
-  if (st === 4) { x.lineWidth = 14; x.beginPath(); x.moveTo(0, 240); x.bezierCurveTo(160, 240, 260, 120, 512, 90); x.stroke(); x.lineWidth = 6; x.beginPath(); x.moveTo(0, 214); x.bezierCurveTo(160, 214, 260, 96, 512, 66); x.stroke(); }
-  x.fillStyle = '#fff'; x.beginPath(); x.arc(420, 120, 66, 0, TAU); x.fill();
-  x.fillStyle = '#0d1018'; x.font = `800 ${cfg.number.length > 1 ? 86 : 110}px Rajdhani, Segoe UI, Arial`; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(cfg.number || '0', 420, 128);
-  // emblème de sponsor (forme géométrique, sans texte) : plus il paie, plus il est grand
-  const si = Math.max(0, SPONSORS.indexOf(sp)), r = 30 * sp.scale;
-  x.save(); x.translate(70, 78); x.lineWidth = 9; x.lineJoin = 'round'; x.strokeStyle = '#000'; x.fillStyle = '#fff';
-  for (let pass = 0; pass < 2; pass++) {
-    x.beginPath();
-    if (si === 0) x.arc(0, 0, r, 0, TAU);
-    else if (si === 1) { x.moveTo(0, -r); x.lineTo(r, r * 0.8); x.lineTo(-r, r * 0.8); x.closePath(); }
-    else if (si === 2) { x.moveTo(5, -r); x.lineTo(-r * 0.7, 4); x.lineTo(4, 4); x.lineTo(-5, r); x.lineTo(r * 0.7, -4); x.lineTo(-4, -4); x.closePath(); }
-    else if (si === 3) { x.moveTo(0, -r); x.lineTo(r * 1.2, 0); x.lineTo(0, r); x.lineTo(-r * 1.2, 0); x.closePath(); }
-    else for (let i = 0; i < 6; i++) { const a = i * TAU / 6; x[i ? 'lineTo' : 'moveTo'](Math.cos(a) * r * 1.2, Math.sin(a) * r * 1.2); }
-    if (!pass) x.stroke(); else x.fill();
+// La moto et le pilote viennent de l'image fournie (assets/bike.png, vue de dos détourée) : aucun modèle généré.
+const bikeImg = new Image(); bikeImg.src = 'assets/bike.png';
+let BASE = null;
+function prepBase() {
+  const [c, x] = cv(bikeImg.naturalWidth, bikeImg.naturalHeight); x.drawImage(bikeImg, 0, 0);
+  BASE = { w: c.width, h: c.height, img: x.getImageData(0, 0, c.width, c.height) };
+}
+function toHsl(hex) {
+  const c = new THREE.Color(hex), o = {}; c.getHSL(o); return { h: o.h * 360, s: o.s, l: o.l };
+}
+const liveryCache = new Map();
+// recolore les zones rouges (couleur principale) et bleues (accent) de l'image
+function livery(cfg, flip) {
+  const key = `${cfg.main}|${cfg.accent}|${flip ? 1 : 0}`;
+  if (liveryCache.has(key)) return liveryCache.get(key);
+  const hm = toHsl(cfg.main), ha = toHsl(cfg.accent);
+  const src = BASE.img.data, out = new Uint8ClampedArray(src.length), col = new THREE.Color(), hs = {};
+  for (let i = 0; i < src.length; i += 4) {
+    out[i] = src[i]; out[i + 1] = src[i + 1]; out[i + 2] = src[i + 2]; out[i + 3] = src[i + 3];
+    if (!src[i + 3]) continue;
+    col.setRGB(src[i] / 255, src[i + 1] / 255, src[i + 2] / 255, THREE.SRGBColorSpace); col.getHSL(hs, THREE.SRGBColorSpace);
+    let h = hs.h * 360, s = hs.s, l = hs.l, tgt = null;
+    if (s > 0.3 && l > 0.1 && l < 0.88) { if (h < 22 || h > 338) tgt = hm; else if (h > 195 && h < 265) tgt = ha; }
+    if (!tgt) continue;
+    if (tgt.s < 0.15) { s *= tgt.s * 3; l = clamp(l + (tgt.l - 0.45) * 0.7, 0, 1); }
+    else { h = tgt.h; s = Math.min(1, s * Math.max(0.6, tgt.s / 0.75)); l = clamp(l + (tgt.l - 0.5) * 0.35, 0, 1); }
+    col.setHSL(h / 360, s, l, THREE.SRGBColorSpace);
+    const rgb = col.getRGB({}, THREE.SRGBColorSpace);
+    out[i] = rgb.r * 255; out[i + 1] = rgb.g * 255; out[i + 2] = rgb.b * 255;
   }
-  x.restore();
-  x.fillStyle = cfg.neon; x.fillRect(120, 70, 150 * sp.scale, 10);
-  return tex(c);
+  const [c, x] = cv(BASE.w, BASE.h);
+  const id = new ImageData(out, BASE.w, BASE.h);
+  if (flip) { const [t, tx] = cv(BASE.w, BASE.h); tx.putImageData(id, 0, 0); x.translate(BASE.w, 0); x.scale(-1, 1); x.drawImage(t, 0, 0); } else x.putImageData(id, 0, 0);
+  const t = tex(c); liveryCache.set(key, t); return t;
 }
-
-function limb(a, b, r, mat) {
-  const d = new THREE.Vector3().subVectors(b, a), len = d.length();
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), mat);
-  m.position.copy(a).addScaledVector(d, 0.5);
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
-  return m;
-}
-
-function makeBike(cfg) {
+function makeBike(cfg, flip = false) {
   const g = new THREE.Group(), lean = new THREE.Group(); g.add(lean);
-  const M = {
-    paint: new THREE.MeshStandardMaterial(), accent: new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.3 }),
-    dark: new THREE.MeshStandardMaterial({ color: 0x0d0f14, roughness: 0.5, metalness: 0.7 }),
-    tire: new THREE.MeshStandardMaterial({ color: 0x08090b, roughness: 0.92 }),
-    neon: new THREE.MeshBasicMaterial({ color: 0x19d3ff, toneMapped: false }),
-    suit: new THREE.MeshStandardMaterial({ color: 0x14161d, roughness: 0.55, metalness: 0.2 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xd9a441, metalness: 0.9, roughness: 0.3 }),
-    ti: new THREE.MeshStandardMaterial({ color: 0x9ea6b2, metalness: 0.9, roughness: 0.3 }),
-    glass: new THREE.MeshStandardMaterial({ color: 0x66ccff, transparent: true, opacity: 0.35, roughness: 0.1 }),
-    lamp: new THREE.MeshBasicMaterial({ color: 0xf2fbff, toneMapped: false }),
-    tail: new THREE.MeshBasicMaterial({ color: 0xff2030, toneMapped: false }),
-    decal: new THREE.MeshStandardMaterial({ transparent: true, roughness: 0.4, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
-  };
-  const add = (geo, mat, x, y, z, o = {}) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (o.rx) m.rotation.x = o.rx; if (o.ry) m.rotation.y = o.ry; if (o.rz) m.rotation.z = o.rz; if (o.s) m.scale.set(...o.s); lean.add(m); return m; };
-  const wheels = [];
-  for (const z of [-0.72, 0.72]) {
-    const w = new THREE.Group(); w.position.set(0, 0.32, z);
-    const tg = new THREE.TorusGeometry(0.25, 0.075, 12, 28); tg.rotateY(Math.PI / 2);
-    const rg = new THREE.TorusGeometry(0.235, 0.014, 6, 32); rg.rotateY(Math.PI / 2);
-    const dg = new THREE.CylinderGeometry(0.19, 0.19, 0.025, 20); dg.rotateZ(Math.PI / 2);
-    const hg = new THREE.CylinderGeometry(0.06, 0.06, 0.12, 10); hg.rotateZ(Math.PI / 2);
-    const spoke = new THREE.BoxGeometry(0.03, 0.4, 0.04);
-    w.add(new THREE.Mesh(tg, M.tire), new THREE.Mesh(rg, M.neon), new THREE.Mesh(dg, M.ti), new THREE.Mesh(hg, M.dark));
-    for (let k = 0; k < 3; k++) { const s = new THREE.Mesh(spoke, M.dark); s.rotation.x = (k * Math.PI) / 3; w.add(s); }
-    lean.add(w); wheels.push(w);
-  }
-  for (const sd of [-1, 1]) add(new THREE.CylinderGeometry(0.022, 0.028, 0.6, 8), M.gold, sd * 0.07, 0.6, -0.635, { rx: 0.295 });
-  add(new THREE.BoxGeometry(0.07, 0.05, 0.75), M.dark, 0, 0.36, 0.38, { rx: -0.05 });
-  add(new THREE.BoxGeometry(0.3, 0.32, 0.5), M.dark, 0, 0.5, 0.05);
-  add(new THREE.BoxGeometry(0.36, 0.38, 0.95), M.paint, 0, 0.55, -0.05);
-  add(new THREE.SphereGeometry(0.22, 14, 10), M.paint, 0, 0.66, -0.55, { s: [0.9, 0.8, 1.55] });
-  add(new THREE.BoxGeometry(0.34, 0.14, 0.7), M.accent, 0, 0.32, 0.0);
-  add(new THREE.BoxGeometry(0.14, 0.03, 0.3), M.accent, 0, 0.64, -0.72);
-  add(new THREE.PlaneGeometry(0.3, 0.24), M.glass, 0, 0.93, -0.64, { rx: -0.65 });
-  add(new THREE.BoxGeometry(0.16, 0.05, 0.06), M.lamp, 0, 0.73, -0.84);
-  add(new THREE.BoxGeometry(0.3, 0.2, 0.42), M.paint, 0, 0.83, -0.1);
-  add(new THREE.BoxGeometry(0.22, 0.14, 0.5), M.paint, 0, 0.82, 0.55, { rx: 0.16 });
-  add(new THREE.BoxGeometry(0.14, 0.04, 0.05), M.tail, 0, 0.85, 0.84);
-  const ex = new THREE.CylinderGeometry(0.05, 0.06, 0.65, 10); ex.rotateX(Math.PI / 2);
-  add(ex, M.ti, 0.18, 0.42, 0.5);
-  add(new THREE.BoxGeometry(0.62, 0.03, 0.03), M.dark, 0, 0.96, -0.5);
-  for (const sd of [-1, 1]) {
-    const d = add(new THREE.PlaneGeometry(0.95, 0.47), M.decal, sd * 0.19, 0.55, -0.04, { ry: sd * Math.PI / 2 });
-    d.userData.decal = true;
-  }
-  // pilote
-  const rider = new THREE.Group(); lean.add(rider);
-  const R = (geo, mat, x, y, z, o = {}) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (o.rx) m.rotation.x = o.rx; if (o.s) m.scale.set(...o.s); rider.add(m); return m; };
-  R(new THREE.BoxGeometry(0.32, 0.2, 0.62), M.suit, 0, 0.94, 0.02, { rx: 0.35 });
-  R(new THREE.BoxGeometry(0.34, 0.04, 0.5), M.neon, 0, 1.06, 0.0, { rx: 0.35, s: [0.12, 1, 1] });
-  const helmet = R(new THREE.SphereGeometry(0.155, 14, 12), M.accent, 0, 1.12, -0.33);
-  R(new THREE.SphereGeometry(0.12, 10, 8), M.dark, 0, 1.11, -0.43, { s: [1.05, 0.6, 0.8] });
-  R(new THREE.BoxGeometry(0.03, 0.02, 0.28), M.neon, 0, 1.28, -0.31);
-  for (const sd of [-1, 1]) {
-    rider.add(limb(new THREE.Vector3(sd * 0.17, 1.0, -0.2), new THREE.Vector3(sd * 0.28, 0.97, -0.5), 0.045, M.suit));
-    rider.add(limb(new THREE.Vector3(sd * 0.14, 0.84, 0.3), new THREE.Vector3(sd * 0.2, 0.62, -0.05), 0.065, M.suit));
-    rider.add(limb(new THREE.Vector3(sd * 0.2, 0.62, -0.05), new THREE.Vector3(sd * 0.18, 0.4, 0.28), 0.05, M.suit));
-    R(new THREE.SphereGeometry(0.05, 6, 6), M.neon, sd * 0.23, 0.6, -0.06);
-  }
-  const b = { group: g, lean, wheels, rider, M, helmet, cfg: null, decals: lean.children.filter(m => m.userData.decal) };
+  const w = 1.35, h = w * (BASE.h / BASE.w);
+  const geo = new THREE.PlaneGeometry(w, h); geo.translate(0, h / 2, 0);
+  const mat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.06, side: THREE.DoubleSide, color: 0xdde3f5 });
+  const mesh = new THREE.Mesh(geo, mat); lean.add(mesh);
+  const sh = new THREE.Mesh(new THREE.CircleGeometry(0.6, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5, depthWrite: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.y = 0.02; sh.scale.set(0.45, 1.0, 1); g.add(sh);
+  const b = { group: g, lean, wheels: [], rider: new THREE.Group(), M: { paint: new THREE.MeshStandardMaterial({ color: cfg.main }) }, helmet: null, cfg, mat, flip };
+  lean.add(b.rider);
   applyLivery(b, cfg);
   return b;
 }
 function applyLivery(b, cfg) {
-  b.cfg = cfg; const f = FINISHES[cfg.finish] || FINISHES.gloss, M = b.M;
-  M.paint.color.set(cfg.main); M.paint.metalness = f.met; M.paint.roughness = f.rough;
-  const wantMap = cfg.finish === 'carbon' ? carbonTex : null;
-  if (M.paint.map !== wantMap) { M.paint.map = wantMap; M.paint.needsUpdate = true; }
-  if (cfg.finish === 'carbon') M.paint.color.set(cfg.main).lerp(new THREE.Color(0xffffff), 0.5);
-  if (cfg.finish === 'pearl') M.paint.emissive.set(cfg.accent).multiplyScalar(0.08); else M.paint.emissive.set(0x000000);
-  M.accent.color.set(cfg.accent); M.neon.color.set(cfg.neon);
-  if (M.decal.map) M.decal.map.dispose();
-  M.decal.map = decalTexture(cfg); M.decal.needsUpdate = true;
+  b.cfg = cfg; b.mat.map = livery(cfg, b.flip); b.mat.needsUpdate = true; b.M.paint.color.set(cfg.main);
+}
+// les motos sont toujours vues de dos : le sprite se tourne vers la caméra
+function faceCam(b, cam) {
+  const p = b.group.position; b.group.rotation.y = Math.atan2(cam.x - p.x, cam.z - p.z);
 }
 
 /* ================================================================ GARAGE (scène) */
-const gar = { ang: -0.9, dist: 5.4, h: 1.2, drag: false, bike: null };
+const gar = { ang: 0, dist: 4.2, h: 1.1, drag: false, bike: null };
 function buildGarage() {
   const sc = garScene;
   sc.background = new THREE.Color(0x05070c); sc.fog = new THREE.Fog(0x05070c, 10, 34);
@@ -572,18 +508,11 @@ function buildGarage() {
   const mat = new THREE.Mesh(new THREE.BoxGeometry(7, 0.05, 3.2), new THREE.MeshStandardMaterial({ color: 0x0a0c11, roughness: 0.9 }));
   mat.position.y = 0.025; sc.add(mat);
   const rim = new THREE.Mesh(new THREE.BoxGeometry(7.1, 0.03, 0.05), neonC); rim.position.set(0, 0.06, 1.62); sc.add(rim);
-  const stand = new THREE.MeshStandardMaterial({ color: 0xaab2c0, metalness: 0.9, roughness: 0.3 });
-  for (const z of [-0.72, 0.72]) {
-    const s = new THREE.Group();
-    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6), stand); bar.rotation.z = Math.PI / 2; bar.position.y = 0.05; s.add(bar);
-    const glow = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 6, 12), neonC); glow.position.set(0, 0.08, 0); s.add(glow);
-    s.position.set(0, 0, z); sc.add(s);
-  }
   const k1 = new THREE.SpotLight(0xffffff, 140, 30, 0.5, 0.6, 1.2); k1.position.set(4, 8, 5); k1.target.position.set(0, 0.5, 0); sc.add(k1, k1.target);
   const k2 = new THREE.PointLight(0x19d3ff, 60, 18, 1.5); k2.position.set(-4, 2, 2); sc.add(k2);
   const k3 = new THREE.PointLight(0xff7a1a, 40, 18, 1.5); k3.position.set(4, 2, -3); sc.add(k3);
   gar.bike = makeBike(save.bike); sc.add(gar.bike.group);
-  gar.bike.group.position.set(0, 0, 0); gar.bike.group.rotation.y = Math.PI / 2;
+  gar.bike.group.position.set(0, 0.05, 0.3);
 }
 
 /* ================================================================ STATS */
@@ -742,7 +671,7 @@ function startRace(mode) {
   const slots = Array.from({ length: 12 }, (_, i) => i).filter(i => i !== grid);
   const cls = st.cls;
   if (mode !== 'tt') slots.forEach((slot, k) => {
-    const bike = makeBike(aiLivery(k + 1)); raceScene.add(bike.group);
+    const bike = makeBike(aiLivery(k + 1), k % 2 === 1); raceScene.add(bike.group);
     const pace = (0.9 + srand() * 0.085) * cls.ai;
     R.ai.push({ name: AI_NAMES[k % AI_NAMES.length], bike, pace, lane: (slot % 2 ? -1 : 1) * (1.8 + (slot % 3) * 1.4) , sTotal: -(6 + slot * 8.5), d: (slot % 2 ? -2.4 : 2.4), v: 0, ph: srand() * TAU, finT: null, vtop: 80 + srand() * 6, lap: 0 });
   });
@@ -1065,7 +994,7 @@ function updateRace(dt) {
     P.pos.set(tr.x + tr.nx * P.d, 0, tr.z + tr.nz * P.d); P.heading = hd;
   }
   const pb = R.pb;
-  pb.group.position.copy(P.pos); pb.group.rotation.y = P.heading;
+  pb.group.position.copy(P.pos); faceCam(pb, raceCam.position);
   if (P.crash) {
     pb.lean.rotation.z = lerp(pb.lean.rotation.z, P.lean, Math.min(1, dt * 8)); pb.lean.position.y = 0.2;
     if (Math.random() < 0.5) {/* étincelles simulées par le débris */ }
@@ -1077,7 +1006,7 @@ function updateRace(dt) {
   R.ai.forEach(a => {
     const t2 = at(a.sTotal, {});
     const la = Math.atan((a.v * a.v * t2.k) / G);
-    poseBike(a.bike, a.sTotal, a.d, a.v, la, dt);
+    poseBike(a.bike, a.sTotal, a.d, a.v, la, dt); faceCam(a.bike, raceCam.position);
   });
   // débris
   R.debris = R.debris.filter(d => {
@@ -1136,12 +1065,12 @@ function updateRain(dt) {
 function updateCamera(dt, tr) {
   const P = R.P;
   const fx = tr.tx, fz = tr.tz;
-  const back = 6.4 + P.v * 0.012, up = 2.5;
+  const back = 5.4 + P.v * 0.01, up = 2.3;
   const tp = new THREE.Vector3(P.pos.x - fx * back, up, P.pos.z - fz * back);
   const lk = new THREE.Vector3(P.pos.x + fx * 9, 1.0, P.pos.z + fz * 9);
   if (!camState.init) { camState.pos.copy(tp); camState.look.copy(lk); camState.init = true; }
-  const k = 1 - Math.exp(-dt * 7);
-  camState.pos.lerp(tp, k); camState.look.lerp(lk, 1 - Math.exp(-dt * 10));
+  const k = 1 - Math.exp(-dt * 18);
+  camState.pos.lerp(tp, k); camState.look.lerp(lk, 1 - Math.exp(-dt * 20));
   raceCam.position.copy(camState.pos);
   if (P.v > 40) raceCam.position.y += Math.sin(R.t * 55) * 0.012 * (P.v / 80);
   raceCam.lookAt(camState.look);
@@ -1329,7 +1258,7 @@ function refreshMenu() {
 /* --- garage --- */
 const CATS = [
   { id: 'cls', i: 'medal', t: 'Catégorie' }, { id: 'engine', i: 'engine', t: 'Moteur' }, { id: 'tyre', i: 'tyre', t: 'Pneus' }, { id: 'exhaust', i: 'exhaust', t: 'Échappement' },
-  { id: 'paint', i: 'palette', t: 'Peinture' }, { id: 'decal', i: 'sticker', t: 'Décalcomanies et sponsors' }, { id: 'suspension', i: 'spring', t: 'Suspension' },
+  { id: 'paint', i: 'palette', t: 'Peinture' }, { id: 'decal', i: 'sticker', t: 'Sponsors' }, { id: 'suspension', i: 'spring', t: 'Suspension' },
   { id: 'brakes', i: 'disc', t: 'Freins' }, { id: 'skills', i: 'helmet', t: 'Pilote' },
 ];
 let gcat = 'engine';
@@ -1364,22 +1293,10 @@ function refreshGarage() {
       i >= save.unlocked ? ic('lock', 22) : save.cls === i ? OK : '', save.cls === i, () => { save.cls = i; persist(); refreshGarage(); }, i >= save.unlocked, c.n));
   } else if (gcat === 'paint') {
     const sw = (icon, key) => o.insertAdjacentHTML('beforeend', `<div class="icl">${ic(icon, 20)}</div><div class="sw" data-k="${key}">${PALETTE.map(c => `<i data-c="${c}" style="background:${c}" class="${b[key] === c ? 'on' : ''}"></i>`).join('')}</div>`);
-    sw('bike', 'main'); sw('stripes', 'accent'); sw('glow', 'neon');
+    sw('bike', 'main'); sw('stripes', 'accent');
     $$('.sw i', o).forEach(i => (i.onclick = () => { b[i.parentElement.dataset.k] = i.dataset.c; applyLivery(gar.bike, b); persist(); refreshGarage(); }));
-    o.insertAdjacentHTML('beforeend', '<div class="fins"></div>');
-    Object.entries(FINISHES).forEach(([k, f]) => {
-      const d = document.createElement('button'); d.className = `fin f-${k}${b.finish === k ? ' on' : ''}`; d.title = f.n; d.setAttribute('aria-label', f.n);
-      d.onclick = () => { b.finish = k; applyLivery(gar.bike, b); persist(); refreshGarage(); }; $('.fins', o).appendChild(d);
-    });
   } else if (gcat === 'decal') {
-    o.insertAdjacentHTML('beforeend', `<div class="numrow">${ic('hash', 26)}<input class="numin" id="numin" maxlength="2" value="${b.number}"></div>`);
-    $('#numin').oninput = e => { b.number = (e.target.value.replace(/\D/g, '') || '0').slice(0, 2); applyLivery(gar.bike, b); persist(); };
-    SPONSORS.forEach((s, i) => opt(`${pips(i + 1, 5)}${st('coin', s.pay)}${st('trophy', s.need)}`, b.sponsor === i ? OK : '', b.sponsor === i, () => { b.sponsor = i; applyLivery(gar.bike, b); persist(); refreshGarage(); }, false, s.n));
-    o.insertAdjacentHTML('beforeend', '<div class="fins"></div>');
-    STRIPES.forEach((s, i) => {
-      const d = document.createElement('button'); d.className = 'fin' + (b.stripes === i ? ' on' : ''); d.title = s; d.setAttribute('aria-label', s); d.innerHTML = ic('s' + i, 34);
-      d.onclick = () => { b.stripes = i; applyLivery(gar.bike, b); persist(); refreshGarage(); }; $$('.fins', o).pop().appendChild(d);
-    });
+    SPONSORS.forEach((s, i) => opt(`${pips(i + 1, 5)}${st('coin', s.pay)}${st('trophy', s.need)}`, b.sponsor === i ? OK : '', b.sponsor === i, () => { b.sponsor = i; persist(); refreshGarage(); }, false, s.n));
   } else if (gcat === 'skills') {
     const ico = { agi: 'bike', tyre: 'tyre', brake: 'disc', res: 'shield' };
     SKILLS.forEach(s => {
@@ -1448,7 +1365,7 @@ let lastX = 0;
 canvas.addEventListener('pointerdown', e => { gar.drag = true; lastX = e.clientX; });
 window.addEventListener('pointerup', () => (gar.drag = false));
 window.addEventListener('pointermove', e => { if (gar.drag) { gar.ang -= (e.clientX - lastX) * 0.008; lastX = e.clientX; } });
-canvas.addEventListener('wheel', e => { gar.dist = clamp(gar.dist + e.deltaY * 0.004, 3, 9); });
+canvas.addEventListener('wheel', e => { gar.dist = clamp(gar.dist + e.deltaY * 0.004, 3, 7); });
 
 /* ================================================================ PORTAILS (GameMonetize, tactile, système) */
 const isTouch = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || 'ontouchstart' in window;
@@ -1509,7 +1426,6 @@ $$('#touch button').forEach(b => {
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 /* ================================================================ BOUCLE */
-buildWorld(); buildGarage(); setupHud(); setScreen('menu');
 let last = performance.now(), tAcc = 0;
 function frame(now) {
   requestAnimationFrame(frame);
@@ -1523,14 +1439,13 @@ function frame(now) {
   } else {
     justPressed.length = 0; canvas.style.visibility = 'visible';
     const b = gar.bike;
-    if (!gar.drag && screen !== 'garage') gar.ang += dt * 0.25; else if (!gar.drag) gar.ang += dt * 0.08;
+    gar.ang = clamp(gar.ang, -0.7, 0.7);
     const dist = screen === 'garage' ? gar.dist : 6.5;
     garCam.position.set(Math.sin(gar.ang) * dist, gar.h + (screen === 'garage' ? 0.2 : 0.5), Math.cos(gar.ang) * dist);
-    const off = screen === 'garage' ? new THREE.Vector3(0, 0.55, 0) : new THREE.Vector3(Math.cos(gar.ang) * -1.9, 0.6, -Math.sin(gar.ang) * 1.9);
-    garCam.lookAt(off);
-    b.wheels.forEach(w => (w.rotation.x -= dt * 0.8));
+    garCam.lookAt(0, 0.85, 0.3); faceCam(b, garCam.position);
     renderer.render(garScene, garCam);
   }
 }
-requestAnimationFrame(frame);
+const boot = () => { prepBase(); buildWorld(); buildGarage(); setupHud(); setScreen('menu'); requestAnimationFrame(frame); };
+if (bikeImg.complete && bikeImg.naturalWidth) boot(); else bikeImg.onload = boot;
 window.__apex = { tick(n, dt = 1 / 30) { for (let i = 0; i < n; i++) if (R && !R.paused) updateRace(dt); }, get R() { return R; }, save, startRace, setScreen, keys, at, TL, N };

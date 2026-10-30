@@ -18,6 +18,8 @@ Tout est généré par `npm install && GM_ID=<votre_game_id> npm run build` :
 4. Si GameMonetize vous donne un extrait de SDK différent, remplacez la fonction `sdk()` dans `build.mjs`.
 
 ### Images
+La moto et le pilote viennent de l'image 10 fournie (détourée). **Attention : cette image montre des marques réelles (Ducati, Alpinestars, Michelin, Arai…)** qui peuvent faire refuser le jeu par un portail ; remplacez `assets/bike.png` par une image sans marque si besoin.
+
 Les visuels du menu, de l'aperçu garage, de la bannière de résultats et **toutes les miniatures** sont recadrés à partir des images que vous avez fournies (`assets/`, `store/`) : rien n'est généré. J'ai volontairement écarté celles qui montrent des marques réelles (Red Bull/KTM/Yamaha, Yokohama, logo MotoGP), car les portails refusent ce type de contenu.
 
 ## Commandes
@@ -42,7 +44,8 @@ Sur mobile : boutons tactiles (◀ ▶, GAZ, FREIN, ARR., STAND, pause).
 - **Chutes** : pilote éjecté (ragdoll simplifié), débris, dégâts cumulés, **abandon technique** à 100 %.
 - **Stand** : demande avec B, voie des stands, **QTE** de changement de roues (une erreur = +0,7 s), choix du compound.
 - **HUD** : compte-tours/vitesse/rapport, inclinaison vs limite, diagramme des pneus (bleu froid → vert optimal → rouge surchauffe), minicarte, écarts, classement.
-- **Garage** : moteur, échappement, suspension, freins carbone, pneus, peinture (5 finitions dont carbone et chrome), numéro, sponsors, motifs, courbe de puissance. Sauvegarde automatique (`localStorage`).
+- **Garage** : moteur, échappement, suspension, freins carbone, pneus, couleurs de la moto (principale et accent), sponsors, courbe de puissance. Sauvegarde automatique (`localStorage`).
+- **Aucun texte à l'écran** : interface en icônes et chiffres, décor sans lettres.
 
 ## Limites connues
-Pas de multijoueur en ligne ni de classement mondial (serveur requis), pas de « licences de sécurité », ragdoll simplifié, pas de fuel, modèle de moto procédural (pas d'assets importés).
+Pas de multijoueur en ligne ni de classement mondial (serveur requis), pas de « licences de sécurité », ragdoll simplifié, pas de fuel, la moto et le pilote sont une image fournie (`assets/bike.png`, vue de dos détourée, recolorée par code) : pas de roues animées, chute simplifiée (la moto bascule).
