@@ -640,7 +640,7 @@ function disposeRace() {
 }
 
 function startRace(mode) {
-  disposeRace();
+  disposeRace(); showAd();
   const st = bikeStats();
   R = {
     mode, laps: mode === 'tt' ? Math.max(3, save.settings.laps) : save.settings.laps, t: 0, state: 'countdown', cd: 4.2, st, stage: 0,
@@ -1233,6 +1233,7 @@ function setScreen(name) {
   if (name === 'settings') $('#menu').classList.remove('hidden');
   if (name === 'pause') $('#hud').classList.remove('hidden');
   if (name === 'results') $('#hud').classList.remove('hidden');
+  $('#touch').classList.toggle('hidden', !(isTouch && name === 'hud'));
   if (name === 'menu') refreshMenu();
   if (name === 'garage') { refreshGarage(); }
   if (name !== 'hud' && name !== 'pause' && name !== 'results' && audio) audioUpdate(false, 4000, 0);
@@ -1367,6 +1368,40 @@ window.addEventListener('pointerup', () => (gar.drag = false));
 window.addEventListener('pointermove', e => { if (gar.drag) { gar.ang -= (e.clientX - lastX) * 0.008; lastX = e.clientX; } });
 canvas.addEventListener('wheel', e => { gar.dist = clamp(gar.dist + e.deltaY * 0.004, 3, 9); });
 
+/* ================================================================ PORTAILS (GameMonetize, tactile, système) */
+const isTouch = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || 'ontouchstart' in window;
+if (isTouch) document.body.classList.add('touch');
+const GM = { held: false, lastAd: 0, races: 0 };
+// publicité interstitielle : jamais avant la 2e course, au plus toutes les 2 minutes
+function showAd() {
+  const now = Date.now(); GM.races++;
+  if (GM.races < 2 || now - GM.lastAd < 120000) return;
+  GM.lastAd = now;
+  try { if (window.sdk && typeof window.sdk.showBanner === 'function') window.sdk.showBanner(); } catch (e) { /* pas de SDK */ }
+}
+window.__gm = {
+  pause() { GM.held = true; if (R) R.paused = true; if (audio) audio.ac.suspend(); },
+  resume() { GM.held = false; if (R && screen === 'hud') R.paused = false; if (audio) audio.ac.resume(); },
+};
+const bMute = $('#bMute');
+const paintMute = () => (bMute.textContent = save.settings.volume > 0 ? '🔊' : '🔇');
+bMute.onclick = () => { save.settings.volume = save.settings.volume > 0 ? 0 : 0.6; persist(); paintMute(); $$('#settings .seg[data-key=volume] button').forEach(b => b.classList.toggle('on', +b.dataset.v === save.settings.volume)); };
+paintMute();
+$('#bFull').onclick = () => { const d = document.documentElement; try { document.fullscreenElement ? document.exitFullscreen() : d.requestFullscreen && d.requestFullscreen(); } catch (e) { /* ignore */ } };
+window.addEventListener('pointerdown', () => window.focus());
+$('#bPlay').onclick = () => { initAudio(); $('#splash').classList.add('hidden'); };
+// contrôles tactiles
+$$('#touch button').forEach(b => {
+  const k = b.dataset.k;
+  if (k) {
+    const down = e => { e.preventDefault(); b.classList.add('dn'); if (!keys.has(k)) { justPressed.push(k); if (R && R.P.pit && R.P.pit.qte) qteKey(k); } keys.add(k); initAudio(); };
+    const up = e => { e.preventDefault(); b.classList.remove('dn'); keys.delete(k); };
+    b.addEventListener('pointerdown', down); ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => b.addEventListener(t, up));
+  } else if (b.dataset.tap) b.addEventListener('pointerdown', e => { e.preventDefault(); justPressed.push(b.dataset.tap); });
+  else if (b.dataset.pause) b.addEventListener('pointerdown', e => { e.preventDefault(); setPause(true); });
+});
+document.addEventListener('contextmenu', e => e.preventDefault());
+
 /* ================================================================ BOUCLE */
 buildWorld(); buildGarage(); setupHud(); setScreen('menu');
 let last = performance.now(), tAcc = 0;
@@ -1374,10 +1409,13 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000); last = now; tAcc += dt;
   if (R && (screen === 'hud' || screen === 'results' || screen === 'pause')) {
-    if (!R.paused) updateRace(dt); else justPressed.length = 0;
+    canvas.style.visibility = 'visible';
+    if (!R.paused && !GM.held) updateRace(dt); else justPressed.length = 0;
     renderer.render(raceScene, raceCam);
+  } else if (screen === 'menu' || screen === 'settings') {
+    justPressed.length = 0; canvas.style.visibility = 'hidden';
   } else {
-    justPressed.length = 0;
+    justPressed.length = 0; canvas.style.visibility = 'visible';
     const b = gar.bike;
     if (!gar.drag && screen !== 'garage') gar.ang += dt * 0.25; else if (!gar.drag) gar.ang += dt * 0.08;
     const dist = screen === 'garage' ? gar.dist : 6.5;

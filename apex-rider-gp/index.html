@@ -111,11 +111,49 @@ canvas.hc{background:rgba(5,9,16,.5);border:1px solid var(--line)}
 @media (max-width:760px){
   #garage .right{display:none}.side{display:none}#hBoard{display:none}#hKeys{display:none}
 }
+
+/* ---------- Portails : accueil, tactile, boutons système ---------- */
+#splash{position:absolute;inset:0;pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:linear-gradient(180deg,rgba(5,7,13,.35),rgba(5,7,13,.8)),url(assets/bg.jpg) center/cover;z-index:20}
+#splash .logo{position:static;text-align:center}
+#splash .cta{font-size:26px;padding:16px 56px}
+#splash p{color:#cfe0ff;font-size:15px;letter-spacing:.12em;text-shadow:0 2px 8px #000;text-align:center;padding:0 16px}
+#menu{background:linear-gradient(90deg,rgba(5,7,13,.88) 0,rgba(5,7,13,.45) 48%,rgba(5,7,13,.08) 100%),url(assets/bg.jpg) center/cover}
+.card img,.dlg img.ban{display:block;width:100%}
+.dlg img.ban{height:110px;object-fit:cover;object-position:center 30%;border-bottom:1px solid var(--line)}
+#sys{position:fixed;right:6px;top:6px;display:flex;gap:6px;z-index:30;pointer-events:auto}
+#sys button{width:34px;height:34px;font-size:17px;background:rgba(10,15,26,.75);border:1px solid var(--line);color:#fff;letter-spacing:0}
+#sys button:hover{border-color:var(--cyan)}
+#touch{position:absolute;inset:0;pointer-events:none}
+#touch button{position:absolute;pointer-events:auto;touch-action:none;background:rgba(10,15,26,.55);border:2px solid rgba(25,211,255,.55);color:#fff;
+  font-size:30px;font-weight:700;border-radius:18px;display:flex;align-items:center;justify-content:center;letter-spacing:0;-webkit-tap-highlight-color:transparent}
+#touch button:active,#touch button.dn{background:rgba(25,211,255,.35)}
+#tL{left:12px;bottom:14px;width:92px;height:92px}#tR{left:114px;bottom:14px;width:92px;height:92px}
+#touch #tG{right:14px;bottom:14px;width:104px;height:104px;border-color:rgba(55,224,122,.7);font-size:16px}
+#touch #tB{right:128px;bottom:14px;width:84px;height:84px;border-color:rgba(255,59,78,.7);font-size:14px}
+#touch #tX{right:14px;bottom:128px;width:64px;height:64px;font-size:12px;border-radius:14px}
+#touch #tP{left:50%;top:8px;transform:translateX(-50%);width:56px;height:34px;font-size:16px;border-radius:10px}
+#touch #tBox{right:86px;bottom:128px;width:64px;height:64px;font-size:12px;border-radius:14px;border-color:#ffd23b}
+body.touch #hKeys,body.touch #hBoard,body.touch #hBL{display:none}
+body.touch #hBR{left:50%;right:auto;transform:translateX(-50%) scale(.5);transform-origin:bottom center;bottom:2px}
+body.touch #hWeather{display:none}
+body.touch #hGap{display:none}
+#hTL{top:5.5vh!important}#hTR{top:5.5vh!important}#hBoard{top:21vh!important}#hWeather{top:21vh!important}
+@media (max-height:520px){.logo{font-size:36px!important}.menu-list{top:24vh!important;gap:6px}.menu-list button{padding:7px 14px!important;font-size:17px!important}
+  #hTL .val,#hTR .val{font-size:24px}#hBR{transform:scale(.7);transform-origin:bottom right}}
 </style>
 </head>
 <body>
+<!--GM_SDK-->
 <canvas id="gl"></canvas>
+<div id="sys"><button id="bMute" title="Son">🔊</button><button id="bFull" title="Plein écran">⛶</button></div>
 <div id="ui">
+
+  <section id="splash">
+    <div class="logo">APEX<span>RIDER</span> GP<small>SIMULATION · GESTION · COURSE</small></div>
+    <button class="cta" id="bPlay">JOUER ▶</button>
+    <p>← → INCLINER · ↑ GAZ · ↓ FREIN · ESPACE FREIN ARRIÈRE — OU BOUTONS TACTILES</p>
+  </section>
 
   <!-- MENU -->
   <section id="menu" class="screen">
@@ -128,7 +166,7 @@ canvas.hc{background:rgba(5,9,16,.5);border:1px solid var(--line)}
       <button data-act="settings">Réglages</button>
     </nav>
     <aside class="side">
-      <div class="card"><h4>ACTUALITÉS</h4><div class="body" id="news"></div></div>
+      <div class="card"><h4>ACTUALITÉS</h4><img src="assets/garage.jpg" alt=""><div class="body" id="news"></div></div>
       <div class="card"><h4>PROFIL PILOTE</h4><div class="body" id="profile"></div></div>
     </aside>
     <div class="hint">Clavier : ← → incliner · ↑ gaz · ↓ frein avant · Espace frein arrière · B stand · Échap pause — Manette compatible</div>
@@ -167,6 +205,11 @@ canvas.hc{background:rgba(5,9,16,.5);border:1px solid var(--line)}
       </div>
     </div>
     <div class="hud" id="hKeys">← → INCLINER · ↑ GAZ · ↓ FREIN AV · ESPACE FREIN AR · B STAND · 1-4 PNEUS · ÉCHAP PAUSE</div>
+    <div id="touch" class="hidden">
+      <button id="tL" data-k="ArrowLeft">◀</button><button id="tR" data-k="ArrowRight">▶</button>
+      <button id="tG" data-k="ArrowUp">GAZ</button><button id="tB" data-k="ArrowDown">FREIN</button>
+      <button id="tX" data-k="Space">ARR.</button><button id="tBox" data-tap="KeyB">STAND</button><button id="tP" data-pause="1">❚❚</button>
+    </div>
     <div id="toast"></div>
     <div id="countdown" class="hidden"></div>
     <div id="pit" class="hidden"></div>
@@ -192,7 +235,7 @@ canvas.hc{background:rgba(5,9,16,.5);border:1px solid var(--line)}
 
   <!-- RESULTS -->
   <section id="results" class="screen hidden"><div class="modal"><div class="dlg">
-    <h2 id="rTitle">RÉSULTATS</h2>
+    <img class="ban" src="assets/banner.jpg" alt=""><h2 id="rTitle">RÉSULTATS</h2>
     <div class="in"><div class="big" id="rPos"></div><div id="rBody"></div></div>
     <div class="btns"><button class="cta" id="rGarage">Garage</button><button class="cta sec" id="rAgain">Rejouer</button><button class="cta sec" id="rMenu">Menu</button></div>
   </div></div></section>
