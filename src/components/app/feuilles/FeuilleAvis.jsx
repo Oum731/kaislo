@@ -53,6 +53,7 @@ export function FeuilleAvis() {
     setEnvoi(true);
     try {
       await appelApi('POST', '/avis', f, s.jetonServeur());
+      s.sauverPrefs({ invitationAvis: { ...(s.prefs.invitationAvis || {}), fait: true } }); // plus d'invitation : l'avis est envoyé
       setFait(true);
     } catch (err) {
       setErreur(err.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : err.message);

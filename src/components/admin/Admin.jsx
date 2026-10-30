@@ -148,7 +148,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
-  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin };
+  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente };
 
   return (
     <div className="coque admin-espace">
@@ -250,6 +250,12 @@ function VueTableau({ commerces, ctx }) {
           <div className="carte kpi"><p className="petit muet">Suspendus</p><p className="kpi-valeur">{compte('suspendu')}</p><p className="sous">accès bloqué</p></div>
           <div className="carte kpi"><p className="petit muet">Encaissé ce mois</p><p className="kpi-valeur petit" style={{ fontSize: 17 }}>{parDevise(duMois)}</p><p className="sous">{duMois.length} paiement(s)</p></div>
         </div>
+        {ctx.avisAttente > 0 && (
+          <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap' }}>
+            <span className="grandit"><b>{ctx.avisAttente} avis de commerçant{ctx.avisAttente > 1 ? 's' : ''} à relire</b> avant publication sur le site.</span>
+            <button className="btn petit" onClick={() => { ctx.allerA('avis'); window.scrollTo(0, 0); }}>Relire les avis</button>
+          </div>
+        )}
         <div className="grille-ecran deux" style={{ marginTop: 16 }}>
           <div className="carte">
             <h3>À relancer</h3>
@@ -547,6 +553,7 @@ function VueAvis({ ctx }) {
       <EnTeteAdmin surTitre="Avis des gérants sur Kaislo" titre="Avis" />
       <div className="contenu pile" style={{ maxWidth: 760 }}>
         <p className="petit muet">Seuls les avis que vous publiez ici apparaissent sur le site (prénom, initiale, ville, activité). Ne modifiez jamais le texte : publiez ou refusez.</p>
+        {liste && <p className="petit"><b>{liste.length}</b> avis reçu{liste.length > 1 ? 's' : ''}{liste.length ? <> · note moyenne <b>{(liste.reduce((t, a) => t + a.note, 0) / liste.length).toFixed(1).replace('.', ',')} / 5</b></> : null}. Un avis arrive ici dès qu’un gérant l’envoie depuis l’application (Compte → Donner mon avis sur Kaislo) ; vous recevez aussi un e-mail.</p>}
         <Puces enveloppe options={[['attente', `À relire (${nb('attente')})`], ['publie', `Publiés (${nb('publie')})`], ['refuse', `Refusés (${nb('refuse')})`], ['tous', 'Tous']]} valeur={filtre} surChanger={setFiltre} />
         {message && <p className="alerte">{message}</p>}
         {!liste ? <p className="muet petit">Chargement…</p> : !vus.length ? <p className="muet petit">Aucun avis ici pour le moment.</p> : vus.map((a) => (

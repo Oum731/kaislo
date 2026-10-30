@@ -12,6 +12,7 @@ import { historiqueCaisse } from '@/lib/donnees/cloture';
 import { formatJourLong, formatDate, formatHeure } from '@/lib/utils/format';
 import { Icone, Segment } from '@/components/ui';
 import { EnTete } from '../EnTete';
+import InvitationAvis from '../InvitationAvis';
 import { etatAbonnement } from '@/lib/donnees/abonnement';
 import { CONTACT_WHATSAPP } from '@/config';
 import { tr, tt } from '@/lib/i18n';
@@ -48,6 +49,7 @@ export default function Accueil() {
       <div className="contenu">
         <BandeauAbonnement />
         <PremiersPas />
+        <InvitationAvis />
         <div className="ligne" style={{ maxWidth: 620, gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
           <Segment options={[['jour', tr('Jour')], ['semaine', tr('Semaine')], ['mois', tr('Mois')], ['annee', tr('Année')]]} valeur={periode} surChanger={(p) => { setPeriode(p); setBarre(null); }} />
