@@ -87,6 +87,7 @@ table.res td:first-child{width:36px;color:var(--muted)}
 /* ---------- HUD ---------- */
 .hud{position:absolute;font-weight:600}
 .hud .lab{font-size:13px;letter-spacing:.3em;color:var(--cyan)}
+.hud .lab svg.li{display:block}#hTR .lab svg.li{margin-left:auto}
 .hud .val{font-size:34px;letter-spacing:.04em;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.7)}
 #hTL{left:2.2vw;top:3vh;border-top:1px solid var(--line);padding-top:4px}
 #hTR{right:2.2vw;top:3vh;text-align:right;border-top:1px solid var(--line);padding-top:4px}
@@ -139,7 +140,8 @@ body.touch #hKeys,body.touch #hBoard,body.touch #hBL{display:none}
 body.touch #hBR{left:50%;right:auto;transform:translateX(-50%) scale(.5);transform-origin:bottom center;bottom:2px}
 body.touch #hWeather{display:none}
 body.touch #hGap{display:none}
-#hTL{top:5.5vh!important}#hTR{top:5.5vh!important}#hBoard{top:21vh!important}#hWeather{top:21vh!important}
+#hTL{top:5.5vh!important}#hTR{top:5.5vh!important}#hBoard{top:30vh!important}#hWeather{top:31vh!important}
+@media (max-height:640px){#hBR{transform:scale(.66);transform-origin:bottom right}#hBoard{top:30vh!important;font-size:13px}}
 @media (max-height:520px){.logo{font-size:36px!important}.menu-list{top:24vh!important;gap:6px}.menu-list button{padding:7px 14px!important;font-size:17px!important}
   #hTL .val,#hTR .val{font-size:24px}#hBR{transform:scale(.7);transform-origin:bottom right}}
 </style>
@@ -192,8 +194,8 @@ body.touch #hGap{display:none}
 
   <!-- HUD -->
   <section id="hud" class="screen hidden">
-    <div class="hud" id="hTL"><div class="lab">TEMPS</div><div class="val" id="hTime">0:00.000</div><div class="lab" style="margin-top:6px">MEILLEUR</div><div class="val" id="hBest" style="font-size:26px">--:--.---</div></div>
-    <div class="hud" id="hTR"><div class="lab">POSITION</div><div class="val" id="hPos">6/12</div><div class="lab" style="margin-top:6px">TOUR</div><div class="val" id="hLap" style="font-size:26px">1/3</div></div>
+    <div class="hud" id="hTL"><div class="lab" ><svg class="li" viewBox="0 0 48 48" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Temps"><title>Temps</title><circle cx="24" cy="27" r="14"/><path d="M24 27V18M19 6h10M24 6v7M38 12l-3 3"/></svg></div><div class="val" id="hTime">0:00.000</div><div class="lab" style="margin-top:6px"><svg class="li" viewBox="0 0 48 48" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Meilleur tour"><title>Meilleur tour</title><path d="M14 8h20v10a10 10 0 0 1-20 0zM14 12H7v3a7 7 0 0 0 7 7M34 12h7v3a7 7 0 0 1-7 7M24 28v8M16 40h16M19 36h10"/></svg></div><div class="val" id="hBest" style="font-size:26px">--:--.---</div></div>
+    <div class="hud" id="hTR"><div class="lab" ><svg class="li" viewBox="0 0 48 48" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Position"><title>Position</title><path d="M12 6v38"/><path d="M12 8h26l-6 9 6 9H12"/></svg></div><div class="val" id="hPos">6/12</div><div class="lab" style="margin-top:6px"><svg class="li" viewBox="0 0 48 48" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Tour"><title>Tour</title><path d="M38 20a14 14 0 1 0 2 8"/><path d="M40 8v12H28"/></svg></div><div class="val" id="hLap" style="font-size:26px">1/3</div></div>
     <div class="hud" id="hBoard"></div>
     <div class="hud" id="hWeather"></div>
     <div class="hud" id="hGap"></div>
