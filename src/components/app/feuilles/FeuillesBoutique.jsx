@@ -169,6 +169,8 @@ export function FeuilleCommandesEnLigne() {
   const [liste, setListe] = useState(null);
   const [erreur, setErreur] = useState('');
   const [message, setMessage] = useState('');
+  const [edition, setEdition] = useState(null); // commande en cours de modification : { id, nom, telephone, adresse, note, quantites: [..] }
+  const [modifiees, setModifiees] = useState([]); // commandes modifiées pendant cette ouverture : on propose de prévenir le client
 
   const charger = () => (demo
     ? import('@/lib/donnees/boutique-demo').then((m) => m.commandesDemo(s.d.commerce.id)).then(setListe)
@@ -186,6 +188,33 @@ export function FeuilleCommandesEnLigne() {
       const r = await appelApi('POST', '/commandes-en-ligne', { id: c.id, statut }, s.jetonServeur());
       setListe((l) => l.map((x) => (x.id === c.id ? r.commande : x)));
     } catch (e) { setErreur(messageErreur(e)); }
+  };
+
+  const modifiable = (c) => !['livree', 'annulee'].includes(c.statut);
+  const commencerModification = (c) => setEdition({ id: c.id, nom: c.client.nom, telephone: c.client.telephone, adresse: c.client.adresse || '', note: c.note || '', quantites: c.lignes.map((l) => l.quantite) });
+  const enregistrerModification = async () => {
+    setErreur('');
+    const e = edition;
+    if (e.quantites.every((q) => q === 0)) return setErreur(tr('Il doit rester au moins un article : pour tout retirer, annulez la commande.'));
+    const corps = { id: e.id, client: { nom: e.nom.trim(), telephone: e.telephone.trim(), adresse: e.adresse.trim() }, note: e.note.trim(), lignes: e.quantites.map((quantite, index) => ({ index, quantite })) };
+    try {
+      if (demo) {
+        const m = await import('@/lib/donnees/boutique-demo');
+        setListe(await m.modifierCommandeDemo(s.d.commerce.id, corps));
+      } else {
+        const r = await appelApi('POST', '/commandes-en-ligne', corps, s.jetonServeur());
+        setListe((l) => l.map((x) => (x.id === e.id ? r.commande : x)));
+      }
+      setModifiees((l) => [...l, e.id]);
+      setEdition(null);
+      setMessage(tr('Commande modifiée. Prévenez le client avec le bouton ci-dessous.'));
+    } catch (err) { setErreur(messageErreur(err)); }
+  };
+  const annuler = async (c) => {
+    if (!confirm(tr('Annuler la commande n° {0} de {1} ?', [c.numero, c.client.nom]))) return;
+    await changer(c, 'annulee');
+    setEdition(null);
+    setMessage(tr('Commande annulée. Prévenez le client avec le bouton « Écrire au client ».'));
   };
 
   // Reprend les articles dans la caisse : le vendeur encaisse comme d'habitude (stock et comptes du soir restent justes)
@@ -226,27 +255,62 @@ export function FeuilleCommandesEnLigne() {
               <span className={'badge' + (c.statut === 'nouvelle' ? ' safran' : c.statut === 'annulee' ? ' gris' : '')}>{libelleStatut(c.statut)}</span>
             </div>
             <p className="tres-petit muet">{formatDate(c.creeLe)} {formatHeure(c.creeLe)}</p>
-            <p className="petit"><b>{c.client.nom}</b> · {c.client.telephone}{c.client.adresse ? ' · ' + c.client.adresse : ''}</p>
-            <ul className="petit" style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
-              {c.lignes.map((l, i) => {
-                const produit = s.d.produits.find((p) => p.id === String(l.produitId).replace(/:demi$/, ''));
-                return (
-                  <li key={i} className="ligne-commande-photo">
-                    <ImageStockee reference={produit?.image} className="mini-photo" alt={l.nom} secours={<span className="mini-photo mini-photo-vide" aria-hidden="true">{produit?.emoji || '🛍️'}</span>} />
-                    <span>{l.quantite} × {l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} : {formatPrix(l.total, dev)}</span>
-                  </li>
-                );
-              })}
-            </ul>
-            {c.note && <p className="petit muet">{tr('Note : {0}', [c.note])}</p>}
-            <p><b>{tr('Total : {0}', [formatPrix(c.total, c.devise)])}</b></p>
-            <div className="grille-2">
-              <a className="btn secondaire" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, TEXTE_STATUT[c.statut](c, nom))}><Icone nom="whatsapp" /> {tr('Écrire au client')}</a>
-              <button className="btn" onClick={() => ouvrirDansCaisse(c)}><Icone nom="caisse" /> {tr('Ouvrir dans la caisse')}</button>
-            </div>
-            <div className="puces enveloppe">
-              {STATUTS_COMMANDE.map(([id]) => <button key={id} className={'puce' + (c.statut === id ? ' actif' : '')} onClick={() => c.statut !== id && changer(c, id)}>{libelleStatut(id)}</button>)}
-            </div>
+            {edition?.id === c.id ? (
+              <div className="pile">
+                <label className="champ"><span>{tr('Nom du client')}</span><input value={edition.nom} onChange={(e) => setEdition({ ...edition, nom: e.target.value })} /></label>
+                <ChampTelephone libelle={tr('Téléphone du client')} pays={pays} valeur={edition.telephone} surChanger={(v) => setEdition({ ...edition, telephone: v })} verifier={!demo} />
+                <label className="champ"><span>{tr('Adresse de livraison')}</span><input value={edition.adresse} onChange={(e) => setEdition({ ...edition, adresse: e.target.value })} /></label>
+                <label className="champ"><span>{tr('Note')}</span><input value={edition.note} maxLength={300} onChange={(e) => setEdition({ ...edition, note: e.target.value })} /></label>
+                {c.lignes.map((l, i) => (
+                  <div key={i} className="ligne espace" style={{ opacity: edition.quantites[i] === 0 ? 0.5 : 1 }}>
+                    <span className="petit grandit">{l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} · {formatPrix(l.prixUnitaire, c.devise)}</span>
+                    <span className="ligne" style={{ gap: 6 }}>
+                      <button type="button" className="icone-btn" aria-label={tr('Moins')} onClick={() => setEdition({ ...edition, quantites: edition.quantites.map((q, j) => (j === i ? Math.max(0, q - 1) : q)) })}>−</button>
+                      <b>{edition.quantites[i]}</b>
+                      <button type="button" className="icone-btn" aria-label={tr('Plus')} onClick={() => setEdition({ ...edition, quantites: edition.quantites.map((q, j) => (j === i ? Math.min(99, q + 1) : q)) })}>+</button>
+                    </span>
+                  </div>
+                ))}
+                <p className="tres-petit muet">{tr('Mettez la quantité à 0 pour retirer un article. Le total est recalculé avec les prix de la commande.')}</p>
+                <div className="grille-2">
+                  <button className="btn secondaire" onClick={() => setEdition(null)}>{tr('Fermer sans changer')}</button>
+                  <button className="btn" onClick={enregistrerModification}>{tr('Enregistrer')}</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="petit"><b>{c.client.nom}</b> · {c.client.telephone}{c.client.adresse ? ' · ' + c.client.adresse : ''}</p>
+                <ul className="petit" style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
+                  {c.lignes.map((l, i) => {
+                    const produit = s.d.produits.find((p) => p.id === String(l.produitId).replace(/:demi$/, ''));
+                    return (
+                      <li key={i} className="ligne-commande-photo">
+                        <ImageStockee reference={produit?.image} className="mini-photo" alt={l.nom} secours={<span className="mini-photo mini-photo-vide" aria-hidden="true">{produit?.emoji || '🛍️'}</span>} />
+                        <span>{l.quantite} × {l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} : {formatPrix(l.total, dev)}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {c.note && <p className="petit muet">{tr('Note : {0}', [c.note])}</p>}
+                <p><b>{tr('Total : {0}', [formatPrix(c.total, c.devise)])}</b></p>
+                <div className="grille-2">
+                  <a className="btn secondaire" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, TEXTE_STATUT[c.statut](c, nom))}><Icone nom="whatsapp" /> {tr('Écrire au client')}</a>
+                  <button className="btn" onClick={() => ouvrirDansCaisse(c)}><Icone nom="caisse" /> {tr('Ouvrir dans la caisse')}</button>
+                </div>
+                {modifiees.includes(c.id) && (
+                  <a className="btn secondaire bloc" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, tr('Bonjour {0}, c’est {1}. Votre commande n° {2} a été modifiée. Nouveau total : {3}. Dites-nous si cela vous convient.', [c.client.nom, nom, c.numero, formatPrix(c.total, c.devise)]))}><Icone nom="whatsapp" /> {tr('Prévenir le client de la modification')}</a>
+                )}
+                {modifiable(c) && (
+                  <div className="grille-2">
+                    <button className="btn secondaire" onClick={() => commencerModification(c)}>{tr('Modifier la commande')}</button>
+                    <button className="btn danger" onClick={() => annuler(c)}>{tr('Annuler la commande')}</button>
+                  </div>
+                )}
+                <div className="puces enveloppe">
+                  {STATUTS_COMMANDE.map(([id]) => <button key={id} className={'puce' + (c.statut === id ? ' actif' : '')} onClick={() => c.statut !== id && changer(c, id)}>{libelleStatut(id)}</button>)}
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>

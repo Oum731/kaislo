@@ -137,6 +137,33 @@ test('migration : les clients des commandes déjà reçues entrent dans le carne
   assert.equal(((await api('GET', '/donnees', null, gerant.jeton)).elements).filter((e) => e.type === 'clients' && !e.supprime).length, 2);
 });
 
+test('le commerçant modifie une commande déjà validée : quantités, client, total recalculé ; livrée ou annulée, plus de modification', async () => {
+  const liste = await api('GET', '/commandes-en-ligne', null, gerant.jeton);
+  const c = liste.commandes.find((x) => x.client.nom === 'Awa Nouvelle');
+  assert.ok(c, JSON.stringify(liste.commandes.map((x) => x.client.nom)));
+  const prix = c.lignes[0].prixUnitaire;
+  assert.equal(c.lignes[0].quantite, 3);
+  const modif = await api('POST', '/commandes-en-ligne', { id: c.id, client: { nom: 'Awa Corrigée', telephone: '0705060708', adresse: 'Marcory' }, note: 'Livrer après 18 h', lignes: [{ index: 0, quantite: 1 }] }, gerant.jeton);
+  assert.equal(modif.statut, 200, JSON.stringify(modif));
+  assert.equal(modif.commande.lignes[0].quantite, 1);
+  assert.equal(modif.commande.total, prix);
+  assert.equal(modif.commande.client.nom, 'Awa Corrigée');
+  assert.equal(modif.commande.client.adresse, 'Marcory');
+  assert.equal(modif.commande.note, 'Livrer après 18 h');
+  // Retirer tous les articles : refusé (on annule plutôt)
+  const vide = await api('POST', '/commandes-en-ligne', { id: c.id, client: { nom: 'Awa', telephone: '0705060708', adresse: 'Marcory' }, lignes: [{ index: 0, quantite: 0 }] }, gerant.jeton);
+  assert.equal(vide.statut, 400);
+  // Quantité folle : refusée
+  assert.equal((await api('POST', '/commandes-en-ligne', { id: c.id, client: { nom: 'Awa', telephone: '0705060708', adresse: 'Marcory' }, lignes: [{ index: 0, quantite: 500 }] }, gerant.jeton)).statut, 400);
+  // Annulation, puis plus de modification possible
+  const annul = await api('POST', '/commandes-en-ligne', { id: c.id, statut: 'annulee' }, gerant.jeton);
+  assert.equal(annul.commande.statut, 'annulee');
+  const apres = await api('POST', '/commandes-en-ligne', { id: c.id, client: { nom: 'Awa', telephone: '0705060708', adresse: 'Marcory' }, lignes: [{ index: 0, quantite: 2 }] }, gerant.jeton);
+  assert.equal(apres.statut, 400);
+  // La commande d'un autre commerce reste hors d'atteinte
+  assert.equal((await api('POST', '/commandes-en-ligne', { id: 'cl_inconnue', statut: 'annulee' }, gerant.jeton)).statut, 404);
+});
+
 test('commande par le lien public : toujours le prix de détail, jamais le gros', async () => {
   const r = await api('POST', '/public/commande', { b: 'depot-awa', client, lignes: [{ produitId: 'p1', quantite: 1 }] });
   assert.equal(r.statut, 201);
