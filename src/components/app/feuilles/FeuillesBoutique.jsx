@@ -13,7 +13,7 @@ import { grosDisponible } from '@/lib/donnees/gros';
 import { tr } from '@/lib/i18n';
 import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
 import { lienWhatsApp } from '@/lib/donnees/whatsapp';
-import { choixDepuisCommande, STATUTS_COMMANDE, articlesAPublier, messageAnnuaire } from '@/lib/donnees/boutique';
+import { choixDepuisCommande, STATUTS_COMMANDE, articlesAPublier, messageAnnuaire, venteDeCommande } from '@/lib/donnees/boutique';
 import { chemin } from '@/config';
 
 const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
@@ -171,6 +171,7 @@ export function FeuilleCommandesEnLigne() {
   const [message, setMessage] = useState('');
   const [edition, setEdition] = useState(null); // commande en cours de modification : { id, nom, telephone, adresse, note, quantites: [..] }
   const [modifiees, setModifiees] = useState([]); // commandes modifiées pendant cette ouverture : on propose de prévenir le client
+  const [annulation, setAnnulation] = useState(null); // annulation d'une commande déjà encaissée : { id, pin } (le code du gérant annule aussi la vente)
 
   const charger = () => (demo
     ? import('@/lib/donnees/boutique-demo').then((m) => m.commandesDemo(s.d.commerce.id)).then(setListe)
@@ -193,34 +194,61 @@ export function FeuilleCommandesEnLigne() {
   // Articles qu'on peut ajouter à une commande : actifs, avec un prix, sans option obligatoire à choisir (ceux-là se prennent à la caisse)
   const produitsAjoutables = s.d.produits.filter((p) => p.actif !== false && Number(p.prix) > 0 && !(p.groupes || []).some((g) => g.obligatoire));
   const modifiable = (c) => !['livree', 'annulee'].includes(c.statut);
-  const commencerModification = (c) => setEdition({ id: c.id, nom: c.client.nom, telephone: c.client.telephone, adresse: c.client.adresse || '', note: c.note || '', quantites: c.lignes.map((l) => l.quantite), ajouts: [] });
-  const enregistrerModification = async () => {
+  const commencerModification = (c) => setEdition({ id: c.id, nom: c.client.nom, telephone: c.client.telephone, adresse: c.client.adresse || '', note: c.note || '', quantites: c.lignes.map((l) => l.quantite), ajouts: [], pin: '' });
+  // Vente en caisse issue de cette commande (ticket déjà émis), si elle n'est pas annulée
+  const venteDe = (c) => venteDeCommande(s.d.ventes, c.id);
+  const enregistrerModification = async (refaire = false) => {
     setErreur('');
     const e = edition;
     if (e.quantites.every((q) => q === 0) && !e.ajouts.length) return setErreur(tr('Il doit rester au moins un article : pour tout retirer, annulez la commande.'));
+    const avant = liste.find((x) => x.id === e.id);
+    const vente = venteDe(avant);
+    // Refaire la vente : le code du gérant est vérifié AVANT de toucher à la commande
+    if (refaire && vente && !(await s.verifierPinGerant(e.pin || ''))) return s.message(tr('Code PIN du gérant incorrect'), 'erreur');
     const corps = { id: e.id, client: { nom: e.nom.trim(), telephone: e.telephone.trim(), adresse: e.adresse.trim() }, note: e.note.trim(), lignes: e.quantites.map((quantite, index) => ({ index, quantite })), ajouts: e.ajouts.map((a) => ({ produitId: a.produitId, quantite: a.quantite })) };
+    let modifiee;
     try {
       if (demo) {
         const m = await import('@/lib/donnees/boutique-demo');
-        setListe(await m.modifierCommandeDemo(s.d.commerce.id, corps));
+        const nouvelle = await m.modifierCommandeDemo(s.d.commerce.id, corps);
+        setListe(nouvelle);
+        modifiee = nouvelle.find((x) => x.id === e.id);
       } else {
         const r = await appelApi('POST', '/commandes-en-ligne', corps, s.jetonServeur());
         setListe((l) => l.map((x) => (x.id === e.id ? r.commande : x)));
+        modifiee = r.commande;
       }
-      setModifiees((l) => [...l, e.id]);
-      setEdition(null);
-      setMessage(tr('Commande modifiée. Prévenez le client avec le bouton ci-dessous.'));
-    } catch (err) { setErreur(messageErreur(err)); }
+    } catch (err) { return setErreur(messageErreur(err)); }
+    setModifiees((l) => [...l, e.id]);
+    setEdition(null);
+    if (refaire && vente) {
+      // Ancienne vente annulée (stock et totaux remis à jour), puis la commande corrigée s'ouvre dans la caisse
+      const ok = await s.annulerVente(vente, e.pin, tr('Commande en ligne n° {0} modifiée', [modifiee.numero]), { ouvrirTicket: false });
+      if (ok) return ouvrirDansCaisse(modifiee, true);
+      return setMessage(tr('Commande modifiée, mais la vente n° {0} n’a pas pu être annulée.', [vente.numero]));
+    }
+    setMessage(vente ? tr('Commande modifiée. Le ticket n° {0} n’a pas changé : annulez ou refaites la vente si le montant n’est plus le bon.', [vente.numero]) : tr('Commande modifiée. Prévenez le client avec le bouton ci-dessous.'));
   };
   const annuler = async (c) => {
+    if (venteDe(c)) return setAnnulation({ id: c.id, pin: '' }); // déjà encaissée : on demande le code du gérant pour annuler aussi la vente
     if (!confirm(tr('Annuler la commande n° {0} de {1} ?', [c.numero, c.client.nom]))) return;
     await changer(c, 'annulee');
     setEdition(null);
     setMessage(tr('Commande annulée. Prévenez le client avec le bouton « Écrire au client ».'));
   };
+  const annulerAvecVente = async (c) => {
+    const vente = venteDe(c);
+    const ok = await s.annulerVente(vente, annulation.pin, tr('Commande en ligne n° {0} annulée', [c.numero]), { ouvrirTicket: false });
+    if (!ok) return setAnnulation({ ...annulation, pin: '' }); // message déjà affiché
+    await changer(c, 'annulee');
+    setAnnulation(null);
+    setMessage(tr('Commande et vente n° {0} annulées. Prévenez le client avec le bouton « Écrire au client ».', [vente.numero]));
+  };
 
   // Reprend les articles dans la caisse : le vendeur encaisse comme d'habitude (stock et comptes du soir restent justes)
-  const ouvrirDansCaisse = (c) => {
+  const ouvrirDansCaisse = (c, refaite = false) => {
+    const deja = venteDe(c);
+    if (deja && !refaite && !confirm(tr('Cette commande a déjà été encaissée (ticket n° {0}). L’encaisser une deuxième fois ?', [deja.numero]))) return;
     const manquants = [];
     s.viderPanier();
     if (c.gros) s.choisirModeGros(true); // commande de grossiste : au carton, au prix de gros
@@ -230,7 +258,7 @@ export function FeuilleCommandesEnLigne() {
       if (!produit) { manquants.push(l.nom); continue; }
       s.ajouterAuPanier(produit, choixDepuisCommande(produit, l.optionIds || []), l.quantite, { demi });
     }
-    useKaislo.setState({ aDistance: true, telephoneDistance: c.client.telephone });
+    useKaislo.setState({ aDistance: true, telephoneDistance: c.client.telephone, commandeEnLigne: { id: c.id, numero: c.numero } });
     if (c.statut === 'nouvelle') changer(c, 'confirmee');
     s.allerA('caisse');
     if (manquants.length) s.message(tr('Article(s) introuvable(s) dans votre catalogue : {0}', [manquants.join(', ')]), 'erreur');
@@ -299,8 +327,15 @@ export function FeuilleCommandesEnLigne() {
                 <p className="tres-petit muet">{tr('Mettez la quantité à 0 pour retirer un article. Les articles déjà commandés gardent leur prix ; un article ajouté prend son prix du jour. Le total est recalculé à l’enregistrement.')}</p>
                 <div className="grille-2">
                   <button className="btn secondaire" onClick={() => setEdition(null)}>{tr('Fermer sans changer')}</button>
-                  <button className="btn" onClick={enregistrerModification}>{tr('Enregistrer')}</button>
+                  <button className="btn" onClick={() => enregistrerModification(false)}>{tr('Enregistrer')}</button>
                 </div>
+                {venteDe(c) && (
+                  <div className="carte pile">
+                    <p className="petit"><b>{tr('Déjà encaissée : ticket n° {0}', [venteDe(c).numero])}</b> · {tr('Enregistrer ne change pas le ticket. Pour que la vente corresponde à la commande modifiée, refaites-la :')}</p>
+                    <label className="champ"><span>{tr('Code PIN du gérant')}</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={4} value={edition.pin} onChange={(e) => setEdition({ ...edition, pin: e.target.value })} placeholder="••••" /></label>
+                    <button className="btn danger bloc" disabled={edition.pin.length < 4} onClick={() => enregistrerModification(true)}>{tr('Enregistrer et refaire la vente')}</button>
+                  </div>
+                )}
               </div>
             ) : (
               <>
@@ -318,6 +353,13 @@ export function FeuilleCommandesEnLigne() {
                 </ul>
                 {c.note && <p className="petit muet">{tr('Note : {0}', [c.note])}</p>}
                 <p><b>{tr('Total : {0}', [formatPrix(c.total, c.devise)])}</b></p>
+                {venteDe(c) && (
+                  <div className="info-verte petit pile">
+                    <span><b>{tr('Déjà encaissée : ticket n° {0}', [venteDe(c).numero])}</b> · {formatPrix(venteDe(c).total, c.devise)}</span>
+                    {Math.abs((venteDe(c).sousTotal ?? venteDe(c).total) - c.total) > 0.005 && <span className="alerte">{tr('Le total de la commande a changé depuis l’encaissement. Annulez le ticket ou refaites la vente.')}</span>}
+                    <button type="button" className="lien" onClick={() => s.ouvrir('ticket', { vente: venteDe(c) })}>{tr('Voir le ticket')}</button>
+                  </div>
+                )}
                 <div className="grille-2">
                   <a className="btn secondaire" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, TEXTE_STATUT[c.statut](c, nom))}><Icone nom="whatsapp" /> {tr('Écrire au client')}</a>
                   <button className="btn" onClick={() => ouvrirDansCaisse(c)}><Icone nom="caisse" /> {tr('Ouvrir dans la caisse')}</button>
@@ -325,7 +367,18 @@ export function FeuilleCommandesEnLigne() {
                 {modifiees.includes(c.id) && (
                   <a className="btn secondaire bloc" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, tr('Bonjour {0}, c’est {1}. Votre commande n° {2} a été modifiée. Nouveau total : {3}. Dites-nous si cela vous convient.', [c.client.nom, nom, c.numero, formatPrix(c.total, c.devise)]))}><Icone nom="whatsapp" /> {tr('Prévenir le client de la modification')}</a>
                 )}
-                {modifiable(c) && (
+                {annulation?.id === c.id && (
+                  <div className="carte pile">
+                    <b>{tr('Annuler la commande et la vente n° {0}', [venteDe(c)?.numero])}</b>
+                    <p className="tres-petit muet">{tr('La vente reste dans l’historique, marquée « Annulée » ; les articles reviennent dans le stock.')}</p>
+                    <label className="champ"><span>{tr('Code PIN du gérant')}</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={4} value={annulation.pin} onChange={(e) => setAnnulation({ ...annulation, pin: e.target.value })} placeholder="••••" /></label>
+                    <div className="grille-2">
+                      <button className="btn secondaire" onClick={() => setAnnulation(null)}>{tr('Fermer sans changer')}</button>
+                      <button className="btn danger" disabled={annulation.pin.length < 4} onClick={() => annulerAvecVente(c)}>{tr('Annuler commande et vente')}</button>
+                    </div>
+                  </div>
+                )}
+                {modifiable(c) && annulation?.id !== c.id && (
                   <div className="grille-2">
                     <button className="btn secondaire" onClick={() => commencerModification(c)}>{tr('Modifier la commande')}</button>
                     <button className="btn danger" onClick={() => annuler(c)}>{tr('Annuler la commande')}</button>

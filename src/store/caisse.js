@@ -27,6 +27,7 @@ export const trancheCaisse = (set, get) => ({
   // commande d'un client qui n'est pas sur place (reçu envoyé par WhatsApp)
   aDistance: false,
   telephoneDistance: '',
+  commandeEnLigne: null, // commande de la boutique en ligne qu'on est en train d'encaisser : { id, numero } (gardée sur la vente)
 
   // --- Panier ---
   // plus.demi : un demi-carton (mode gros seulement, article qui a un prix de demi-carton)
@@ -85,7 +86,7 @@ export const trancheCaisse = (set, get) => ({
   },
 
   viderPanier() {
-    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
+    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '', commandeEnLigne: null });
   },
 
   definirRemise(remise) {
@@ -143,6 +144,7 @@ export const trancheCaisse = (set, get) => ({
       table: commande?.table || null,
       // Client à distance : on garde son numéro pour lui envoyer le reçu par WhatsApp
       aDistance: get().aDistance || undefined,
+      ...(get().commandeEnLigne ? { commandeEnLigne: get().commandeEnLigne } : {}), // lien vente ↔ commande en ligne (modifier ou annuler l'une sait retrouver l'autre)
       telephoneClient: (get().aDistance && get().telephoneDistance.trim()) || client?.telephone || undefined,
       lignes: panier.map(({ envoyee, ...l }) => l),
       ...(panier.some((l) => l.gros) ? { gros: true } : {}), // vente avec des articles au carton (badge dans l'historique)
@@ -160,7 +162,7 @@ export const trancheCaisse = (set, get) => ({
       // La table est libérée
       commandes: commande ? d.commandes.filter((c) => c.id !== commande.id) : d.commandes,
     }));
-    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '' });
+    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '', commandeEnLigne: null });
     get().ouvrir('ticket', { vente, nouvelle: true });
     if (typeof navigator !== 'undefined') navigator.vibrate?.([30, 50, 30]);
     // Impression automatique seulement si une imprimante est connectée ET si l'option est active (facultatif)
@@ -193,7 +195,8 @@ export const trancheCaisse = (set, get) => ({
     }
   },
 
-  async annulerVente(vente, pin, motif) {
+  // ouvrirTicket : false quand l'annulation fait partie d'un autre geste (commande en ligne annulée ou refaite)
+  async annulerVente(vente, pin, motif, { ouvrirTicket = true } = {}) {
     const gerant = await get().verifierPinGerant(pin);
     if (gerant === false) return false; // message déjà affiché
     if (!gerant) {
@@ -205,7 +208,7 @@ export const trancheCaisse = (set, get) => ({
       ventes: d.ventes.map((v) => (v.id === vente.id ? annulee : v)),
       // Les articles reviennent dans le stock tout seuls : une vente annulée ne compte plus dans le calcul du stock
     }));
-    get().ouvrir('ticket', { vente: annulee });
+    if (ouvrirTicket) get().ouvrir('ticket', { vente: annulee });
     get().message(tr('Vente n° {0} annulée', [vente.numero]));
     return true;
   },
