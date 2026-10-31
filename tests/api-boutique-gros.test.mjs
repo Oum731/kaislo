@@ -150,6 +150,29 @@ test('le commerçant modifie une commande déjà validée : quantités, client, 
   assert.equal(modif.commande.client.nom, 'Awa Corrigée');
   assert.equal(modif.commande.client.adresse, 'Marcory');
   assert.equal(modif.commande.note, 'Livrer après 18 h');
+  // Commande de gros : pas d'ajout (les prix de gros ne se recalculent pas ici)
+  const identite = { nom: 'Awa Corrigée', telephone: '0705060708', adresse: 'Marcory' };
+  assert.equal((await api('POST', '/commandes-en-ligne', { id: c.id, client: identite, lignes: [{ index: 0, quantite: 1 }], ajouts: [{ produitId: 'p2', quantite: 1 }] }, gerant.jeton)).statut, 400);
+  // Commande de détail : ajout d'un article du catalogue, au prix du jour, total recalculé ; article inconnu ou quantité folle refusés
+  const detail = await api('POST', '/public/commande', { b: 'depot-awa', client: { nom: 'Yao Détail', telephone: '0708080808', adresse: 'Yopougon' }, lignes: [{ produitId: 'p1', quantite: 2 }] });
+  assert.equal(detail.statut, 201, JSON.stringify(detail));
+  const d = (await api('GET', '/commandes-en-ligne', null, gerant.jeton)).commandes.find((x) => x.client.nom === 'Yao Détail');
+  const idd = { nom: 'Yao Détail', telephone: '0708080808', adresse: 'Yopougon' };
+  const garde = [{ index: 0, quantite: 1 }];
+  const avecAjout = await api('POST', '/commandes-en-ligne', { id: d.id, client: idd, lignes: garde, ajouts: [{ produitId: 'p2', quantite: 2 }] }, gerant.jeton);
+  assert.equal(avecAjout.statut, 200, JSON.stringify(avecAjout));
+  assert.equal(avecAjout.commande.lignes.length, 2);
+  const ajoutee = avecAjout.commande.lignes[1];
+  assert.equal(ajoutee.produitId, 'p2');
+  assert.equal(ajoutee.prixUnitaire, 300);
+  assert.equal(ajoutee.total, 600);
+  assert.equal(avecAjout.commande.total, 500 + 600);
+  assert.equal((await api('POST', '/commandes-en-ligne', { id: d.id, client: idd, lignes: garde, ajouts: [{ produitId: 'inconnu', quantite: 1 }] }, gerant.jeton)).statut, 400);
+  assert.equal((await api('POST', '/commandes-en-ligne', { id: d.id, client: idd, lignes: garde, ajouts: [{ produitId: 'p2', quantite: 0 }] }, gerant.jeton)).statut, 400);
+  // Retirer le premier article en gardant l'ajouté : accepté
+  const sansPremier = await api('POST', '/commandes-en-ligne', { id: d.id, client: idd, lignes: [{ index: 0, quantite: 0 }, { index: 1, quantite: 2 }] }, gerant.jeton);
+  assert.equal(sansPremier.statut, 200, JSON.stringify(sansPremier));
+  assert.deepEqual(sansPremier.commande.lignes.map((l) => l.produitId), ['p2']);
   // Retirer tous les articles : refusé (on annule plutôt)
   const vide = await api('POST', '/commandes-en-ligne', { id: c.id, client: { nom: 'Awa', telephone: '0705060708', adresse: 'Marcory' }, lignes: [{ index: 0, quantite: 0 }] }, gerant.jeton);
   assert.equal(vide.statut, 400);

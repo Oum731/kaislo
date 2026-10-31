@@ -228,8 +228,9 @@ function routeCommandesEnLigneLire(): never
 
 // POST /api/commandes-en-ligne
 //   { id, statut }                                          : change le statut (dont « annulee »)
-//   { id, client: {nom, telephone, adresse}, note, lignes: [{ index, quantite }] } : modifie une commande déjà validée
-// Le serveur recalcule le total : les prix des lignes restent ceux du moment de la commande, seule la quantité change (0 = retirer l'article).
+//   { id, client: {nom, telephone, adresse}, note, lignes: [{ index, quantite }], ajouts: [{ produitId, quantite }] } : modifie une commande déjà validée
+// Le serveur recalcule le total : les articles déjà commandés gardent le prix du moment de la commande (quantité 0 = retiré), les articles ajoutés
+// prennent le prix du jour du catalogue.
 function routeCommandesEnLigneStatut(): never
 {
     $u = utilisateurConnecte();
@@ -258,6 +259,31 @@ function routeCommandesEnLigneStatut(): never
             $l['total'] = arrondirMontant((float) $l['prixUnitaire'] * $q, $c['devise']);
             $total += $l['total'];
             $nouvelles[] = $l;
+        }
+        // Articles ajoutés par le commerçant : pris dans son catalogue, au prix du jour (promotion comprise), sans option à choisir
+        $ajouts = array_values(array_filter((array) ($e['ajouts'] ?? []), 'is_array'));
+        if ($ajouts) {
+            if (!empty($c['gros'])) throw new ErreurApi('Ajout impossible sur une commande de gros : les prix de gros ne se recalculent pas ici');
+            if (count($nouvelles) + count($ajouts) > LIGNES_COMMANDE_MAX) throw new ErreurApi('Trop d’articles dans une seule commande');
+            $catalogue = [];
+            foreach (requete("SELECT id, contenu FROM elements WHERE commerce_id = ? AND type = 'produits' AND supprime = 0", [$u['commerce_id']])->fetchAll() as $l) {
+                $p = json_decode($l['contenu'], true);
+                if (is_array($p) && !empty($p['nom']) && isset($p['prix'])) $catalogue[(string) ($p['id'] ?? $l['id'])] = $p;
+            }
+            $slug = requete('SELECT slug FROM boutiques WHERE commerce_id = ?', [$u['commerce_id']])->fetch()['slug'] ?? '';
+            foreach ($ajouts as $a) {
+                $p = $catalogue[(string) ($a['produitId'] ?? '')] ?? null;
+                if (!$p || ($p['actif'] ?? true) === false) throw new ErreurApi('Un article ajouté n’existe plus dans votre catalogue');
+                foreach ((array) ($p['groupes'] ?? []) as $g) if (!empty($g['obligatoire'])) throw new ErreurApi('« ' . $p['nom'] . ' » demande un choix d’options : ajoutez-le depuis la caisse');
+                $q = (int) ($a['quantite'] ?? 0);
+                if ($q < 1 || $q > 99) throw new ErreurApi('Quantité invalide');
+                $prix = arrondirMontant(prixArticle($p), $c['devise']);
+                $image = imagePublique((string) ($p['image'] ?? ''));
+                $ligneTotal = arrondirMontant($prix * $q, $c['devise']);
+                $total += $ligneTotal;
+                $nouvelles[] = ['produitId' => (string) ($p['id'] ?? ''), 'nom' => (string) $p['nom'], 'photo' => $image && $slug ? 'https://' . (domaineSite() ?: 'kaislo.com') . '/api/public/boutique-image?b=' . $slug . '&i=' . $image : null,
+                    'options' => [], 'optionIds' => [], 'quantite' => $q, 'prixUnitaire' => $prix, 'total' => $ligneTotal];
+            }
         }
         if (!$nouvelles) throw new ErreurApi('Il doit rester au moins un article : pour tout retirer, annulez la commande');
         $total = arrondirMontant($total, $c['devise']);

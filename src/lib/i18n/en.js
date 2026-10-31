@@ -2083,10 +2083,12 @@ export const EN = {
   "Nom du client": "Customer name",
   "Téléphone du client": "Customer phone",
   "Adresse de livraison": "Delivery address",
-  "Mettez la quantité à 0 pour retirer un article. Le total est recalculé avec les prix de la commande.": "Set the quantity to 0 to remove an item. The total is recalculated with the order’s prices.",
+  "Mettez la quantité à 0 pour retirer un article. Les articles déjà commandés gardent leur prix ; un article ajouté prend son prix du jour. Le total est recalculé à l’enregistrement.": "Set the quantity to 0 to remove an item. Items already ordered keep their price; an added item takes today’s price. The total is recalculated when you save.",
   "Fermer sans changer": "Close without changes",
   "Bonjour {0}, c’est {1}. Votre commande n° {2} a été modifiée. Nouveau total : {3}. Dites-nous si cela vous convient.": "Hello {0}, this is {1}. Your order no. {2} has been updated. New total: {3}. Let us know if that suits you.",
   "Prévenir le client de la modification": "Tell the customer about the change",
   "Modifier la commande": "Edit the order",
   "Annuler la commande": "Cancel the order",
+  "Ajouté": "Added",
+  "Choisir dans votre catalogue…": "Choose from your catalogue…",
 };

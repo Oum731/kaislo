@@ -66,7 +66,7 @@ export async function changerStatutDemo(commerceId, id, statut) {
 }
 
 /** Modification d'une commande de démo : mêmes règles que l'API (quantité 0 = article retiré, total recalculé). */
-export async function modifierCommandeDemo(commerceId, { id, client, note, lignes }) {
+export async function modifierCommandeDemo(commerceId, { id, client, note, lignes, ajouts = [] }) {
   const liste = (await commandesDemo(commerceId)).map((c) => {
     if (c.id !== id) return c;
     const nouvelles = c.lignes
@@ -75,6 +75,13 @@ export async function modifierCommandeDemo(commerceId, { id, client, note, ligne
         return { ...l, quantite: q, total: l.prixUnitaire * q };
       })
       .filter((l) => l.quantite > 0);
+    const d = chargerCommerce(commerceId);
+    for (const a of ajouts) {
+      const p = d?.produits.find((x) => x.id === a.produitId);
+      if (!p) continue;
+      const prix = prixArticleBoutique({ ...p, groupes: p.groupes || [] }, []);
+      nouvelles.push({ produitId: p.id, nom: p.nom, options: [], optionIds: [], quantite: a.quantite, prixUnitaire: prix, total: prix * a.quantite, photo: null });
+    }
     return { ...c, client: { ...c.client, ...client }, note: note || '', lignes: nouvelles, total: nouvelles.reduce((n, l) => n + l.total, 0) };
   });
   ecrireLocal(cle(commerceId), liste);
