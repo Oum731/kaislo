@@ -65,6 +65,22 @@ export async function changerStatutDemo(commerceId, id, statut) {
   return liste;
 }
 
+/** Modification d'une commande de démo : mêmes règles que l'API (quantité 0 = article retiré, total recalculé). */
+export async function modifierCommandeDemo(commerceId, { id, client, note, lignes }) {
+  const liste = (await commandesDemo(commerceId)).map((c) => {
+    if (c.id !== id) return c;
+    const nouvelles = c.lignes
+      .map((l, i) => {
+        const q = lignes.find((x) => x.index === i)?.quantite ?? l.quantite;
+        return { ...l, quantite: q, total: l.prixUnitaire * q };
+      })
+      .filter((l) => l.quantite > 0);
+    return { ...c, client: { ...c.client, ...client }, note: note || '', lignes: nouvelles, total: nouvelles.reduce((n, l) => n + l.total, 0) };
+  });
+  ecrireLocal(cle(commerceId), liste);
+  return liste;
+}
+
 /** Commande du visiteur sur la vitrine de démo : enregistrée dans l'appareil, au format de l'API. */
 export async function passerCommandeDemo(commerceId, boutique, panier, client, note) {
   const liste = await commandesDemo(commerceId);
