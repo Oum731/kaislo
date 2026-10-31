@@ -226,14 +226,75 @@ function routeCommandesEnLigneLire(): never
     repondre(['ok' => true, 'commandes' => array_map('versCommandeLigne', $liste), 'nouvelles' => $nouvelles]);
 }
 
+// POST /api/commandes-en-ligne
+//   { id, statut }                                          : change le statut (dont « annulee »)
+//   { id, client: {nom, telephone, adresse}, note, lignes: [{ index, quantite }], ajouts: [{ produitId, quantite }] } : modifie une commande déjà validée
+// Le serveur recalcule le total : les articles déjà commandés gardent le prix du moment de la commande (quantité 0 = retiré), les articles ajoutés
+// prennent le prix du jour du catalogue.
 function routeCommandesEnLigneStatut(): never
 {
     $u = utilisateurConnecte();
     $e = entree();
-    $statut = (string) ($e['statut'] ?? '');
-    if (!in_array($statut, STATUTS_COMMANDE, true)) throw new ErreurApi('Statut inconnu');
     $c = requete('SELECT * FROM commandes_en_ligne WHERE id = ? AND commerce_id = ?', [(string) ($e['id'] ?? ''), $u['commerce_id']])->fetch();
     if (!$c) throw new ErreurApi('Commande introuvable', 404);
+    if (array_key_exists('lignes', $e) || array_key_exists('client', $e)) {
+        if (in_array($c['statut'], ['livree', 'annulee'], true)) throw new ErreurApi('Une commande livrée ou annulée ne se modifie plus : changez d’abord son statut');
+        $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
+        $client = is_array($e['client'] ?? null) ? $e['client'] : [];
+        $nom = texte($client, 'nom', 'le nom du client', true, 60);
+        if (mb_strlen($nom) < 2) throw new ErreurApi('Indiquez le nom du client');
+        $tel = telephoneValide(texte($client, 'telephone', 'le numéro du client', true, 40), $commerce['pays'], 'numéro du client');
+        $adresse = texte($client, 'adresse', 'l’adresse de livraison', false, 200);
+        $note = texte($e, 'note', 'la note', false, 300);
+        $lignes = json_decode($c['lignes'], true) ?: [];
+        $quantites = [];
+        foreach ((array) ($e['lignes'] ?? []) as $d) $quantites[(int) ($d['index'] ?? -1)] = (int) ($d['quantite'] ?? 0);
+        $nouvelles = [];
+        $total = 0.0;
+        foreach ($lignes as $i => $l) {
+            $q = $quantites[$i] ?? (int) $l['quantite'];
+            if ($q < 0 || $q > 99) throw new ErreurApi('Quantité invalide');
+            if ($q === 0) continue;
+            $l['quantite'] = $q;
+            $l['total'] = arrondirMontant((float) $l['prixUnitaire'] * $q, $c['devise']);
+            $total += $l['total'];
+            $nouvelles[] = $l;
+        }
+        // Articles ajoutés par le commerçant : pris dans son catalogue, au prix du jour (promotion comprise), sans option à choisir
+        $ajouts = array_values(array_filter((array) ($e['ajouts'] ?? []), 'is_array'));
+        if ($ajouts) {
+            if (!empty($c['gros'])) throw new ErreurApi('Ajout impossible sur une commande de gros : les prix de gros ne se recalculent pas ici');
+            if (count($nouvelles) + count($ajouts) > LIGNES_COMMANDE_MAX) throw new ErreurApi('Trop d’articles dans une seule commande');
+            $catalogue = [];
+            foreach (requete("SELECT id, contenu FROM elements WHERE commerce_id = ? AND type = 'produits' AND supprime = 0", [$u['commerce_id']])->fetchAll() as $l) {
+                $p = json_decode($l['contenu'], true);
+                if (is_array($p) && !empty($p['nom']) && isset($p['prix'])) $catalogue[(string) ($p['id'] ?? $l['id'])] = $p;
+            }
+            $slug = requete('SELECT slug FROM boutiques WHERE commerce_id = ?', [$u['commerce_id']])->fetch()['slug'] ?? '';
+            foreach ($ajouts as $a) {
+                $p = $catalogue[(string) ($a['produitId'] ?? '')] ?? null;
+                if (!$p || ($p['actif'] ?? true) === false) throw new ErreurApi('Un article ajouté n’existe plus dans votre catalogue');
+                foreach ((array) ($p['groupes'] ?? []) as $g) if (!empty($g['obligatoire'])) throw new ErreurApi('« ' . $p['nom'] . ' » demande un choix d’options : ajoutez-le depuis la caisse');
+                $q = (int) ($a['quantite'] ?? 0);
+                if ($q < 1 || $q > 99) throw new ErreurApi('Quantité invalide');
+                $prix = arrondirMontant(prixArticle($p), $c['devise']);
+                $image = imagePublique((string) ($p['image'] ?? ''));
+                $ligneTotal = arrondirMontant($prix * $q, $c['devise']);
+                $total += $ligneTotal;
+                $nouvelles[] = ['produitId' => (string) ($p['id'] ?? ''), 'nom' => (string) $p['nom'], 'photo' => $image && $slug ? 'https://' . (domaineSite() ?: 'kaislo.com') . '/api/public/boutique-image?b=' . $slug . '&i=' . $image : null,
+                    'options' => [], 'optionIds' => [], 'quantite' => $q, 'prixUnitaire' => $prix, 'total' => $ligneTotal];
+            }
+        }
+        if (!$nouvelles) throw new ErreurApi('Il doit rester au moins un article : pour tout retirer, annulez la commande');
+        $total = arrondirMontant($total, $c['devise']);
+        requete('UPDATE commandes_en_ligne SET client_nom = ?, client_telephone = ?, adresse = ?, note = ?, lignes = ?, total = ?, modifie_le = ? WHERE id = ?',
+            [$nom, $tel['affichage'], $adresse, $note, json_encode($nouvelles, JSON_UNESCAPED_UNICODE), $total, maintenant(), $c['id']]);
+        journaliser($u['commerce_id'], $u['id'], 'commande-en-ligne-modifiee', ['numero' => (int) $c['numero'], 'ancienTotal' => (float) $c['total'], 'total' => $total]);
+        $c = requete('SELECT * FROM commandes_en_ligne WHERE id = ?', [$c['id']])->fetch();
+        repondre(['ok' => true, 'commande' => versCommandeLigne($c)]);
+    }
+    $statut = (string) ($e['statut'] ?? '');
+    if (!in_array($statut, STATUTS_COMMANDE, true)) throw new ErreurApi('Statut inconnu');
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$statut, maintenant(), $c['id']]);
     $c['statut'] = $statut;
     repondre(['ok' => true, 'commande' => versCommandeLigne($c)]);
