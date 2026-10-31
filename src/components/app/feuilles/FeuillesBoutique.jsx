@@ -190,13 +190,15 @@ export function FeuilleCommandesEnLigne() {
     } catch (e) { setErreur(messageErreur(e)); }
   };
 
+  // Articles qu'on peut ajouter à une commande : actifs, avec un prix, sans option obligatoire à choisir (ceux-là se prennent à la caisse)
+  const produitsAjoutables = s.d.produits.filter((p) => p.actif !== false && Number(p.prix) > 0 && !(p.groupes || []).some((g) => g.obligatoire));
   const modifiable = (c) => !['livree', 'annulee'].includes(c.statut);
-  const commencerModification = (c) => setEdition({ id: c.id, nom: c.client.nom, telephone: c.client.telephone, adresse: c.client.adresse || '', note: c.note || '', quantites: c.lignes.map((l) => l.quantite) });
+  const commencerModification = (c) => setEdition({ id: c.id, nom: c.client.nom, telephone: c.client.telephone, adresse: c.client.adresse || '', note: c.note || '', quantites: c.lignes.map((l) => l.quantite), ajouts: [] });
   const enregistrerModification = async () => {
     setErreur('');
     const e = edition;
-    if (e.quantites.every((q) => q === 0)) return setErreur(tr('Il doit rester au moins un article : pour tout retirer, annulez la commande.'));
-    const corps = { id: e.id, client: { nom: e.nom.trim(), telephone: e.telephone.trim(), adresse: e.adresse.trim() }, note: e.note.trim(), lignes: e.quantites.map((quantite, index) => ({ index, quantite })) };
+    if (e.quantites.every((q) => q === 0) && !e.ajouts.length) return setErreur(tr('Il doit rester au moins un article : pour tout retirer, annulez la commande.'));
+    const corps = { id: e.id, client: { nom: e.nom.trim(), telephone: e.telephone.trim(), adresse: e.adresse.trim() }, note: e.note.trim(), lignes: e.quantites.map((quantite, index) => ({ index, quantite })), ajouts: e.ajouts.map((a) => ({ produitId: a.produitId, quantite: a.quantite })) };
     try {
       if (demo) {
         const m = await import('@/lib/donnees/boutique-demo');
@@ -271,7 +273,30 @@ export function FeuilleCommandesEnLigne() {
                     </span>
                   </div>
                 ))}
-                <p className="tres-petit muet">{tr('Mettez la quantité à 0 pour retirer un article. Le total est recalculé avec les prix de la commande.')}</p>
+                {edition.ajouts.map((a, i) => (
+                  <div key={'a' + i} className="ligne espace">
+                    <span className="petit grandit"><span className="badge safran">{tr('Ajouté')}</span> {a.nom} · {formatPrix(a.prix, c.devise)}</span>
+                    <span className="ligne" style={{ gap: 6 }}>
+                      <button type="button" className="icone-btn" aria-label={tr('Moins')} onClick={() => setEdition({ ...edition, ajouts: edition.ajouts.map((x, j) => (j === i ? { ...x, quantite: x.quantite - 1 } : x)).filter((x) => x.quantite > 0) })}>−</button>
+                      <b>{a.quantite}</b>
+                      <button type="button" className="icone-btn" aria-label={tr('Plus')} onClick={() => setEdition({ ...edition, ajouts: edition.ajouts.map((x, j) => (j === i ? { ...x, quantite: Math.min(99, x.quantite + 1) } : x)) })}>+</button>
+                    </span>
+                  </div>
+                ))}
+                {produitsAjoutables.length > 0 && (
+                  <label className="champ"><span>{tr('Ajouter un article')}</span>
+                    <select value="" onChange={(ev) => {
+                      const p = produitsAjoutables.find((x) => x.id === ev.target.value);
+                      if (!p) return;
+                      const deja = edition.ajouts.findIndex((x) => x.produitId === p.id);
+                      setEdition({ ...edition, ajouts: deja >= 0 ? edition.ajouts.map((x, j) => (j === deja ? { ...x, quantite: Math.min(99, x.quantite + 1) } : x)) : [...edition.ajouts, { produitId: p.id, nom: p.nom, prix: p.prix, quantite: 1 }] });
+                    }}>
+                      <option value="">{tr('Choisir dans votre catalogue…')}</option>
+                      {produitsAjoutables.map((p) => <option key={p.id} value={p.id}>{p.nom} · {formatPrix(p.prix, dev)}</option>)}
+                    </select>
+                  </label>
+                )}
+                <p className="tres-petit muet">{tr('Mettez la quantité à 0 pour retirer un article. Les articles déjà commandés gardent leur prix ; un article ajouté prend son prix du jour. Le total est recalculé à l’enregistrement.')}</p>
                 <div className="grille-2">
                   <button className="btn secondaire" onClick={() => setEdition(null)}>{tr('Fermer sans changer')}</button>
                   <button className="btn" onClick={enregistrerModification}>{tr('Enregistrer')}</button>
