@@ -80,7 +80,7 @@ export function construireTicket(vente, commerce, largeurPapier = 58) {
   const date = formatDate(vente.date) + ' ' + formatHeure(vente.date);
   for (const l of deuxColonnes(tr('Ticket n° {0}', [vente.numero]), date, L)) ajouter(l);
   if (vente.table) ajouter(tr('Table : {0}', [vente.table]));
-  if (vente.aDistance) ajouter(tr('Commande à distance'));
+  if (vente.aDistance) ajouter(vente.commandeEnLigne ? tr('Commande en ligne n° {0}', [vente.commandeEnLigne.numero]) : tr('Commande à distance'));
   separateur();
 
   // Articles

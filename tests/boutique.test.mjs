@@ -1,7 +1,7 @@
 // Boutique en ligne : panier du client, texte de la commande WhatsApp, reprise dans la caisse.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { articlesAPublier, messageAnnuaire, photosCommande, prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, messageCommande, lienCommandeWhatsApp, choixDepuisCommande } from '../src/lib/donnees/boutique.js';
+import { venteDeCommande, articlesAPublier, messageAnnuaire, photosCommande, prixArticleBoutique, nomsOptions, cleLignePanier, totalPanier, nombreArticles, erreurOptions, messageCommande, lienCommandeWhatsApp, choixDepuisCommande } from '../src/lib/donnees/boutique.js';
 
 const jus = { id: 'p1', nom: 'Jus', prix: 1000, promo: null, groupes: [
   { id: 'g1', nom: 'Taille', type: 'unique', obligatoire: true, options: [{ id: 'o1', nom: 'Petit', prix: 0 }, { id: 'o2', nom: 'Grand', prix: 500 }] },
@@ -105,4 +105,16 @@ test('message du gérant : la boutique est dans la liste, ou la raison précise 
   }
   assert.match(messageAnnuaire({ dansAnnuaire: false, raisonAnnuaire: 'aucunArticle' }).texte, /aucun article/);
   assert.equal(messageAnnuaire({ dansAnnuaire: false, raisonAnnuaire: 'inconnue' }), null);
+});
+
+test('la vente issue d\'une commande en ligne se retrouve ; annulée ou autre commande : aucune', () => {
+  const ventes = [
+    { id: 'v1', numero: 1, total: 500 },
+    { id: 'v2', numero: 2, total: 900, commandeEnLigne: { id: 'cl_a', numero: 7 } },
+    { id: 'v3', numero: 3, total: 400, commandeEnLigne: { id: 'cl_b', numero: 8 }, annulee: { date: '2026-10-31T10:00:00.000Z', par: 'Awa', motif: '' } },
+  ];
+  assert.equal(venteDeCommande(ventes, 'cl_a').numero, 2);
+  assert.equal(venteDeCommande(ventes, 'cl_b'), null); // vente annulée : la commande peut être encaissée à nouveau
+  assert.equal(venteDeCommande(ventes, 'cl_c'), null);
+  assert.equal(venteDeCommande(undefined, 'cl_a'), null);
 });

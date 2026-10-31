@@ -79,6 +79,9 @@ export function choixDepuisCommande(produit, optionIds = []) {
   return choix;
 }
 
+/** Vente (ticket) issue d'une commande en ligne encaissée dans la caisse, si elle n'est pas annulée ; null sinon. */
+export const venteDeCommande = (ventes, commandeId) => (ventes || []).find((v) => v.commandeEnLigne?.id === commandeId && !v.annulee) || null;
+
 export const STATUTS_COMMANDE = [
   ['nouvelle', 'Nouvelle'], ['confirmee', 'Confirmée'], ['prete', 'Prête'], ['livree', 'Livrée'], ['annulee', 'Annulée'],
 ];
