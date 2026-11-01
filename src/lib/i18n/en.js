@@ -2106,4 +2106,8 @@ export const EN = {
   "La vente reste dans l’historique, marquée « Annulée » ; les articles reviennent dans le stock.": "The sale stays in the history, marked “Cancelled”; the items go back into stock.",
   "Annuler commande et vente": "Cancel order and sale",
   "Commande en ligne n° {0}": "Online order no. {0}",
+  "Ce mois": "This month",
+  "Total des dépenses": "Total expenses",
+  "Note, catégorie, personne ou montant…": "Note, category, person or amount…",
+  "espèces du jour": "cash of the day",
 };

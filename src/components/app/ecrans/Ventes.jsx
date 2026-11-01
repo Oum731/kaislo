@@ -4,11 +4,13 @@
 //  - état de la caisse du jour : ouverture / fermeture
 //  - tickets (le vendeur ne voit que ses ventes, le gérant voit tout)
 //  - journées de vente : historique des ouvertures et fermetures (gérant)
+//  - dépenses : historique par jour, avec recherche (gérant)
 // ------------------------------------------------------------
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { formatHeure, formatDate, formatJourLong } from '@/lib/utils/format';
 import { historiqueCaisse, calculerCloture } from '@/lib/donnees/cloture';
+import { historiqueDepenses } from '@/lib/donnees/depenses';
 import { Icone, Puces, Segment } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { BadgeEcart } from './Accueil';
@@ -17,7 +19,9 @@ import { tr, tt } from '@/lib/i18n';
 export default function Ventes() {
   const s = useKaislo();
   const gerant = s.estGerant();
-  const [onglet, setOnglet] = useState('tickets');
+  const [onglet, setOnglet] = useState(gerant && s.ongletVentes ? s.ongletVentes : 'tickets');
+  // L'onglet demandé depuis l'accueil n'est valable qu'une fois
+  useEffect(() => { if (s.ongletVentes) useKaislo.setState({ ongletVentes: null }); }, [s.ongletVentes]);
 
   return (
     <>
@@ -25,11 +29,11 @@ export default function Ventes() {
       <div className="contenu" style={{ maxWidth: 900 }}>
         <EtatCaisse />
         {gerant && (
-          <div style={{ maxWidth: 420, margin: '16px 0 4px' }}>
-            <Segment options={[['tickets', tr('Tickets')], ['journees', tr('Journées de vente')]]} valeur={onglet} surChanger={setOnglet} />
+          <div style={{ maxWidth: 520, margin: '16px 0 4px' }}>
+            <Segment options={[['tickets', tr('Tickets')], ['journees', tr('Journées de vente')], ['depenses', tr('Dépenses')]]} valeur={onglet} surChanger={setOnglet} />
           </div>
         )}
-        {onglet === 'tickets' ? <ListeTickets /> : <JourneesCaisse />}
+        {onglet === 'tickets' ? <ListeTickets /> : onglet === 'journees' ? <JourneesCaisse /> : <HistoriqueDepenses />}
       </div>
     </>
   );
@@ -159,5 +163,51 @@ function JourneesCaisse() {
       })}
       {!journees.length && <p className="muet petit" style={{ padding: 16 }}>{tr('Aucune journée de vente pour l’instant.')}</p>}
     </div>
+  );
+}
+
+// Historique des dépenses (gérant) : par jour, avec la période et une recherche. Toucher une dépense la modifie.
+function HistoriqueDepenses() {
+  const s = useKaislo();
+  const [periode, setPeriode] = useState('mois');
+  const [recherche, setRecherche] = useState('');
+  const h = historiqueDepenses(s.d.depenses || [], { periode, recherche, libelleCategorie: tt });
+  return (
+    <>
+      <div style={{ marginTop: 14 }} className="ligne espace">
+        <Puces options={[['jour', tr('Aujourd’hui')], ['semaine', tr('7 derniers jours')], ['mois', tr('Ce mois')], ['tout', tr('Tout')]]} valeur={periode} surChanger={setPeriode} enveloppe />
+        <button className="btn petit" onClick={() => s.ouvrir('depense')}><Icone nom="plus" taille="sm" /> {tr('Dépense')}</button>
+      </div>
+      <div className="grille-2" style={{ margin: '14px 0' }}>
+        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-rouge"><Icone nom="baisse" /></span><p className="kpi-valeur">{s.prix(h.total)}</p><p className="tuile-kpi-libelle">{tr('Total des dépenses')}</p></div>
+        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-vert"><Icone nom="depense" /></span><p className="kpi-valeur">{h.nombre}</p><p className="tuile-kpi-libelle">{tr('Dépenses')}</p></div>
+      </div>
+      <label className="recherche" style={{ marginBottom: 14 }}>
+        <Icone nom="recherche" taille="sm" />
+        <input type="search" placeholder={tr('Note, catégorie, personne ou montant…')} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+      </label>
+      {h.jours.map((j) => (
+        <div key={j.cle} style={{ marginBottom: 14 }}>
+          <div className="ligne espace" style={{ padding: '0 4px 6px' }}>
+            <b>{formatJourLong(j.date)} <span className="tres-petit muet">· {formatDate(j.date.toISOString())}</span></b>
+            <b className="chiffre petit">−{s.prix(j.total)}</b>
+          </div>
+          <div className="liste">
+            {j.depenses.map((x) => (
+              <button key={x.id} className="liste-item" onClick={() => s.ouvrir('depense', { depense: x })}>
+                <span className="grandit" style={{ minWidth: 0 }}>
+                  <b className="bloc-texte tronque">{x.note || tt(x.categorie)}</b>
+                  <span className="tres-petit muet tronque bloc-texte">
+                    {formatHeure(x.date)} · {tt(x.categorie)}{x.utilisateurNom ? ' · ' + x.utilisateurNom : ''}{x.depuisCaisse ? ' · ' + tr('espèces du jour') : ''}
+                  </span>
+                </span>
+                <b className="chiffre">−{s.prix(x.montant)}</b>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {!h.nombre && <div className="vide"><p>{tr('Aucune dépense sur cette période.')}</p></div>}
+    </>
   );
 }

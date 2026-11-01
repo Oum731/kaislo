@@ -152,7 +152,7 @@ export default function Accueil() {
             )}
 
             <div className="carte">
-              <div className="ligne espace"><h3>{tr('Dépenses')}</h3><button className="lien" onClick={() => s.ouvrir('depense')}>{tr('+ Ajouter')}</button></div>
+              <div className="ligne espace"><h3>{tr('Dépenses')}</h3><span className="ligne" style={{ gap: 14 }}>{s.estGerant() && <button className="lien" onClick={() => { useKaislo.setState({ ongletVentes: 'depenses' }); s.allerA('ventes'); }}>{tr('Historique')}</button>}<button className="lien" onClick={() => s.ouvrir('depense')}>{tr('+ Ajouter')}</button></span></div>
               {st.depenses.slice(0, 6).map((x) => (
                 <button key={x.id} className="ligne" style={{ width: '100%', textAlign: 'left', marginTop: 12 }} onClick={() => s.ouvrir('depense', { depense: x })}>
                   <span className="grandit">
