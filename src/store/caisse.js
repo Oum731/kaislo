@@ -27,6 +27,7 @@ export const trancheCaisse = (set, get) => ({
   // commande d'un client qui n'est pas sur place (reçu envoyé par WhatsApp)
   aDistance: false,
   telephoneDistance: '',
+  ongletVentes: null, // onglet à ouvrir dans l'écran Ventes (« depenses » depuis l'accueil) ; null = Tickets
   commandeEnLigne: null, // commande de la boutique en ligne qu'on est en train d'encaisser : { id, numero } (gardée sur la vente)
 
   // --- Panier ---
