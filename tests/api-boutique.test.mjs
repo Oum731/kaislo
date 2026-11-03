@@ -82,6 +82,36 @@ test('la boutique est introuvable tant qu\'elle n\'est pas activée, et réserv�
   assert.equal((await api('POST', '/boutique', { ...reglages, conditionsAcceptees: undefined }, gerant.jeton)).ok, true);
 });
 
+test('« Partager ma boutique » : la boutique s\'active d\'un geste avec l\'adresse proposée et le numéro du commerce, et le lien marche', async () => {
+  const neuf = await api('POST', '/inscription', {
+    commerce: { nom: 'Chez Koffi Partage', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345690' },
+    gerant: { nom: 'Koffi', telephone: '0712345691', pin: '1234' }, conditionsAcceptees: true,
+  });
+  assert.equal(neuf.statut, 201, JSON.stringify(neuf));
+  const avant = await api('GET', '/boutique', null, neuf.jeton);
+  assert.equal(avant.boutique.lien, '', 'pas de lien tant que la boutique n\'est pas activée');
+  assert.equal(avant.boutique.suggestion, 'chez-koffi-partage');
+  // Ce que fait la fenêtre : adresse proposée + numéro du commerce + conditions cochées
+  const r = await api('POST', '/boutique', {
+    actif: true, conditionsAcceptees: true, publique: true, chat: true, pro: false,
+    slug: avant.boutique.suggestion, whatsapp: neuf.commerce.telephone, description: '', livraison: '',
+  }, neuf.jeton);
+  assert.equal(r.statut, 200, JSON.stringify(r));
+  assert.equal(r.boutique.actif, true);
+  assert.match(r.boutique.lien, /\/boutique\/chez-koffi-partage\/$/);
+  // Le lien est celui que le commerçant partage : la boutique répond au public
+  const pub = await api('GET', '/public/boutique?b=chez-koffi-partage');
+  assert.equal(pub.statut, 200, JSON.stringify(pub));
+  assert.equal(pub.boutique.nom, 'Chez Koffi Partage');
+  // Sans cocher les conditions : refusé
+  const autre = await api('POST', '/inscription', {
+    commerce: { nom: 'Chez Yao Partage', type: 'epicerie', pays: 'CI', ville: 'Abidjan', quartier: 'Cocody', telephone: '0712345692' },
+    gerant: { nom: 'Yao', telephone: '0712345693', pin: '1234' }, conditionsAcceptees: true,
+  });
+  const sans = await api('POST', '/boutique', { actif: true, conditionsAcceptees: false, slug: 'chez-yao-partage', whatsapp: autre.commerce.telephone }, autre.jeton);
+  assert.equal(sans.statut, 400);
+});
+
 test('la vitrine ne montre que les articles publiés, sans prix d\'achat', async () => {
   const v = await api('GET', '/public/boutique?b=chez-awa');
   assert.equal(v.ok, true);
