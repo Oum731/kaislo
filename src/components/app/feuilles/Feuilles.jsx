@@ -19,7 +19,7 @@ import { FeuilleCommerces, FeuilleAjoutCommerce } from './FeuillesCommerces';
 import { FeuilleAvis } from './FeuilleAvis';
 import { FeuilleParrainage } from './FeuilleParrainage';
 import { FeuilleVirement } from './FeuilleVirement';
-import { FeuilleBoutique, FeuilleCommandesEnLigne } from './FeuillesBoutique';
+import { FeuilleBoutique, FeuilleCommandesEnLigne, FeuillePartagerBoutique } from './FeuillesBoutique';
 
 const FEUILLES = {
   rapport: FeuilleRapport,
@@ -56,6 +56,7 @@ const FEUILLES = {
   parrainage: FeuilleParrainage,
   virement: FeuilleVirement,
   boutique: FeuilleBoutique,
+  partagerBoutique: FeuillePartagerBoutique,
   commandesEnLigne: FeuilleCommandesEnLigne,
 };
 

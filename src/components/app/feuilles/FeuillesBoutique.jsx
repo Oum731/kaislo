@@ -155,6 +155,85 @@ export function FeuilleBoutique() {
   );
 }
 
+// ---------- Partager le lien de sa boutique (accueil → « Partager ma boutique ») ----------
+// Le lien de la boutique, prêt à envoyer à ses proches : copier, WhatsApp, partage du téléphone. Boutique pas encore en ligne : un seul geste l'active.
+export function FeuillePartagerBoutique() {
+  const s = useKaislo();
+  const demo = s.estDemoActuel();
+  const [b, setB] = useState(null);
+  const [erreur, setErreur] = useState('');
+  const [message, setMessage] = useState('');
+  const [accord, setAccord] = useState(false);
+  const [occupe, setOccupe] = useState(false);
+  const nom = s.d.commerce.nom;
+
+  useEffect(() => {
+    if (demo) return;
+    appelApi('GET', '/boutique', null, s.jetonServeur()).then((r) => setB(r.boutique)).catch((e) => setErreur(messageErreur(e)));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const lien = demo ? 'https://kaislo.com' + chemin('/boutique/?demo=' + s.d.commerce.id) : (b?.actif && b?.lien) || '';
+  const texte = tr('Commandez chez {0} : {1}', [nom, lien]);
+  const peutPartager = typeof navigator !== 'undefined' && !!navigator.share;
+  const copier = async () => {
+    setErreur('');
+    try { await navigator.clipboard.writeText(lien); setMessage(tr('Lien copié.')); } catch { setErreur(tr('Copie impossible : utilisez le bouton WhatsApp.')); }
+  };
+  const partager = async () => {
+    try { await navigator.share({ title: nom, text: tr('Commandez chez {0}', [nom]), url: lien }); } catch { /* partage annulé */ }
+  };
+  // Boutique pas encore en ligne : on l'active avec l'adresse proposée et le numéro du commerce, sans quitter cette fenêtre
+  const activer = async () => {
+    setErreur(''); setMessage('');
+    if (!b.conditionsAcceptees && !accord) return setErreur(tr('Pour activer votre boutique, cochez la case des conditions : Kaislo est un outil, vous restez seul responsable de vos articles et de vos ventes.'));
+    setOccupe(true);
+    try {
+      const r = await appelApi('POST', '/boutique', {
+        actif: true, conditionsAcceptees: true, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif,
+        slug: b.slug || b.suggestion, whatsapp: b.whatsapp || s.d.commerce.telephone || '', description: b.description || '', livraison: b.livraison || '',
+      }, s.jetonServeur());
+      setB(r.boutique);
+      setMessage(tr('Votre boutique est en ligne : voici votre lien.'));
+    } catch (e) { setErreur(messageErreur(e)); }
+    setOccupe(false);
+  };
+
+  return (
+    <Feuille titre={tr('Partager ma boutique')} surFermer={s.fermer}
+      pied={b && <button className="btn secondaire bloc" onClick={() => s.ouvrir('boutique')}>{tr('Réglages de la boutique')}</button>}>
+      <div className="pile">
+        {erreur && <p className="alerte">{erreur}</p>}
+        {message && <p className="info-verte">{message}</p>}
+        {!demo && !b && !erreur && <p className="muet petit">{tr('Chargement…')}</p>}
+        {lien ? (
+          <>
+            <p className="petit muet">{tr('Voici le lien de votre boutique. Envoyez-le à votre famille, vos amis, vos voisins et vos clients : ils choisissent leurs articles et la commande vous arrive sur WhatsApp.')}</p>
+            <div className="carte pile">
+              <b>{nom}</b>
+              <p style={{ wordBreak: 'break-all', fontWeight: 700 }}>{lien}</p>
+            </div>
+            <a className="btn grand bloc" target="_blank" rel="noreferrer" href={'https://wa.me/?text=' + encodeURIComponent(texte)}><Icone nom="whatsapp" /> {tr('Envoyer sur WhatsApp')}</a>
+            <div className="grille-2">
+              <button className="btn secondaire" onClick={copier}><Icone nom="ok" /> {tr('Copier le lien')}</button>
+              {peutPartager ? <button className="btn secondaire" onClick={partager}><Icone nom="lienExterne" /> {tr('Partager…')}</button> : <a className="btn secondaire" target="_blank" rel="noreferrer" href={lien}><Icone nom="lienExterne" /> {tr('Voir ma boutique')}</a>}
+            </div>
+            {!demo && b && b.articlesPublies === 0 && <p className="alerte petit">{tr('Aucun article n’est encore publié : votre page est vide. Ouvrez la fiche d’un article et cochez « Vendre en ligne », ou publiez-les tous dans les réglages de la boutique.')}</p>}
+          </>
+        ) : b && (
+          <>
+            <p className="petit muet">{tr('Votre boutique n’est pas encore en ligne. Activez-la : vous obtenez tout de suite un lien à partager avec votre entourage.')}</p>
+            {!b.conditionsAcceptees && (
+              <label className="case-accord"><input type="checkbox" checked={accord} onChange={(e) => setAccord(e.target.checked)} /><span>{tr('Je comprends que Kaislo est un outil, un pont entre les boutiques et leurs clients : je suis seul responsable de mes articles, de mes prix, de la livraison et de mes ventes. J’accepte les conditions de la boutique en ligne.')}</span></label>
+            )}
+            <p className="tres-petit muet">{tr('Adresse proposée : kaislo.com/boutique/{0}/', [b.slug || b.suggestion])}</p>
+            <button className="btn grand bloc" disabled={occupe} onClick={activer}>{occupe ? tr('Activation…') : tr('Activer ma boutique et obtenir mon lien')}</button>
+          </>
+        )}
+      </div>
+    </Feuille>
+  );
+}
+
 const TEXTE_STATUT = {
   nouvelle: (c, boutique) => tr('Bonjour {0}, c’est {1}. Nous avons bien reçu votre commande n° {2}. Nous revenons vers vous très vite.', [c.client.nom, boutique, c.numero]),
   confirmee: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est confirmée. Merci !', [c.client.nom, boutique, c.numero]),
