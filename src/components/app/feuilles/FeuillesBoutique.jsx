@@ -258,7 +258,7 @@ export function FeuilleCommandesEnLigne() {
       if (!produit) { manquants.push(l.nom); continue; }
       s.ajouterAuPanier(produit, choixDepuisCommande(produit, l.optionIds || []), l.quantite, { demi });
     }
-    useKaislo.setState({ aDistance: true, telephoneDistance: c.client.telephone, commandeEnLigne: { id: c.id, numero: c.numero } });
+    useKaislo.setState({ aDistance: true, telephoneDistance: c.client.telephone, nomDistance: c.client.nom || '', commandeEnLigne: { id: c.id, numero: c.numero } });
     if (c.statut === 'nouvelle') changer(c, 'confirmee');
     s.allerA('caisse');
     if (manquants.length) s.message(tr('Article(s) introuvable(s) dans votre catalogue : {0}', [manquants.join(', ')]), 'erreur');

@@ -27,6 +27,7 @@ export const trancheCaisse = (set, get) => ({
   // commande d'un client qui n'est pas sur place (reçu envoyé par WhatsApp)
   aDistance: false,
   telephoneDistance: '',
+  nomDistance: '', // nom du client à distance : facultatif
   ongletVentes: null, // onglet à ouvrir dans l'écran Ventes (« depenses » depuis l'accueil) ; null = Tickets
   commandeEnLigne: null, // commande de la boutique en ligne qu'on est en train d'encaisser : { id, numero } (gardée sur la vente)
 
@@ -87,7 +88,7 @@ export const trancheCaisse = (set, get) => ({
   },
 
   viderPanier() {
-    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '', commandeEnLigne: null });
+    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '', nomDistance: '', commandeEnLigne: null });
   },
 
   definirRemise(remise) {
@@ -141,7 +142,7 @@ export const trancheCaisse = (set, get) => ({
       recu: paiement === 'Espèces' && recu > 0 ? recu : 0,
       ...(paiement === 'Virement' && get().refPaiement.trim() ? { refPaiement: get().refPaiement.trim().slice(0, 60) } : {}),
       clientId: client?.id || null,
-      clientNom: client?.nom || null,
+      clientNom: client?.nom || (get().aDistance && get().nomDistance.trim().slice(0, 60)) || null, // client à crédit, sinon le nom saisi pour un client à distance (facultatif)
       table: commande?.table || null,
       // Client à distance : on garde son numéro pour lui envoyer le reçu par WhatsApp
       aDistance: get().aDistance || undefined,
@@ -163,7 +164,7 @@ export const trancheCaisse = (set, get) => ({
       // La table est libérée
       commandes: commande ? d.commandes.filter((c) => c.id !== commande.id) : d.commandes,
     }));
-    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '', commandeEnLigne: null });
+    set({ refPaiement: '', modeGros: false, panier: [], remise: null, commandeActive: null, derniereVente: vente, paiementChoisi: null, montantRecu: null, clientCredit: null, aDistance: false, telephoneDistance: '', nomDistance: '', commandeEnLigne: null });
     get().ouvrir('ticket', { vente, nouvelle: true });
     if (typeof navigator !== 'undefined') navigator.vibrate?.([30, 50, 30]);
     // Impression automatique seulement si une imprimante est connectée ET si l'option est active (facultatif)

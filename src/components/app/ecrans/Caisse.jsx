@@ -298,13 +298,20 @@ export function ContenuPanier({ dansFeuille = false }) {
             <>
               <input
                 className="saisie"
+                maxLength={60}
+                placeholder={tr('Nom du client (facultatif)')}
+                value={s.nomDistance}
+                onChange={(e) => setEtat({ nomDistance: e.target.value })}
+              />
+              <input
+                className="saisie"
                 type="tel"
                 inputMode="tel"
                 placeholder={tr('Numéro WhatsApp du client')}
                 value={s.telephoneDistance}
                 onChange={(e) => setEtat({ telephoneDistance: e.target.value })}
               />
-              <BoutonContacts surChoisir={(c) => setEtat({ telephoneDistance: c.telephone })} />
+              <BoutonContacts avecNom surChoisir={(c) => setEtat({ telephoneDistance: c.telephone, nomDistance: s.nomDistance.trim() ? s.nomDistance : c.nomContact || '' })} />
             </>
           )}
         </div>

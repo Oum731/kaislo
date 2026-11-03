@@ -2110,4 +2110,5 @@ export const EN = {
   "Total des dépenses": "Total expenses",
   "Note, catégorie, personne ou montant…": "Note, category, person or amount…",
   "espèces du jour": "cash of the day",
+  "Nom du client (facultatif)": "Customer name (optional)",
 };
