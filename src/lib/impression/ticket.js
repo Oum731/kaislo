@@ -81,6 +81,8 @@ export function construireTicket(vente, commerce, largeurPapier = 58) {
   for (const l of deuxColonnes(tr('Ticket n° {0}', [vente.numero]), date, L)) ajouter(l);
   if (vente.table) ajouter(tr('Table : {0}', [vente.table]));
   if (vente.aDistance) ajouter(vente.commandeEnLigne ? tr('Commande en ligne n° {0}', [vente.commandeEnLigne.numero]) : tr('Commande à distance'));
+  // Client à distance : son nom seulement s'il a été saisi (facultatif) ; pour une vente à crédit il est déjà imprimé plus bas
+  if (vente.aDistance && vente.clientNom && vente.paiement !== 'Crédit') for (const l of decouper(tr('Client : {0}', [vente.clientNom]), L)) ajouter(l);
   separateur();
 
   // Articles
