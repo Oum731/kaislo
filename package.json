@@ -16,6 +16,7 @@
     "captures": "node scripts/captures.mjs",
     "seo": "node scripts/verifier-seo.mjs",
     "i18n": "node scripts/i18n.mjs --strict",
+    "guides-slugs": "node --no-warnings scripts/guides-slugs.mjs",
     "videos": "node scripts/videos-demo.mjs",
     "images": "node scripts/images.mjs",
     "logos-ads": "node scripts/logos-ads.mjs"

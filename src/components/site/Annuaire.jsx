@@ -120,7 +120,7 @@ export default function Annuaire() {
           {autres.length > 0 && (
             <p className="petit">Boutiques disponibles : {autres.map((p, i) => <span key={p.id}>{i ? ', ' : ''}<button type="button" className="lien" onClick={() => changer(p.id)}>{p.nom}</button></span>)}</p>
           )}
-          <p><Link className="btn" href="/app/?inscription=1">Vous êtes commerçant ? Ouvrez votre boutique</Link></p>
+          <p><Link prefetch={false} className="btn" href="/app/?inscription=1">Vous êtes commerçant ? Ouvrez votre boutique</Link></p>
         </div>
       </div>
     );

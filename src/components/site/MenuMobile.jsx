@@ -34,8 +34,8 @@ export default function MenuMobile({ liens, lienInscription }) {
           <nav id="menu-mobile-site" className="menu-site-panneau" aria-label={tr('Menu du site')}>
             {liens.map(([lien, nom]) => <Link key={lien} href={lien} onClick={fermer}>{nom}</Link>)}
             <div className="menu-site-actions">
-              <Link href="/app/" className="btn secondaire bloc" onClick={fermer}>{tr('Se connecter')}</Link>
-              <Link href={lienInscription} className="btn bloc" onClick={fermer}>{tr('Essai gratuit 30 jours')}</Link>
+              <Link prefetch={false} href="/app/" className="btn secondaire bloc" onClick={fermer}>{tr('Se connecter')}</Link>
+              <Link prefetch={false} href={lienInscription} className="btn bloc" onClick={fermer}>{tr('Essai gratuit 30 jours')}</Link>
             </div>
           </nav>
         </>
