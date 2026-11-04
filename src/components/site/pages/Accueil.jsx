@@ -73,8 +73,8 @@ export default function Accueil({ lang }) {
               <h1>{fr ? 'Le cahier du soir, sans le crayon.' : tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}</h1>
               <p className="chapo">{fr ? 'Vos ventes, votre stock et vos crédits sur le téléphone. Chaque soir, les comptes sont faits : vous n’avez plus rien à recopier.' : tr('Restaurants, épiceries, boutiques, bars, boulangeries : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir.')}</p>
               <div className="boutons">
-                <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
-                <Link href={LIEN_DEMO_RESTO} className="btn secondaire grand">{tr('Voir la démo')}</Link>
+                <Link prefetch={false} href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
+                <Link prefetch={false} href={LIEN_DEMO_RESTO} className="btn secondaire grand">{tr('Voir la démo')}</Link>
               </div>
               {fr && <p className="accueil-client">Vous cherchez une boutique près de chez vous ? <Link href="/boutiques/">Voir les boutiques →</Link></p>}
             </div>

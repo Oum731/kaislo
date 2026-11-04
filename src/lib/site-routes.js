@@ -5,7 +5,8 @@
 // ------------------------------------------------------------
 import { SITE_URL } from '@/config';
 import { langueActive } from '@/lib/i18n';
-import { GUIDES } from '@/lib/guides';
+// Adresses seules des guides (pas leur texte : près de 300 Ko inutiles sur chaque page). Fichier généré : npm run guides-slugs
+import GUIDES_ADRESSES from '@/lib/guides-slugs.json';
 
 export const PAGES = [
   ['/', '/en/'],
@@ -21,7 +22,7 @@ export const PAGES = [
   ['/gestion-bar/', '/en/bar-management/'],
   ['/logiciel-grossiste/', '/en/wholesale-management/'],
   ['/guides/', '/en/guides/'],
-  ...GUIDES.map((g) => [`/guides/${g.fr.slug}/`, `/en/guides/${g.en.slug}/`]),
+  ...GUIDES_ADRESSES.map(([fr, en]) => [`/guides/${fr}/`, `/en/guides/${en}/`]),
 ];
 
 const VERS_EN = new Map(PAGES);

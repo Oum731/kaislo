@@ -50,8 +50,8 @@ export default function Tarifs({ lang }) {
             <h1>{tr('Un prix simple, selon votre métier.')}</h1>
             <p className="chapo">{tr('Chaque formule comprend')} <b>{tr('1 poste avec jusqu’à {0} vendeurs', [VENDEURS_PAR_POSTE])}</b>{tr(', plus le gérant. Premier mois gratuit, sans engagement.')}</p>
             <div className="ligne" style={{ gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
-              <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
-              <Link href={LIEN_DEMO_RESTO} className="btn secondaire grand">{tr('Voir la démo')}</Link>
+              <Link prefetch={false} href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
+              <Link prefetch={false} href={LIEN_DEMO_RESTO} className="btn secondaire grand">{tr('Voir la démo')}</Link>
             </div>
           </div>
         </section>

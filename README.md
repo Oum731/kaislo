@@ -183,6 +183,11 @@ en cas d'échec, GitHub envoie un e-mail au propriétaire du dépôt. Si `/api/s
 - **Pages par pays** (`/pays/cote-d-ivoire/`, `/pays/senegal/`… 15 pays) : devise, modes de paiement, numéros de téléphone et prix réels du pays (`src/lib/pays-seo.js`).
 - **Ajouter un pays : un seul fichier**, `api/lib/pays.json` (lu par le site et par le serveur PHP) : nom, devise, indicatif, ville, modes de paiement, règles des numéros, fuseaux horaires, article (« en/au »), page SEO et nom anglais. Un test (`tests/pays.test.mjs`) vérifie que chaque pays est complet et que PHP et le site lisent la même liste. Une devise nouvelle demande en plus des prix dans `src/lib/donnees/tarifs.js` et `api/lib/tarifs.php`.
 - Contrôle automatique après chaque construction : `npm run build && npm run seo` (lancé par la CI).
+- **Vitesse du site public** (mesurée avec Lighthouse sur la page d'accueil, mobile) :
+  - le texte des guides (près de 300 Ko) n'est plus envoyé avec chaque page : le site n'en garde que les adresses (français/anglais) dans `src/lib/guides-slugs.json`. **Après avoir ajouté ou renommé un guide : `npm run guides-slugs`** (le test `tests/guides-slugs.test.mjs` échoue si le fichier est périmé) ;
+  - les liens vers l'application et ses démos ne préchargent plus en arrière-plan le programme de l'application (`prefetch={false}`, environ 550 Ko) : il se charge quand le visiteur touche le lien (ou le survole) ;
+  - le bandeau des cookies et la barre « Installer Kaislo » sont écrits dans la page générée à l'avance (visibles dès le premier affichage, au lieu d'apparaître d'un coup au chargement du programme, ce que PageSpeed compte contre le Speed Index). Un petit script lancé avant l'affichage (`src/lib/garde-barres.js`, testé dans `tests/garde-barres.test.mjs`) les cache pour qui a déjà répondu, a installé Kaislo ou ne doit pas revoir la barre, et sur ordinateur. Ne pas écrire de balise `<style>` dans le corps de la page : l'outil de CSS critique la réécrit et fait échouer la reprise de la page par React.
+
 - À faire une fois : `GOOGLE_VERIFICATION` dans `src/config.js` (Search Console → Ajouter une propriété → balise HTML), puis envoyer `https://kaislo.com/sitemap.xml` dans Search Console ;
   idem dans Bing Webmaster Tools. Image de partage et icônes : GitHub → Actions → « Captures et vidéos » → « images de partage ».
 

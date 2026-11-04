@@ -108,7 +108,7 @@ export function Guide({ lang, slug }) {
                 <b>{tr('Gagnez du temps avec Kaislo')}</b>
                 <p>{tr('Ventes, stock, crédit clients et comptes du soir au même endroit, sur téléphone ou ordinateur. Essai gratuit de 30 jours.')}</p>
                 <div className="ligne" style={{ gap: 10, flexWrap: 'wrap' }}>
-                  <Link className="btn" href="/app/?inscription=1">{tr('Essai gratuit')}</Link>
+                  <Link prefetch={false} className="btn" href="/app/?inscription=1">{tr('Essai gratuit')}</Link>
                   <Link className="btn secondaire" href={lien(g.metier)}>{tr('Découvrir la gestion de stock et de ventes')}</Link>
                 </div>
               </div>

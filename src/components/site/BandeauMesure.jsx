@@ -2,10 +2,12 @@
 // ------------------------------------------------------------
 // Bandeau « Accepter / Refuser » pour la mesure des inscriptions (Google Ads, pixel Meta).
 // N'existe que si GOOGLE_ADS_ID ou FACEBOOK_PIXEL_ID est rempli (src/config.js) ; jamais dans /admin/ et /commercial/.
-// Affiché seulement côté navigateur, après le chargement : aucun effet sur le calcul de la mise en page (pas de décalage).
+// Écrit dans la page générée à l'avance (donc visible dès le premier affichage, sans apparaître d'un coup après le chargement du programme) ;
+// le script lib/garde-barres.js le cache avant l'affichage pour qui a déjà répondu. Position fixe : aucun décalage de la mise en page.
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { GOOGLE_ADS_ID, FACEBOOK_PIXEL_ID } from '@/config';
 import { mesureActive, pageSansMesure, choixMesure, accepterMesure, refuserMesure, chargerBaliseAuRepos } from '@/lib/mesure';
 
@@ -14,28 +16,28 @@ const TEXTES = {
   fr: () => ({
     titre: 'Mesurer nos publicités ?',
     texte: `De petits cookies pour savoir quelles publicités (${nomsRegies(' et ')}) amènent de vrais commerces. Jamais vos ventes ni vos clients ; refuser ne change rien.`,
-    accepter: 'Accepter', refuser: 'Refuser', plus: 'En savoir plus', lien: '/cookies/',
+    accepter: 'Accepter', refuser: 'Refuser', plus: 'En savoir plus sur les cookies', lien: '/cookies/',
   }),
   en: () => ({
     titre: 'Measure our ads?',
     texte: `Small cookies to know which ads (${nomsRegies(' and ')}) bring real businesses. Never your sales or your customers; declining changes nothing.`,
-    accepter: 'Accept', refuser: 'Decline', plus: 'Learn more', lien: '/cookies/',
+    accepter: 'Accept', refuser: 'Decline', plus: 'Learn more about cookies', lien: '/cookies/',
   }),
 };
 
 export default function BandeauMesure() {
-  const [visible, setVisible] = useState(false);
-  const [dansApp, setDansApp] = useState(false); // dans l'application, les fenêtres (reçu, clôture…) passent au-dessus du bandeau
-  const [t, setT] = useState(() => TEXTES.fr());
+  const chemin = usePathname() || '';
+  const dansApp = chemin.startsWith('/app'); // dans l'application, les fenêtres (reçu, clôture…) passent au-dessus du bandeau
+  // Même rendu côté serveur et au premier rendu du navigateur : présent si la mesure existe et si la page en a une
+  const [visible, setVisible] = useState(() => mesureActive() && !pageSansMesure(chemin));
+  const [t, setT] = useState(() => (chemin.startsWith('/en/') ? TEXTES.en() : TEXTES.fr()));
   useEffect(() => {
-    if (!mesureActive() || pageSansMesure(window.location.pathname)) return;
+    if (!mesureActive() || pageSansMesure(window.location.pathname)) { setVisible(false); return; }
     const choix = choixMesure();
-    if (choix === 'oui') return chargerBaliseAuRepos();
-    if (choix === 'non') return;
-    const anglais = window.location.pathname.startsWith('/en/') || (window.location.pathname.startsWith('/app') && /^en/i.test(navigator.language || ''));
-    setDansApp(window.location.pathname.startsWith('/app'));
-    setT(anglais ? TEXTES.en() : TEXTES.fr());
-    setVisible(true);
+    if (choix === 'oui') { setVisible(false); return chargerBaliseAuRepos(); }
+    if (choix === 'non') { setVisible(false); return; }
+    // Application ouverte sur un téléphone en anglais : le texte passe en anglais (le reste du site connaît sa langue par son adresse)
+    if (window.location.pathname.startsWith('/app') && /^en/i.test(navigator.language || '')) setT(TEXTES.en());
   }, []);
   if (!visible) return null;
   const choisir = (accepte) => { (accepte ? accepterMesure : refuserMesure)(); setVisible(false); };

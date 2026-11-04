@@ -9,11 +9,11 @@ export default function BoutonsEspace({ libelleConnexion, libelleEssai, libelleE
   const [espace, setEspace] = useState(null);
   useEffect(() => setEspace(espaceMemorise()), []);
   // « Mon espace » ramène au tableau de bord (et remet la redirection automatique de l'accueil)
-  if (espace) return <Link href={ADRESSES_ESPACES[espace]} className="btn petit" onClick={quitterLeSite}>{libelleEspace}</Link>;
+  if (espace) return <Link prefetch={false} href={ADRESSES_ESPACES[espace]} className="btn petit" onClick={quitterLeSite}>{libelleEspace}</Link>;
   return (
     <>
-      <Link href="/app/" className="btn secondaire petit">{libelleConnexion}</Link>
-      <Link href={lienInscription} className="btn petit">{libelleEssai}</Link>
+      <Link prefetch={false} href="/app/" className="btn secondaire petit">{libelleConnexion}</Link>
+      <Link prefetch={false} href={lienInscription} className="btn petit">{libelleEssai}</Link>
     </>
   );
 }

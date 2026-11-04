@@ -63,7 +63,7 @@ export default function PageBoutiques() {
           <div className="site-largeur">
             <h2>Vous avez un commerce ?</h2>
             <p className="chapo">Gérez vos ventes et votre stock avec Kaislo, puis ouvrez votre boutique en ligne : vos clients commandent sur WhatsApp et vous continuez à tout suivre comme d’habitude.</p>
-            <p><Link className="btn" href="/app/?inscription=1">Essai gratuit de 30 jours</Link> <Link className="btn secondaire" href="/">Découvrir Kaislo</Link></p>
+            <p><Link prefetch={false} className="btn" href="/app/?inscription=1">Essai gratuit de 30 jours</Link> <Link className="btn secondaire" href="/">Découvrir Kaislo</Link></p>
           </div>
         </section>
       </main>

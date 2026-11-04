@@ -1,7 +1,8 @@
 'use client';
 // ------------------------------------------------------------
 // Bouton « Installer Kaislo » affiché tout de suite aux visiteurs sur téléphone (pas sur ordinateur), tant que Kaislo n'est pas
-// installé. Le geste dépend de l'appareil (voir lib/installer-pwa.js) : un toucher ouvre l'installation du navigateur (Chrome, Edge),
+// installé. Il est écrit dans la page générée à l'avance (visible dès le premier affichage) ; le style le cache sur ordinateur et le script
+// lib/garde-barres.js le cache avant l'affichage s'il est déjà installé ou refusé récemment. Le geste dépend de l'appareil (voir lib/installer-pwa.js) : un toucher ouvre l'installation du navigateur (Chrome, Edge),
 // sinon une fiche explique les 3 gestes un par un (iPhone, Android sans bouton, navigateurs intégrés à Facebook/Instagram…).
 // La croix masque le bouton : on ne le remontre qu'après 3 jours, puis 30 jours, puis plus jamais.
 // ------------------------------------------------------------
@@ -51,15 +52,15 @@ const ETAPES = () => ({
 });
 
 export default function ProposerInstallation() {
-  const [parcours, setParcours] = useState(null); // null = rien à afficher
+  const [parcours, setParcours] = useState('attente'); // null = rien à afficher ; 'attente' = page générée à l'avance (la barre est déjà là, le parcours se précise au chargement)
   const [guide, setGuide] = useState(false); // la fiche des gestes est ouverte
   const [copie, setCopie] = useState(false);
   const [, rafraichir] = useState(0);
 
   useEffect(() => {
-    if (dejaInstallee() || !doitProposer(lire())) return undefined;
+    if (dejaInstallee() || !doitProposer(lire())) { setParcours(null); return undefined; }
     const evaluer = () => choisirParcours({ ua: navigator.userAgent, plateforme: navigator.platform, pointsTactiles: navigator.maxTouchPoints, proposition: !!offre });
-    if (!evaluer()) return undefined; // ordinateur : rien à proposer
+    if (!evaluer()) { setParcours(null); return undefined; } // ordinateur : rien à proposer
     enregistrerServiceWorker(); // Chrome n'annonce l'installation qu'avec un service worker actif
     const f = () => { rafraichir((n) => n + 1); setParcours((p) => (p ? evaluer() : p)); };
     abonnes.add(f);

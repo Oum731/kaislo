@@ -96,8 +96,8 @@ export function PiedSite() {
             <Link href={lien('/guides/')}>{tr('Guides pratiques')}</Link>
             <Link href={lien('/guides/#modeles')}>{tr('Modèles Excel gratuits')}</Link>
             <Link href="/devenir-commercial/">{tr('Devenir commercial Kaislo')}</Link>
-            <Link href="/app/">{tr('Se connecter')}</Link>
-            <Link href={LIEN_INSCRIPTION}>{tr('Créer mon commerce')}</Link>
+            <Link prefetch={false} href="/app/">{tr('Se connecter')}</Link>
+            <Link prefetch={false} href={LIEN_INSCRIPTION}>{tr('Créer mon commerce')}</Link>
           </div>
           <div>
             <h4>{tr('Par activité')}</h4>
@@ -151,7 +151,7 @@ export function Hero({ titre, chapo, lienDemo, garanties, capture, captureMobile
           <h1>{titre}</h1>
           <p className="chapo">{chapo}</p>
           <div className="boutons">
-            <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
+            <Link prefetch={false} href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
             <Link href={lienDemo} className="btn secondaire grand">{tr('Voir la démo')} <Icone nom="droite" taille="sm" /></Link>
           </div>
           <div className="garanties">
@@ -244,7 +244,7 @@ export function SectionVideos({ titre = tr('Voyez Kaislo en action, en une minut
         ))}
         {vignettes.length > 0 && <VignettesTutos videos={vignettes} />}
         <div className="boutons" style={{ marginTop: 28 }}>
-          <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Créer mon commerce gratuitement')}</Link>
+          <Link prefetch={false} href={LIEN_INSCRIPTION} className="btn grand">{tr('Créer mon commerce gratuitement')}</Link>
           {toutes && <Link href={lien('/tutoriels/')} className="btn secondaire grand">{tr('Tous les tutoriels')} <Icone nom="droite" taille="sm" /></Link>}
         </div>
       </div>
@@ -366,7 +366,7 @@ export function AppelFinal({ titre, texte, lienDemo }) {
             <p>{texte}</p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link href={LIEN_INSCRIPTION} className="btn grand">{tr('Créer mon commerce')}</Link>
+            <Link prefetch={false} href={LIEN_INSCRIPTION} className="btn grand">{tr('Créer mon commerce')}</Link>
             <Link href={lienDemo} className="btn secondaire grand">{tr('Voir la démo')}</Link>
           </div>
         </div>
