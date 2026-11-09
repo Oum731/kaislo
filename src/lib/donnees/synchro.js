@@ -14,7 +14,7 @@ import { memeProduit, produitPourServeur } from './stock.js';
 import { enregistrerImage, lireImage } from './images.js';
 
 // Listes du commerce synchronisées élément par élément
-export const COLLECTIONS = ['postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements'];
+export const COLLECTIONS = ['postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements', 'journal'];
 // Champs du commerce gérés par le serveur : jamais envoyés comme « réglages »
 const CHAMPS_SERVEUR = ['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur', 'tarif'];
 

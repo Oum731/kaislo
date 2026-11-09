@@ -10,6 +10,7 @@ import { exporterTout, exporterVentesCsv } from '@/lib/donnees/export';
 import { NOMS_DEVISES, formatDate } from '@/lib/utils/format';
 import AbonnementCommerce from './Abonnement';
 import Postes from './Postes';
+import Journal from './Journal';
 import { posteParId } from '@/lib/donnees/postes';
 import { Icone, Segment, SelecteurLangue, Interrupteur, Avatar, ApercuTicket, Reglage, ChampMontant, ChoixImage, ImageStockee } from '@/components/ui';
 import { EnTete } from '../EnTete';
@@ -20,7 +21,7 @@ export default function Reglages() {
   const { d } = s;
   const [onglet, setOnglet] = useState('equipe');
   const avecTables = typeCommerce(d.commerce.type).tables || d.commerce.tables.length > 0;
-  const options = [['equipe', tr('Équipe'), 'clients'], ['postes', tr('Postes'), 'ecran'], ['commerce', tr('Profil'), 'reglages'], ...(avecTables ? [['tables', tr('Tables'), 'tables']] : []), ['imprimante', tr('Imprimante'), 'imprimante']];
+  const options = [['equipe', tr('Équipe'), 'clients'], ['postes', tr('Postes'), 'ecran'], ['commerce', tr('Profil'), 'reglages'], ...(avecTables ? [['tables', tr('Tables'), 'tables']] : []), ['imprimante', tr('Imprimante'), 'imprimante'], ['journal', tr('Journal'), 'ventes']];
 
   return (
     <>
@@ -40,6 +41,7 @@ export default function Reglages() {
           {onglet === 'commerce' && <InfosCommerce />}
           {onglet === 'tables' && <ConfigTables />}
           {onglet === 'imprimante' && <BlocImprimante />}
+          {onglet === 'journal' && <Journal />}
         </div>
       </div>
     </>

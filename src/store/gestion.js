@@ -18,11 +18,18 @@ import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs.js';
 import { stockDe, departStock } from '@/lib/donnees/stock.js';
 import { nettoyerGros, grosDisponible } from '@/lib/donnees/gros.js';
 import { articlesAPublier } from '@/lib/donnees/boutique.js';
+import { ligneJournal, ajouterAuJournal } from '@/lib/donnees/journal.js';
 import { tr } from '@/lib/i18n';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
 
 export const trancheGestion = (set, get) => ({
+  // Note un geste dans le journal d'activité (Réglages → Journal) : à utiliser DANS la recette de majDonnees
+  // Exemple : majDonnees((d) => ({ ..., journal: noterJournal(d, 'prix', { produit: 'Riz' }) }))
+  noterJournal(d, type, details) {
+    return ajouterAuJournal(d.journal, ligneJournal(get().utilisateur?.nom, type, details));
+  },
+
   // ---------- Produits ----------
   // Renvoie un message d'erreur, ou null si tout va bien
   enregistrerProduit(brouillon) {
@@ -72,11 +79,13 @@ export const trancheGestion = (set, get) => ({
       delete b.stock;
       Object.assign(b, departStock(quantite));
     }
+    const prixChange = ancien && Number(ancien.prix) !== Number(b.prix);
     get().majDonnees((d) => ({
       ...(b.id
         ? { produits: d.produits.map((p) => (p.id === b.id ? b : p)) }
         : { produits: [...d.produits, { ...b, id: genId('p') }] }),
       ...(mouvement ? { mouvements: [...(d.mouvements || []), mouvement] } : {}),
+      ...(prixChange ? { journal: get().noterJournal(d, 'prix', { produit: b.nom, avant: Number(ancien.prix), apres: Number(b.prix) }) } : {}),
     }));
     get().message(tr('Produit enregistré'));
     return null;
@@ -90,8 +99,9 @@ export const trancheGestion = (set, get) => ({
   },
 
   supprimerProduit(id) {
-    supprimerImage(get().d.produits.find((p) => p.id === id)?.image); // sa photo aussi
-    get().majDonnees((d) => ({ produits: d.produits.filter((p) => p.id !== id) }));
+    const produit = get().d.produits.find((p) => p.id === id);
+    supprimerImage(produit?.image); // sa photo aussi
+    get().majDonnees((d) => ({ produits: d.produits.filter((p) => p.id !== id), ...(produit ? { journal: get().noterJournal(d, 'produit-supprime', { produit: produit.nom }) } : {}) }));
     get().message(tr('Produit supprimé'));
   },
 
@@ -368,7 +378,10 @@ export const trancheGestion = (set, get) => ({
   },
 
   supprimerDepense(id) {
-    get().majDonnees((d) => ({ depenses: d.depenses.filter((x) => x.id !== id) }));
+    get().majDonnees((d) => {
+      const x = d.depenses.find((y) => y.id === id);
+      return { depenses: d.depenses.filter((y) => y.id !== id), ...(x ? { journal: get().noterJournal(d, 'depense-supprimee', { montant: x.montant, note: x.note || '', categorie: x.categorie || '' }) } : {}) };
+    });
   },
 
   // ---------- Journée de vente : ouverture et fermeture ----------
@@ -441,7 +454,10 @@ export const trancheGestion = (set, get) => ({
 
   supprimerClient(id) {
     if (soldeClient(get().d, id) > 0) return tr('Ce client doit encore de l’argent');
-    get().majDonnees((d) => ({ clients: d.clients.filter((c) => c.id !== id) }));
+    get().majDonnees((d) => {
+      const c = d.clients.find((x) => x.id === id);
+      return { clients: d.clients.filter((x) => x.id !== id), ...(c ? { journal: get().noterJournal(d, 'client-supprime', { client: c.nom }) } : {}) };
+    });
     return null;
   },
 

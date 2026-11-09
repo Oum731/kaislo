@@ -275,6 +275,12 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Journal d'activité (Réglages → Journal)
+
+Le gérant voit en un fil qui a fait quoi et quand : ventes annulées (avec le motif), remises, dépenses, entrées et corrections de stock, ouvertures et fermetures de caisse (avec l'écart). Les gestes qui ne laissent aucune trace autrement (dépense, article ou client supprimé, prix changé) sont notés au moment du geste dans `d.journal` (collection synchronisée, ajouts seulement, 3 000 lignes au plus). Filtres : période, personne, type. Les gestes à surveiller sont marqués d'un « ! ».
+- Code : `src/lib/donnees/journal.js` (calcul du fil, testé dans `tests/journal.test.mjs`), `src/components/app/ecrans/Journal.jsx`.
+- Pour noter un nouveau geste : dans la recette de `majDonnees`, ajouter `journal: get().noterJournal(d, 'type', { … })` et prévoir son texte dans `Journal.jsx` + `TYPES_JOURNAL`.
+
 ## Carnet des retours utilisateurs (Espace Amorac → Retours)
 
 L'équipe note ce que disent les commerçants (WhatsApp, appel, visite) : ce qui leur plaît, ce qui les bloque, la fonction qui leur manque. Un retour est lié à un commerce (ou à une personne qui n'est pas encore cliente), avec un statut : reçu, prévu, fait, refusé.
