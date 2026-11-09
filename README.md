@@ -275,6 +275,15 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Achats et fournisseurs (Stock → Achats, gérant)
+
+- **Fournisseurs** : nom, téléphone (lien WhatsApp), note ; la liste montre ce qu'on doit à chacun.
+- **Nouvel achat** : un fournisseur, plusieurs articles (quantité, prix d'achat unitaire), ce qui est payé tout de suite, n° de facture. Chaque ligne fait entrer la marchandise dans le stock (entrée reliée à l'achat, visible dans l'historique) et met à jour le prix d'achat de l'article (donc les marges).
+- **Dette** : achats − payé à l'achat − règlements. Fiche fournisseur : « Payer ce fournisseur » (jamais plus que la dette), « Tout solder », historique des achats et paiements.
+- Les achats ne sont pas des dépenses : le stock acheté est une valeur, les charges (loyer, transport…) restent dans Dépenses.
+- Données : collections synchronisées `fournisseurs`, `achats`, `reglementsFournisseurs` (comprises dans la sauvegarde). Réservées au gérant, aussi côté serveur (`droitManquant`).
+- Code : `src/lib/donnees/achats.js`, `src/components/app/ecrans/Achats.jsx`, `src/components/app/feuilles/FeuillesAchats.jsx`, actions dans `src/store/gestion.js`. Tests : `achats.test.mjs`, `api-achats.test.mjs`.
+
 ## Retour d'un article (ticket → « Retour d'un article »)
 
 Le client rapporte un ou plusieurs articles d'une vente : on choisit les quantités, le mode de remboursement (celui de la vente, un autre mode, ou « déduit de sa dette » pour une vente à crédit), le motif, et si l'article revient en stock (décocher s'il est abîmé). Code PIN du gérant obligatoire, comme une annulation.
