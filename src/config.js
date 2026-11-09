@@ -50,9 +50,9 @@ export const RESEAUX = { youtube: 'https://www.youtube.com/@kaislo-amorac', face
 // À COMPLÉTER avant le lancement commercial : un champ vide n'est pas affiché.
 export const SOCIETE = {
   nom: 'Amorac',
-  formeJuridique: '', // ex : SARL au capital de 100 000 MAD
-  adresse: '', // adresse du siège
-  immatriculation: '', // ex : RC Casablanca 123456 · ICE 000000000000000
+  formeJuridique: 'SARL au capital de 10 000 MAD',
+  adresse: '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc', // siège
+  immatriculation: 'RC 690767 · ICE 003786356000083 · IF 68391830 · TP 34215251',
   directeurPublication: '', // nom de la personne responsable du site
   emailDonnees: 'contact@kaislo.com', // demandes sur les données personnelles
   emailSecurite: 'contact@kaislo.com', // signalement de failles de sécurité
@@ -66,7 +66,7 @@ export const HEBERGEUR = {
 };
 
 // Date affichée en haut des pages légales (à changer à chaque modification)
-export const DATE_PAGES_LEGALES = '16 octobre 2026';
+export const DATE_PAGES_LEGALES = '9 novembre 2026';
 
 // L'espace Amorac (/admin) est protégé par le serveur : comptes de l'équipe (e-mail + mot de passe).
 // Premier compte : clé « CleAdmin » du fichier .env du serveur.
