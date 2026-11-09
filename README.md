@@ -278,7 +278,7 @@ liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement 
 ## Alertes de l'équipe Kaislo (nouveau commerce, message reçu)
 
 À chaque **nouveau commerce** (inscription ou commerce ajouté par un gérant), **message d'un commerce**, **question d'un visiteur**, **avis** ou **commercial à valider**, l'équipe reçoit un e-mail (`EmailEquipe` du `.env`) **et** une notification sur ses appareils.
-- Activer : application « Kaislo Équipe » (/admin) → Accueil → « Alertes sur ce téléphone » → « Activer les alertes » (chaque membre, sur chaque appareil ; sur iPhone, ajouter d'abord Kaislo Équipe à l'écran d'accueil).
+- Activer : application « Kaislo Équipe » (/admin) → Accueil → « Alertes sur ce téléphone » → « Activer les alertes » (chaque membre, sur chaque appareil ; sur iPhone, ajouter d'abord Kaislo Équipe à l'écran d'accueil). Une fois activées, le cadre disparaît de l'Accueil ; « Désactiver les alertes » est dans le menu (Plus sur téléphone, bas du menu sur ordinateur).
 - Technique : les appareils de l'équipe sont des abonnements push (`abonnements_push`) dont `commerce_id` vaut `amorac` ; `alerterEquipe()` (`api/lib/alertes-equipe.php`) envoie l'e-mail et la notification après la réponse, un échec ne gêne jamais l'action. Routes : `GET /api/admin/push`, `POST /api/admin/push/abonner` et `/desabonner`.
 - Pour une nouvelle alerte : appeler `alerterEquipe('type', 'Titre', 'Texte court', 'Sujet e-mail', 'Corps e-mail')` (type : 20 caractères au plus). Test : `tests/api-alertes-equipe.test.mjs`.
 
