@@ -11,6 +11,7 @@ import { arrondir, genId } from '@/lib/utils/format.js';
 import { estServeur } from '@/lib/donnees/synchro.js';
 import { appelApi } from '@/lib/api.js';
 import { posteDuTicket } from '@/lib/donnees/postes.js';
+import { creerRetour } from '@/lib/donnees/retours.js';
 import { tr } from '@/lib/i18n';
 
 export const trancheCaisse = (set, get) => ({
@@ -213,6 +214,31 @@ export const trancheCaisse = (set, get) => ({
     if (ouvrirTicket) get().ouvrir('ticket', { vente: annulee });
     get().message(tr('Vente n° {0} annulée', [vente.numero]));
     return true;
+  },
+
+  // --- Retour d'un ou plusieurs articles d'une vente (code PIN du gérant obligatoire ; voir lib/donnees/retours.js) ---
+  // Renvoie le retour enregistré, ou false (message déjà affiché)
+  async retournerArticles(vente, quantites, { mode, motif, remettreEnStock, pin }) {
+    const gerant = await get().verifierPinGerant(pin);
+    if (gerant === false) return false;
+    if (!gerant) {
+      get().message(tr('Code PIN du gérant incorrect'), 'erreur');
+      return false;
+    }
+    const { d, utilisateur, prefs } = get();
+    if (!get().caisseOuverte()) {
+      get().message(tr('Ouvrez d’abord la journée'), 'erreur');
+      return false;
+    }
+    const r = creerRetour(d, vente, quantites, { mode, motif, remettreEnStock, vendeur: utilisateur, gerantNom: gerant.nom, posteId: posteDuTicket(d, utilisateur, prefs.posteAppareil) || undefined, appareil: prefs.appareilId });
+    if (r.erreur) {
+      get().message({ rien: tr('Choisissez au moins un article à rendre'), trop: tr('Quantité supérieure à ce qui reste à rendre'), motif: tr('Indiquez le motif du retour'), mode: tr('Le crédit n’est possible que pour une vente notée au nom d’un client'), montant: tr('Montant supérieur à ce qui reste à rendre') }[r.erreur], 'erreur');
+      return false;
+    }
+    get().majDonnees((x) => ({ ventes: [...x.ventes, r.retour] }));
+    get().ouvrir('ticket', { vente: r.retour });
+    get().message(tr('Retour enregistré : {0} à rendre', [get().prix(-r.retour.total)]));
+    return r.retour;
   },
 
   // --- Tables (restaurant) ---

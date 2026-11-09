@@ -4,7 +4,7 @@
 // ------------------------------------------------------------
 import { useKaislo } from '@/store/kaislo';
 import {
-  FeuilleOptions, FeuillePanier, FeuilleTicket, FeuilleAnnulation, FeuilleCuisine, FeuilleRemise,
+  FeuilleOptions, FeuillePanier, FeuilleTicket, FeuilleAnnulation, FeuilleRetourArticle, FeuilleCuisine, FeuilleRemise,
   FeuilleChoixClient, FeuilleChoixTable, FeuilleScan, FeuilleCloture, FeuilleTicketCloture, FeuilleOuverture,
 } from './FeuillesVente';
 import {
@@ -29,6 +29,7 @@ const FEUILLES = {
   panier: FeuillePanier,
   ticket: FeuilleTicket,
   annulation: FeuilleAnnulation,
+  retourArticle: FeuilleRetourArticle,
   cuisine: FeuilleCuisine,
   remise: FeuilleRemise,
   choixClient: FeuilleChoixClient,

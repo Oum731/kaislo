@@ -44,7 +44,7 @@ export function resumeDuJour(d, maintenant = new Date()) {
   // Heure de pointe : l'heure qui a eu le plus de tickets (si assez de ventes pour que ce soit parlant)
   const parHeure = new Map();
   for (const v of ventes) {
-    if (v.annulee) continue;
+    if (v.annulee || v.retourDe) continue; // heure de pointe : les tickets, pas les retours d'article
     const t = new Date(v.date);
     if (t < jour || t > reference) continue;
     parHeure.set(t.getHours(), (parHeure.get(t.getHours()) || 0) + 1);

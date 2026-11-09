@@ -75,10 +75,18 @@ export function construireTicket(vente, commerce, largeurPapier = 58) {
     separateur();
   }
 
+  // Retour d'article : bien visible en haut du ticket (voir lib/donnees/retours.js)
+  if (vente.retourDe) {
+    ajouter(centrer(tr('*** RETOUR D’ARTICLE ***'), L), { gras: true, grand: true });
+    for (const l of decouper(tr('Sur le ticket n° {0}', [vente.retourDeNumero]), L)) ajouter(centrer(l, L));
+    if (vente.motifRetour) for (const l of decouper(tr('Motif : {0}', [vente.motifRetour]), L)) ajouter(centrer(l, L));
+    separateur();
+  }
+
   // Infos de la vente (le nom du vendeur n'est pas imprimé :
   // il reste visible pour le gérant dans l'historique des ventes)
   const date = formatDate(vente.date) + ' ' + formatHeure(vente.date);
-  for (const l of deuxColonnes(tr('Ticket n° {0}', [vente.numero]), date, L)) ajouter(l);
+  for (const l of deuxColonnes(vente.retourDe ? tr('Retour n° {0}', [vente.numero]) : tr('Ticket n° {0}', [vente.numero]), date, L)) ajouter(l);
   if (vente.table) ajouter(tr('Table : {0}', [vente.table]));
   if (vente.aDistance) ajouter(vente.commandeEnLigne ? tr('Commande en ligne n° {0}', [vente.commandeEnLigne.numero]) : tr('Commande à distance'));
   // Client à distance : son nom seulement s'il a été saisi (facultatif) ; pour une vente à crédit il est déjà imprimé plus bas

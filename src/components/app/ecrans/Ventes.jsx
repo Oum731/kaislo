@@ -83,6 +83,7 @@ function LigneTicket({ v, gerant }) {
         <span className="ligne" style={{ gap: 6, flexWrap: 'wrap' }}>
           <b>N° {v.numero}</b>
           {v.annulee && <span className="badge rouge">{tr('Annulée')}</span>}
+          {v.retourDe && <span className="badge safran">{tr('Retour sur n° {0}', [v.retourDeNumero])}</span>}
           {v.table && <span className="badge gris">{v.table}</span>}
           {v.gros && <span className="badge safran">{tr('Gros')}</span>}
           {v.aDistance && <span className="badge"><Icone nom="whatsapp" taille="sm" /></span>}

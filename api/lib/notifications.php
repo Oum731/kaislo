@@ -131,12 +131,12 @@ function calculerResume(array $commerce, array $reglages, ?DateTimeImmutable $ma
         $lignes = is_array($v['lignes'] ?? null) ? $v['lignes'] : [];
         foreach ($lignes as $ligne) {
             $pid = (string) ($ligne['produitId'] ?? '');
-            if (isset($produits[$pid]) && $date >= $depuisDe($produits[$pid])) $delta[$pid] -= (float) ($ligne['quantite'] ?? 0);
+            if (isset($produits[$pid]) && empty($ligne['horsStock']) && $date >= $depuisDe($produits[$pid])) $delta[$pid] -= (float) ($ligne['quantite'] ?? 0);
         }
         if (($v['paiement'] ?? '') === 'Crédit' && !empty($v['clientId'])) $credit[$v['clientId']] = ($credit[$v['clientId']] ?? 0) + (float) ($v['total'] ?? 0);
         if ($date >= $debutSemaine && $date < $debut) $recentes++;
         if ($date < $debut || $date >= $fin) continue;
-        $nb++;
+        if (empty($v['retourDe'])) $nb++; // un retour d'article n'est pas un ticket
         $t = (float) ($v['total'] ?? 0);
         $total += $t;
         $mode = (string) ($v['paiement'] ?? '');

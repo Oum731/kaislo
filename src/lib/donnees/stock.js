@@ -46,6 +46,7 @@ export function avecStocks(d) {
   for (const v of d.ventes || []) {
     if (v.annulee) continue;
     for (const l of v.lignes || []) {
+      if (l.horsStock) continue; // article rendu mais abîmé : il ne revient pas dans le stock (retours.js)
       const s = suivis.get(l.produitId);
       if (s && v.date >= depuisDe(s.p)) s.delta -= (Number(l.quantite) || 0) * (Number(l.contenance) || 1); // au carton : contenance unités par carton (gros.js)
     }

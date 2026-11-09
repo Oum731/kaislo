@@ -94,7 +94,7 @@ export function calculerStats(ventes, periode, maintenant = new Date(), depenses
     if (d < debut || d > maintenant) continue;
 
     total += v.total;
-    nb++;
+    if (!v.retourDe) nb++; // un retour d'article ne compte pas comme un ticket (retours.js)
     barres[indexBarre(periode, d)].valeur += v.total;
     cumuler(vendeurs, v.vendeurId, v.vendeurNom, v.total);
     cumuler(paiements, v.paiement, tt(v.paiement), v.total);

@@ -44,7 +44,7 @@ export function calculerCloture(d, debut, fin, fondDeCaisse) {
     const liste = ventes.filter((v) => v.paiement === mode);
     const total = arrondir(liste.reduce((s, v) => s + v.total, 0), dev);
     const rembourse = arrondir(remboursements.filter((r) => r.mode === mode).reduce((s, r) => s + r.montant, 0), dev);
-    return { mode, nb: liste.length, total, rembourse, recu: mode === CREDIT ? 0 : arrondir(total + rembourse, dev) };
+    return { mode, nb: liste.filter((v) => !v.retourDe).length, total, rembourse, recu: mode === CREDIT ? 0 : arrondir(total + rembourse, dev) };
   });
 
   // Total vendu par article (pour faciliter les comptes à la fermeture)
@@ -69,7 +69,7 @@ export function calculerCloture(d, debut, fin, fondDeCaisse) {
   return {
     debut: debut.toISOString(),
     fin: fin.toISOString(),
-    nbVentes: ventes.length,
+    nbVentes: ventes.filter((v) => !v.retourDe).length, // les retours d'article ne sont pas des tickets
     nbAnnulees: annulees.length,
     totalVentes: arrondir(ventes.reduce((s, v) => s + v.total, 0), dev),
     totalRemises: arrondir(ventes.reduce((s, v) => s + (v.remise || 0), 0), dev),

@@ -184,8 +184,47 @@ function droitManquant(array $u, string $type, bool $supprime, ?array $existant,
 //   - lignes, quantités et montants doivent être valides ; un total qui ne correspond pas aux lignes
 //     est accepté mais signalé dans le journal (vérification par l'équipe, sans perdre la vente)
 // ------------------------------------------------------------
+// Retour d'article : une vente « en négatif » (retourDe = vente d'origine), qui demande le code du gérant et ne peut pas rendre plus que la vente
+function controlerRetour(array $u, ?array $existant, array $vente): ?string
+{
+    $nombre = fn ($v) => is_int($v) || is_float($v);
+    if ($existant) {
+        $avant = json_decode($existant['contenu'], true) ?: [];
+        $changes = [];
+        foreach (array_unique([...array_keys($avant), ...array_keys($vente)]) as $k) {
+            if (($avant[$k] ?? null) != ($vente[$k] ?? null)) $changes[] = $k;
+        }
+        return array_diff($changes, ['impressionDemandee', 'telephoneClient']) ? 'un retour enregistré ne peut pas être modifié' : null;
+    }
+    $lignes = $vente['lignes'] ?? null;
+    if (!is_array($lignes) || !$lignes || count($lignes) > 200) return 'retour invalide : lignes manquantes';
+    $somme = 0.0;
+    foreach ($lignes as $l) {
+        if (!is_array($l) || !$nombre($l['quantite'] ?? null) || !$nombre($l['prixUnitaire'] ?? null) || !$nombre($l['total'] ?? null)) return 'retour invalide : ligne incorrecte';
+        if ($l['quantite'] >= 0 || $l['prixUnitaire'] < 0 || $l['total'] > 0) return 'retour invalide : les quantités et montants doivent être négatifs';
+        $somme += $l['total'];
+    }
+    if (!$nombre($vente['total'] ?? null) || !$nombre($vente['sousTotal'] ?? null) || $vente['total'] > 0 || abs($somme - $vente['sousTotal']) > 1 || abs($vente['sousTotal'] - $vente['total']) > 1) return 'retour invalide : total';
+    if (($vente['remise'] ?? 0) != 0) return 'retour invalide : remise';
+    if ($u['role'] !== 'gerant' && !autorisationValide($u)) return 'retour : code du gérant requis';
+    // La vente d'origine existe, n'est pas annulée, n'est pas elle-même un retour ; le total rendu ne dépasse pas son total
+    $origine = requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'ventes' AND id = ? AND supprime = 0", [$u['commerce_id'], (string) $vente['retourDe']])->fetch();
+    $o = $origine ? json_decode($origine['contenu'], true) : null;
+    if (!is_array($o) || !empty($o['annulee']) || !empty($o['retourDe'])) return 'retour : vente d’origine introuvable ou annulée';
+    $dejaRendu = 0.0;
+    $motif = '%"retourDe":' . json_encode((string) $vente['retourDe']) . '%';
+    foreach (requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'ventes' AND supprime = 0 AND id <> ? AND contenu LIKE ?", [$u['commerce_id'], (string) ($vente['id'] ?? ''), $motif])->fetchAll() as $l) {
+        $r = json_decode($l['contenu'], true);
+        if (is_array($r) && ($r['retourDe'] ?? null) === $vente['retourDe'] && empty($r['annulee'])) $dejaRendu += abs((float) ($r['total'] ?? 0));
+    }
+    if (abs($vente['total']) + $dejaRendu > (float) ($o['total'] ?? 0) + 1) return 'retour : plus que le montant de la vente';
+    journaliser($u['commerce_id'], $u['id'], 'vente-retour', ['vente' => $vente['retourDe'], 'retour' => $vente['id'] ?? null, 'total' => $vente['total']]);
+    return null;
+}
+
 function controlerVente(array $u, ?array $existant, array $vente): ?string
 {
+    if (!empty($vente['retourDe'])) return controlerRetour($u, $existant, $vente);
     $nombre = fn ($v) => is_int($v) || is_float($v);
     $lignes = $vente['lignes'] ?? null;
     if (!is_array($lignes) || !$lignes || count($lignes) > 200) return 'vente invalide : lignes manquantes';
