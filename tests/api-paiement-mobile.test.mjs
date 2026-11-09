@@ -48,7 +48,7 @@ test('par défaut : Orange Money et le code QR Wave pour la Côte d’Ivoire, av
   assert.deepEqual(r.mobiles.map((m) => m.operateur), ['Orange Money', 'Wave']);
   const [orange, wave] = r.mobiles;
   assert.equal(orange.numero, '+2250779872585');
-  assert.equal(orange.qr, '');
+  assert.equal(orange.qr, '/paiement/orange-money.png');
   assert.equal(orange.devise, 'FCFA');
   assert.ok(orange.parMois > 0 && orange.annuel > orange.parMois);
   // Wave : le code QR (image du site) remplace le lien ; le titulaire est affiché
@@ -62,10 +62,12 @@ test('par défaut : Orange Money et le code QR Wave pour la Côte d’Ivoire, av
   assert.deepEqual((await api('GET', '/paiement-virement', null, congo.jeton)).mobiles, []);
 });
 
-test('l’image du code QR Wave est rangée dans le site (public/paiement/wave.png)', () => {
-  const png = fs.readFileSync('public/paiement/wave.png');
-  assert.equal(png.subarray(1, 4).toString(), 'PNG');
-  assert.ok(png.length > 5000 && png.length < 200000);
+test('les images des codes QR par défaut sont rangées dans le site (public/paiement/)', () => {
+  for (const nom of ['wave.png', 'orange-money.png']) {
+    const png = fs.readFileSync('public/paiement/' + nom);
+    assert.equal(png.subarray(1, 4).toString(), 'PNG', nom);
+    assert.ok(png.length > 5000 && png.length < 200000, nom);
+  }
 });
 
 test('l’équipe enregistre ses moyens : contrôles et droits', async () => {
