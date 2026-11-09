@@ -17,7 +17,7 @@
 // Émetteur (même contenu que SOCIETE dans src/config.js : un test le vérifie)
 const EMETTEUR_FACTURE = [
     'nom' => 'AMORAC',
-    'forme' => 'SARL au capital de 10 000 MAD',
+    'forme' => '', // ni forme juridique ni capital sur les factures (comme SOCIETE.formeJuridique)
     'adresse' => '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc',
     'identifiants' => ['RC' => '690767', 'ICE' => '003786356000083', 'IF' => '68391830', 'TP' => '34215251'],
     'email' => 'contact@kaislo.com',
