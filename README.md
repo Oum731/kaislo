@@ -290,7 +290,8 @@ Chaque paiement d'abonnement enregistré dans l'Espace Amorac donne une **factur
 - **Où** : le gérant les trouve dans Réglages → Profil → Abonnement → « Mes factures » (PDF, partage sur téléphone) ; l'équipe, dans la fiche du commerce → Historique des paiements (bouton « Facture FAC-… »). La facture se crée toute seule à l'enregistrement du paiement (simple ou groupé) ; les paiements enregistrés avant ce système n'ont pas de facture (rien n'est créé à la main).
 - **Émetteur** : `EMETTEUR_FACTURE` (api/lib/facturation.php) doit rester identique à `SOCIETE` (src/config.js) : un test le vérifie. Si l'adresse ou le capital change, modifier les deux ; les anciennes factures gardent l'ancienne identité.
 - PDF : `src/lib/export/facture-pdf.js` (français, police standard). Tests : `tests/api-factures.test.mjs`.
-- Pas encore : avoir (facture rectificative) en cas d'erreur ou de remboursement, devis, numéro fiscal du client (ICE, NIF) sur la facture.
+- **Facture d'avoir** (annulation ou remboursement, total ou partiel) : réservée aux administrateurs, depuis la fiche du commerce → Historique des paiements → « Faire un avoir » (montant TTC, vide = tout ce qui reste ; motif obligatoire). Numéro propre `AV-2026-0001` (suite par année), montants négatifs, TVA et mention de la facture d'origine, jamais plus que le total de la facture (cumul des avoirs), table `avoirs` (base v26). Le gérant les voit dans « Mes factures » (étiquette « avoir »). C'est un **document comptable** : il ne rembourse pas l'argent et ne change pas la date de fin d'abonnement, à faire à part.
+- Pas encore : devis, numéro fiscal du client (ICE, NIF) sur la facture.
 
 ## Achats et fournisseurs (Stock → Achats, gérant)
 

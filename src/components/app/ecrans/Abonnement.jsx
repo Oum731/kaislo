@@ -94,7 +94,7 @@ function MesFactures() {
   const [factures, setFactures] = useState(null);
   const [erreur, setErreur] = useState(null);
   useEffect(() => {
-    appelApi('GET', '/factures', null, s.jetonServeur()).then((r) => setFactures(r.factures)).catch(() => setFactures([]));
+    appelApi('GET', '/factures', null, s.jetonServeur()).then((r) => setFactures([...r.factures, ...(r.avoirs || [])].sort((a, b) => b.date.localeCompare(a.date)))).catch(() => setFactures([]));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   if (!factures?.length) return null;
   const telecharger = async (f) => {
@@ -106,7 +106,7 @@ function MesFactures() {
       <b>{tr('Mes factures')}</b>
       {factures.map((f) => (
         <div key={f.id} className="ligne espace" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <span className="petit"><b>{f.numero}</b> · {formatDate(f.date)} · {formatPrix(f.totalTtc, f.devise)}</span>
+          <span className="petit"><b>{f.numero}</b>{f.type === 'avoir' ? ' (' + tr('avoir') + ')' : ''} · {formatDate(f.date)} · {formatPrix(f.totalTtc, f.devise)}</span>
           <button className="btn secondaire petit" onClick={() => telecharger(f)}><Icone nom="installer" taille="sm" /> {tr('PDF')}</button>
         </div>
       ))}

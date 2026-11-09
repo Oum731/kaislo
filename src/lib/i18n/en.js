@@ -2277,4 +2277,5 @@ export const EN = {
   "Paiement noté : {0}": "Payment recorded: {0}",
   "Impossible de créer le PDF, réessayez": "Could not create the PDF, try again",
   "Mes factures": "My invoices",
+  "avoir": "credit note",
 };

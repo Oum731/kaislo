@@ -811,18 +811,57 @@ function VueEquipe({ ctx }) {
   );
 }
 
-// Facture d'un paiement (créée toute seule à l'enregistrement du paiement) : télécharge le PDF
+// Facture d'un paiement (créée toute seule à l'enregistrement du paiement) : télécharge le PDF ; un administrateur peut émettre un avoir
 function BoutonFacture({ p, ctx, commerceId }) {
   const [enCours, setEnCours] = useState(false);
+  const [avoir, setAvoir] = useState(false);
   if (!p.facture) return null; // paiement enregistré avant les factures : pas de facture
-  const agir = async () => {
+  const telecharger = async (numero, type) => {
     setEnCours(true);
     try {
-      const f = (await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId))).factures.find((x) => x.numero === p.facture);
+      const rep = await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId));
+      const f = (type === 'avoir' ? rep.avoirs : rep.factures).find((x) => x.numero === numero);
       if (f) await telechargerFacture(f);
     } catch (e) { window.alert(e.message || 'Impossible de créer le PDF'); } finally { setEnCours(false); }
   };
-  return <button className="btn secondaire petit" onClick={agir} disabled={enCours}>{'Facture ' + p.facture}</button>;
+  return (
+    <>
+      <button className="btn secondaire petit" onClick={() => telecharger(p.facture, 'facture')} disabled={enCours}>{'Facture ' + p.facture}</button>
+      {(p.avoirs || []).map((a) => <button key={a.numero} className="btn secondaire petit" onClick={() => telecharger(a.numero, 'avoir')} disabled={enCours}>{'Avoir ' + a.numero + ' (' + formatPrix(a.totalTtc, p.devise) + ')'}</button>)}
+      {ctx.estAdmin && <button className="btn secondaire petit" onClick={() => setAvoir(true)}>Faire un avoir</button>}
+      {avoir && <FeuilleAvoir p={p} ctx={ctx} commerceId={commerceId} surFermer={() => setAvoir(false)} />}
+    </>
+  );
+}
+
+// Facture d'avoir : annule ou rembourse tout ou partie d'une facture (document comptable ; le remboursement et l'abonnement se règlent à part)
+function FeuilleAvoir({ p, ctx, commerceId, surFermer }) {
+  const [montant, setMontant] = useState('');
+  const [motif, setMotif] = useState('');
+  const [erreur, setErreur] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
+  const emettre = async () => {
+    setEnvoi(true); setErreur(null);
+    try {
+      const rep = await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId));
+      const facture = rep.factures.find((x) => x.numero === p.facture);
+      const r = await ctx.api('POST', '/admin/avoir', { factureId: facture.id, montant: montant === '' ? null : Number(montant), motif });
+      await ctx.recharger();
+      await telechargerFacture(r.avoir);
+      surFermer();
+    } catch (e) { setErreur(e.message); setEnvoi(false); }
+  };
+  return (
+    <Feuille titre={'Avoir sur la facture ' + p.facture} sousTitre={'Facture de ' + formatPrix(p.montant, p.devise)} surFermer={surFermer}
+      pied={<button className="btn bloc" onClick={emettre} disabled={envoi || motif.trim().length < 3}>{envoi ? 'Création…' : 'Émettre l’avoir'}</button>}>
+      <div className="pile">
+        <label className="champ"><span>Montant TTC à créditer (vide = tout ce qui reste)</span><input type="number" inputMode="decimal" min="0" step="any" value={montant} onChange={(e) => setMontant(e.target.value)} placeholder={String(p.montant)} /></label>
+        <label className="champ"><span>Motif</span><input value={motif} onChange={(e) => setMotif(e.target.value)} maxLength={200} placeholder="Ex : remboursement, erreur de montant, geste commercial" /></label>
+        {erreur && <p className="alerte">{erreur}</p>}
+        <p className="tres-petit muet">L’avoir est un document comptable : il prend le prochain numéro AV-… et ne se modifie plus. Il ne rembourse pas l’argent et ne change pas la date de fin d’abonnement : faites-le à part si besoin.</p>
+      </div>
+    </Feuille>
+  );
 }
 
 // ---------- Fiche d'un commerce : abonnement, paiements, suspension, numéro, équipe ----------

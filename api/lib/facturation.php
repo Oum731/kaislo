@@ -115,13 +115,104 @@ function routeFacturesCommerce(): never
     $u = utilisateurConnecte();
     if ($u['role'] !== 'gerant') throw new ErreurApi('Réservé au gérant', 403);
     $lignes = requete('SELECT * FROM factures WHERE commerce_id = ? ORDER BY sequence DESC, annee DESC, date DESC', [$u['commerce_id']])->fetchAll();
-    repondre(['ok' => true, 'factures' => array_map('versFacture', $lignes)]);
+    $avoirs = requete('SELECT * FROM avoirs WHERE commerce_id = ? ORDER BY date DESC', [$u['commerce_id']])->fetchAll();
+    repondre(['ok' => true, 'factures' => array_map('versFacture', $lignes), 'avoirs' => array_map('versAvoir', $avoirs)]);
 }
 
 function routeAdminFactures(): never
 {
     adminConnecte();
     $commerceId = (string) ($_GET['commerceId'] ?? '');
-    $lignes = requete('SELECT * FROM factures' . ($commerceId !== '' ? ' WHERE commerce_id = ?' : '') . ' ORDER BY date DESC LIMIT 1000', $commerceId !== '' ? [$commerceId] : [])->fetchAll();
-    repondre(['ok' => true, 'factures' => array_map('versFacture', $lignes)]);
+    $filtre = $commerceId !== '' ? ' WHERE commerce_id = ?' : '';
+    $lignes = requete('SELECT * FROM factures' . $filtre . ' ORDER BY date DESC LIMIT 1000', $commerceId !== '' ? [$commerceId] : [])->fetchAll();
+    $avoirs = requete('SELECT * FROM avoirs' . $filtre . ' ORDER BY date DESC LIMIT 1000', $commerceId !== '' ? [$commerceId] : [])->fetchAll();
+    repondre(['ok' => true, 'factures' => array_map('versFacture', $lignes), 'avoirs' => array_map('versAvoir', $avoirs)]);
+}
+
+// ---------- Factures d'avoir ----------
+
+function numeroAvoir(int $annee, int $sequence): string
+{
+    return sprintf('AV-%d-%04d', $annee, $sequence);
+}
+
+function versAvoir(array $a): array
+{
+    $contenu = json_decode($a['contenu'] ?? '{}', true) ?: [];
+    return [
+        'id' => $a['id'], 'type' => 'avoir', 'numero' => $a['numero'], 'date' => $a['date'], 'factureId' => $a['facture_id'], 'commerceId' => $a['commerce_id'],
+        'devise' => $a['devise'], 'totalHt' => (float) $a['total_ht'], 'tvaTaux' => (float) $a['tva_taux'], 'tva' => (float) $a['tva'], 'totalTtc' => (float) $a['total_ttc'],
+    ] + $contenu;
+}
+
+/** Ce qui reste à créditer sur une facture (TTC) : son total moins les avoirs déjà émis. */
+function resteACrediter(array $facture): float
+{
+    $deja = (float) (requete('SELECT COALESCE(SUM(total_ttc), 0) AS t FROM avoirs WHERE facture_id = ?', [$facture['id']])->fetch()['t'] ?? 0);
+    // total_ttc d'un avoir est négatif : le reste est le total de la facture + la somme des avoirs
+    return round((float) $facture['total_ttc'] + $deja, decimalesDevise((string) $facture['devise']));
+}
+
+/**
+ * Émet un avoir sur une facture (dans la transaction de l'appelant). $montantTtc : montant à créditer, positif (au plus le reste à créditer).
+ * Les montants de l'avoir sont négatifs ; la TVA suit celle de la facture.
+ */
+function creerAvoir(array $facture, float $montantTtc, string $motif, string $creePar): array
+{
+    $devise = (string) $facture['devise'];
+    $d = decimalesDevise($devise);
+    $montantTtc = round($montantTtc, $d);
+    if ($montantTtc <= 0) throw new ErreurApi('Indiquez le montant à créditer');
+    $reste = resteACrediter($facture);
+    if ($montantTtc > $reste + 1e-9) throw new ErreurApi($reste > 0 ? 'Le montant dépasse ce qui reste à créditer sur cette facture (' . $reste . ' ' . $devise . ')' : 'Cette facture est déjà entièrement créditée');
+    $motif = trim($motif);
+    if (mb_strlen($motif) < 3) throw new ErreurApi('Indiquez le motif de l’avoir');
+    $m = montantsFacture($montantTtc, (float) $facture['tva_taux'], $devise);
+    $origine = json_decode($facture['contenu'] ?? '{}', true) ?: [];
+    $contenu = [
+        'emetteur' => EMETTEUR_FACTURE,
+        'client' => $origine['client'] ?? [],
+        'lignes' => [['designation' => 'Avoir sur la facture ' . $facture['numero'] . ' – ' . mb_substr($motif, 0, 120), 'quantite' => 1, 'montantTtc' => -$m['ttc']]],
+        'reference' => ['factureNumero' => $facture['numero'], 'factureDate' => $facture['date']],
+        'motif' => mb_substr($motif, 0, 200),
+        'mentionTva' => $origine['mentionTva'] ?? '',
+        'creePar' => $creePar,
+    ];
+    $annee = (int) gmdate('Y');
+    $id = nouvelId('av');
+    $date = maintenant();
+    for ($essai = 0; $essai < 5; $essai++) {
+        $sequence = ((int) (requete('SELECT MAX(sequence) AS s FROM avoirs WHERE annee = ?', [$annee])->fetch()['s'] ?? 0)) + 1;
+        try {
+            requete('INSERT INTO avoirs (id, numero, annee, sequence, facture_id, commerce_id, date, devise, total_ht, tva_taux, tva, total_ttc, contenu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                $id, numeroAvoir($annee, $sequence), $annee, $sequence, $facture['id'], $facture['commerce_id'], $date, $devise, -$m['ht'], $facture['tva_taux'], -$m['tva'], -$m['ttc'],
+                json_encode($contenu, JSON_UNESCAPED_UNICODE),
+            ]);
+            return versAvoir(requete('SELECT * FROM avoirs WHERE id = ?', [$id])->fetch());
+        } catch (PDOException $e) {
+            if ($essai === 4) throw $e;
+        }
+    }
+    throw new ErreurApi('Numéro d’avoir indisponible, réessayez', 503);
+}
+
+function routeAdminCreerAvoir(): never
+{
+    $admin = adminConnecte(true);
+    $e = entree();
+    $facture = requete('SELECT * FROM factures WHERE id = ?', [(string) ($e['factureId'] ?? '')])->fetch();
+    if (!$facture) throw new ErreurApi('Facture introuvable', 404);
+    // Sans montant : on crédite tout ce qui reste
+    $montant = isset($e['montant']) && $e['montant'] !== '' && $e['montant'] !== null ? (float) $e['montant'] : resteACrediter($facture);
+    $pdo = base();
+    $pdo->beginTransaction();
+    try {
+        $a = creerAvoir($facture, $montant, (string) ($e['motif'] ?? ''), $admin['email']);
+        $pdo->commit();
+    } catch (Throwable $err) {
+        $pdo->rollBack();
+        throw $err;
+    }
+    journaliser($facture['commerce_id'], $admin['id'], 'amorac-avoir', ['numero' => $a['numero'], 'facture' => $facture['numero'], 'montant' => $a['totalTtc'], 'par' => $admin['email']]);
+    repondre(['ok' => true, 'avoir' => $a], 201);
 }

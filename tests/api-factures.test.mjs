@@ -122,3 +122,46 @@ test('paiement groupé : une facture par commerce, numéros qui se suivent ; un 
   assert.equal((await payer(maroc, 0)).ok, false);
   assert.equal((await api('GET', '/admin/factures', null, admin)).factures.length, avant + 2);
 });
+
+test('facture d’avoir : numéro propre AV-…, montants négatifs, TVA de la facture, jamais plus que la facture', async () => {
+  const toutes = (await api('GET', '/admin/factures', null, admin)).factures;
+  const fm = toutes.find((f) => f.commerceId === maroc.commerce.id && f.totalTtc === 1200);
+  const fc = toutes.find((f) => f.commerceId === ivoire.commerce.id);
+  // Droits et contrôles
+  assert.equal((await api('POST', '/admin/avoir', { factureId: fm.id, montant: 100, motif: 'Geste commercial' }, support)).statut, 403);
+  assert.equal((await api('POST', '/admin/avoir', { factureId: 'inconnue', montant: 100, motif: 'Erreur' }, admin)).statut, 404);
+  assert.equal((await api('POST', '/admin/avoir', { factureId: fm.id, montant: 100, motif: '' }, admin)).statut, 400);
+  assert.equal((await api('POST', '/admin/avoir', { factureId: fm.id, montant: 0, motif: 'Erreur de saisie' }, admin)).statut, 400);
+  assert.equal((await api('POST', '/admin/avoir', { factureId: fm.id, montant: 1201, motif: 'Erreur de saisie' }, admin)).statut, 400);
+  // Avoir partiel (Maroc : 600 TTC = 500 HT + 100 TVA, en négatif)
+  const a1 = await api('POST', '/admin/avoir', { factureId: fm.id, montant: 600, motif: 'Remboursement partiel' }, admin);
+  assert.equal(a1.statut, 201, JSON.stringify(a1));
+  assert.equal(a1.avoir.numero, `AV-${annee}-0001`);
+  assert.deepEqual([a1.avoir.totalHt, a1.avoir.tva, a1.avoir.totalTtc, a1.avoir.tvaTaux], [-500, -100, -600, 20]);
+  assert.equal(a1.avoir.reference.factureNumero, fm.numero);
+  assert.equal(a1.avoir.client.nom, 'Épicerie Awa');
+  assert.match(a1.avoir.lignes[0].designation, new RegExp('Avoir sur la facture ' + fm.numero));
+  // Sans montant : on crédite le reste ; ensuite plus rien à créditer
+  const a2 = await api('POST', '/admin/avoir', { factureId: fm.id, motif: 'Annulation du reste' }, admin);
+  assert.equal(a2.statut, 201, JSON.stringify(a2));
+  assert.equal(a2.avoir.numero, `AV-${annee}-0002`);
+  assert.equal(a2.avoir.totalTtc, -600);
+  const trop = await api('POST', '/admin/avoir', { factureId: fm.id, montant: 1, motif: 'Encore' }, admin);
+  assert.equal(trop.statut, 400);
+  assert.match(trop.erreur || trop.message || '', /entièrement créditée/);
+  // Hors Maroc : pas de TVA, mention reprise de la facture
+  const a3 = await api('POST', '/admin/avoir', { factureId: fc.id, montant: 5000, motif: 'Geste commercial' }, admin);
+  assert.deepEqual([a3.avoir.totalHt, a3.avoir.tva, a3.avoir.totalTtc], [-5000, 0, -5000]);
+  assert.equal(a3.avoir.numero, `AV-${annee}-0003`);
+  assert.match(a3.avoir.mentionTva, /exportation de services/);
+  // Les factures ne changent pas ; le gérant voit ses avoirs ; la fiche indique les avoirs de chaque paiement
+  const apres = (await api('GET', '/admin/factures', null, admin));
+  assert.equal(apres.avoirs.length, 3);
+  assert.equal(apres.factures.find((f) => f.id === fm.id).totalTtc, 1200);
+  const duGerant = await api('GET', '/factures', null, maroc.jeton);
+  assert.deepEqual(duGerant.avoirs.map((a) => a.numero).sort(), [`AV-${annee}-0001`, `AV-${annee}-0002`]);
+  assert.equal((await api('GET', '/factures', null, ivoire.jeton)).avoirs.length, 1);
+  const fiche = await api('GET', '/admin/commerces', null, admin);
+  const paiement = fiche.commerces.find((x) => x.commerce.id === maroc.commerce.id).commerce.abonnement.paiements.find((p) => p.facture === fm.numero);
+  assert.deepEqual(paiement.avoirs.map((a) => a.numero), [`AV-${annee}-0001`, `AV-${annee}-0002`]);
+});

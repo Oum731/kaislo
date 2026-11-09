@@ -137,9 +137,11 @@ function resumesCommerces(?string $seulId = null): array
     }
     $facturesDe = []; // paiement -> numéro de facture
     foreach (requete('SELECT paiement_id, numero FROM factures' . ($seulId ? ' WHERE commerce_id = ?' : ''), $seulId ? [$seulId] : [])->fetchAll() as $f) $facturesDe[$f['paiement_id']] = $f['numero'];
+    $avoirsDe = []; // numéro de facture -> avoirs [{numero, totalTtc}]
+    foreach (requete('SELECT a.numero, a.total_ttc, f.numero AS facture FROM avoirs a JOIN factures f ON f.id = a.facture_id' . ($seulId ? ' WHERE a.commerce_id = ?' : '') . ' ORDER BY a.date', $seulId ? [$seulId] : [])->fetchAll() as $a) $avoirsDe[$a['facture']][] = ['numero' => $a['numero'], 'totalTtc' => (float) $a['total_ttc']];
     $paiements = [];
     foreach (requete('SELECT * FROM paiements' . ($seulId ? ' WHERE commerce_id = ?' : '') . ' ORDER BY date', $seulId ? [$seulId] : [])->fetchAll() as $p) {
-        $paiements[$p['commerce_id']][] = ['id' => $p['id'], 'date' => $p['date'], 'montant' => (float) $p['montant'], 'devise' => $p['devise'], 'mois' => (int) $p['mois'], 'moyen' => $p['moyen'], 'note' => $p['note'], 'creePar' => $p['cree_par'], 'postes' => (int) ($p['postes'] ?? 1), 'details' => json_decode($p['details'] ?? '{}', true) ?: [], 'facture' => $facturesDe[$p['id']] ?? null];
+        $paiements[$p['commerce_id']][] = ['id' => $p['id'], 'date' => $p['date'], 'montant' => (float) $p['montant'], 'devise' => $p['devise'], 'mois' => (int) $p['mois'], 'moyen' => $p['moyen'], 'note' => $p['note'], 'creePar' => $p['cree_par'], 'postes' => (int) ($p['postes'] ?? 1), 'details' => json_decode($p['details'] ?? '{}', true) ?: [], 'facture' => $facturesDe[$p['id']] ?? null, 'avoirs' => $avoirsDe[$facturesDe[$p['id']] ?? ''] ?? []];
     }
     $gerants = [];
     $groupes = []; // numéro du gérant -> commerces qu'il gère
