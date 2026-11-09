@@ -3,7 +3,7 @@
 // TARIFS : une formule par métier, 1 poste inclus (5 vendeurs au maximum par poste),
 // postes supplémentaires, paiement annuel (2 mois offerts), tarif fondateur.
 // Mêmes valeurs par défaut que src/lib/donnees/tarifs.js (à garder identiques).
-// L'équipe Amorac peut les modifier : elles sont alors gardées dans reglages_amorac.
+// L'équipe Kaislo peut les modifier : elles sont alors gardées dans reglages_amorac.
 //
 //   GET  /api/tarifs         formules et règles en vigueur (public)
 //   POST /api/admin/tarifs   { formules, regles } (administrateurs)
@@ -42,7 +42,7 @@ const FORMULES_DEFAUT = [
 // (donc les tarifs actuels, inchangés). Les nouveaux clients SANS code paient le prix catalogue = prix de la grille ÷ (1 − remise),
 // arrondi au pas supérieur : le code donne alors une vraie remise sans jamais baisser les tarifs actuels.
 // Les commerces inscrits avant « catalogueDepuis » gardent leur prix actuel.
-// « taux » : unités de chaque devise pour 1 euro (le FCFA est fixe). Changer un prix dans l'espace Amorac recalcule les autres devises.
+// « taux » : unités de chaque devise pour 1 euro (le FCFA est fixe). Changer un prix dans l'espace Kaislo recalcule les autres devises.
 const TAUX_CHANGE = ['EUR' => 1, 'FCFA' => 655.957, 'MAD' => 10.8, 'CAD' => 1.5, 'USD' => 1.1, 'GNF' => 9840];
 const REGLES_DEFAUT = [
     'taux' => TAUX_CHANGE, 'moisOffertsAnnuel' => 2, 'remiseFondateur' => 20, 'placesFondateur' => 20,
@@ -131,7 +131,7 @@ function rangCommerceDuGerant(array $c): int
     return 0;
 }
 
-// Tarif actuel d'un commerce (affiché dans ses réglages et dans l'espace Amorac)
+// Tarif actuel d'un commerce (affiché dans ses réglages et dans l'espace Kaislo)
 function tarifCommerce(array $c, ?string $devise = null): array
 {
     $dev = $devise ?? $c['devise']; // autre devise : même formule et mêmes remises, prix de la grille dans cette devise (ex. virement en euros)

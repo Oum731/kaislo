@@ -2,15 +2,15 @@
 // ------------------------------------------------------------
 // PAIEMENT PAR VIREMENT BANCAIRE de l'abonnement.
 //
-//   L'équipe Amorac enregistre ses comptes bancaires (un par devise : EUR, MAD…) dans l'espace Amorac → Tarifs.
+//   L'équipe Kaislo enregistre ses comptes bancaires (un par devise : EUR, MAD…) dans l'espace Kaislo → Tarifs.
 //   Le gérant les voit dans l'application (Compte → Abonnement → Payer par virement) avec :
 //     · le montant à virer dans la devise du compte (prix de la grille, avec ses remises : parrain, fondateur…) ;
 //     · une référence à indiquer dans le motif du virement (KAISLO-code du commerce), pour que l'équipe retrouve le paiement ;
 //     · un bouton « J'ai fait le virement » qui prévient l'équipe par la messagerie.
-//   L'équipe enregistre ensuite le paiement dans l'espace Amorac (moyen « Virement »), comme pour les autres moyens.
+//   L'équipe enregistre ensuite le paiement dans l'espace Kaislo (moyen « Virement »), comme pour les autres moyens.
 //
 //   GET  /api/paiement-virement   comptes et montants pour le commerce du gérant connecté
-//   GET  /api/admin/virement      comptes enregistrés (équipe Amorac)
+//   GET  /api/admin/virement      comptes enregistrés (équipe Kaislo)
 //   POST /api/admin/virement      { comptes: [{ devise, beneficiaire, banque, iban, bic?, note? }] } (administrateur)
 // ------------------------------------------------------------
 

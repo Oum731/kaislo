@@ -12,17 +12,19 @@
 //   GET|POST /api/donnees   synchronisation des caisses (voir lib/donnees.php)
 //   POST /api/utilisateurs  vendeurs (gérant) · POST /api/verifier-gerant (annulation)
 //   POST /api/biometrie/... empreinte / Face ID (voir lib/biometrie.php)
-//   GET|POST /api/messages  messagerie avec l'équipe Amorac (voir lib/messages.php)
+//   GET|POST /api/messages  messagerie avec l'équipe Kaislo (voir lib/messages.php)
 //   GET|POST /api/public/chat, /api/chats…  discussion client ↔ commerçant (voir lib/chat.php)
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
 //   GET /api/parrainage     parrainage entre commerçants : code, filleuls, mois gagnés (voir lib/parrainage.php)
 //   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
-//   GET/POST /api/admin/retours   carnet des retours utilisateurs de l'équipe Amorac (voir lib/retours.php)
+//   GET/POST /api/admin/push[/abonner|/desabonner]   alertes de l'équipe sur ses appareils (voir lib/alertes-equipe.php)
+//   GET /api/factures, GET /api/admin/factures   factures d'abonnement émises par Amorac (voir lib/facturation.php)
+//   GET/POST /api/admin/retours   carnet des retours utilisateurs de l'équipe Kaislo (voir lib/retours.php)
 //   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
 //   GET  /api/pays          pays du visiteur d'après son adresse IP (voir lib/pays.php)
 //   /api/notifications      notifications au commerçant : résumé du soir, nouvelles commandes (voir lib/notifications.php)
 //   /api/commercial/...     espace des commerciaux Kaislo (voir lib/commerciaux.php)
-//   /api/admin/...          espace Amorac : commerces, abonnements, offres, équipe (voir lib/admin.php)
+//   /api/admin/...          espace Kaislo : commerces, abonnements, offres, équipe (voir lib/admin.php)
 //
 // Réponses en JSON : { ok: true, ... } ou { ok: false, erreur: "message" }.
 // PHP 8.1 minimum (à choisir dans hPanel → Avancé → Configuration PHP).
@@ -41,6 +43,8 @@ require __DIR__ . '/lib/admin.php';
 require __DIR__ . '/lib/contact.php';
 require __DIR__ . '/lib/avis.php';
 require __DIR__ . '/lib/retours.php';
+require __DIR__ . '/lib/facturation.php';
+require __DIR__ . '/lib/alertes-equipe.php';
 require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
@@ -76,6 +80,7 @@ try {
         'GET /moi' => routeMoi(),
         'POST /deconnexion' => routeDeconnexion(),
         'GET /mes-commerces' => routeMesCommerces(),
+        'GET /factures' => routeFacturesCommerce(),
         'POST /changer-commerce' => routeChangerCommerce(),
         'POST /ajouter-commerce' => routeAjouterCommerce(),
         'GET /admin/catalogue' => routeAdminCatalogue(),
@@ -117,6 +122,10 @@ try {
         'POST /avis' => routeAvisEnvoyer(),
         'GET /admin/avis' => routeAdminAvis(),
         'POST /admin/avis' => routeAdminAvisModerer(),
+        'GET /admin/factures' => routeAdminFactures(),
+        'GET /admin/push' => routeAdminPushEtat(),
+        'POST /admin/push/abonner' => routeAdminPushAbonner(),
+        'POST /admin/push/desabonner' => routeAdminPushDesabonner(),
         'GET /admin/retours' => routeAdminRetoursLire(),
         'POST /admin/retours' => routeAdminRetoursEcrire(),
         'GET /admin/contacts' => routeAdminContacts(),
@@ -284,6 +293,11 @@ function routeInscription(): never
         throw $err;
     }
     $ligneCommerce = requete('SELECT * FROM commerces WHERE id = ?', [$idCommerce])->fetch();
+    alerterEquipe('inscription', 'Nouveau commerce : ' . $nom, "$type · $ville ($pays)",
+        'Kaislo — nouveau commerce : ' . $nom,
+        "Un commerce vient de s'inscrire.\n\nCommerce : $nom (code $code)\nActivité : $type\nLieu : $quartier, $ville ($pays)\nGérant : $nomGerant ($telGerant)\nTéléphone du commerce : {$numCommerce['affichage']}\n"
+            . ($commercial ? "Apporté par le commercial : {$commercial['code']}\n" : '') . ($parrainCommerce ? "Parrainé par le commerce : {$parrainCommerce['code']}\n" : '')
+            . "\nFiche : " . lienAdmin());
     repondre(['ok' => true, 'jeton' => $jeton, 'utilisateur' => versUtilisateur($utilisateur), 'commerce' => versCommerce($ligneCommerce)], 201);
 }
 
@@ -322,7 +336,7 @@ function routeConnexion(): never
         $c = requete('SELECT * FROM commerces WHERE id = ?', [$l['commerce_id']])->fetch();
         if (!$l['actif']) { $refus ??= ['Ce compte a été désactivé par le gérant', 403]; continue; }
         if (!$c) { $refus ??= ['Commerce introuvable', 404]; continue; }
-        if ($c['statut'] === 'suspendu') { $refus ??= ['Ce commerce est suspendu. Contactez Amorac.', 403]; continue; }
+        if ($c['statut'] === 'suspendu') { $refus ??= ['Ce commerce est suspendu. Contactez Kaislo.', 403]; continue; }
         $u = $l; $commerce = $c; break;
     }
     if (!$u) throw new ErreurApi($refus[0], $refus[1]);

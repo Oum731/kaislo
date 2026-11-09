@@ -4,7 +4,7 @@
 //
 // Chaque commercial a un code parrain, saisi à la création du compte d'un commerce
 // (ou dans le lien kaislo.com/app/?ref=CODE).
-// Règle (modifiable dans l'espace Amorac → Commerciaux → Règles) :
+// Règle (modifiable dans l'espace Kaislo → Commerciaux → Règles) :
 //  - 25 % de tout ce que paie le client pendant ses 12 premiers mois payés
 //    (formule et postes supplémentaires compris) ;
 //  - rien n'est payable avant la validation : 6 mois payés ET des ventes chaque semaine ;
@@ -17,7 +17,7 @@
 //
 // Une ligne de commission par mois payé : statut attente → a_payer → payee (ou annulee).
 //
-//   Espace Amorac (administrateurs) :
+//   Espace Kaislo (administrateurs) :
 //     GET  /api/admin/commerciaux                 liste, totaux, règles du programme
 //     GET  /api/admin/commercial?id=…             clients, contrôle de validation, commissions, primes
 //     POST /api/admin/commercial                  créer / modifier un commercial
@@ -251,7 +251,7 @@ function commercialParCode(string $saisie): ?array
     return $c;
 }
 
-// ---------- Espace Amorac ----------
+// ---------- Espace Kaislo ----------
 
 function routeAdminCommerciaux(): never
 {
@@ -418,7 +418,7 @@ function commercialConnecte(): array
     return $c;
 }
 
-// ---------- Inscription d'un commercial par lui-même (validée ensuite par l'équipe Amorac) ----------
+// ---------- Inscription d'un commercial par lui-même (validée ensuite par l'équipe Kaislo) ----------
 // { nom, telephone, pays, email?, pin, conditionsAcceptees: true }
 function routeCommercialInscription(): never
 {
@@ -447,11 +447,9 @@ function routeCommercialInscription(): never
     requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, ville, quartier, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NULL)',
         [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $ville, $quartier, $code, password_hash($pin, PASSWORD_DEFAULT), (float) programme()['taux'], 'Inscription faite par le commercial lui-même', maintenant()]);
     journaliser(null, null, 'commercial-inscription', ['commercial' => $nom, 'code' => $code]);
-    envoyerEmail(
-        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
+    alerterEquipe('commercial', 'Commercial à valider : ' . $nom, $pays . ' · ' . $num['affichage'],
         'Kaislo — nouveau commercial à valider : ' . $nom,
-        "Un commercial vient de s'inscrire.\n\nNom : $nom\nTéléphone : " . $num['affichage'] . "\nPays : $pays\n" . ($email !== '' ? "E-mail : $email\n" : '') . "\nÀ valider dans l'espace Amorac → Commerciaux : https://" . (domaineSite() ?: 'kaislo.com') . "/admin/"
-    );
+        "Un commercial vient de s'inscrire.\n\nNom : $nom\nTéléphone : " . $num['affichage'] . "\nPays : $pays\n" . ($email !== '' ? "E-mail : $email\n" : '') . "\nÀ valider dans l'espace Kaislo Équipe → Commerciaux : " . lienAdmin());
     repondre(['ok' => true, 'enAttente' => true, 'code' => $code], 201);
 }
 

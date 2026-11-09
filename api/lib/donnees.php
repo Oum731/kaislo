@@ -59,7 +59,7 @@ function routeDonneesLire(): never
     repondre([
         'ok' => true, 'heure' => $heure, 'suite' => $suite, 'elements' => $elements,
         'commerce' => versCommerce($commerce), 'utilisateurs' => equipe($u['commerce_id']), 'moi' => versUtilisateur($u),
-        'messagesNonLus' => messagesNonLus($u['commerce_id']), // réponses de l'équipe Amorac pas encore lues
+        'messagesNonLus' => messagesNonLus($u['commerce_id']), // réponses de l'équipe Kaislo pas encore lues
         'chatsNonLus' => chatsNonLus($u['commerce_id']), // messages de clients pas encore lus
         'tarif' => tarifCommerce($commerce), // formule, postes et prix de l'abonnement
     ]);
@@ -70,10 +70,10 @@ function routeDonneesEcrire(): never
 {
     $u = utilisateurConnecte();
     $commerce = requete('SELECT statut, essai_fin, periode_fin FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
-    if (($commerce['statut'] ?? '') === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Amorac.', 403);
+    if (($commerce['statut'] ?? '') === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Kaislo.', 403);
     // Abonnement non payé : la lecture reste possible, mais plus l'enregistrement de nouvelles données
     // (elles restent dans la file d'attente de l'appareil et partent dès que l'abonnement est réglé)
-    if (abonnementExpire($commerce)) throw new ErreurApi('Abonnement expiré : réglez-le pour synchroniser de nouveau (vos données restent sur cet appareil). Contactez Amorac.', 403);
+    if (abonnementExpire($commerce)) throw new ErreurApi('Abonnement expiré : réglez-le pour synchroniser de nouveau (vos données restent sur cet appareil). Contactez Kaislo.', 403);
     $elements = entree()['elements'] ?? null;
     if (!is_array($elements)) throw new ErreurApi('Liste « elements » attendue');
     if (count($elements) > ELEMENTS_PAR_ENVOI) throw new ErreurApi('Trop d’éléments en une fois (' . ELEMENTS_PAR_ENVOI . ' au maximum)');
@@ -139,7 +139,7 @@ function enregistrerElement(array $u, array $e): ?string
         $json = json_encode($contenu, JSON_UNESCAPED_UNICODE);
         $nom = trim((string) ($contenu['nom'] ?? ''));
         if ($nom !== '') {
-            // Le numéro du commerce (son identifiant) n'est changé que par l'équipe Amorac
+            // Le numéro du commerce (son identifiant) n'est changé que par l'équipe Kaislo
             requete('UPDATE commerces SET nom = ?, ville = ?, modifie_le = ? WHERE id = ?', [
                 mb_substr($nom, 0, 120), mb_substr((string) ($contenu['ville'] ?? ''), 0, 120), maintenant(), $u['commerce_id'],
             ]);

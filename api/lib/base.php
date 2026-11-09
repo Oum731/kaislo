@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 24;
+const VERSION_BASE = 25;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -21,7 +21,7 @@ const STRUCTURE = [
             'offre' => 'VARCHAR(20)', 'statut' => 'VARCHAR(20)', 'essai_fin' => 'DATE', 'periode_fin' => 'DATE',
             'conditions_acceptees_le' => 'DATE', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
             'cle_telephone' => 'VARCHAR(20)', // numéro du commerce (chiffres du format international) : unique
-            'notes' => 'LONG', // notes internes de l'équipe Amorac
+            'notes' => 'LONG', // notes internes de l'équipe Kaislo
             'commercial_id' => 'ID', // commercial Kaislo qui a apporté le commerce (code parrain)
             'fondateur' => 'ENTIER', // 1 = tarif fondateur (remise à vie, 20 premiers clients)
             'commission_validee_le' => 'DATE', // 6 mois payés et utilisés : commissions du commercial débloquées
@@ -68,7 +68,7 @@ const STRUCTURE = [
         ],
         'cle' => ['commerce_id', 'type', 'id'], 'uniques' => [], 'index' => [['commerce_id', 'modifie_le'], ['commerce_id', 'recu_le']],
     ],
-    // Paiements des abonnements (enregistrés par l'équipe Amorac ou le prestataire de paiement)
+    // Paiements des abonnements (enregistrés par l'équipe Kaislo ou le prestataire de paiement)
     'paiements' => [
         'colonnes' => [
             'id' => 'ID', 'commerce_id' => 'ID', 'date' => 'DATE', 'montant' => 'MONTANT', 'devise' => 'VARCHAR(6)',
@@ -76,6 +76,14 @@ const STRUCTURE = [
             'postes' => 'ENTIER', 'details' => 'LONG', // nombre de postes payés ; formule, remise… (JSON)
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id']],
+    ],
+    // Factures d'abonnement émises par Amorac (une par paiement, numéro sans trou : FAC-2026-0001)
+    'factures' => [
+        'colonnes' => [
+            'id' => 'ID', 'numero' => 'VARCHAR(20)', 'annee' => 'ENTIER', 'sequence' => 'ENTIER', 'paiement_id' => 'ID', 'commerce_id' => 'ID',
+            'date' => 'DATE', 'devise' => 'VARCHAR(6)', 'total_ht' => 'MONTANT', 'tva_taux' => 'MONTANT', 'tva' => 'MONTANT', 'total_ttc' => 'MONTANT', 'contenu' => 'LONG',
+        ],
+        'cle' => ['id'], 'uniques' => [['numero'], ['paiement_id'], ['annee', 'sequence']], 'index' => [['commerce_id']],
     ],
     // Empreinte / Face ID : clé publique de chaque appareil (la clé secrète ne quitte jamais le téléphone)
     'cles_biometriques' => [
@@ -91,7 +99,7 @@ const STRUCTURE = [
         'colonnes' => ['defi_hash' => 'VARCHAR(64)', 'type' => 'VARCHAR(20)', 'utilisateur_id' => 'ID', 'expire_le' => 'DATE'],
         'cle' => ['defi_hash'], 'uniques' => [], 'index' => [],
     ],
-    // Comptes de l'équipe Amorac (espace /admin)
+    // Comptes de l'équipe Kaislo (espace /admin)
     'admins' => [
         'colonnes' => [
             'id' => 'ID', 'email' => 'VARCHAR(190)', 'nom' => 'TEXTE', 'mdp_hash' => 'TEXTE', 'cree_le' => 'DATE',
@@ -99,12 +107,12 @@ const STRUCTURE = [
         ],
         'cle' => ['id'], 'uniques' => [['email']], 'index' => [],
     ],
-    // Sessions de l'espace Amorac (8 heures, empreinte du jeton seulement)
+    // Sessions de l'espace Kaislo (8 heures, empreinte du jeton seulement)
     'jetons_admin' => [
         'colonnes' => ['jeton_hash' => 'VARCHAR(64)', 'admin_id' => 'ID', 'cree_le' => 'DATE', 'expire_le' => 'DATE', 'appareil' => 'TEXTE'],
         'cle' => ['jeton_hash'], 'uniques' => [], 'index' => [['admin_id']],
     ],
-    // Messagerie entre chaque commerce et l'équipe Amorac
+    // Messagerie entre chaque commerce et l'équipe Kaislo
     'messages' => [
         'colonnes' => [
             'id' => 'ID', 'commerce_id' => 'ID', 'auteur' => 'VARCHAR(10)', // 'commerce' ou 'amorac'
@@ -112,7 +120,7 @@ const STRUCTURE = [
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id', 'cree_le']],
     ],
-    // Réglages de l'équipe Amorac (offres d'abonnement…), en JSON
+    // Réglages de l'équipe Kaislo (offres d'abonnement…), en JSON
     'reglages_amorac' => [
         'colonnes' => ['cle' => 'VARCHAR(40)', 'valeur' => 'LONG', 'modifie_le' => 'DATE'],
         'cle' => ['cle'], 'uniques' => [], 'index' => [],
@@ -171,7 +179,7 @@ const STRUCTURE = [
         ],
         'cle' => ['id'], 'uniques' => [['commerce_id']], 'index' => [['statut', 'cree_le']],
     ],
-    // Carnet des retours utilisateurs de l'équipe Amorac (ce que disent les commerçants : manque, problème, ce qui plaît) : voir lib/retours.php
+    // Carnet des retours utilisateurs de l'équipe Kaislo (ce que disent les commerçants : manque, problème, ce qui plaît) : voir lib/retours.php
     'retours' => [
         'colonnes' => [
             'id' => 'ID', 'commerce_id' => 'ID', 'nom_libre' => 'TEXTE', 'contact' => 'VARCHAR(40)',
@@ -191,7 +199,7 @@ const STRUCTURE = [
             'notes' => 'LONG', 'cree_le' => 'DATE', 'vu_le' => 'DATE',
             'contrat_numero' => 'VARCHAR(30)', 'contrat_envoye_le' => 'DATE', 'contrat_accepte_le' => 'DATE',
             'contrat_conditions' => 'LONG', // règles du programme au moment de l'envoi du contrat (JSON) : le PDF reste identique ensuite
-            'valide_le' => 'DATE', // NULL + inactif = inscription en attente de validation par l'équipe Amorac
+            'valide_le' => 'DATE', // NULL + inactif = inscription en attente de validation par l'équipe Kaislo
         ],
         'cle' => ['id'], 'uniques' => [['code'], ['cle_telephone']], 'index' => [],
     ],
@@ -420,7 +428,7 @@ function migrer(PDO $pdo, string $driver): void
     if ($version >= 4 && $version < 6) $essayer('UPDATE commerciaux SET valide_le = cree_le WHERE valide_le IS NULL');
     // Numéros déjà enregistrés : mis au format international (pays du commerce)
     if ($version >= 1 && $version < 3) normaliserNumerosExistants($pdo);
-    // Bases en version 1 à 21 : nouvelle grille de tarifs (épicerie à part, toutes devises recalculées). Si l'équipe Amorac
+    // Bases en version 1 à 21 : nouvelle grille de tarifs (épicerie à part, toutes devises recalculées). Si l'équipe Kaislo
     // avait déjà enregistré ses tarifs, ils sont remplacés par la grille officielle (sinon les valeurs par défaut s'appliquent).
     if ($version >= 1 && $version < 22) {
         try {

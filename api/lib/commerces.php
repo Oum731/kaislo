@@ -10,7 +10,7 @@
 //   POST /api/changer-commerce   { commerceId, appareil } : ouvre un autre de ses commerces
 //   POST /api/ajouter-commerce   { commerce: { nom, type, ville, quartier, pays?, telephone? }, pin, conditionsAcceptees }
 //
-// Côté équipe Amorac : signauxActivite() repère les commerces dont le contenu ne correspond pas à l'activité déclarée
+// Côté équipe Kaislo : signauxActivite() repère les commerces dont le contenu ne correspond pas à l'activité déclarée
 // (voir plus bas) et routeAdminCatalogue() permet de voir les produits d'un commerce SANS aucun chiffre.
 // ------------------------------------------------------------
 
@@ -82,7 +82,7 @@ function routeChangerCommerce(): never
     $cible = null;
     foreach (commercesDuGerant((string) $moi['cle_telephone']) as $c) if ($c['id'] === (string) ($e['commerceId'] ?? '')) $cible = $c;
     if (!$cible) throw new ErreurApi('Commerce introuvable', 404);
-    if ($cible['statut'] === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Amorac.', 403);
+    if ($cible['statut'] === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Kaislo.', 403);
     $u = requete('SELECT * FROM utilisateurs WHERE id = ?', [$cible['utilisateur_id']])->fetch();
     $jeton = creerJeton($u, (string) ($e['appareil'] ?? ''));
     journaliser($cible['id'], $u['id'], 'changement-commerce', ['depuis' => $moi['commerce_id']]);
@@ -109,7 +109,7 @@ function routeAjouterCommerce(): never
     if (($e['conditionsAcceptees'] ?? false) !== true) throw new ErreurApi('Merci d’accepter les conditions d’utilisation');
 
     $existants = commercesDuGerant((string) $moi['cle_telephone']);
-    if (count($existants) >= MAX_COMMERCES_PAR_GERANT) throw new ErreurApi('Vous avez atteint le nombre maximum de commerces (' . MAX_COMMERCES_PAR_GERANT . '). Contactez Amorac.', 409);
+    if (count($existants) >= MAX_COMMERCES_PAR_GERANT) throw new ErreurApi('Vous avez atteint le nombre maximum de commerces (' . MAX_COMMERCES_PAR_GERANT . '). Contactez Kaislo.', 409);
     $ids = array_column($existants, 'id');
     $actuel = requete('SELECT * FROM commerces WHERE id = ?', [$moi['commerce_id']])->fetch();
 
@@ -157,11 +157,14 @@ function routeAjouterCommerce(): never
     $u = requete('SELECT * FROM utilisateurs WHERE id = ?', [$idUtilisateur])->fetch();
     $jeton = creerJeton($u, (string) ($e['appareil'] ?? ''));
     $ligne = requete('SELECT * FROM commerces WHERE id = ?', [$idCommerce])->fetch();
+    alerterEquipe('inscription', 'Nouveau commerce : ' . $nom, "$type · $ville ($pays) · commerce de plus d'un gérant existant",
+        'Kaislo — nouveau commerce : ' . $nom,
+        "Un gérant déjà inscrit vient d'ajouter un commerce.\n\nCommerce : $nom (code {$ligne['code']})\nActivité : $type\nLieu : $ville ($pays)\nGérant : {$moi['nom']} ({$moi['telephone']})\n\nFiche : " . lienAdmin());
     repondre(['ok' => true, 'jeton' => $jeton, 'utilisateur' => versUtilisateur($u), 'commerce' => versCommerce($ligne), 'commerces' => listeCommercesGerant($u)], 201);
 }
 
 // ------------------------------------------------------------
-// DÉTECTION DES FAUSSES DÉCLARATIONS D'ACTIVITÉ (espace Amorac)
+// DÉTECTION DES FAUSSES DÉCLARATIONS D'ACTIVITÉ (espace Kaislo)
 //
 // Le prix de l'abonnement dépend de l'activité déclarée. Quand le contenu d'un commerce ressemble clairement à un
 // autre métier plus cher (des plats et des tables dans une « épicerie », des cartons et des sacs dans une
@@ -226,7 +229,7 @@ function produitsParCommerce(?string $seulId = null): array
 }
 
 // ---------- GET /api/admin/catalogue?commerceId=… ----------
-// Consultation des produits d'un commerce par l'équipe Amorac : noms, catégories, unités, choix. JAMAIS de prix, de
+// Consultation des produits d'un commerce par l'équipe Kaislo : noms, catégories, unités, choix. JAMAIS de prix, de
 // stock, de ventes ni de chiffres. Chaque consultation est notée dans le journal.
 function routeAdminCatalogue(): never
 {
