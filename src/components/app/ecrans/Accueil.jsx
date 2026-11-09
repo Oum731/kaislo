@@ -13,6 +13,7 @@ import { formatJourLong, formatDate, formatHeure } from '@/lib/utils/format';
 import { Icone, Segment } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import InvitationAvis from '../InvitationAvis';
+import ResumeDuJour from '../ResumeDuJour';
 import { etatAbonnement } from '@/lib/donnees/abonnement';
 import { CONTACT_WHATSAPP } from '@/config';
 import { tr, tt } from '@/lib/i18n';
@@ -85,6 +86,8 @@ export default function Accueil() {
               <button onClick={() => s.ouvrir('depense')}><Icone nom="plus" />{tr('Dépense')}</button>
               {peutArticles && <button onClick={() => s.ouvrir('produit')}><Icone nom="produits" />{tr('Article')}</button>}
             </div>
+
+            {gerant && <ResumeDuJour />}
 
             {gerant && (
               <div className="etat-journee">

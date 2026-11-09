@@ -6,11 +6,13 @@
 //  - journées de vente : historique des ouvertures et fermetures (gérant)
 //  - dépenses : historique par jour, avec recherche (gérant)
 // ------------------------------------------------------------
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { formatHeure, formatDate, formatJourLong } from '@/lib/utils/format';
 import { historiqueCaisse, calculerCloture } from '@/lib/donnees/cloture';
 import { historiqueDepenses } from '@/lib/donnees/depenses';
+import { filtrerVentes, valeursDeFiltre } from '@/lib/donnees/historique-ventes';
+import { exporterVentesCsv } from '@/lib/donnees/export';
 import { Icone, Puces, Segment } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { BadgeEcart } from './Accueil';
@@ -66,73 +68,125 @@ export function EtatCaisse({ compact = false }) {
   );
 }
 
+const PAS_LISTE = 50; // tickets affichés d'abord, puis 50 de plus à chaque « Afficher plus »
+
+// Ligne d'un ticket (heure, mode de paiement, détails, total)
+function LigneTicket({ v, gerant }) {
+  const s = useKaislo();
+  const mode = v.annulee ? 'annulee' : v.paiement === 'Crédit' ? 'credit' : v.paiement === 'Espèces' ? 'especes' : v.paiement === 'Carte' ? 'carte' : 'mobile';
+  const icone = v.paiement === 'Virement' && !v.annulee ? 'banque' : { annulee: 'fermer', credit: 'carnet', especes: 'billet', carte: 'depense', mobile: 'telephone' }[mode];
+  return (
+    <button className={`vente-item ${v.annulee ? 'annulee' : ''}`} onClick={() => s.ouvrir('ticket', { vente: v })} aria-label={tr('Ticket n° {0}, {1}', [v.numero, s.prix(v.total)])}>
+      <span className="vente-heure">{formatHeure(v.date)}</span>
+      <span className={`vente-paiement ${mode}`} title={v.annulee ? tr('Annulée') : tt(v.paiement)}><Icone nom={icone} /></span>
+      <span className="grandit" style={{ minWidth: 0 }}>
+        <span className="ligne" style={{ gap: 6, flexWrap: 'wrap' }}>
+          <b>N° {v.numero}</b>
+          {v.annulee && <span className="badge rouge">{tr('Annulée')}</span>}
+          {v.table && <span className="badge gris">{v.table}</span>}
+          {v.gros && <span className="badge safran">{tr('Gros')}</span>}
+          {v.aDistance && <span className="badge"><Icone nom="whatsapp" taille="sm" /></span>}
+        </span>
+        <span className="tres-petit muet tronque bloc-texte" style={{ marginTop: 3 }}>
+          {(mode === 'mobile' || mode === 'credit' ? tt(v.paiement) + ' · ' : '') + (v.refPaiement ? v.refPaiement + ' · ' : '') + (gerant ? v.vendeurNom.split(' ')[0] + ' · ' : '') + (v.clientNom ? v.clientNom + ' · ' : '') + v.lignes.map((l) => l.produitNom || l.nom).join(', ')}
+        </span>
+      </span>
+      <b className="chiffre prix-vente">{s.prix(v.total)}</b>
+    </button>
+  );
+}
+
+// Historique des ventes : période (aujourd'hui, hier, 7 jours, ce mois, mois dernier, tout, dates libres), vendeur, paiement, état, recherche.
+// Le vendeur ne voit que ses ventes. Le gérant peut exporter le résultat affiché en CSV.
 function ListeTickets() {
   const s = useKaislo();
   const { d } = s;
   const gerant = s.estGerant();
-  const [filtre, setFiltre] = useState('jour');
+  const [periode, setPeriode] = useState('jour');
+  const [du, setDu] = useState('');
+  const [au, setAu] = useState('');
+  const [vendeurId, setVendeurId] = useState('');
+  const [paiement, setPaiement] = useState('');
+  const [statut, setStatut] = useState('toutes');
   const [recherche, setRecherche] = useState('');
+  const [limite, setLimite] = useState(PAS_LISTE);
+  const seulement = gerant ? '' : s.utilisateur.id;
 
-  const debut = new Date();
-  debut.setHours(0, 0, 0, 0);
-  let fin = null;
-  if (filtre === 'hier') { fin = new Date(debut); debut.setDate(debut.getDate() - 1); }
-  if (filtre === 'semaine') debut.setDate(debut.getDate() - 6);
-  const r = recherche.trim().toLowerCase();
-
-  const liste = d.ventes
-    .filter((v) => {
-      const t = new Date(v.date);
-      if (t < debut || (fin && t >= fin)) return false;
-      if (!gerant && v.vendeurId !== s.utilisateur.id) return false;
-      if (r && !(String(v.numero) === r || (v.clientNom || '').toLowerCase().includes(r) || (v.table || '').toLowerCase().includes(r))) return false;
-      return true;
-    })
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 200);
-  const valides = liste.filter((v) => !v.annulee);
-  const total = valides.reduce((x, v) => x + v.total, 0);
+  const choix = useMemo(() => valeursDeFiltre(seulement ? d.ventes.filter((v) => v.vendeurId === seulement) : d.ventes), [d.ventes, seulement]);
+  const h = useMemo(() => filtrerVentes(d.ventes, { periode, du, au, vendeurId, paiement, statut, recherche, seulementVendeurId: seulement }), [d.ventes, periode, du, au, vendeurId, paiement, statut, recherche, seulement]);
+  const { resume } = h;
+  const plusieursJours = h.jours.length > 1;
+  // Sous les totaux : ventes par mode de paiement (s'il y en a plusieurs), remises accordées, ventes annulées
+  const detailsResume = [
+    ...(resume.parPaiement.length > 1 ? resume.parPaiement.map((p) => tt(p.mode) + ' ' + s.prix(p.total)) : []),
+    ...(resume.remises > 0 ? [tr('remises {0}', [s.prix(resume.remises)])] : []),
+    ...(resume.nbAnnulees > 0 ? [tr('{0} annulée(s) : {1}', [resume.nbAnnulees, s.prix(resume.totalAnnule)])] : []),
+  ];
+  const filtresActifs = [vendeurId, paiement, statut !== 'toutes' ? statut : '', recherche.trim()].filter(Boolean).length;
+  // Les tickets affichés (les premiers), regroupés par jour comme la liste complète
+  const affiches = h.liste.slice(0, limite);
+  const ids = new Set(affiches.map((v) => v.id));
+  const jours = h.jours.map((j) => ({ ...j, ventes: j.ventes.filter((v) => ids.has(v.id)) })).filter((j) => j.ventes.length);
+  const changer = (fn) => (v) => { fn(v); setLimite(PAS_LISTE); };
 
   return (
     <>
       <div style={{ marginTop: 14 }}>
-        <Puces options={[['jour', tr('Aujourd’hui')], ['hier', tr('Hier')], ['semaine', tr('7 derniers jours')]]} valeur={filtre} surChanger={setFiltre} />
+        <Puces options={[['jour', tr('Aujourd’hui')], ['hier', tr('Hier')], ['semaine', tr('7 derniers jours')], ['mois', tr('Ce mois')], ['moisPrecedent', tr('Mois dernier')], ['tout', tr('Tout')], ['dates', tr('Dates…')]]} valeur={periode} surChanger={changer(setPeriode)} enveloppe />
       </div>
-      <div className="grille-2" style={{ margin: '14px 0' }}>
-        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-vert"><Icone nom="depense" /></span><p className="kpi-valeur">{s.prix(total)}</p><p className="tuile-kpi-libelle">{tr('Total')}</p></div>
-        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-vert"><Icone nom="ventes" /></span><p className="kpi-valeur">{valides.length}</p><p className="tuile-kpi-libelle">{tr('Tickets')}</p></div>
+      {periode === 'dates' && (
+        <div className="grille-2" style={{ marginTop: 10 }}>
+          <label className="champ"><span>{tr('Du')}</span><input type="date" value={du} max={au || undefined} onChange={(e) => changer(setDu)(e.target.value)} /></label>
+          <label className="champ"><span>{tr('Au')}</span><input type="date" value={au} min={du || undefined} onChange={(e) => changer(setAu)(e.target.value)} /></label>
+        </div>
+      )}
+      <div className="grille-2" style={{ margin: '14px 0 8px' }}>
+        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-vert"><Icone nom="depense" /></span><p className="kpi-valeur">{s.prix(resume.total)}</p><p className="tuile-kpi-libelle">{tr('Total')}</p></div>
+        <div className="carte kpi tuile-kpi"><span className="tuile-icone teinte-vert"><Icone nom="ventes" /></span><p className="kpi-valeur">{resume.nb}</p><p className="tuile-kpi-libelle">{tr('Tickets')}{resume.nb > 0 ? ' · ' + tr('moyen {0}', [s.prix(resume.panierMoyen)]) : ''}</p></div>
       </div>
-      <label className="recherche" style={{ marginBottom: 14 }}>
+      {detailsResume.length > 0 && <p className="tres-petit muet" style={{ margin: '0 0 12px' }}>{detailsResume.join(' · ')}</p>}
+      <label className="recherche" style={{ marginBottom: 10 }}>
         <Icone nom="recherche" taille="sm" />
-        <input type="search" placeholder={tr('N° de ticket, client ou table…')} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+        <input type="search" placeholder={tr('N° de ticket, client, table ou article…')} value={recherche} onChange={(e) => changer(setRecherche)(e.target.value)} />
       </label>
-      {liste.map((v) => {
-        const mode = v.annulee ? 'annulee' : v.paiement === 'Crédit' ? 'credit' : v.paiement === 'Espèces' ? 'especes' : v.paiement === 'Carte' ? 'carte' : 'mobile';
-        const icone = v.paiement === 'Virement' && !v.annulee ? 'banque' : { annulee: 'fermer', credit: 'carnet', especes: 'billet', carte: 'depense', mobile: 'telephone' }[mode];
-        return (
-          <button key={v.id} className={`vente-item ${v.annulee ? 'annulee' : ''}`} onClick={() => s.ouvrir('ticket', { vente: v })} aria-label={tr('Ticket n° {0}, {1}', [v.numero, s.prix(v.total)])}>
-            <span className="vente-heure">
-              {formatHeure(v.date)}
-              {filtre === 'semaine' && <span className="tres-petit muet bloc-texte" style={{ fontWeight: 500 }}>{formatDate(v.date).slice(0, 5)}</span>}
-            </span>
-            <span className={`vente-paiement ${mode}`} title={v.annulee ? tr('Annulée') : tt(v.paiement)}><Icone nom={icone} /></span>
-            <span className="grandit" style={{ minWidth: 0 }}>
-              <span className="ligne" style={{ gap: 6, flexWrap: 'wrap' }}>
-                <b>N° {v.numero}</b>
-                {v.annulee && <span className="badge rouge">{tr('Annulée')}</span>}
-                {v.table && <span className="badge gris">{v.table}</span>}
-                {v.gros && <span className="badge safran">{tr('Gros')}</span>}
-                {v.aDistance && <span className="badge"><Icone nom="whatsapp" taille="sm" /></span>}
-              </span>
-              <span className="tres-petit muet tronque bloc-texte" style={{ marginTop: 3 }}>
-                {(mode === 'mobile' || mode === 'credit' ? tt(v.paiement) + ' · ' : '') + (v.refPaiement ? v.refPaiement + ' · ' : '') + (gerant ? v.vendeurNom.split(' ')[0] + ' · ' : '') + (v.clientNom ? v.clientNom + ' · ' : '') + v.lignes.map((l) => l.produitNom || l.nom).join(', ')}
-              </span>
-            </span>
-            <b className="chiffre prix-vente">{s.prix(v.total)}</b>
-          </button>
-        );
-      })}
-      {!liste.length && <div className="vide"><p>{tr('Aucune vente sur cette période')}</p></div>}
+      <div className="ligne" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+        {gerant && choix.vendeurs.length > 1 && (
+          <select className="saisie" style={{ flex: '1 1 140px', width: 'auto' }} value={vendeurId} onChange={(e) => changer(setVendeurId)(e.target.value)} aria-label={tr('Vendeur')}>
+            <option value="">{tr('Tous les vendeurs')}</option>
+            {choix.vendeurs.map((x) => <option key={x.id} value={x.id}>{x.nom}</option>)}
+          </select>
+        )}
+        {choix.paiements.length > 1 && (
+          <select className="saisie" style={{ flex: '1 1 140px', width: 'auto' }} value={paiement} onChange={(e) => changer(setPaiement)(e.target.value)} aria-label={tr('Paiement')}>
+            <option value="">{tr('Tous les paiements')}</option>
+            {choix.paiements.map((x) => <option key={x} value={x}>{tt(x)}</option>)}
+          </select>
+        )}
+        <select className="saisie" style={{ flex: '1 1 140px', width: 'auto' }} value={statut} onChange={(e) => changer(setStatut)(e.target.value)} aria-label={tr('État')}>
+          <option value="toutes">{tr('Ventes valides et annulées')}</option>
+          <option value="valides">{tr('Ventes valides')}</option>
+          <option value="annulees">{tr('Ventes annulées')}</option>
+        </select>
+        {filtresActifs > 0 && <button className="lien" onClick={() => { setVendeurId(''); setPaiement(''); setStatut('toutes'); setRecherche(''); setLimite(PAS_LISTE); }}>{tr('Effacer les filtres')}</button>}
+      </div>
+      {jours.map((j) => (
+        <div key={j.cle} style={{ marginBottom: plusieursJours ? 10 : 0 }}>
+          {plusieursJours && (
+            <div className="ligne espace" style={{ padding: '10px 4px 6px' }}>
+              <b>{formatJourLong(j.date)} <span className="tres-petit muet">· {formatDate(j.date.toISOString())}</span></b>
+              <span className="tres-petit muet">{tr('{0} ticket(s)', [j.nb])} · <b className="chiffre">{s.prix(j.total)}</b></span>
+            </div>
+          )}
+          {j.ventes.map((v) => <LigneTicket key={v.id} v={v} gerant={gerant} />)}
+        </div>
+      ))}
+      {h.liste.length > limite && (
+        <button className="btn secondaire bloc" style={{ margin: '8px 0' }} onClick={() => setLimite(limite + PAS_LISTE)}>{tr('Afficher plus ({0} sur {1})', [affiches.length, h.liste.length])}</button>
+      )}
+      {!h.liste.length && <div className="vide"><p>{tr('Aucune vente sur cette période')}</p></div>}
+      {gerant && h.liste.length > 0 && (
+        <button className="btn fantome petit" style={{ marginTop: 6 }} onClick={() => exporterVentesCsv(d, h.liste)}><Icone nom="installer" taille="sm" /> {tr('Exporter ces {0} ventes (CSV)', [h.liste.length])}</button>
+      )}
     </>
   );
 }

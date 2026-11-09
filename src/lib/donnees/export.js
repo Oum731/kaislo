@@ -41,10 +41,10 @@ const cellule = (v) => {
 // Montants avec une virgule décimale (format attendu par Excel en français)
 const montant = (x) => (Number(x) || 0).toString().replace('.', ',');
 
-// Une ligne par ticket
-export function exporterVentesCsv(d) {
+// Une ligne par ticket (toutes les ventes, ou la liste filtrée passée en second argument)
+export function exporterVentesCsv(d, ventes = d.ventes) {
   const entete = [tr('Numéro'), tr('Date'), tr('Heure'), tr('Vendeur'), tr('Paiement'), tr('Client'), tr('Table'), tr('Articles'), tr('Sous-total'), tr('Remise'), tr('Total'), tr('Devise'), tr('Annulée'), tr('Motif d’annulation')];
-  const lignes = d.ventes.map((v) => {
+  const lignes = ventes.map((v) => {
     const date = new Date(v.date);
     return [
       v.numero,
