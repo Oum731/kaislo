@@ -2,7 +2,7 @@
 // Écran de chargement : logo Kaislo entouré d'un anneau qui tourne.
 // Uniquement du HTML + CSS : il s'affiche dès la première image,
 // avant même que le JavaScript soit téléchargé (connexions lentes).
-// Utilisé au lancement de l'application, de l'espace Amorac,
+// Utilisé au lancement de l'application, de l'espace Kaislo,
 // et entre deux pages du site (src/app/loading.js).
 // ------------------------------------------------------------
 import Marque from '@/components/Marque';

@@ -33,15 +33,13 @@ function routeContact(): never
     $texte = texteMessage($e);
     $page = mb_substr((string) ($e['page'] ?? ''), 0, 120);
     requete('INSERT INTO contacts (id, nom, contact, texte, page, ip_hash, cree_le) VALUES (?, ?, ?, ?, ?, ?, ?)', [nouvelId('ct'), $nom, $contact, $texte, $page, $ip, maintenant()]);
-    envoyerEmail(
-        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
+    alerterEquipe('visiteur', 'Question d’un visiteur : ' . $nom, mb_substr($texte, 0, 140),
         'Kaislo — question d’un visiteur : ' . $nom,
-        "Un visiteur a écrit depuis le site ($page).\n\nNom : $nom\nContact : $contact\n\n$texte\n\nÀ traiter dans l'espace Amorac → Messages → Visiteurs : https://" . (domaineSite() ?: 'kaislo.com') . "/admin/"
-    );
+        "Un visiteur a écrit depuis le site ($page).\n\nNom : $nom\nContact : $contact\n\n$texte\n\nÀ traiter dans l'espace Kaislo Équipe → Messages → Visiteurs : " . lienAdmin());
     repondre(['ok' => true], 201);
 }
 
-// Nombre de messages de visiteurs pas encore traités (pastille de l'espace Amorac)
+// Nombre de messages de visiteurs pas encore traités (pastille de l'espace Kaislo)
 function contactsNonTraites(): int
 {
     return (int) requete('SELECT COUNT(*) AS n FROM contacts WHERE traite_le IS NULL')->fetch()['n'];

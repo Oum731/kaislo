@@ -66,7 +66,7 @@ function PanneauVisuel() {
         <h2>{tr('Vendez plus vite. Comptez moins. Gagnez plus.')}</h2>
         <p style={{ opacity: 0.75, marginTop: 14, maxWidth: 420 }}>{tr('Ventes, tickets, carnet de crédit, tables, stock et marges : tout votre commerce dans votre poche.')}</p>
       </div>
-      <p className="petit" style={{ opacity: 0.6, position: 'relative' }}>{tr('Une solution Amorac')}</p>
+      <p className="petit" style={{ opacity: 0.6, position: 'relative' }}>{tr('Fonctionne sans internet')}</p>
     </div>
   );
 }
@@ -235,7 +235,7 @@ function ConnexionTelephone() {
   );
 }
 
-// Le commerce a été suspendu par l'équipe Amorac
+// Le commerce a été suspendu par l'équipe Kaislo
 function CommerceSuspendu() {
   const s = useKaislo();
   return (
@@ -311,7 +311,7 @@ function Inscription() {
       {etape === 2 && (
         <form className="pile" onSubmit={(e) => { e.preventDefault(); continuer(); }}>
           <div className="intro"><p className="petit muet">{tr('Étape 2 sur 3')}</p><h1 style={{ marginTop: 4 }}>{tr('Votre commerce')}</h1></div>
-          <label className="champ"><span>{tr('Nom du commerce')}</span><input value={f.nom} onChange={maj('nom')} placeholder={tr('Ex : Amorac Kaislo')} autoFocus /></label>
+          <label className="champ"><span>{tr('Nom du commerce')}</span><input value={f.nom} onChange={maj('nom')} placeholder={tr('Ex : Kaislo')} autoFocus /></label>
           <div className="grille-2">
             <label className="champ"><span>{tr('Pays')}</span>
               <select value={f.pays} onChange={maj('pays')}>
@@ -335,7 +335,7 @@ function Inscription() {
             <h1 style={{ marginTop: 4 }}>{tr('Votre compte gérant')}</h1>
             <p>{tr('Vous vous connecterez avec votre numéro de téléphone et votre code PIN.')}</p>
           </div>
-          <label className="champ"><span>{tr('Votre nom et prénom')}</span><input value={f.gerantNom} onChange={maj('gerantNom')} placeholder={tr('Ex : Amorac Kaislo')} autoFocus /></label>
+          <label className="champ"><span>{tr('Votre nom et prénom')}</span><input value={f.gerantNom} onChange={maj('gerantNom')} placeholder={tr('Ex : Kaislo')} autoFocus /></label>
           <ChampTelephone libelle={tr('Votre numéro de téléphone (pour vous connecter)')} pays={f.pays} valeur={f.gerantTelephone} surChanger={(v) => setF({ ...f, gerantTelephone: v })} />
           {!f.gerantTelephone && f.telephone && (
             <button type="button" className="lien tres-petit" style={{ textAlign: 'left' }} onClick={() => setF({ ...f, gerantTelephone: f.telephone })}>{tr('Utiliser le numéro du commerce')}</button>

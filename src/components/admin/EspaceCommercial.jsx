@@ -4,7 +4,7 @@
 //  - son code parrain et son lien d'inscription à partager
 //  - ses clients, leur ancienneté et le contrôle des 6 mois
 //  - ses commissions (en attente, à payer, payées) et ses primes
-// Inscription : le commercial crée lui-même sa demande (code parrain automatique) ; l'équipe Amorac la valide.
+// Inscription : le commercial crée lui-même sa demande (code parrain automatique) ; l'équipe Kaislo la valide.
 // Connexion : pays + numéro de téléphone + code PIN à 6 chiffres (choisi à l'inscription).
 // ------------------------------------------------------------
 import { useCallback, useEffect, useState } from 'react';
@@ -81,7 +81,7 @@ function ConnexionCommercial({ surConnexion }) {
   );
 }
 
-// Inscription d'un commercial : demande « en attente », l'équipe Amorac la valide ; le code parrain est créé automatiquement
+// Inscription d'un commercial : demande « en attente », l'équipe Kaislo la valide ; le code parrain est créé automatiquement
 function FormulaireInscription() {
   const [f, setF] = useState({ pays: 'CI', nom: '', telephone: '', ville: '', quartier: '', email: '', pin: '', pin2: '', accepte: false });
   const [erreur, setErreur] = useState('');

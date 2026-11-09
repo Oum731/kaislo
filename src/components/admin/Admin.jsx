@@ -4,7 +4,7 @@
 //  - tableau de bord : commerces, essais, abonnés, revenus, à relancer
 //  - commerces : fiche, abonnement, paiements, suspension, numéro, notes
 //  - messages : conversations avec les commerces
-//  - paiements, tarifs (formules par métier, postes, fondateur), commerciaux, équipe Amorac
+//  - paiements, tarifs (formules par métier, postes, fondateur), commerciaux, équipe Kaislo
 // Accès : comptes de l'équipe (e-mail + mot de passe), session de 8 heures.
 // Rôles : « admin » (tout) ou « support » (consultation, notes et messages).
 // ------------------------------------------------------------
@@ -22,6 +22,7 @@ import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/rela
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
 import { telechargerFacture } from '@/lib/export/telecharger-facture';
+import { etatPush, activerPush, desactiverPush, iosNonInstalle } from '@/lib/push-client';
 import { VueRetours, RetoursCommerce } from './Retours';
 
 const JOUR = 86400000;
@@ -60,8 +61,8 @@ export default function Admin() {
     setEtat({ pret: true, admin: null, installe: true, jeton: null });
   };
 
-  if (!etat.pret) return <Chargement texte="Ouverture de l’espace Amorac…" />;
-  if (!API_ACTIVE) return <Cadre><p className="astuce">L’espace Amorac fonctionne sur le serveur (version hébergée). Cette version de test n’a pas de serveur.</p></Cadre>;
+  if (!etat.pret) return <Chargement texte="Ouverture de l’espace Kaislo…" />;
+  if (!API_ACTIVE) return <Cadre><p className="astuce">L’espace Kaislo fonctionne sur le serveur (version hébergée). Cette version de test n’a pas de serveur.</p></Cadre>;
   if (!etat.admin) return etat.installe ? <ConnexionAdmin surConnexion={connecte} /> : <InstallationAdmin surConnexion={connecte} />;
   return <TableauAdmin admin={etat.admin} jeton={etat.jeton} surDeconnexion={deconnexion} />;
 }
@@ -70,7 +71,7 @@ function Cadre({ children }) {
   return (
     <div className="ecran-chargement" style={{ padding: 20 }}>
       <div className="carte pile" style={{ width: '100%', maxWidth: 440 }}>
-        <span className="logo"><Marque /> Kaislo · Amorac</span>
+        <span className="logo"><Marque /> Kaislo Équipe</span>
         {children}
       </div>
     </div>
@@ -112,7 +113,7 @@ function InstallationAdmin({ surConnexion }) {
   };
   return (
     <Cadre>
-      <h2>Installer l’espace Amorac</h2>
+      <h2>Installer l’espace Kaislo</h2>
       <p className="petit muet">Création du premier compte administrateur. La clé d’installation est la valeur « CleAdmin » du fichier .env du serveur.</p>
       <form className="pile" onSubmit={valider}>
         <label className="champ"><span>Clé d’installation</span><input type="password" value={f.cle} onChange={maj('cle')} autoFocus /></label>
@@ -150,12 +151,12 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
-  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente };
+  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente, jeton };
 
   return (
     <div className="coque admin-espace">
-      <nav className="menu" aria-label="Menu Amorac">
-        <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Amorac</span></span></div>
+      <nav className="menu" aria-label="Menu Kaislo">
+        <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Kaislo</span></span></div>
         <div className="menu-liens">
           {/* Téléphone : 4 onglets + « Plus » (Commerciaux, Tarifs, Équipe, Sortir) ; tablette et ordinateur : tous les liens */}
           {liens.map(([e, l, i, pastille], n) => (
@@ -224,6 +225,44 @@ function parDevise(lignes) {
 }
 const paiementsDe = (commerces) => commerces.flatMap((c) => (c.commerce.abonnement?.paiements || []).map((p) => ({ ...p, c })));
 
+// Alertes sur cet appareil : une notification à chaque nouveau commerce, message d'un commerce ou question d'un visiteur (voir api/lib/alertes-equipe.php)
+function AlertesEquipe({ ctx }) {
+  const [etat, setEtat] = useState(null);
+  const [serveur, setServeur] = useState(null);
+  const [message, setMessage] = useState(null);
+  const [enCours, setEnCours] = useState(false);
+  const charger = useCallback(async () => {
+    setEtat(await etatPush());
+    ctx.api('GET', '/admin/push').then(setServeur).catch(() => setServeur(null));
+  }, [ctx]);
+  useEffect(() => { charger(); }, [charger]);
+  if (!etat) return null;
+  const agir = async (activer) => {
+    setEnCours(true); setMessage(null);
+    try {
+      if (activer) await activerPush(serveur?.clePublique, ctx.jeton, '/admin/push'); else await desactiverPush(ctx.jeton, '/admin/push');
+      await charger();
+    } catch (e) {
+      setMessage(e.code === 'refuse' ? 'Notifications refusées : autorisez-les dans les réglages du navigateur pour ce site.' : 'Impossible d’activer les alertes sur cet appareil.');
+    } finally { setEnCours(false); }
+  };
+  const ios = iosNonInstalle();
+  return (
+    <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap', gap: 10 }}>
+      <span className="grandit">
+        <b>Alertes sur ce téléphone</b>
+        <span className="petit bloc-texte">{etat.abonne ? 'Activées : vous êtes prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur.' : 'Soyez prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur (en plus de l’e-mail).'}{serveur ? ` · ${serveur.appareils} appareil${serveur.appareils > 1 ? 's' : ''} de l’équipe` : ''}</span>
+        {ios && <span className="tres-petit muet bloc-texte">Sur iPhone : ajoutez d’abord Kaislo Équipe à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.</span>}
+        {!etat.supporte && <span className="tres-petit muet bloc-texte">Ce navigateur ne gère pas les notifications.</span>}
+        {message && <span className="tres-petit bloc-texte" style={{ color: 'var(--rouge, #C8402F)' }}>{message}</span>}
+      </span>
+      {etat.supporte && !ios && (etat.abonne
+        ? <button className="btn secondaire petit" onClick={() => agir(false)} disabled={enCours}>Désactiver</button>
+        : <button className="btn petit" onClick={() => agir(true)} disabled={enCours || !serveur?.clePublique}>Activer les alertes</button>)}
+    </div>
+  );
+}
+
 function VueTableau({ commerces, ctx }) {
   const compte = (statut) => commerces.filter((c) => c.etat.statut === statut).length;
   const debutMois = new Date();
@@ -243,7 +282,7 @@ function VueTableau({ commerces, ctx }) {
   };
   return (
     <>
-      <EnTeteAdmin surTitre="Équipe Amorac" titre="Tableau de bord" />
+      <EnTeteAdmin surTitre="Équipe Kaislo" titre="Tableau de bord" />
       <div className="contenu">
         <div className="kpis">
           <div className="carte kpi"><p className="petit muet">Commerces</p><p className="kpi-valeur">{commerces.length}</p><p className="sous">{actifsSemaine} actifs cette semaine</p></div>
@@ -253,6 +292,7 @@ function VueTableau({ commerces, ctx }) {
           <div className="carte kpi"><p className="petit muet">Suspendus</p><p className="kpi-valeur">{compte('suspendu')}</p><p className="sous">accès bloqué</p></div>
           <div className="carte kpi"><p className="petit muet">Encaissé ce mois</p><p className="kpi-valeur petit" style={{ fontSize: 17 }}>{parDevise(duMois)}</p><p className="sous">{duMois.length} paiement(s)</p></div>
         </div>
+        <AlertesEquipe ctx={ctx} />
         {ctx.avisAttente > 0 && (
           <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap' }}>
             <span className="grandit"><b>{ctx.avisAttente} avis de commerçant{ctx.avisAttente > 1 ? 's' : ''} à relire</b> avant publication sur le site.</span>
@@ -714,7 +754,7 @@ function VueTarifs({ ctx }) {
   );
 }
 
-// ---------- Équipe Amorac : comptes et rôles ----------
+// ---------- Équipe Kaislo : comptes et rôles ----------
 function VueEquipe({ ctx }) {
   const [equipe, setEquipe] = useState(null);
   const [edition, setEdition] = useState(null);
@@ -730,7 +770,7 @@ function VueEquipe({ ctx }) {
   };
   return (
     <>
-      <EnTeteAdmin surTitre="Comptes de l’espace Amorac" titre="Équipe">
+      <EnTeteAdmin surTitre="Comptes de l’espace Kaislo" titre="Équipe">
         <button className="btn" onClick={() => setEdition({ nom: '', email: '', role: 'support', actif: true, motDePasse: '' })}><Icone nom="plus" /> Compte</button>
       </EnTeteAdmin>
       <div className="contenu" style={{ maxWidth: 800 }}>

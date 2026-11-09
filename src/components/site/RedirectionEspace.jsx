@@ -1,5 +1,5 @@
 'use client';
-// Page d'accueil publique : quelqu'un déjà connecté (application, espace Amorac, espace commercial) est envoyé dans son espace.
+// Page d'accueil publique : quelqu'un déjà connecté (application, espace Kaislo, espace commercial) est envoyé dans son espace.
 // Le script placé en haut de la page (lib/espace.js) le fait au premier chargement, sans flash ; ce composant le fait aussi
 // quand on arrive ici EN NAVIGUANT (bouton « retour » du navigateur depuis l'application), cas où le script ne s'exécute pas.
 // replace : l'accueil public ne reste pas dans l'historique. Ajouter ?site=1 à l'adresse (bouton « Voir le site » des tableaux de bord) pour voir la page publique.

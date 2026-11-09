@@ -1,6 +1,6 @@
 <?php
 // ------------------------------------------------------------
-// CARNET DES RETOURS UTILISATEURS (espace Amorac)
+// CARNET DES RETOURS UTILISATEURS (espace Kaislo)
 //
 // L'équipe y note ce que les commerçants lui disent (WhatsApp, appel, visite) : ce qui leur plaît, ce qui les bloque, ce qui leur manque.
 // Une ligne = un retour, rattaché à un commerce (ou à une personne sans commerce encore), avec le canal, le type, la fonction demandée

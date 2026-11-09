@@ -124,7 +124,7 @@ export const trancheSynchro = (set, get) => ({
         // Compte désactivé ou commerce suspendu depuis un autre appareil
         if (u && moi && !moi.actif) get().finSession(tr('Votre compte a été désactivé par le gérant'));
         else if (get().commerceSuspendu()) set({ etapeConnexion: 'suspendu', utilisateur: null });
-        // Commerce réactivé par l'équipe Amorac : retour à l'écran de connexion
+        // Commerce réactivé par l'équipe Kaislo : retour à l'écran de connexion
         else if (get().etapeConnexion === 'suspendu' && !get().utilisateur) set({ etapeConnexion: 'connexion' });
         return true;
       } catch (e) {

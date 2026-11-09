@@ -80,7 +80,7 @@ const SECTIONS = [
       <>
         <p>Uniquement avec les prestataires nécessaires au service, tenus à la confidentialité :</p>
         <ul>
-          <li><b>Équipe Amorac</b> : seuls les membres de l’équipe, avec un compte personnel protégé par mot de passe, accèdent aux informations des commerces pour l’assistance et les abonnements. Chaque action est enregistrée.</li>
+          <li><b>Équipe Kaislo</b> : seuls les membres de l’équipe, avec un compte personnel protégé par mot de passe, accèdent aux informations des commerces pour l’assistance et les abonnements. Chaque action est enregistrée.</li>
           <li><b>Hébergeur</b> du site et des données (voir les <Link href="/mentions-legales/">mentions légales</Link>).</li>
           <li><b>Prestataires de paiement</b> (carte bancaire, mobile money, banque) pour les abonnements.</li>
           <li><b>Envoi de SMS ou de messages WhatsApp</b> pour les codes de vérification.</li>

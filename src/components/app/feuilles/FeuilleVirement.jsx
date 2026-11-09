@@ -1,8 +1,8 @@
 'use client';
 // ------------------------------------------------------------
-// « Payer par virement » : le gérant voit les comptes bancaires de l'équipe Amorac, le montant exact à virer dans la devise du compte
+// « Payer par virement » : le gérant voit les comptes bancaires de l'équipe Kaislo, le montant exact à virer dans la devise du compte
 // et la référence à écrire dans le motif du virement. « J'ai fait le virement » prévient l'équipe par la messagerie (écran Aide).
-// L'équipe enregistre ensuite le paiement dans l'espace Amorac (moyen « Virement »). Voir api/lib/virement.php.
+// L'équipe enregistre ensuite le paiement dans l'espace Kaislo (moyen « Virement »). Voir api/lib/virement.php.
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
@@ -47,7 +47,7 @@ export function FeuilleVirement() {
   const prevenir = async (compte) => {
     setErreur('');
     try {
-      // Message pour l'équipe Amorac : toujours en français, quelle que soit la langue de l'application
+      // Message pour l'équipe Kaislo : toujours en français, quelle que soit la langue de l'application
       await appelApi('POST', '/messages', { texte: `J’ai fait un virement (compte en ${compte.devise}, ${montant(compte.parMois, compte.devise)} par mois). Référence : ${r.reference}.` }, s.jetonServeur());
       setEnvoye(true);
     } catch (e) { setErreur(e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message); }

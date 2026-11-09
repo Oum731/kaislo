@@ -114,6 +114,12 @@ function envoyerPush(string $commerceId, string $type, string $titre, string $te
 {
     $abos = abonnementsPush($commerceId);
     if (!$abos) return null;
+    return diffuserPush($abos, $commerceId, $type, $titre, $texte, $url);
+}
+
+/** Envoie la notification à ces appareils (les gérants d'un commerce, ou l'équipe Kaislo : voir alertes-equipe.php). Renvoie [joints, appareils]. */
+function diffuserPush(array $abos, string $commerceId, string $type, string $titre, string $texte, string $url): array
+{
     $joints = 0;
     foreach ($abos as $abo) {
         requete('INSERT INTO push_messages (id, abonnement_id, titre, texte, url, tag, cree_le) VALUES (?, ?, ?, ?, ?, ?, ?)', [

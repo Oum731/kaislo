@@ -137,7 +137,7 @@ export function fusionServeur(d, rep) {
     ...d,
     commerce: {
       ...d.commerce,
-      // Numéro du commerce : tenu par le serveur (identifiant, changé seulement par l'équipe Amorac)
+      // Numéro du commerce : tenu par le serveur (identifiant, changé seulement par l'équipe Kaislo)
       ...(rep.commerce?.telephone ? { telephone: rep.commerce.telephone } : {}),
       ...(ab ? { abonnement: { ...(d.commerce.abonnement || {}), ...ab, paiements: d.commerce.abonnement?.paiements || [] } } : {}),
       // Formule, nombre de postes et prix de l'abonnement (calculés par le serveur)

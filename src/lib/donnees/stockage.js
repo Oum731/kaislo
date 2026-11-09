@@ -73,7 +73,7 @@ export function reinitialiserCommerce(commerceId) {
 // ---------- Comptes créés par les commerçants ----------
 
 // Liste des commerces créés (sert à retrouver un commerce par son code
-// et à l'espace Amorac). Jamais affichée aux commerçants.
+// et à l'espace Kaislo). Jamais affichée aux commerçants.
 export function listeComptes() {
   return lire('comptes') || [];
 }
@@ -210,7 +210,7 @@ export function telephoneDejaUtilise(telephone, sauf = null) {
   return !!trouve && trouve.utilisateur.id + '@' + trouve.d.commerce.id !== sauf;
 }
 
-// Tous les commerces (espace Amorac). Dans la vraie app : liste venant du serveur.
+// Tous les commerces (espace Kaislo). Dans la vraie app : liste venant du serveur.
 export function tousLesCommerces() {
   const ids = [...COMMERCES_DEMO.map((c) => c.id), ...listeComptes().map((c) => c.id)];
   return ids.map((id) => chargerCommerce(id)).filter(Boolean);

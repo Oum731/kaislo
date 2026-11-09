@@ -10,7 +10,7 @@
 // hors du Maroc (pas de TVA marocaine, mention sur la facture). À faire valider par le comptable de la société.
 //
 //   GET  /api/factures                          les factures du commerce (gérant)
-//   GET  /api/admin/factures[?commerceId=…]     toutes les factures, ou celles d'un commerce (équipe Amorac)
+//   GET  /api/admin/factures[?commerceId=…]     toutes les factures, ou celles d'un commerce (équipe Kaislo)
 // ------------------------------------------------------------
 
 // Émetteur (même contenu que SOCIETE dans src/config.js : un test le vérifie)

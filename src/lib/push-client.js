@@ -31,8 +31,8 @@ export async function etatPush() {
   return { supporte: true, permission: Notification.permission, abonne };
 }
 
-/** Demande l'autorisation, abonne cet appareil et le déclare au serveur. Lance une erreur avec un `code` : 'refuse' | 'indisponible'. */
-export async function activerPush(clePublique, jeton) {
+/** Demande l'autorisation, abonne cet appareil et le déclare au serveur (base : '/push' pour un gérant, '/admin/push' pour l'équipe Kaislo). Lance une erreur avec un `code` : 'refuse' | 'indisponible'. */
+export async function activerPush(clePublique, jeton, base = '/push') {
   const erreur = (code) => Object.assign(new Error(code), { code });
   if (!pushSupporte() || !clePublique) throw erreur('indisponible');
   const permission = await Notification.requestPermission();
@@ -40,14 +40,14 @@ export async function activerPush(clePublique, jeton) {
   const reg = await navigator.serviceWorker.ready;
   const abonnement = (await reg.pushManager.getSubscription())
     || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: versOctets(clePublique) }));
-  await appelApi('POST', '/push/abonner', { endpoint: abonnement.endpoint, appareil: nomAppareil() }, jeton);
+  await appelApi('POST', base + '/abonner', { endpoint: abonnement.endpoint, appareil: nomAppareil() }, jeton);
 }
 
-export async function desactiverPush(jeton) {
+export async function desactiverPush(jeton, base = '/push') {
   const reg = await navigator.serviceWorker.getRegistration();
   const abonnement = reg && (await reg.pushManager.getSubscription());
   if (!abonnement) return;
   const endpoint = abonnement.endpoint;
   await abonnement.unsubscribe();
-  await appelApi('POST', '/push/desabonner', { endpoint }, jeton).catch(() => {});
+  await appelApi('POST', base + '/desabonner', { endpoint }, jeton).catch(() => {});
 }

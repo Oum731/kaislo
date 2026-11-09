@@ -140,7 +140,7 @@ function routeBiometrieConnexion(): never
     $u = requete('SELECT * FROM utilisateurs WHERE id = ?', [$cle['utilisateur_id']])->fetch();
     if (!$u || !$u['actif']) throw new ErreurApi('Ce compte a été désactivé par le gérant', 403);
     $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
-    if ($commerce['statut'] === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Amorac.', 403);
+    if ($commerce['statut'] === 'suspendu') throw new ErreurApi('Ce commerce est suspendu. Contactez Kaislo.', 403);
     requete('UPDATE cles_biometriques SET compteur = ?, utilise_le = ? WHERE id_hash = ?', [$compteur, maintenant(), $cle['id_hash']]);
     effacerEchecs($cleBlocage);
     $jeton = creerJeton($u, (string) ($e['appareil'] ?? ''));

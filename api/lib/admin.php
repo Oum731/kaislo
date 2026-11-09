@@ -5,12 +5,12 @@
 //
 // Premier compte : POST /api/admin/installer avec la clé « CleAdmin » du .env
 // du serveur (aucun compte n'existe encore). Ensuite, les comptes se créent
-// depuis l'espace Amorac (rôle « admin » seulement).
+// depuis l'espace Kaislo (rôle « admin » seulement).
 //   admin   : tout (abonnements, paiements, tarifs, commerciaux, équipe)
 //   support : consultation et messagerie
 // ------------------------------------------------------------
 
-const DUREE_SESSION_ADMIN = 8 * 3600; // une session de l'espace Amorac dure 8 heures sans activité
+const DUREE_SESSION_ADMIN = 8 * 3600; // une session de l'espace Kaislo dure 8 heures sans activité
 const MOT_DE_PASSE_MIN = 10;
 
 // ---------- Session ----------
@@ -18,12 +18,12 @@ const MOT_DE_PASSE_MIN = 10;
 function adminConnecte(bool $adminSeulement = false): array
 {
     $jeton = jetonRecu();
-    if (!$jeton) throw new ErreurApi('Connexion à l’espace Amorac nécessaire', 401);
+    if (!$jeton) throw new ErreurApi('Connexion à l’espace Kaislo nécessaire', 401);
     $empreinte = hash('sha256', $jeton);
     $a = requete('SELECT j.expire_le, a.* FROM jetons_admin j JOIN admins a ON a.id = j.admin_id WHERE j.jeton_hash = ?', [$empreinte])->fetch();
     if (!$a || $a['expire_le'] < maintenant()) throw new ErreurApi('Session expirée : reconnectez-vous', 401);
     if (!$a['actif']) throw new ErreurApi('Compte désactivé', 403);
-    if ($adminSeulement && $a['role'] !== 'admin') throw new ErreurApi('Réservé aux administrateurs Amorac', 403);
+    if ($adminSeulement && $a['role'] !== 'admin') throw new ErreurApi('Réservé aux administrateurs Kaislo', 403);
     requete('UPDATE jetons_admin SET expire_le = ? WHERE jeton_hash = ?', [maintenant(DUREE_SESSION_ADMIN), $empreinte]);
     unset($a['expire_le'], $a['mdp_hash']);
     return $a;
@@ -55,7 +55,7 @@ function verifierMotDePasse(string $mdp): void
 function routeAdminInstaller(): never
 {
     $e = entree();
-    if ((int) requete('SELECT COUNT(*) AS n FROM admins')->fetch()['n'] > 0) throw new ErreurApi('L’espace Amorac est déjà installé : connectez-vous', 409);
+    if ((int) requete('SELECT COUNT(*) AS n FROM admins')->fetch()['n'] > 0) throw new ErreurApi('L’espace Kaislo est déjà installé : connectez-vous', 409);
     $cle = (string) (lireFichierEnvCle('CleAdmin') ?? '');
     if (strlen($cle) < 12) throw new ErreurApi('Ajoutez une ligne « CleAdmin=… » (12 caractères ou plus) dans le fichier .env du serveur', 400);
     verifierBlocage('installation:' . adresseIp());
@@ -133,7 +133,7 @@ function resumesCommerces(?string $seulId = null): array
         $v = json_decode($l['contenu'], true) ?: [];
         if (!empty($v['annulee']) || ($v['date'] ?? '') < $depuis) continue;
         $ca[$l['commerce_id']]['ca'] = ($ca[$l['commerce_id']]['ca'] ?? 0) + (float) ($v['total'] ?? 0);
-        $ca[$l['commerce_id']]['tickets'] = ($ca[$l['commerce_id']]['tickets'] ?? 0) + 1;
+        if (empty($v['retourDe'])) $ca[$l['commerce_id']]['tickets'] = ($ca[$l['commerce_id']]['tickets'] ?? 0) + 1; // un retour d'article n'est pas un ticket
     }
     $facturesDe = []; // paiement -> numéro de facture
     foreach (requete('SELECT paiement_id, numero FROM factures' . ($seulId ? ' WHERE commerce_id = ?' : ''), $seulId ? [$seulId] : [])->fetchAll() as $f) $facturesDe[$f['paiement_id']] = $f['numero'];
@@ -403,7 +403,7 @@ function routeAdminPaiementGroupe(): never
     repondre(['ok' => true, 'groupe' => $groupe, 'commerces' => array_map(fn ($r) => resumesCommerces($r['commerce']['id'])[0], $resultats)]);
 }
 
-// ---------- Équipe Amorac ----------
+// ---------- Équipe Kaislo ----------
 
 function routeAdminEquipe(): never
 {
