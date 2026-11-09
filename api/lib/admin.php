@@ -303,6 +303,7 @@ function routeAdminActionCommerce(): never
 // la fin de l'essai (ces jours ne sont pas perdus) ; sinon null = maintenant. Toujours null si cette date est passée.
 function debutPeriodePayee(array $c): ?string
 {
+    if (!empty($c['periode_provisoire'])) return null; // activation provisoire : la période payée commence maintenant, les jours d'attente ne s'y ajoutent pas
     $fin = $c['statut'] === 'actif' ? ($c['periode_fin'] ?? null) : ($c['statut'] === 'essai' && (int) ($c['jours_offerts'] ?? 0) > 0 ? ($c['essai_fin'] ?? null) : null);
     return $fin && $fin > maintenant() ? $fin : null;
 }
@@ -333,7 +334,7 @@ function enregistrerPaiement(array $admin, array $e): array
     ]);
     // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
     $finPeriode = prolongerDate($debut, $joursPayes);
-    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, jours_offerts = 0, modifie_le = ? WHERE id = ?", [
+    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, jours_offerts = 0, periode_provisoire = 0, modifie_le = ? WHERE id = ?", [
         $formule['id'], $finPeriode, maintenant(), $c['id'],
     ]);
     // Facture acquittée de ce paiement (numéro sans trou, voir lib/facturation.php)

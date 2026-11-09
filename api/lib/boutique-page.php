@@ -190,7 +190,7 @@ function routePlanBoutiques(): never
     $xml .= '<url><loc>' . echapper($site . '/boutiques/') . "</loc></url>\n";
     $lignes = requete("SELECT b.slug, b.publique, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu' ORDER BY b.slug LIMIT 5000")->fetchAll();
     foreach ($lignes as $c) {
-        if (abonnementExpire($c) || !articlesPublies($c['id'])) continue;
+        if (abonnementTermine($c) || !articlesPublies($c['id'])) continue;
         $xml .= '<url><loc>' . echapper($site . '/boutique/' . $c['slug'] . '/') . "</loc></url>\n";
     }
     http_response_code(200);

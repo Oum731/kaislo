@@ -18,6 +18,7 @@ function routeUtilisateur(): never
     $id = (string) ($e['id'] ?? '');
     $existant = $id !== '' ? requete('SELECT * FROM utilisateurs WHERE id = ? AND commerce_id = ?', [$id, $moi['commerce_id']])->fetch() : null;
     if ($id !== '' && !$existant) throw new ErreurApi('Vendeur introuvable', 404);
+    if (!$existant) exigerAbonnementPaye($moi['commerce_id'], 'Abonnement non payé : activez-le pour ajouter des vendeurs.');
 
     $nom = texte($e, 'nom', 'le nom');
     // Numéro au format international du pays du commerce, unique dans tout Kaislo

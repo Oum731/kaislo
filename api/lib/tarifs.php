@@ -47,6 +47,7 @@ const TAUX_CHANGE = ['EUR' => 1, 'FCFA' => 655.957, 'MAD' => 10.8, 'CAD' => 1.5,
 const REGLES_DEFAUT = [
     'taux' => TAUX_CHANGE, 'moisOffertsAnnuel' => 2, 'remiseFondateur' => 20, 'placesFondateur' => 20,
     'remiseParrain' => 10, 'remiseMultiCommerce' => 10, 'catalogueActif' => true, 'catalogueDepuis' => '2026-10-06',
+    'joursActivationProvisoire' => 5, // jours laissés pour payer après « Activer l'abonnement » (lib/activation.php)
 ];
 
 // Valeur JSON gardée dans reglages_amorac (ou la valeur par défaut)
@@ -190,6 +191,7 @@ function routeAdminTarifs(): never
         'placesFondateur' => max(0, min(1000, (int) ($r['placesFondateur'] ?? 20))),
         'remiseParrain' => max(0, min(40, (float) ($r['remiseParrain'] ?? 10))),
         'remiseMultiCommerce' => max(0, min(40, (float) ($r['remiseMultiCommerce'] ?? 10))),
+        'joursActivationProvisoire' => max(1, min(15, (int) ($r['joursActivationProvisoire'] ?? 5))),
         'catalogueActif' => !empty($r['catalogueActif']),
         'catalogueDepuis' => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($r['catalogueDepuis'] ?? '')) ? (string) $r['catalogueDepuis'] : REGLES_DEFAUT['catalogueDepuis'],
     ];
