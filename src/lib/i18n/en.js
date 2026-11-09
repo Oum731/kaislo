@@ -2303,4 +2303,8 @@ export const EN = {
   "Numéro depuis lequel vous avez payé (facultatif)": "Number you paid from (optional)",
   "J’ai payé": "I have paid",
   "Votre abonnement est prolongé dès que l’équipe a vu le paiement. Gardez le message de confirmation de l’opérateur.": "Your subscription is extended as soon as the team has seen the payment. Keep the operator’s confirmation message.",
+  "Payer {0} avec {1} (1 mois)": "Pay {0} with {1} (1 month)",
+  "Payer {0} avec {1} (12 mois)": "Pay {0} with {1} (12 months)",
+  "Le lien s’ouvre dans l’application {0} avec le montant de votre formule. Vérifiez-le avant de confirmer.": "The link opens in the {0} app with the amount of your plan. Check it before confirming.",
+  "Ou envoyez au numéro": "Or send to the number",
 };

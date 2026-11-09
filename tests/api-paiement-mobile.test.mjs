@@ -41,13 +41,22 @@ before(async () => {
 });
 after(() => { serveur?.kill(); fs.rmSync(dossier, { recursive: true, force: true }); });
 
-test('par défaut : Orange Money pour les commerces en FCFA, avec leur prix en FCFA ; rien pour un commerce en dirhams', async () => {
+test('par défaut : Orange Money et le lien Wave pour les commerces en FCFA, avec leur prix en FCFA ; rien pour un commerce en dirhams', async () => {
   const r = await api('GET', '/paiement-virement', null, ivoire.jeton);
-  assert.equal(r.mobiles.length, 1);
-  assert.equal(r.mobiles[0].operateur, 'Orange Money');
-  assert.equal(r.mobiles[0].numero, '+2250779872585');
-  assert.equal(r.mobiles[0].devise, 'FCFA');
-  assert.ok(r.mobiles[0].parMois > 0 && r.mobiles[0].annuel > r.mobiles[0].parMois);
+  assert.deepEqual(r.mobiles.map((m) => m.operateur), ['Orange Money', 'Wave']);
+  const [orange, wave] = r.mobiles;
+  assert.equal(orange.numero, '+2250779872585');
+  assert.deepEqual(orange.liens, []);
+  assert.equal(orange.devise, 'FCFA');
+  assert.ok(orange.parMois > 0 && orange.annuel > orange.parMois);
+  // Wave : le montant de la formule du commerce est ajouté au lien (1 mois et 12 mois)
+  assert.equal(wave.titulaire, 'Traoreservice');
+  assert.equal(wave.liens.length, 2);
+  assert.deepEqual(wave.liens.map((l) => l.mois), [1, 12]);
+  assert.equal(wave.liens[0].url, `https://pay.wave.com/m/M_ci_9JyOKoTX4xvQ/c/ci/?amount=${wave.parMois}`);
+  assert.equal(wave.liens[1].url, `https://pay.wave.com/m/M_ci_9JyOKoTX4xvQ/c/ci/?amount=${wave.annuel}`);
+  assert.equal(wave.liens[0].montant, wave.parMois);
+  assert.equal(wave.lien, undefined); // le gérant reçoit les liens calculés, pas le modèle
   assert.match(r.reference, /^KAISLO-\d{6}$/);
   assert.deepEqual((await api('GET', '/paiement-virement', null, maroc.jeton)).mobiles, []);
 });
@@ -60,6 +69,13 @@ test('l’équipe enregistre ses numéros : contrôles et droits', async () => {
   assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [{ ...ORANGE, numero: '12' }] }, admin)).statut, 400);
   assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [{ ...ORANGE, devises: [] }] }, admin)).statut, 400);
   assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: Array(9).fill(ORANGE) }, admin)).statut, 400);
+  // Lien : Wave seulement, en https, sans identifiants ; un numéro ou un lien au moins
+  const wave = { operateur: 'Wave', numero: '', lien: 'https://pay.wave.com/m/M_ci_test/c/ci/', devises: ['FCFA'] };
+  assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [{ ...wave, lien: 'http://pay.wave.com/m/x' }] }, admin)).statut, 400);
+  assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [{ ...wave, lien: 'https://exemple.com/pay' }] }, admin)).statut, 400);
+  assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [{ ...wave, lien: 'https://pay.wave.com.evil.com/x' }] }, admin)).statut, 400);
+  assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [{ ...wave, lien: 'https://user@pay.wave.com/x' }] }, admin)).statut, 400);
+  assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [{ ...wave, lien: '' }] }, admin)).statut, 400);
   const ok = await api('POST', '/admin/paiements-mobiles', { moyens: [ORANGE, { operateur: 'Wave', numero: '0700000002', devises: ['FCFA', 'GNF'] }] }, admin);
   assert.equal(ok.ok, true, JSON.stringify(ok));
   assert.equal(ok.moyens[0].numero, '+2250700000001'); // espaces retirés
@@ -75,4 +91,15 @@ test('le gérant voit les numéros enregistrés (pas ceux d’une autre devise) 
   assert.deepEqual((await api('GET', '/paiement-virement', null, ivoire.jeton)).mobiles, []);
   assert.equal((await api('POST', '/admin/paiements-mobiles', { moyens: [] }, admin)).ok, true);
   assert.deepEqual((await api('GET', '/admin/paiements-mobiles', null, admin)).moyens, []); // vide enregistré : le numéro par défaut ne revient pas
+});
+
+test('un lien avec {montant} et un lien avec paramètres reçoivent le montant au bon endroit', async () => {
+  await api('POST', '/admin/paiements-mobiles', { moyens: [
+    { operateur: 'Wave', lien: 'https://pay.wave.com/m/M_ci_test/c/ci/?amount={montant}&ref=kaislo', devises: ['FCFA'] },
+    { operateur: 'Wave', lien: 'https://pay.wave.com/m/M_ci_autre/c/ci/?lang=fr', devises: ['FCFA'] },
+  ] }, admin);
+  const [a, b] = (await api('GET', '/paiement-virement', null, ivoire.jeton)).mobiles;
+  assert.equal(a.liens[0].url, `https://pay.wave.com/m/M_ci_test/c/ci/?amount=${a.parMois}&ref=kaislo`);
+  assert.equal(b.liens[0].url, `https://pay.wave.com/m/M_ci_autre/c/ci/?lang=fr&amount=${b.parMois}`);
+  assert.equal(a.numero, '');
 });

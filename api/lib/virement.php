@@ -11,10 +11,12 @@
 //
 //   Paiement mobile (Orange Money, Wave, MTN MoMo…) : l'équipe enregistre ses numéros dans l'espace Kaislo → Tarifs ; le gérant d'un commerce
 //   dans la même devise voit le numéro, le montant en sa devise et la même référence KAISLO-code (qu'il indique à l'équipe avec « J'ai payé »).
+//   Un moyen peut aussi avoir un lien de paiement Wave (https://pay.wave.com/…) : le montant de la formule du commerce (1 mois, 12 mois) s'y ajoute
+//   tout seul (?amount=…, ou à la place de {montant} dans le lien) et le gérant paie d'un geste.
 //
 //   GET  /api/paiement-virement   comptes, numéros mobiles et montants pour le commerce du gérant connecté
 //   GET  /api/admin/paiements-mobiles   numéros enregistrés (équipe Kaislo)
-//   POST /api/admin/paiements-mobiles   { moyens: [{ operateur, numero, titulaire?, devises: ['FCFA'], note? }] } (administrateur)
+//   POST /api/admin/paiements-mobiles   { moyens: [{ operateur, numero?, lien?, titulaire?, devises: ['FCFA'], note? }] } (administrateur) : un numéro ou un lien au moins
 //   GET  /api/admin/virement      comptes enregistrés (équipe Kaislo)
 //   POST /api/admin/virement      { comptes: [{ devise, beneficiaire, banque, iban, bic?, note? }] } (administrateur)
 // ------------------------------------------------------------
@@ -24,7 +26,28 @@ const COMPTES_VIREMENT_MAX = 6;
 const OPERATEURS_MOBILES = ['Orange Money', 'Wave', 'MTN MoMo', 'Moov Money', 'Airtel Money', 'M-Pesa'];
 const MOYENS_MOBILES_MAX = 8;
 // Numéro proposé tant que l'équipe n'a rien enregistré (modifiable dans l'espace Kaislo → Tarifs)
-const MOYENS_MOBILES_DEFAUT = [['operateur' => 'Orange Money', 'numero' => '+2250779872585', 'titulaire' => '', 'devises' => ['FCFA'], 'note' => '']];
+const MOYENS_MOBILES_DEFAUT = [
+    ['operateur' => 'Orange Money', 'numero' => '+2250779872585', 'lien' => '', 'titulaire' => '', 'devises' => ['FCFA'], 'note' => ''],
+    ['operateur' => 'Wave', 'numero' => '', 'lien' => 'https://pay.wave.com/m/M_ci_9JyOKoTX4xvQ/c/ci/', 'titulaire' => 'Traoreservice', 'devises' => ['FCFA'], 'note' => ''],
+];
+const HOTES_LIENS_PAIEMENT = ['pay.wave.com']; // liens de paiement acceptés (évite qu'un lien trompeur soit proposé aux gérants)
+
+/** Un lien de paiement valide (https, hôte autorisé), ou null. */
+function lienPaiementValide(string $lien): ?string
+{
+    $lien = trim($lien);
+    $p = parse_url($lien);
+    if (!$p || ($p['scheme'] ?? '') !== 'https' || !in_array(strtolower((string) ($p['host'] ?? '')), HOTES_LIENS_PAIEMENT, true) || isset($p['user']) || isset($p['port']) || strlen($lien) > 300) return null;
+    return $lien;
+}
+
+/** Le lien avec le montant : à la place de {montant} s'il y en a un, sinon en paramètre amount. */
+function lienAvecMontant(string $lien, float $montant): string
+{
+    $m = (string) (int) round($montant);
+    if (str_contains($lien, '{montant}')) return str_replace('{montant}', $m, $lien);
+    return $lien . (str_contains($lien, '?') ? '&' : '?') . 'amount=' . $m;
+}
 
 function moyensMobiles(): array
 {
@@ -61,6 +84,9 @@ function routePaiementVirement(): never
         if (!in_array($c['devise'], (array) ($m['devises'] ?? []), true)) continue;
         $t = tarifCommerce($c, $c['devise']);
         if ($t['parMois'] <= 0) continue;
+        $lien = lienPaiementValide((string) ($m['lien'] ?? ''));
+        $m['liens'] = $lien ? [['mois' => 1, 'montant' => $t['parMois'], 'url' => lienAvecMontant($lien, (float) $t['parMois'])], ['mois' => 12, 'montant' => $t['annuel'], 'url' => lienAvecMontant($lien, (float) $t['annuel'])]] : [];
+        unset($m['lien']);
         $mobiles[] = $m + ['devise' => $c['devise'], 'parMois' => $t['parMois'], 'annuel' => $t['annuel']];
     }
     repondre(['ok' => true, 'reference' => referenceVirement($c), 'comptes' => $comptes, 'mobiles' => $mobiles]);
@@ -82,10 +108,13 @@ function routeAdminMoyensMobilesEnregistrer(): never
         $operateur = (string) ($m['operateur'] ?? '');
         if (!in_array($operateur, OPERATEURS_MOBILES, true)) throw new ErreurApi('Opérateur inconnu');
         $numero = preg_replace('/[^\d+]/', '', (string) ($m['numero'] ?? ''));
-        if (!preg_match('/^\+?\d{8,15}$/', $numero)) throw new ErreurApi('Numéro invalide (8 à 15 chiffres, avec l’indicatif du pays)');
+        $lien = trim((string) ($m['lien'] ?? ''));
+        if ($lien !== '' && !lienPaiementValide($lien)) throw new ErreurApi('Lien de paiement invalide : il doit commencer par https://pay.wave.com/');
+        if ($numero === '' && $lien === '') throw new ErreurApi('Indiquez un numéro ou un lien de paiement');
+        if ($numero !== '' && !preg_match('/^\+?\d{8,15}$/', $numero)) throw new ErreurApi('Numéro invalide (8 à 15 chiffres, avec l’indicatif du pays)');
         $devises = array_values(array_unique(array_filter((array) ($m['devises'] ?? []), fn ($d) => in_array($d, DEVISES_VIREMENT, true))));
         if (!$devises) throw new ErreurApi('Choisissez au moins une devise (celle des commerces qui peuvent payer par ce numéro)');
-        $moyens[] = ['operateur' => $operateur, 'numero' => $numero, 'titulaire' => texte($m, 'titulaire', 'le nom du titulaire', false, 80), 'devises' => $devises, 'note' => texte($m, 'note', 'la note', false, 200)];
+        $moyens[] = ['operateur' => $operateur, 'numero' => $numero, 'lien' => $lien, 'titulaire' => texte($m, 'titulaire', 'le nom du titulaire', false, 80), 'devises' => $devises, 'note' => texte($m, 'note', 'la note', false, 200)];
     }
     enregistrerReglageAmorac('paiements_mobiles', ['moyens' => $moyens]);
     journaliser(null, null, 'amorac-paiements-mobiles', ['numeros' => count($moyens), 'par' => $admin['email']]);

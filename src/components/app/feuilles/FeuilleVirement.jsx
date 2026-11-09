@@ -59,7 +59,7 @@ export function FeuilleVirement() {
   const prevenirMobile = async (m) => {
     setErreur('');
     try {
-      await appelApi('POST', '/messages', { texte: `J’ai payé par ${m.operateur} au ${m.numero} (${montant(m.parMois, m.devise)} par mois).${expediteur.trim() ? ` Numéro d’envoi : ${expediteur.trim().slice(0, 30)}.` : ''} Référence : ${r.reference}.` }, s.jetonServeur());
+      await appelApi('POST', '/messages', { texte: `J’ai payé par ${m.operateur}${m.numero ? ' au ' + m.numero : ''} (${montant(m.parMois, m.devise)} par mois).${expediteur.trim() ? ` Numéro d’envoi : ${expediteur.trim().slice(0, 30)}.` : ''} Référence : ${r.reference}.` }, s.jetonServeur());
       setEnvoyeMobile(true);
     } catch (e) { setErreur(e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message); }
   };
@@ -79,7 +79,17 @@ export function FeuilleVirement() {
                   <span className="badge safran">{montant(m.parMois, m.devise)} {tr('par mois')}</span>
                 </div>
                 <p className="petit muet">{tr('À l’année : {0} ({1} mois offerts).', [montant(m.annuel, m.devise), 2])}</p>
-                <Ligne libelle={tr('Envoyez au numéro')} valeur={m.numero} copie={copie === 'num' + i} surCopier={() => copier('num' + i, m.numero)} />
+                {(m.liens || []).length > 0 && (
+                  <div className="pile" style={{ gap: 8 }}>
+                    {m.liens.map((l) => (
+                      <a key={l.mois} className={l.mois === 1 ? 'btn bloc' : 'btn secondaire bloc'} href={l.url} target="_blank" rel="noreferrer">
+                        <Icone nom="billet" /> {l.mois === 1 ? tr('Payer {0} avec {1} (1 mois)', [montant(l.montant, m.devise), m.operateur]) : tr('Payer {0} avec {1} (12 mois)', [montant(l.montant, m.devise), m.operateur])}
+                      </a>
+                    ))}
+                    <p className="tres-petit muet">{tr('Le lien s’ouvre dans l’application {0} avec le montant de votre formule. Vérifiez-le avant de confirmer.', [m.operateur])}</p>
+                  </div>
+                )}
+                {m.numero && <Ligne libelle={m.liens?.length ? tr('Ou envoyez au numéro') : tr('Envoyez au numéro')} valeur={m.numero} copie={copie === 'num' + i} surCopier={() => copier('num' + i, m.numero)} />}
                 {m.titulaire && <Ligne libelle={tr('Au nom de')} valeur={m.titulaire} />}
                 <Ligne libelle={tr('Référence à indiquer si possible')} valeur={r.reference} copie={copie === 'refm' + i} surCopier={() => copier('refm' + i, r.reference)} />
                 {m.note && <p className="petit muet">{m.note}</p>}
