@@ -2278,4 +2278,9 @@ export const EN = {
   "Impossible de créer le PDF, réessayez": "Could not create the PDF, try again",
   "Mes factures": "My invoices",
   "avoir": "credit note",
+  "Aucune facture pour l’instant.": "No invoices yet.",
+  "Émises par Kaislo pour {0}": "Issued by Kaislo for {0}",
+  "Votre avoir est disponible": "Your credit note is available",
+  "Votre facture est disponible": "Your invoice is available",
+  "Voir mes factures": "See my invoices",
 };

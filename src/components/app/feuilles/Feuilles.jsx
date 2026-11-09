@@ -13,6 +13,7 @@ import {
 } from './FeuillesGestion';
 
 import { FeuilleAchat, FeuilleFournisseur } from './FeuillesAchats';
+import { FeuilleFactures } from './FeuilleFactures';
 import { FeuilleRapport } from './FeuilleRapport';
 import { FeuilleImport } from './FeuilleImport';
 import { FeuilleNotifications } from './FeuilleNotifications';
@@ -49,6 +50,7 @@ const FEUILLES = {
   recuRemboursement: FeuilleRecuRemboursement,
   entreeStock: FeuilleEntreeStock,
   achat: FeuilleAchat,
+  factures: FeuilleFactures,
   fournisseur: FeuilleFournisseur,
   ajustement: FeuilleAjustement,
   compte: FeuilleCompte,

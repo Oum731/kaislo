@@ -59,6 +59,7 @@ function routeDonneesLire(): never
     repondre([
         'ok' => true, 'heure' => $heure, 'suite' => $suite, 'elements' => $elements,
         'commerce' => versCommerce($commerce), 'utilisateurs' => equipe($u['commerce_id']), 'moi' => versUtilisateur($u),
+        'derniereFacture' => $u['role'] === 'gerant' ? derniereFactureDe($u['commerce_id']) : null, // « Votre facture est disponible » (écran d'accueil du gérant)
         'messagesNonLus' => messagesNonLus($u['commerce_id']), // réponses de l'équipe Kaislo pas encore lues
         'chatsNonLus' => chatsNonLus($u['commerce_id']), // messages de clients pas encore lus
         'tarif' => tarifCommerce($commerce), // formule, postes et prix de l'abonnement

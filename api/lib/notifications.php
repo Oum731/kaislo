@@ -306,7 +306,7 @@ function envoyerNotification(array $commerce, array $reglages, string $type, arr
         $r = envoyerPush($id, $type === 'essai' ? 'essai' : $type, $contenu['push'][0], $contenu['push'][1]);
         if ($r) $resultats[] = ['push', $r[0] > 0 ? 'envoye' : 'echec', $r[0] . '/' . $r[1]];
     }
-    if ($prefs['whatsapp']) {
+    if ($prefs['whatsapp'] && !empty($contenu['modele'])) { // sans modèle WhatsApp approuvé (ex : factures), pas de WhatsApp
         if (!whatsappConfigure() && !modeEssaiNotifications()) {
             $resultats[] = ['whatsapp', 'indisponible', 'WhatsApp n’est pas encore activé sur Kaislo'];
         } elseif (!$canaux['whatsapp']) {

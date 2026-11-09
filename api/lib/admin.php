@@ -342,6 +342,7 @@ function enregistrerPaiement(array $admin, array $e): array
     if (!empty($c['commercial_id'])) creerCommissions($c, $idPaiement, $montant, $mois);
     // Parrainage entre commerçants : au premier paiement du filleul, le parrain gagne ses jours offerts
     recompenserParrain($c);
+    notifierDocumentFacture($c, $facture); // le gérant est prévenu (après la réponse, donc après la validation de la transaction)
     return ['commerce' => $c, 'montant' => $montant, 'mois' => $mois, 'postes' => $postes, 'formule' => $formule, 'facture' => $facture];
 }
 
