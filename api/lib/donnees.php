@@ -77,6 +77,7 @@ function routeDonneesEcrire(): never
     if (abonnementExpire($commerce)) throw new ErreurApi('Abonnement expiré : réglez-le pour synchroniser de nouveau (vos données restent sur cet appareil). Contactez Kaislo.', 403);
     $elements = entree()['elements'] ?? null;
     if (!is_array($elements)) throw new ErreurApi('Liste « elements » attendue');
+    if ($elements) sauvegardeDuJour($u['commerce_id']); // copie du jour : prise avant la première écriture de la journée
     if (count($elements) > ELEMENTS_PAR_ENVOI) throw new ErreurApi('Trop d’éléments en une fois (' . ELEMENTS_PAR_ENVOI . ' au maximum)');
 
     $acceptes = [];
