@@ -186,7 +186,7 @@ function ListeTickets() {
       )}
       {!h.liste.length && <div className="vide"><p>{tr('Aucune vente sur cette période')}</p></div>}
       {gerant && h.liste.length > 0 && (
-        <button className="btn fantome petit" style={{ marginTop: 6 }} onClick={() => exporterVentesCsv(d, h.liste)}><Icone nom="installer" taille="sm" /> {tr('Exporter ces {0} ventes (CSV)', [h.liste.length])}</button>
+        <button className="btn fantome petit" style={{ marginTop: 6 }} onClick={() => !s.limiteSiImpaye(tr('les rapports et exports')) && exporterVentesCsv(d, h.liste)}><Icone nom="installer" taille="sm" /> {tr('Exporter ces {0} ventes (CSV)', [h.liste.length])}</button>
       )}
     </>
   );

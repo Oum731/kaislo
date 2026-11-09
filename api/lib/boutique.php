@@ -51,7 +51,7 @@ function raisonAbsenceAnnuaire(?array $b, array $commerce, int $nbPublies): stri
     if (!$b['actif']) return 'desactivee';
     if ($b['publique'] !== null && !(int) $b['publique']) return 'privee';
     if (($commerce['statut'] ?? '') === 'suspendu') return 'suspendu';
-    if (abonnementExpire($commerce)) return 'abonnement';
+    if (abonnementTermine($commerce)) return 'abonnement'; // abonnement terminé : boutique fermée tout de suite (lib/activation.php)
     if ($nbPublies < 1) return 'aucunArticle';
     return '';
 }
@@ -143,7 +143,7 @@ function boutiqueParSlug(string $slug): array
     $b = requete('SELECT * FROM boutiques WHERE slug = ?', [$slug])->fetch();
     if (!$b || !$b['actif']) throw new ErreurApi('Boutique introuvable', 404);
     $c = requete('SELECT * FROM commerces WHERE id = ?', [$b['commerce_id']])->fetch();
-    if (!$c || $c['statut'] === 'suspendu' || abonnementExpire($c)) throw new ErreurApi('Cette boutique est momentanément fermée', 404);
+    if (!$c || $c['statut'] === 'suspendu' || abonnementTermine($c)) throw new ErreurApi('Cette boutique est momentanément fermée', 404);
     return [$b, $c];
 }
 
@@ -238,6 +238,7 @@ function routeCommandesEnLigneStatut(): never
     $c = requete('SELECT * FROM commandes_en_ligne WHERE id = ? AND commerce_id = ?', [(string) ($e['id'] ?? ''), $u['commerce_id']])->fetch();
     if (!$c) throw new ErreurApi('Commande introuvable', 404);
     if (array_key_exists('lignes', $e) || array_key_exists('client', $e)) {
+        exigerAbonnementPaye($u['commerce_id'], 'Abonnement non payé : activez-le pour modifier vos commandes.');
         if (in_array($c['statut'], ['livree', 'annulee'], true)) throw new ErreurApi('Une commande livrée ou annulée ne se modifie plus : changez d’abord son statut');
         $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
         $client = is_array($e['client'] ?? null) ? $e['client'] : [];
@@ -295,6 +296,8 @@ function routeCommandesEnLigneStatut(): never
     }
     $statut = (string) ($e['statut'] ?? '');
     if (!in_array($statut, STATUTS_COMMANDE, true)) throw new ErreurApi('Statut inconnu');
+    // Abonnement non payé : on peut encore refuser (annuler) une commande, mais plus la valider
+    if ($statut !== 'annulee' && $statut !== 'nouvelle') exigerAbonnementPaye($u['commerce_id'], 'Abonnement non payé : activez-le pour valider vos commandes.');
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$statut, maintenant(), $c['id']]);
     $c['statut'] = $statut;
     repondre(['ok' => true, 'commande' => versCommandeLigne($c)]);
@@ -377,7 +380,7 @@ function routeBoutiquesAnnuaire(): never
         AND EXISTS (SELECT 1 FROM elements e WHERE e.commerce_id = c.id AND e.type = 'produits' AND e.supprime = 0 AND (e.contenu LIKE '%\"enLigne\":true%' OR e.contenu LIKE '%\"enLigne\":1%'))
         ORDER BY b.modifie_le DESC LIMIT 5000")->fetchAll();
     foreach ($lignes as $c) {
-        if (abonnementExpire($c)) continue;
+        if (abonnementTermine($c)) continue;
         if ($pays !== $c['pays']) { $disponibles[$c['pays']] = ($disponibles[$c['pays']] ?? 0) + 1; continue; } // un client ne voit que les boutiques de son pays
         $articles = array_values(articlesPublies($c['id']));
         if (!$articles) continue;

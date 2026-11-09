@@ -759,6 +759,7 @@ function VueTarifs({ ctx }) {
           <div className="grille-3">
             <label className="champ"><span>Paiement annuel : mois offerts</span><input type="number" min="0" max="6" value={regles.moisOffertsAnnuel} onChange={(e) => setRegles({ ...regles, moisOffertsAnnuel: e.target.value })} /></label>
             <label className="champ"><span>Tarif fondateur : remise (%)</span><input type="number" min="0" max="90" value={regles.remiseFondateur} onChange={(e) => setRegles({ ...regles, remiseFondateur: e.target.value })} /></label>
+            <label className="champ"><span>Jours pour payer après « Activer l’abonnement »</span><input type="number" min="1" max="15" value={regles.joursActivationProvisoire ?? 5} onChange={(e) => setRegles({ ...regles, joursActivationProvisoire: e.target.value })} /></label>
             <label className="champ"><span>Places au tarif fondateur</span><input type="number" min="0" value={regles.placesFondateur} onChange={(e) => setRegles({ ...regles, placesFondateur: e.target.value })} /></label>
           </div>
           <p className="tres-petit muet">Tarif fondateur : {ctx.fondateurs}/{ctx.regles.placesFondateur} places attribuées (case à cocher dans la fiche de chaque commerce). Essai gratuit de {DUREE_ESSAI_JOURS} jours pour tous.</p>
@@ -1054,6 +1055,7 @@ function FicheCommerce({ c, ctx, fermer }) {
               <h3>Abonnement</h3>
               <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}</span>
             </div>
+            {ab.provisoire && c.etat.statut !== 'suspendu' && <p className="astuce petit">Activation provisoire : {c.etat.statut === 'expire' ? 'délai passé sans paiement, fonctions limitées (rapports, exports, nouveaux articles et vendeurs, validation des commandes, boutique fermée).' : 'à payer avant le ' + formatDate(c.etat.fin) + '.'}</p>}
             <p className="petit">
               Formule : <b>{c.tarif.nom}</b> · {c.tarif.postes} poste(s) · <b>{formatPrix(c.tarif.parMois, dev)}</b>/mois{c.commerce.fondateur ? ' (fondateur)' : ''}
               {c.etat.fin && <> · {c.etat.statut === 'expire' ? 'terminé le ' : 'jusqu’au '}{formatDate(c.etat.fin)}{c.etat.joursRestants > 0 ? ' (' + c.etat.joursRestants + ' j)' : ''}</>}

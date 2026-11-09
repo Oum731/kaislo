@@ -148,6 +148,11 @@ const trancheCommune = (set, get) => ({
   },
 
   ouvrir(type, infos = {}) {
+    // Abonnement non payé : rapports, import et nouveaux articles / vendeurs sont suspendus jusqu'au paiement
+    if (type === 'rapport' && get().limiteSiImpaye(tr('les rapports et exports'))) return;
+    if (type === 'importProduits' && get().limiteSiImpaye(tr('importer des articles'))) return;
+    if (type === 'produit' && !infos.produit && get().limiteSiImpaye(tr('ajouter des articles'))) return;
+    if (type === 'utilisateur' && !infos.utilisateur && get().limiteSiImpaye(tr('ajouter des vendeurs'))) return;
     const dejaOuverte = !!get().feuille;
     // _id : chaque ouverture repart d'un formulaire neuf
     set({ feuille: { type, ...infos, _id: Date.now() } });

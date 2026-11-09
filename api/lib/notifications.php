@@ -353,7 +353,7 @@ function pushResume(array $commerce, array $r, string $langue): array
 // Un commerce reçoit-il son résumé maintenant ? (heure locale choisie, pas déjà envoyé aujourd'hui, abonnement en cours)
 function resumeDu(array $commerce, array $reglages, DateTimeImmutable $maintenantUtc): bool
 {
-    if (($commerce['statut'] ?? '') === 'suspendu' || abonnementExpire($commerce)) return false;
+    if (($commerce['statut'] ?? '') === 'suspendu' || abonnementTermine($commerce)) return false; // abonnement terminé : plus de résumé du soir (lib/activation.php)
     $prefs = prefsNotifications($reglages);
     if (!$prefs['resume']) return false;
     $canaux = canauxDuCompte($commerce, $reglages);

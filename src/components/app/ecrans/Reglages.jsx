@@ -215,7 +215,7 @@ function InfosCommerce() {
         <p className="petit muet">{tr('Vos données vous appartiennent. Téléchargez-les à tout moment : pour votre comptable, ou pour garder une copie.')}</p>
         <button className="btn bloc" onClick={() => s.ouvrir('rapport')}>{tr('Rapport d’activité (Excel et PDF)')}</button>
         <div className="grille-2">
-          <button className="btn secondaire" onClick={() => exporterVentesCsv(d)}>{tr('Ventes (Excel, CSV)')}</button>
+          <button className="btn secondaire" onClick={() => !s.limiteSiImpaye(tr('les rapports et exports')) && exporterVentesCsv(d)}>{tr('Ventes (Excel, CSV)')}</button>
           <button className="btn secondaire" onClick={() => exporterTout(d)}>{tr('Sauvegarde complète')}</button>
         </div>
         <p className="tres-petit muet">{tr('La sauvegarde complète contient articles, ventes, clients, dépenses et journées de vente. Les codes PIN n’y figurent pas.')}</p>

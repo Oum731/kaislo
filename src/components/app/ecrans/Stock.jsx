@@ -37,7 +37,7 @@ export default function Stock() {
   return (
     <>
       <EnTete surTitre={tr('{0} articles suivis', [suivis.length])} titre={tr('Stock')}>
-        <button className="btn secondaire cache-mobile" onClick={() => exporterInventaireCsv(d)}><Icone nom="installer" /> {tr('Exporter l’inventaire')}</button>
+        <button className="btn secondaire cache-mobile" onClick={() => !s.limiteSiImpaye(tr('les rapports et exports')) && exporterInventaireCsv(d)}><Icone nom="installer" /> {tr('Exporter l’inventaire')}</button>
         <button className="btn cache-mobile" onClick={() => s.ouvrir('entreeStock')}><Icone nom="plus" /> {tr('Entrée de marchandise')}</button>
       </EnTete>
       <div className="contenu" style={{ maxWidth: 980 }}>
@@ -55,7 +55,7 @@ export default function Stock() {
           <span className="droite"><small>{tr('Si tout est vendu')}</small><b className="vert-texte">{s.prix(valeurVente)}</b></span>
         </div>
         <div className="grille-2 seulement-mobile" style={{ marginTop: 14 }}>
-          <button className="btn secondaire" onClick={() => exporterInventaireCsv(d)}><Icone nom="installer" /> {tr('Inventaire')}</button>
+          <button className="btn secondaire" onClick={() => !s.limiteSiImpaye(tr('les rapports et exports')) && exporterInventaireCsv(d)}><Icone nom="installer" /> {tr('Inventaire')}</button>
           <button className="btn" onClick={() => s.ouvrir('entreeStock')}><Icone nom="plus" /> {tr('Entrée')}</button>
         </div>
 

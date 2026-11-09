@@ -56,6 +56,12 @@ export function etatAbonnement(ab, maintenant = new Date()) {
   return { statut: ab.statut, joursRestants, fin };
 }
 
+// Abonnement non payé dont le délai est passé (commerce en ligne uniquement) : certaines actions sont suspendues, la caisse reste utilisable
+export function abonnementLimite(d, maintenant = new Date()) {
+  if (!d?.commerce || d.commerce.serveur !== true) return false;
+  return etatAbonnement(d.commerce.abonnement, maintenant).statut === 'expire';
+}
+
 // Ajoute des jours à une date (à partir d'aujourd'hui si la date est passée)
 export function prolonger(dateIso, jours, maintenant = new Date()) {
   const depart = dateIso && new Date(dateIso) > maintenant ? new Date(dateIso) : maintenant;

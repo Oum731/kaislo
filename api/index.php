@@ -17,6 +17,7 @@
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
 //   GET /api/parrainage     parrainage entre commerçants : code, filleuls, mois gagnés (voir lib/parrainage.php)
 //   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
+//   POST /api/abonnement/activer   activation provisoire de l'abonnement, à payer sous quelques jours (voir lib/activation.php)
 //   GET/POST /api/sauvegardes[/restaurer]   copies datées des données d'un commerce en ligne (voir lib/sauvegardes.php)
 //   GET/POST /api/admin/push[/abonner|/desabonner]   alertes de l'équipe sur ses appareils (voir lib/alertes-equipe.php)
 //   GET /api/factures, GET /api/admin/factures, POST /api/admin/avoir   factures et factures d'avoir d'abonnement émises par Amorac (voir lib/facturation.php)
@@ -47,6 +48,7 @@ require __DIR__ . '/lib/retours.php';
 require __DIR__ . '/lib/facturation.php';
 require __DIR__ . '/lib/alertes-equipe.php';
 require __DIR__ . '/lib/sauvegardes.php';
+require __DIR__ . '/lib/activation.php';
 require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
@@ -83,6 +85,7 @@ try {
         'POST /deconnexion' => routeDeconnexion(),
         'GET /mes-commerces' => routeMesCommerces(),
         'GET /factures' => routeFacturesCommerce(),
+        'POST /abonnement/activer' => routeActiverAbonnement(),
         'GET /sauvegardes' => routeSauvegardesLire(),
         'POST /sauvegardes' => routeSauvegardesCreer(),
         'POST /sauvegardes/restaurer' => routeSauvegardesRestaurer(),
