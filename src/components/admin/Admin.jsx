@@ -22,6 +22,7 @@ import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/rela
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
 import { telechargerFacture } from '@/lib/export/telecharger-facture';
+import { etatPush, activerPush, desactiverPush, iosNonInstalle } from '@/lib/push-client';
 import { VueRetours, RetoursCommerce } from './Retours';
 
 const JOUR = 86400000;
@@ -150,7 +151,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
-  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente };
+  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente, jeton };
 
   return (
     <div className="coque admin-espace">
@@ -224,6 +225,44 @@ function parDevise(lignes) {
 }
 const paiementsDe = (commerces) => commerces.flatMap((c) => (c.commerce.abonnement?.paiements || []).map((p) => ({ ...p, c })));
 
+// Alertes sur cet appareil : une notification à chaque nouveau commerce, message d'un commerce ou question d'un visiteur (voir api/lib/alertes-equipe.php)
+function AlertesEquipe({ ctx }) {
+  const [etat, setEtat] = useState(null);
+  const [serveur, setServeur] = useState(null);
+  const [message, setMessage] = useState(null);
+  const [enCours, setEnCours] = useState(false);
+  const charger = useCallback(async () => {
+    setEtat(await etatPush());
+    ctx.api('GET', '/admin/push').then(setServeur).catch(() => setServeur(null));
+  }, [ctx]);
+  useEffect(() => { charger(); }, [charger]);
+  if (!etat) return null;
+  const agir = async (activer) => {
+    setEnCours(true); setMessage(null);
+    try {
+      if (activer) await activerPush(serveur?.clePublique, ctx.jeton, '/admin/push'); else await desactiverPush(ctx.jeton, '/admin/push');
+      await charger();
+    } catch (e) {
+      setMessage(e.code === 'refuse' ? 'Notifications refusées : autorisez-les dans les réglages du navigateur pour ce site.' : 'Impossible d’activer les alertes sur cet appareil.');
+    } finally { setEnCours(false); }
+  };
+  const ios = iosNonInstalle();
+  return (
+    <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap', gap: 10 }}>
+      <span className="grandit">
+        <b>Alertes sur ce téléphone</b>
+        <span className="petit bloc-texte">{etat.abonne ? 'Activées : vous êtes prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur.' : 'Soyez prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur (en plus de l’e-mail).'}{serveur ? ` · ${serveur.appareils} appareil${serveur.appareils > 1 ? 's' : ''} de l’équipe` : ''}</span>
+        {ios && <span className="tres-petit muet bloc-texte">Sur iPhone : ajoutez d’abord Amorac à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.</span>}
+        {!etat.supporte && <span className="tres-petit muet bloc-texte">Ce navigateur ne gère pas les notifications.</span>}
+        {message && <span className="tres-petit bloc-texte" style={{ color: 'var(--rouge, #C8402F)' }}>{message}</span>}
+      </span>
+      {etat.supporte && !ios && (etat.abonne
+        ? <button className="btn secondaire petit" onClick={() => agir(false)} disabled={enCours}>Désactiver</button>
+        : <button className="btn petit" onClick={() => agir(true)} disabled={enCours || !serveur?.clePublique}>Activer les alertes</button>)}
+    </div>
+  );
+}
+
 function VueTableau({ commerces, ctx }) {
   const compte = (statut) => commerces.filter((c) => c.etat.statut === statut).length;
   const debutMois = new Date();
@@ -253,6 +292,7 @@ function VueTableau({ commerces, ctx }) {
           <div className="carte kpi"><p className="petit muet">Suspendus</p><p className="kpi-valeur">{compte('suspendu')}</p><p className="sous">accès bloqué</p></div>
           <div className="carte kpi"><p className="petit muet">Encaissé ce mois</p><p className="kpi-valeur petit" style={{ fontSize: 17 }}>{parDevise(duMois)}</p><p className="sous">{duMois.length} paiement(s)</p></div>
         </div>
+        <AlertesEquipe ctx={ctx} />
         {ctx.avisAttente > 0 && (
           <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap' }}>
             <span className="grandit"><b>{ctx.avisAttente} avis de commerçant{ctx.avisAttente > 1 ? 's' : ''} à relire</b> avant publication sur le site.</span>

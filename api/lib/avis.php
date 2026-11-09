@@ -71,11 +71,9 @@ function routeAvisEnvoyer(): never
     }
     journaliser($u['commerce_id'], $u['id'], 'avis', ['note' => $note]);
     // L'équipe est prévenue par e-mail (comme pour les messages des visiteurs) : l'avis est à relire dans l'espace Amorac → Avis
-    envoyerEmail(
-        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
+    alerterEquipe('avis', 'Nouvel avis ' . $note . '/5 : ' . $c['nom'], mb_substr($texte, 0, 140),
         'Kaislo — nouvel avis (' . $note . '/5) : ' . $c['nom'],
-        "Avis de " . nomPourAvis($u['nom']) . " ({$c['nom']}, {$c['ville']}) : $note/5\n\n$texte\n\nÀ relire et publier dans l'espace Amorac → Avis : https://" . (domaineSite() ?: 'kaislo.com') . '/admin/'
-    );
+        "Avis de " . nomPourAvis($u['nom']) . " ({$c['nom']}, {$c['ville']}) : $note/5\n\n$texte\n\nÀ relire et publier dans l'espace Amorac → Avis : " . lienAdmin());
     repondre(['ok' => true, 'etat' => 'attente'], 201);
 }
 

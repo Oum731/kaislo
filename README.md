@@ -275,6 +275,13 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Alertes de l'équipe Amorac (nouveau commerce, message reçu)
+
+À chaque **nouveau commerce** (inscription ou commerce ajouté par un gérant), **message d'un commerce**, **question d'un visiteur**, **avis** ou **commercial à valider**, l'équipe reçoit un e-mail (`EmailEquipe` du `.env`) **et** une notification sur ses appareils.
+- Activer : Espace Amorac → Accueil → « Alertes sur ce téléphone » → « Activer les alertes » (chaque membre, sur chaque appareil ; sur iPhone, ajouter d'abord Amorac à l'écran d'accueil).
+- Technique : les appareils de l'équipe sont des abonnements push (`abonnements_push`) dont `commerce_id` vaut `amorac` ; `alerterEquipe()` (`api/lib/alertes-equipe.php`) envoie l'e-mail et la notification après la réponse, un échec ne gêne jamais l'action. Routes : `GET /api/admin/push`, `POST /api/admin/push/abonner` et `/desabonner`.
+- Pour une nouvelle alerte : appeler `alerterEquipe('type', 'Titre', 'Texte court', 'Sujet e-mail', 'Corps e-mail')` (type : 20 caractères au plus). Test : `tests/api-alertes-equipe.test.mjs`.
+
 ## Factures d'abonnement (Amorac → ses abonnés)
 
 Chaque paiement d'abonnement enregistré dans l'Espace Amorac donne une **facture acquittée** : numéro sans trou `FAC-2026-0001` (une suite par année, tous pays confondus), émetteur Amorac (forme « SARL » sans le capital, siège, RC, ICE, IF, TP), client (commerce, gérant, adresse, pays), désignation (formule, durée, postes), période couverte, HT / TVA / TTC, moyen et date de paiement.

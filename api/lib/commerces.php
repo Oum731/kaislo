@@ -157,6 +157,9 @@ function routeAjouterCommerce(): never
     $u = requete('SELECT * FROM utilisateurs WHERE id = ?', [$idUtilisateur])->fetch();
     $jeton = creerJeton($u, (string) ($e['appareil'] ?? ''));
     $ligne = requete('SELECT * FROM commerces WHERE id = ?', [$idCommerce])->fetch();
+    alerterEquipe('inscription', 'Nouveau commerce : ' . $nom, "$type · $ville ($pays) · commerce de plus d'un gérant existant",
+        'Kaislo — nouveau commerce : ' . $nom,
+        "Un gérant déjà inscrit vient d'ajouter un commerce.\n\nCommerce : $nom (code {$ligne['code']})\nActivité : $type\nLieu : $ville ($pays)\nGérant : {$moi['nom']} ({$moi['telephone']})\n\nFiche : " . lienAdmin());
     repondre(['ok' => true, 'jeton' => $jeton, 'utilisateur' => versUtilisateur($u), 'commerce' => versCommerce($ligne), 'commerces' => listeCommercesGerant($u)], 201);
 }
 

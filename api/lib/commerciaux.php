@@ -447,11 +447,9 @@ function routeCommercialInscription(): never
     requete('INSERT INTO commerciaux (id, nom, telephone, cle_telephone, email, pays, ville, quartier, code, pin_hash, taux, actif, notes, cree_le, valide_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NULL)',
         [$id, $nom, $num['affichage'], $num['cle'], $email, $pays, $ville, $quartier, $code, password_hash($pin, PASSWORD_DEFAULT), (float) programme()['taux'], 'Inscription faite par le commercial lui-même', maintenant()]);
     journaliser(null, null, 'commercial-inscription', ['commercial' => $nom, 'code' => $code]);
-    envoyerEmail(
-        lireFichierEnvCle('EmailEquipe') ?? 'contact@kaislo.com',
+    alerterEquipe('commercial', 'Commercial à valider : ' . $nom, $pays . ' · ' . $num['affichage'],
         'Kaislo — nouveau commercial à valider : ' . $nom,
-        "Un commercial vient de s'inscrire.\n\nNom : $nom\nTéléphone : " . $num['affichage'] . "\nPays : $pays\n" . ($email !== '' ? "E-mail : $email\n" : '') . "\nÀ valider dans l'espace Amorac → Commerciaux : https://" . (domaineSite() ?: 'kaislo.com') . "/admin/"
-    );
+        "Un commercial vient de s'inscrire.\n\nNom : $nom\nTéléphone : " . $num['affichage'] . "\nPays : $pays\n" . ($email !== '' ? "E-mail : $email\n" : '') . "\nÀ valider dans l'espace Amorac → Commerciaux : " . lienAdmin());
     repondre(['ok' => true, 'enAttente' => true, 'code' => $code], 201);
 }
 
