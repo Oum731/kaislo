@@ -43,10 +43,13 @@ before(async () => {
 });
 after(() => { serveur?.kill(); fs.rmSync(dossier, { recursive: true, force: true }); });
 
-test('par défaut : Orange Money et le code QR Wave pour la Côte d’Ivoire, avec le prix en FCFA ; Maroc et Congo ne voient que le virement', async () => {
+test('par défaut : Orange Money, Wave et MTN MoMo pour la Côte d’Ivoire, avec le prix en FCFA ; Maroc et Congo ne voient que le virement', async () => {
   const r = await api('GET', '/paiement-virement', null, ivoire.jeton);
-  assert.deepEqual(r.mobiles.map((m) => m.operateur), ['Orange Money', 'Wave']);
-  const [orange, wave] = r.mobiles;
+  assert.deepEqual(r.mobiles.map((m) => m.operateur), ['Orange Money', 'Wave', 'MTN MoMo']);
+  const [orange, wave, mtn] = r.mobiles;
+  assert.equal(mtn.numero, '+2250507131267');
+  assert.equal(mtn.qr, '/paiement/mtn-momo.png');
+  assert.deepEqual(mtn.liens, []);
   assert.equal(orange.numero, '+2250779872585');
   assert.equal(orange.qr, '/paiement/orange-money.png');
   assert.equal(orange.devise, 'FCFA');
@@ -65,7 +68,7 @@ test('par défaut : Orange Money et le code QR Wave pour la Côte d’Ivoire, av
 });
 
 test('les images des codes QR par défaut sont rangées dans le site (public/paiement/)', () => {
-  for (const nom of ['wave.png', 'orange-money.png']) {
+  for (const nom of ['wave.png', 'orange-money.png', 'mtn-momo.png']) {
     const png = fs.readFileSync('public/paiement/' + nom);
     assert.equal(png.subarray(1, 4).toString(), 'PNG', nom);
     assert.ok(png.length > 5000 && png.length < 200000, nom);

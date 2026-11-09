@@ -30,6 +30,7 @@ const MOYENS_MOBILES_MAX = 8;
 const MOYENS_MOBILES_DEFAUT = [
     ['operateur' => 'Orange Money', 'pays' => ['CI'], 'numero' => '+2250779872585', 'qr' => 'orange-money.png', 'lien' => '', 'titulaire' => '', 'note' => ''],
     ['operateur' => 'Wave', 'pays' => ['CI'], 'numero' => '', 'qr' => 'wave.png', 'lien' => 'https://pay.wave.com/m/M_ci_9JyOKoTX4xvQ/c/ci/', 'titulaire' => 'Traoreservice', 'note' => ''],
+    ['operateur' => 'MTN MoMo', 'pays' => ['CI'], 'numero' => '+2250507131267', 'qr' => 'mtn-momo.png', 'lien' => '', 'titulaire' => '', 'note' => ''], // code « MoMo Pay » (2250507131267@momopay)
 ];
 /** Nom d'une image de code QR rangée dans public/paiement/ (pas de chemin : seulement un nom de fichier). */
 function qrValide(string $nom): bool
