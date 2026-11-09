@@ -114,3 +114,21 @@ test('l’émetteur de la facture est celui de src/config.js', () => {
   assert.match(config, /formeJuridique: 'SARL',/); // la forme, jamais le capital
   assert.doesNotMatch(config, /capital de/i);
 });
+
+test('paiement groupé : une facture par commerce, numéros qui se suivent ; un paiement refusé ne laisse aucune facture', async () => {
+  await new Promise((r) => setTimeout(r, 1100)); // les dates ont une précision d'une seconde
+  const second = await api('POST', '/ajouter-commerce', { commerce: { nom: 'Annexe Awa', type: 'epicerie', ville: 'Rabat', quartier: 'Agdal' }, conditionsAcceptees: true, pin: '1234' }, maroc.jeton);
+  assert.equal(second.statut, 201, JSON.stringify(second));
+  const avant = (await api('GET', '/admin/factures', null, admin)).factures.length;
+  const groupe = await api('POST', '/admin/paiement-groupe', { lignes: [{ commerceId: maroc.commerce.id, montant: 1200, mois: 1 }, { commerceId: second.commerce.id, montant: 600, mois: 1 }], moyen: 'Espèces' }, admin);
+  assert.equal(groupe.ok, true, JSON.stringify(groupe));
+  const apres = (await api('GET', '/admin/factures', null, admin)).factures;
+  assert.equal(apres.length, avant + 2);
+  const nouvelles = apres.filter((f) => [maroc.commerce.id, second.commerce.id].includes(f.commerceId) && f.reglement.moyen === 'Espèces');
+  assert.equal(nouvelles.length, 2);
+  const suites = nouvelles.map((f) => Number(f.numero.slice(-4))).sort((a, b) => a - b);
+  assert.equal(suites[1], suites[0] + 1);
+  // Un paiement invalide (montant nul) échoue sans créer de facture ni consommer de numéro
+  assert.equal((await payer(maroc, 0)).ok, false);
+  assert.equal((await api('GET', '/admin/factures', null, admin)).factures.length, avant + 2);
+});
