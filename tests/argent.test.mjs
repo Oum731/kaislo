@@ -233,3 +233,16 @@ test('tarifs : épicerie à 12 000 FCFA et toutes les devises suivent la même g
   assert.equal(convertirPrix(15000, 'FCFA', 'MAD') % 10, 9); // dirhams terminés par 9
   assert.equal(TAUX_CHANGE.FCFA, 655.957);
 });
+
+test('liste des formules de la fiche admin : le prix affiché est celui que CE commerce paie (catalogue sans code parrain, grille avec code)', async () => {
+  const { FORMULES, REGLES_TARIFS, prixListeFormule, prixAbonnement } = await import('../src/lib/donnees/tarifs.js');
+  const restoBar = FORMULES.find((f) => f.id === 'restaurant');
+  // Grille (avec code parrain ou inscrit avant le catalogue) : 12 000 FCFA ; catalogue (sans code) : 13 500 FCFA, le même prix que « Prix calculé » de la fiche
+  assert.equal(prixListeFormule(restoBar, 'FCFA', { mode: 'base' }), 12000);
+  assert.equal(prixListeFormule(restoBar, 'FCFA', { mode: 'catalogue' }), 13500);
+  assert.equal(prixListeFormule(restoBar, 'FCFA', { mode: 'catalogue' }), prixAbonnement({ formule: restoBar, devise: 'FCFA', postes: 1, mois: 1, regles: REGLES_TARIFS, mode: 'catalogue' }).parMois);
+  // Toutes les formules et devises : jamais moins que la grille, et égal au prix calculé par la fiche
+  for (const f of FORMULES) for (const d of ['FCFA', 'GNF', 'MAD', 'EUR', 'CAD', 'USD']) {
+    assert.ok(prixListeFormule(f, d, { mode: 'catalogue' }) >= prixListeFormule(f, d, { mode: 'base' }), f.id + ' ' + d);
+  }
+});

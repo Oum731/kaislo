@@ -17,7 +17,7 @@ import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnee
 import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
-import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixTouteDevise, TAUX_CHANGE } from '@/lib/donnees/tarifs';
+import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixListeFormule, prixTouteDevise, TAUX_CHANGE } from '@/lib/donnees/tarifs';
 import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
@@ -933,7 +933,7 @@ function FicheCommerce({ c, ctx, fermer }) {
               <h3>Enregistrer un paiement</h3>
               <label className="champ"><span>Formule</span>
                 <select value={formule} onChange={(e) => choisir({ formule: e.target.value })}>
-                  {ctx.formules.map((f) => <option key={f.id} value={f.id}>{f.nom} · {formatPrix(f.prix?.[dev] || 0, dev)}/mois</option>)}
+                  {ctx.formules.map((f) => <option key={f.id} value={f.id}>{f.nom} · {formatPrix(prixListeFormule(f, dev, { regles: ctx.regles, mode: c.tarif.mode }), dev)}/mois{c.tarif.mode === 'catalogue' ? ' (catalogue)' : ''}</option>)}
                 </select>
               </label>
               <div className="grille-2">

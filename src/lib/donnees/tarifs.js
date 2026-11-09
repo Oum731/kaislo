@@ -116,6 +116,11 @@ export function prixAbonnement({ formule, devise, postes = 1, mois = 1, fondateu
   return { base, supplement, remise: fondateur ? regles.remiseFondateur : 0, parMois, total: arrondir(parMois * moisFactures, devise) };
 }
 
+/** Prix par mois d'une formule (1 poste, sans remise fondateur) tel que CE commerce le paie : prix catalogue pour un client sans code parrain, prix de la grille sinon. */
+export function prixListeFormule(formule, devise, { regles = REGLES_TARIFS, mode = 'base' } = {}) {
+  return prixAbonnement({ formule, devise, postes: 1, mois: 1, regles, mode }).parMois;
+}
+
 /**
  * Les jours offerts (parrainage) comptent dans le mois : le client ne paie que les jours restants (30 jours par mois).
  * Identique à prixApresJoursOfferts (api/lib/tarifs.php). Renvoie { deduits, joursPayes, montant }.
