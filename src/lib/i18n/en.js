@@ -25,7 +25,6 @@ export const EN = {
   "Retour": "Back",
   "Vendez plus vite. Comptez moins. Gagnez plus.": "Sell faster. Count less. Earn more.",
   "Ventes, tickets, carnet de crédit, tables, stock et marges : tout votre commerce dans votre poche.": "Sales, receipts, credit book, tables, stock and margins: your whole business in your pocket.",
-  "Une solution Kaislo": "A Kaislo solution",
   "La gestion simple de votre commerce.": "Simple management for your business.",
   "Restaurants, épiceries, boutiques, partout dans le monde : enregistrez vos ventes en quelques touches, imprimez le ticket, suivez vos ventes.": "Restaurants, grocery shops, boutiques, anywhere in the world: record your sales in a few taps, print the receipt, track your sales.",
   "Se connecter": "Log in",

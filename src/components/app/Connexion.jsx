@@ -66,7 +66,7 @@ function PanneauVisuel() {
         <h2>{tr('Vendez plus vite. Comptez moins. Gagnez plus.')}</h2>
         <p style={{ opacity: 0.75, marginTop: 14, maxWidth: 420 }}>{tr('Ventes, tickets, carnet de crédit, tables, stock et marges : tout votre commerce dans votre poche.')}</p>
       </div>
-      <p className="petit" style={{ opacity: 0.6, position: 'relative' }}>{tr('Une solution Kaislo')}</p>
+      <p className="petit" style={{ opacity: 0.6, position: 'relative' }}>{tr('Fonctionne sans internet')}</p>
     </div>
   );
 }
