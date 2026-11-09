@@ -140,6 +140,7 @@ export function creerCommerce(infos, serveur = null) {
     remboursements: [],
     mouvements: [],
     journal: [], // journal d'activité (lib/donnees/journal.js)
+    fournisseurs: [], achats: [], reglementsFournisseurs: [], // achats et fournisseurs (lib/donnees/achats.js)
     commandes: [],
     prochainNumero: 1,
   };
@@ -165,7 +166,7 @@ export function commerceDepuisServeur(rep) {
       tables: [], creeLe: c.creeLe, conditionsAccepteesLe: c.conditionsAccepteesLe, abonnement: { ...nouvelAbonnement(), ...c.abonnement },
     },
     utilisateurs: [rep.utilisateur],
-    categories: [], produits: [], ventes: [], depenses: [], sessionsCaisse: [], clients: [], remboursements: [], mouvements: [], journal: [], commandes: [],
+    categories: [], produits: [], ventes: [], depenses: [], sessionsCaisse: [], clients: [], remboursements: [], mouvements: [], journal: [], fournisseurs: [], achats: [], reglementsFournisseurs: [], commandes: [],
     prochainNumero: 1,
   };
   ecrire('commerce:' + c.id, donnees);

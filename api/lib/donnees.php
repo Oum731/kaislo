@@ -12,7 +12,7 @@
 // ------------------------------------------------------------
 
 // Types acceptés. « reglages » = réglages du commerce (un seul élément, id « commerce »).
-const TYPES_ELEMENTS = ['reglages', 'postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements', 'journal', 'images'];
+const TYPES_ELEMENTS = ['reglages', 'postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements', 'journal', 'fournisseurs', 'achats', 'reglementsFournisseurs', 'images'];
 const TAILLE_MAX_ELEMENT = 400000; // octets (une photo réduite fait environ 40 à 80 Ko)
 const ELEMENTS_PAR_ENVOI = 500;
 const ELEMENTS_PAR_PAGE = 2000;
@@ -161,7 +161,7 @@ function enregistrerElement(array $u, array $e): ?string
 function droitManquant(array $u, string $type, bool $supprime, ?array $existant, ?array $contenu): ?string
 {
     if ($u['role'] === 'gerant') return null;
-    if ($type === 'reglages' || $type === 'postes') return 'réservé au gérant';
+    if (in_array($type, ['reglages', 'postes', 'fournisseurs', 'achats', 'reglementsFournisseurs'], true)) return 'réservé au gérant';
     $produits = in_array($type, ['produits', 'categories'], true);
     if ($produits && $u['peut_gerer_produits']) return null;
     if ($supprime) return $type === 'commandes' ? null : 'suppression réservée au gérant';

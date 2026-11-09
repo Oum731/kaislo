@@ -9,7 +9,7 @@
 import { lireLocal, ecrireLocal } from './stockage.js';
 
 export const COPIES_GARDEES = 5;
-const LISTES = ['postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements', 'journal'];
+const LISTES = ['postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'sessionsCaisse', 'depenses', 'mouvements', 'journal', 'fournisseurs', 'achats', 'reglementsFournisseurs'];
 const jourDe = (date) => {
   const d = new Date(date);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');

@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { formatDate, formatHeure, quantiteUnite } from '@/lib/utils/format';
 import { Icone, Segment, ImageStockee, initiales } from '@/components/ui';
+import Achats from './Achats';
 import { EnTete } from '../EnTete';
 import { exporterInventaireCsv } from '@/lib/donnees/export';
 import { tr } from '@/lib/i18n';
@@ -59,7 +60,7 @@ export default function Stock() {
         </div>
 
         <div style={{ maxWidth: 420, margin: '18px 0 14px' }}>
-          <Segment options={[['produits', tr('Articles')], ['mouvements', tr('Historique')]]} valeur={onglet} surChanger={setOnglet} />
+          <Segment options={[['produits', tr('Articles')], ['mouvements', tr('Historique')], ...(s.estGerant() ? [['achats', tr('Achats')]] : [])]} valeur={onglet} surChanger={setOnglet} />
         </div>
 
         {onglet === 'produits' && (
@@ -91,6 +92,8 @@ export default function Stock() {
             </div>
           </>
         )}
+
+        {onglet === 'achats' && s.estGerant() && <Achats />}
 
         {onglet === 'mouvements' && (
           <div className="liste">

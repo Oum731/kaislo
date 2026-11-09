@@ -20,6 +20,7 @@ import { nettoyerGros, grosDisponible } from '@/lib/donnees/gros.js';
 import { articlesAPublier } from '@/lib/donnees/boutique.js';
 import { ligneJournal, ajouterAuJournal } from '@/lib/donnees/journal.js';
 import { verifierSauvegarde, appliquerSauvegarde, garderCopie } from '@/lib/donnees/sauvegarde.js';
+import { creerAchat, creerReglement } from '@/lib/donnees/achats.js';
 import { tr } from '@/lib/i18n';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
@@ -474,6 +475,54 @@ export const trancheGestion = (set, get) => ({
     get().ouvrir('recuRemboursement', { remboursement: r, client, soldeApres });
     if (get().imprimante.connectee) get().imprimerRemboursement(r, client, soldeApres);
     return { remboursement: r };
+  },
+
+  // ---------- Fournisseurs et achats (voir lib/donnees/achats.js) ----------
+  // Renvoie un message d'erreur, ou null ; la fiche créée est donnée à `surCree(fournisseur)`
+  enregistrerFournisseur(b, surCree) {
+    const nom = (b.nom || '').trim();
+    if (!nom) return tr('Indiquez le nom du fournisseur');
+    const { d } = get();
+    if ((d.fournisseurs || []).some((f) => f.id !== b.id && f.nom.toLowerCase() === nom.toLowerCase())) return tr('Ce fournisseur existe déjà');
+    const f = { id: b.id || genId('f'), nom: nom.slice(0, 80), telephone: (b.telephone || '').trim().slice(0, 30), note: (b.note || '').trim().slice(0, 200) };
+    get().majDonnees((x) => ({ fournisseurs: b.id ? x.fournisseurs.map((y) => (y.id === b.id ? f : y)) : [...(x.fournisseurs || []), f] }));
+    surCree?.(f);
+    return null;
+  },
+
+  supprimerFournisseur(id) {
+    const { d } = get();
+    if ((d.achats || []).some((a) => a.fournisseurId === id)) return tr('Ce fournisseur a des achats : il reste dans la liste');
+    get().majDonnees((x) => ({ fournisseurs: x.fournisseurs.filter((f) => f.id !== id) }));
+    return null;
+  },
+
+  // Enregistre un achat : l'achat, les entrées de stock et le prix d'achat des articles. Renvoie un message d'erreur, ou null.
+  enregistrerAchat(b) {
+    const r = creerAchat(get().d, { ...b, utilisateurNom: get().utilisateur.nom });
+    if (r.erreur) return { fournisseur: tr('Choisissez le fournisseur'), lignes: tr('Ajoutez au moins un article avec une quantité'), prix: tr('Indiquez le prix d’achat de chaque article'), paye: tr('Le montant payé ne peut pas dépasser le total') }[r.erreur];
+    const prix = new Map(r.achat.lignes.map((l) => [l.produitId, l.prixAchat]));
+    get().majDonnees((d) => ({
+      achats: [...(d.achats || []), r.achat],
+      mouvements: [...(d.mouvements || []), ...r.mouvements],
+      // Même règle qu'une entrée de marchandise : le prix d'achat suit le dernier achat, le stock devient suivi
+      produits: d.produits.map((x) => {
+        if (!prix.has(x.id)) return x;
+        const p = prix.get(x.id);
+        if (x.suiviStock && p === x.prixAchat) return x;
+        return { ...x, suiviStock: true, prixAchat: p, ...(x.suiviStock ? {} : departStock(0)) };
+      }),
+    }));
+    get().message(tr('Achat enregistré : {0}', [get().prix(r.achat.total)]));
+    return null;
+  },
+
+  reglerFournisseur(b) {
+    const r = creerReglement(get().d, { ...b, utilisateurNom: get().utilisateur.nom });
+    if (r.erreur) return { montant: tr('Indiquez le montant payé'), trop: tr('Le montant dépasse ce qui est dû à ce fournisseur'), fournisseur: tr('Choisissez le fournisseur') }[r.erreur];
+    get().majDonnees((d) => ({ reglementsFournisseurs: [...(d.reglementsFournisseurs || []), r.reglement] }));
+    get().message(tr('Paiement noté : {0}', [get().prix(r.reglement.montant)]));
+    return null;
   },
 
   // ---------- Restauration ----------

@@ -12,6 +12,7 @@ import {
   FeuilleRemboursement, FeuilleRecuRemboursement, FeuilleEntreeStock, FeuilleAjustement, FeuilleCompte, FeuilleMenu, FeuilleBiometrie,
 } from './FeuillesGestion';
 
+import { FeuilleAchat, FeuilleFournisseur } from './FeuillesAchats';
 import { FeuilleRapport } from './FeuilleRapport';
 import { FeuilleImport } from './FeuilleImport';
 import { FeuilleNotifications } from './FeuilleNotifications';
@@ -47,6 +48,8 @@ const FEUILLES = {
   remboursement: FeuilleRemboursement,
   recuRemboursement: FeuilleRecuRemboursement,
   entreeStock: FeuilleEntreeStock,
+  achat: FeuilleAchat,
+  fournisseur: FeuilleFournisseur,
   ajustement: FeuilleAjustement,
   compte: FeuilleCompte,
   menu: FeuilleMenu,
