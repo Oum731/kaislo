@@ -133,7 +133,7 @@ function resumesCommerces(?string $seulId = null): array
         $v = json_decode($l['contenu'], true) ?: [];
         if (!empty($v['annulee']) || ($v['date'] ?? '') < $depuis) continue;
         $ca[$l['commerce_id']]['ca'] = ($ca[$l['commerce_id']]['ca'] ?? 0) + (float) ($v['total'] ?? 0);
-        $ca[$l['commerce_id']]['tickets'] = ($ca[$l['commerce_id']]['tickets'] ?? 0) + 1;
+        if (empty($v['retourDe'])) $ca[$l['commerce_id']]['tickets'] = ($ca[$l['commerce_id']]['tickets'] ?? 0) + 1; // un retour d'article n'est pas un ticket
     }
     $facturesDe = []; // paiement -> numéro de facture
     foreach (requete('SELECT paiement_id, numero FROM factures' . ($seulId ? ' WHERE commerce_id = ?' : ''), $seulId ? [$seulId] : [])->fetchAll() as $f) $facturesDe[$f['paiement_id']] = $f['numero'];
