@@ -92,10 +92,11 @@ test('règles du bonus modifiables et vues par l\'équipe', async () => {
 });
 
 test('le bonus d\'une semaine terminée se verse une seule fois', async () => {
-  // On recule de 8 jours l'inscription des clients et leurs ventes : ils tombent dans la semaine précédente
+  // On recule de 7 jours l'inscription des clients et leurs ventes : même jour et même heure la semaine d'avant, donc toujours dans la semaine précédente
+  // (avec 8 jours, le lundi, ils tombaient deux semaines en arrière et le test échouait ce jour-là)
   const { DatabaseSync } = await import('node:sqlite');
   const bd = new DatabaseSync(path.join(dossier, 't.sqlite'));
-  const recule = (iso) => new Date(new Date(iso).getTime() - 8 * 86400000).toISOString();
+  const recule = (iso) => new Date(new Date(iso).getTime() - 7 * 86400000).toISOString();
   for (const c of bd.prepare('SELECT id, cree_le FROM commerces').all()) bd.prepare('UPDATE commerces SET cree_le = ? WHERE id = ?').run(recule(c.cree_le), c.id);
   for (const e of bd.prepare("SELECT commerce_id, id, contenu FROM elements WHERE type = 'ventes'").all()) {
     const v = JSON.parse(e.contenu); v.date = recule(v.date);
