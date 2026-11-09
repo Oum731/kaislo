@@ -11,12 +11,13 @@
 //
 //   Paiement mobile (Orange Money, Wave, MTN MoMo…) : l'équipe enregistre ses numéros dans l'espace Kaislo → Tarifs ; le gérant d'un commerce
 //   dans la même devise voit le numéro, le montant en sa devise et la même référence KAISLO-code (qu'il indique à l'équipe avec « J'ai payé »).
-//   Un moyen peut aussi avoir un lien de paiement Wave (https://pay.wave.com/…) : le montant de la formule du commerce (1 mois, 12 mois) s'y ajoute
-//   tout seul (?amount=…, ou à la place de {montant} dans le lien) et le gérant paie d'un geste.
+//   Chaque moyen est montré aux commerces des PAYS cochés (Wave et Orange Money de Côte d'Ivoire : Côte d'Ivoire ; MTN MoMo et Airtel Money : Congo…).
+//   Un commerce d'un autre pays ne voit que le virement bancaire. Un moyen a un numéro, un code QR à scanner (image dans public/paiement/) et/ou un lien :
+//   un lien de paiement Wave (https://pay.wave.com/…) reçoit le montant de la formule du commerce (1 mois, 12 mois) tout seul (?amount=…, ou à la place de {montant}).
 //
 //   GET  /api/paiement-virement   comptes, numéros mobiles et montants pour le commerce du gérant connecté
 //   GET  /api/admin/paiements-mobiles   numéros enregistrés (équipe Kaislo)
-//   POST /api/admin/paiements-mobiles   { moyens: [{ operateur, numero?, lien?, titulaire?, devises: ['FCFA'], note? }] } (administrateur) : un numéro ou un lien au moins
+//   POST /api/admin/paiements-mobiles   { moyens: [{ operateur, pays: ['CI'], numero?, qr?, lien?, titulaire?, note? }] } (administrateur) : un numéro, un code QR ou un lien au moins
 //   GET  /api/admin/virement      comptes enregistrés (équipe Kaislo)
 //   POST /api/admin/virement      { comptes: [{ devise, beneficiaire, banque, iban, bic?, note? }] } (administrateur)
 // ------------------------------------------------------------
@@ -27,9 +28,14 @@ const OPERATEURS_MOBILES = ['Orange Money', 'Wave', 'MTN MoMo', 'Moov Money', 'A
 const MOYENS_MOBILES_MAX = 8;
 // Numéro proposé tant que l'équipe n'a rien enregistré (modifiable dans l'espace Kaislo → Tarifs)
 const MOYENS_MOBILES_DEFAUT = [
-    ['operateur' => 'Orange Money', 'numero' => '+2250779872585', 'lien' => '', 'titulaire' => '', 'devises' => ['FCFA'], 'note' => ''],
-    ['operateur' => 'Wave', 'numero' => '', 'lien' => 'https://pay.wave.com/m/M_ci_9JyOKoTX4xvQ/c/ci/', 'titulaire' => 'Traoreservice', 'devises' => ['FCFA'], 'note' => ''],
+    ['operateur' => 'Orange Money', 'pays' => ['CI'], 'numero' => '+2250779872585', 'qr' => '', 'lien' => '', 'titulaire' => '', 'note' => ''],
+    ['operateur' => 'Wave', 'pays' => ['CI'], 'numero' => '', 'qr' => 'wave.png', 'lien' => '', 'titulaire' => 'Traoreservice', 'note' => ''],
 ];
+/** Nom d'une image de code QR rangée dans public/paiement/ (pas de chemin : seulement un nom de fichier). */
+function qrValide(string $nom): bool
+{
+    return (bool) preg_match('/^[a-z0-9][a-z0-9-]{0,40}\.(png|jpe?g|webp)$/', $nom);
+}
 const HOTES_LIENS_PAIEMENT = ['pay.wave.com']; // liens de paiement acceptés (évite qu'un lien trompeur soit proposé aux gérants)
 
 /** Un lien de paiement valide (https, hôte autorisé), ou null. */
@@ -81,12 +87,15 @@ function routePaiementVirement(): never
     // Numéros de paiement mobile des devises du commerce, avec le prix dans sa devise
     $mobiles = [];
     foreach (moyensMobiles() as $m) {
-        if (!in_array($c['devise'], (array) ($m['devises'] ?? []), true)) continue;
+        // Un commerce ne voit que les moyens de son pays (anciens réglages : sa devise)
+        $pays = (array) ($m['pays'] ?? []);
+        if ($pays ? !in_array($c['pays'], $pays, true) : !in_array($c['devise'], (array) ($m['devises'] ?? []), true)) continue;
         $t = tarifCommerce($c, $c['devise']);
         if ($t['parMois'] <= 0) continue;
         $lien = lienPaiementValide((string) ($m['lien'] ?? ''));
         $m['liens'] = $lien ? [['mois' => 1, 'montant' => $t['parMois'], 'url' => lienAvecMontant($lien, (float) $t['parMois'])], ['mois' => 12, 'montant' => $t['annuel'], 'url' => lienAvecMontant($lien, (float) $t['annuel'])]] : [];
         unset($m['lien']);
+        $m['qr'] = !empty($m['qr']) && qrValide((string) $m['qr']) ? '/paiement/' . $m['qr'] : '';
         $mobiles[] = $m + ['devise' => $c['devise'], 'parMois' => $t['parMois'], 'annuel' => $t['annuel']];
     }
     repondre(['ok' => true, 'reference' => referenceVirement($c), 'comptes' => $comptes, 'mobiles' => $mobiles]);
@@ -110,11 +119,14 @@ function routeAdminMoyensMobilesEnregistrer(): never
         $numero = preg_replace('/[^\d+]/', '', (string) ($m['numero'] ?? ''));
         $lien = trim((string) ($m['lien'] ?? ''));
         if ($lien !== '' && !lienPaiementValide($lien)) throw new ErreurApi('Lien de paiement invalide : il doit commencer par https://pay.wave.com/');
-        if ($numero === '' && $lien === '') throw new ErreurApi('Indiquez un numéro ou un lien de paiement');
+        $qr = trim((string) ($m['qr'] ?? ''));
+        if ($qr !== '' && !qrValide($qr)) throw new ErreurApi('Nom du code QR invalide : un nom de fichier comme wave.png (image rangée dans public/paiement/)');
+        if ($numero === '' && $lien === '' && $qr === '') throw new ErreurApi('Indiquez un numéro, un code QR ou un lien de paiement');
         if ($numero !== '' && !preg_match('/^\+?\d{8,15}$/', $numero)) throw new ErreurApi('Numéro invalide (8 à 15 chiffres, avec l’indicatif du pays)');
-        $devises = array_values(array_unique(array_filter((array) ($m['devises'] ?? []), fn ($d) => in_array($d, DEVISES_VIREMENT, true))));
-        if (!$devises) throw new ErreurApi('Choisissez au moins une devise (celle des commerces qui peuvent payer par ce numéro)');
-        $moyens[] = ['operateur' => $operateur, 'numero' => $numero, 'lien' => $lien, 'titulaire' => texte($m, 'titulaire', 'le nom du titulaire', false, 80), 'devises' => $devises, 'note' => texte($m, 'note', 'la note', false, 200)];
+        $idsPays = array_column(LISTE_PAYS, 'id');
+        $pays = array_values(array_unique(array_filter((array) ($m['pays'] ?? []), fn ($p) => in_array($p, $idsPays, true))));
+        if (!$pays) throw new ErreurApi('Choisissez au moins un pays : les commerces des autres pays ne verront pas ce moyen (ils ne verront que le virement)');
+        $moyens[] = ['operateur' => $operateur, 'pays' => $pays, 'numero' => $numero, 'qr' => $qr, 'lien' => $lien, 'titulaire' => texte($m, 'titulaire', 'le nom du titulaire', false, 80), 'note' => texte($m, 'note', 'la note', false, 200)];
     }
     enregistrerReglageAmorac('paiements_mobiles', ['moyens' => $moyens]);
     journaliser(null, null, 'amorac-paiements-mobiles', ['numeros' => count($moyens), 'par' => $admin['email']]);

@@ -2307,4 +2307,7 @@ export const EN = {
   "Payer {0} avec {1} (12 mois)": "Pay {0} with {1} (12 months)",
   "Le lien s’ouvre dans l’application {0} avec le montant de votre formule. Vérifiez-le avant de confirmer.": "The link opens in the {0} app with the amount of your plan. Check it before confirming.",
   "Ou envoyez au numéro": "Or send to the number",
+  "Code QR {0}": "{0} QR code",
+  "Scannez ce code avec l’application {0} pour payer, puis saisissez le montant de votre formule : {1} par mois ou {2} à l’année.": "Scan this code with the {0} app to pay, then enter the amount of your plan: {1} per month or {2} per year.",
+  "Sur ce même téléphone, vous ne pouvez pas scanner votre propre écran : ouvrez ce code sur un autre écran, ou écrivez-nous (écran Aide) pour recevoir un lien de paiement.": "On this same phone you cannot scan your own screen: open this code on another screen, or write to us (Help screen) to get a payment link.",
 };

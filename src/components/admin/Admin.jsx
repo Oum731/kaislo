@@ -14,7 +14,7 @@ import Chargement from '@/components/Chargement';
 import Marque from '@/components/Marque';
 import { API_ACTIVE, appelApi } from '@/lib/api';
 import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnees/abonnement';
-import { paysParId, typeCommerce, numeroWhatsApp } from '@/lib/donnees/modeles';
+import { paysParId, typeCommerce, numeroWhatsApp, PAYS } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
 import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixListeFormule, prixTouteDevise, TAUX_CHANGE } from '@/lib/donnees/tarifs';
@@ -634,14 +634,14 @@ function MoyensMobiles({ ctx }) {
   const [message, setMessage] = useState(null);
   useEffect(() => { ctx.api('GET', '/admin/paiements-mobiles').then((r) => { setMoyens(r.moyens); setOperateurs(r.operateurs); }).catch((e) => setMessage({ ok: false, texte: e.message })); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const maj = (i, x) => setMoyens(moyens.map((m, j) => (j === i ? { ...m, ...x } : m)));
-  const basculer = (i, dev) => { const d = moyens[i].devises || []; maj(i, { devises: d.includes(dev) ? d.filter((x) => x !== dev) : [...d, dev] }); };
+  const basculer = (i, id) => { const p = moyens[i].pays || []; maj(i, { pays: p.includes(id) ? p.filter((x) => x !== id) : [...p, id] }); };
   const enregistrer = async () => {
     try { const r = await ctx.api('POST', '/admin/paiements-mobiles', { moyens }); setMoyens(r.moyens); setMessage({ ok: true, texte: 'Numéros enregistrés' }); } catch (e) { setMessage({ ok: false, texte: e.message }); }
   };
   return (
     <div className="carte pile" style={{ marginBottom: 14 }}>
       <h3>Numéros de paiement mobile</h3>
-      <p className="petit muet">Orange Money, Wave, MTN MoMo… Les gérants des commerces dont la devise est cochée voient le numéro et/ou le lien de paiement, leur prix dans leur devise et leur référence <b>KAISLO-code</b>, puis « J’ai payé » vous prévient par la messagerie (et par l’alerte sur votre téléphone). Quand l’argent arrive, enregistrez le paiement avec le moyen correspondant : la facture se crée toute seule.</p>
+      <p className="petit muet">Orange Money, Wave, MTN MoMo… Les gérants des commerces des pays cochés voient le numéro, le code QR et/ou le lien de paiement, leur prix dans leur devise et leur référence <b>KAISLO-code</b>, puis « J’ai payé » vous prévient par la messagerie (et par l’alerte sur votre téléphone). Quand l’argent arrive, enregistrez le paiement avec le moyen correspondant : la facture se crée toute seule.</p>
       {message && <p className={message.ok ? 'info-verte' : 'alerte'}>{message.texte}</p>}
       {(moyens || []).map((m, i) => (
         <div key={i} className="groupe-edition pile">
@@ -651,16 +651,17 @@ function MoyensMobiles({ ctx }) {
             <label className="champ"><span>Au nom de (facultatif)</span><input value={m.titulaire || ''} onChange={(e) => maj(i, { titulaire: e.target.value })} maxLength={80} /></label>
           </div>
           <div className="ligne" style={{ gap: 10, flexWrap: 'wrap' }}>
-            <span className="petit muet">Commerces qui voient ce numéro (devise) :</span>
-            {DEVISES_COMPTES.map((d) => <label key={d} className="ligne petit" style={{ gap: 4 }}><input type="checkbox" checked={(m.devises || []).includes(d)} onChange={() => basculer(i, d)} /> {d}</label>)}
+            <span className="petit muet">Pays dont les commerces voient ce moyen (les autres ne voient que le virement) :</span>
+            {PAYS.filter((p) => p.id !== 'XX').map((p) => <label key={p.id} className="ligne petit" style={{ gap: 4 }}><input type="checkbox" checked={(m.pays || []).includes(p.id)} onChange={() => basculer(i, p.id)} /> {p.nom}</label>)}
           </div>
-          <label className="champ"><span>Lien de paiement Wave (facultatif ; le montant de la formule s’ajoute tout seul)</span><input value={m.lien || ''} onChange={(e) => maj(i, { lien: e.target.value })} maxLength={300} placeholder="https://pay.wave.com/m/…/c/ci/" /></label>
+          <label className="champ"><span>Code QR à scanner (nom du fichier rangé dans public/paiement/, ex. wave.png)</span><input value={m.qr || ''} onChange={(e) => maj(i, { qr: e.target.value })} maxLength={45} placeholder="wave.png" /></label>
+          <label className="champ"><span>Lien de paiement Wave (facultatif ; le montant de la formule s’ajoute tout seul ; utile sur téléphone, où l’on ne peut pas scanner son propre écran)</span><input value={m.lien || ''} onChange={(e) => maj(i, { lien: e.target.value })} maxLength={300} placeholder="https://pay.wave.com/m/…/c/ci/" /></label>
           <label className="champ"><span>Note pour le client (facultatif)</span><input value={m.note || ''} onChange={(e) => maj(i, { note: e.target.value })} maxLength={200} placeholder="Ex : depuis un autre pays, vérifiez que votre opérateur permet l’envoi" /></label>
           <button className="btn secondaire petit" onClick={() => setMoyens(moyens.filter((_, j) => j !== i))}>Retirer ce numéro</button>
         </div>
       ))}
       <div className="grille-2">
-        {moyens && moyens.length < 8 && <button className="btn secondaire" onClick={() => setMoyens([...moyens, { operateur: operateurs[0] || 'Orange Money', numero: '', lien: '', titulaire: '', devises: ['FCFA'], note: '' }])}>+ Ajouter un numéro</button>}
+        {moyens && moyens.length < 8 && <button className="btn secondaire" onClick={() => setMoyens([...moyens, { operateur: operateurs[0] || 'Orange Money', pays: ['CI'], numero: '', qr: '', lien: '', titulaire: '', note: '' }])}>+ Ajouter un numéro</button>}
         <button className="btn" onClick={enregistrer} disabled={!moyens}>Enregistrer les numéros</button>
       </div>
     </div>

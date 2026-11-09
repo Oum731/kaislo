@@ -9,6 +9,7 @@ import { useKaislo } from '@/store/kaislo';
 import { Feuille, Icone } from '@/components/ui';
 import { appelApi } from '@/lib/api';
 import { symbole } from '@/lib/utils/format';
+import { chemin } from '@/config';
 import { tr } from '@/lib/i18n';
 
 const montant = (x, devise) => Math.round(x).toLocaleString('fr-FR').replace(/[  ]/g, ' ') + ' ' + symbole(devise);
@@ -79,6 +80,13 @@ export function FeuilleVirement() {
                   <span className="badge safran">{montant(m.parMois, m.devise)} {tr('par mois')}</span>
                 </div>
                 <p className="petit muet">{tr('À l’année : {0} ({1} mois offerts).', [montant(m.annuel, m.devise), 2])}</p>
+                {m.qr && (
+                  <div className="pile" style={{ alignItems: 'center', gap: 8 }}>
+                    <img src={chemin(m.qr)} alt={tr('Code QR {0}', [m.operateur])} width={240} height={240} style={{ maxWidth: '100%', height: 'auto', borderRadius: 12, border: '1px solid rgba(0,0,0,.12)', background: '#fff' }} />
+                    <p className="petit" style={{ textAlign: 'center' }}>{tr('Scannez ce code avec l’application {0} pour payer, puis saisissez le montant de votre formule : {1} par mois ou {2} à l’année.', [m.operateur, montant(m.parMois, m.devise), montant(m.annuel, m.devise)])}</p>
+                    <p className="tres-petit muet" style={{ textAlign: 'center' }}>{tr('Sur ce même téléphone, vous ne pouvez pas scanner votre propre écran : ouvrez ce code sur un autre écran, ou écrivez-nous (écran Aide) pour recevoir un lien de paiement.')}</p>
+                  </div>
+                )}
                 {(m.liens || []).length > 0 && (
                   <div className="pile" style={{ gap: 8 }}>
                     {m.liens.map((l) => (
