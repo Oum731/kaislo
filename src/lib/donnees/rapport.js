@@ -106,7 +106,7 @@ export function construireRapport(d, type = 'jour', ref = new Date(), maintenant
   // ----- Totaux -----
   const somme = (liste, champ) => R(liste.reduce((s, x) => s + (Number(x[champ]) || 0), 0));
   const chiffreAffaires = somme(valides, 'total');
-  const nbTickets = valides.length;
+  const nbTickets = valides.filter((v) => !v.retourDe).length; // un retour d'article n'est pas un ticket (retours.js)
   const totalDepenses = somme(depenses, 'montant');
   let marge = 0, margeConnue = false;
   for (const v of valides) {
@@ -122,8 +122,9 @@ export function construireRapport(d, type = 'jour', ref = new Date(), maintenant
   const parPaiement = modes.map((mode) => {
     const liste = valides.filter((v) => v.paiement === mode);
     const total = somme(liste, 'total');
+    const nbListe = liste.filter((v) => !v.retourDe).length;
     const rembourse = R(remboursements.filter((r) => r.mode === mode).reduce((s, r) => s + r.montant, 0));
-    return { mode: tt(mode), nb: liste.length, total, rembourse, recu: mode === CREDIT ? 0 : R(total + rembourse) };
+    return { mode: tt(mode), nb: nbListe, total, rembourse, recu: mode === CREDIT ? 0 : R(total + rembourse) };
   });
   const totalRecu = R(parPaiement.reduce((s, p) => s + p.recu, 0));
   const aCredit = somme(valides.filter((v) => v.paiement === CREDIT), 'total');
@@ -153,7 +154,7 @@ export function construireRapport(d, type = 'jour', ref = new Date(), maintenant
 
   // ----- Évolution (heure, jour ou mois) -----
   const evolution = tranches(type, debut, fin);
-  for (const v of valides) { const t = evolution[indexTranche(type, new Date(v.date), debut)]; t.tickets++; t.ventes += v.total; }
+  for (const v of valides) { const t = evolution[indexTranche(type, new Date(v.date), debut)]; if (!v.retourDe) t.tickets++; t.ventes += v.total; }
   for (const x of depenses) evolution[indexTranche(type, new Date(x.date), debut)].depenses += x.montant;
   const lignesEvolution = evolution.map((t) => ({ ...t, ventes: R(t.ventes), depenses: R(t.depenses), solde: R(t.ventes - t.depenses) }));
   tableaux.push({
@@ -269,10 +270,11 @@ export function construireRapport(d, type = 'jour', ref = new Date(), maintenant
   for (const v of valides) {
     const cle = v.vendeurId || v.vendeurNom;
     const e = vendeurs.get(cle) || { nom: v.vendeurNom || '', nb: 0, total: 0 };
-    e.nb++; e.total += v.total;
+    if (!v.retourDe) e.nb++;
+    e.total += v.total;
     vendeurs.set(cle, e);
   }
-  const lignesVendeurs = [...vendeurs.values()].sort((a, b) => b.total - a.total).map((e) => ({ nom: e.nom, nb: e.nb, total: R(e.total), panier: R(e.total / e.nb) }));
+  const lignesVendeurs = [...vendeurs.values()].sort((a, b) => b.total - a.total).map((e) => ({ nom: e.nom, nb: e.nb, total: R(e.total), panier: e.nb ? R(e.total / e.nb) : 0 }));
   tableaux.push({
     id: 'vendeurs',
     titre: tr('Par vendeur'),

@@ -14,6 +14,7 @@ import { Feuille, Icone, ApercuTicket, ChampMontant, Segment, ImageStockee, init
 import { ContenuPanier } from '../ecrans/Caisse';
 import BoutonContacts from '../BoutonContacts';
 import { venteEnGros } from '@/lib/donnees/gros';
+import { estRetour, retoursDe, retourPossible, lignesRetournables, montantLigneRendue, resteARendre, CREDIT as MODE_CREDIT } from '@/lib/donnees/retours';
 import { tr, tt } from '@/lib/i18n';
 
 // ---------- Options d'un produit (accompagnement, taille…) ----------
@@ -105,9 +106,11 @@ export function FeuillePanier() {
 // ---------- Ticket de vente ----------
 export function FeuilleTicket({ vente, nouvelle }) {
   const s = useKaislo();
+  const retours = estRetour(vente) ? [] : retoursDe(s.d, vente);
+  const peutRendre = retourPossible(s.d, vente);
   return (
     <Feuille
-      titre={tr('Ticket n° {0}', [vente.numero])}
+      titre={estRetour(vente) ? tr('Retour n° {0}', [vente.numero]) : tr('Ticket n° {0}', [vente.numero])}
       sousTitre={tr('{0} à {1}', [formatDate(vente.date), formatHeure(vente.date)]) + ' · ' + vente.vendeurNom}
       surFermer={s.fermer}
       pleine
@@ -139,7 +142,20 @@ export function FeuilleTicket({ vente, nouvelle }) {
       )}
       {!vente.annulee && <EnvoiWhatsApp vente={vente} enAvant={nouvelle && vente.aDistance} />}
       <ApercuTicket lignes={s.lignesVente(vente)} largeur={s.prefs.largeurTicket} />
-      {!vente.annulee && (
+      {estRetour(vente) && (
+        <p className="petit muet" style={{ marginTop: 14 }}>{tr('Retour sur le ticket n° {0} · {1}{2}', [vente.retourDeNumero, tt(vente.paiement), vente.motifRetour ? ' · ' + vente.motifRetour : ''])}</p>
+      )}
+      {retours.length > 0 && (
+        <div className="carte pile" style={{ marginTop: 14 }}>
+          <b className="petit">{tr('Articles déjà rendus')}</b>
+          {retours.map((r) => <p key={r.id} className="petit">{r.numero} · {formatDate(r.date)} · {s.prix(-r.total)} ({tt(r.paiement)}) · {r.lignes.map((l) => -l.quantite + ' × ' + (l.produitNom || l.nom)).join(', ')}</p>)}
+        </div>
+      )}
+      {peutRendre && (
+        <button className="btn secondaire petit bloc" style={{ marginTop: 20 }} onClick={() => s.ouvrir('retourArticle', { vente })}>
+          <Icone nom="fermer" taille="sm" /> {tr('Retour d’un article')}</button>
+      )}
+      {!vente.annulee && !estRetour(vente) && !retours.length && (
         <button className="btn danger petit bloc" style={{ marginTop: 20 }} onClick={() => s.ouvrir('annulation', { vente })}>
           <Icone nom="fermer" taille="sm" /> {tr('Annuler cette vente')}</button>
       )}
@@ -199,6 +215,71 @@ export function FeuilleAnnulation({ vente }) {
         <label className="champ"><span>{tr('Motif')}</span><input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={tr('Ex : erreur de saisie, client parti…')} /></label>
         <label className="champ"><span>{tr('Code PIN du gérant')}</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value)} placeholder="••••" onKeyDown={(e) => e.key === 'Enter' && pin.length === 4 && confirmer()} /></label>
         <p className="tres-petit muet">{tr('La vente reste dans l’historique, marquée « Annulée ». Elle ne compte plus dans les totaux ni dans la clôture, et les articles reviennent dans le stock.')}</p>
+      </div>
+    </Feuille>
+  );
+}
+
+// ---------- Retour d'un ou plusieurs articles (PIN du gérant) ----------
+export function FeuilleRetourArticle({ vente }) {
+  const s = useKaislo();
+  const { d } = s;
+  const lignes = lignesRetournables(d, vente).filter((l) => l.reste > 0);
+  const [quantites, setQuantites] = useState({});
+  const [mode, setMode] = useState(vente.paiement === MODE_CREDIT ? MODE_CREDIT : (d.commerce.modesPaiement.includes(vente.paiement) ? vente.paiement : d.commerce.modesPaiement[0]));
+  const [motif, setMotif] = useState('');
+  const [remettre, setRemettre] = useState(true);
+  const [pin, setPin] = useState('');
+  const [enCours, setEnCours] = useState(false);
+  const dev = d.commerce.devise;
+  const total = lignes.reduce((n, l) => n + montantLigneRendue(vente, l.ligne, Number(quantites[l.index]) || 0, dev), 0);
+  const modes = [...d.commerce.modesPaiement, ...(vente.clientId ? [MODE_CREDIT] : [])];
+  const regler = (index, reste, delta) => {
+    const q = Math.min(reste, Math.max(0, Math.round(((Number(quantites[index]) || 0) + delta) * 1000) / 1000));
+    setQuantites({ ...quantites, [index]: q });
+  };
+  const confirmer = async () => {
+    if (enCours) return;
+    setEnCours(true);
+    const ok = await s.retournerArticles(vente, quantites, { mode, motif, remettreEnStock: remettre, pin });
+    setEnCours(false);
+    if (!ok) setPin('');
+  };
+  return (
+    <Feuille
+      titre={tr('Retour sur le ticket n° {0}', [vente.numero])}
+      sousTitre={tr('Reste à rendre au plus : {0}', [s.prix(resteARendre(d, vente))])}
+      surFermer={() => s.ouvrir('ticket', { vente })}
+      pied={<button className="btn bloc" disabled={total <= 0 || !motif.trim() || pin.length < 4 || enCours} onClick={confirmer}>{enCours ? tr('Vérification…') : tr('Rendre {0}', [s.prix(total)])}</button>}
+    >
+      <div className="pile">
+        <p className="petit muet">{tr('Choisissez ce que le client rapporte. Le montant rendu est le prix payé, remise comprise.')}</p>
+        {lignes.map((l) => {
+          const q = Number(quantites[l.index]) || 0;
+          return (
+            <div key={l.index} className="carte ligne espace" style={{ gap: 8, padding: '10px 12px' }}>
+              <span className="grandit" style={{ minWidth: 0 }}>
+                <b className="bloc-texte tronque">{l.ligne.nom}</b>
+                <span className="tres-petit muet">{tr('{0} vendu(s), {1} déjà rendu(s)', [l.vendu, l.rendu])}{q > 0 ? ' · ' + s.prix(montantLigneRendue(vente, l.ligne, q, dev)) : ''}</span>
+              </span>
+              <span className="ligne" style={{ gap: 6 }}>
+                <button className="btn secondaire petit" onClick={() => regler(l.index, l.reste, -1)} disabled={q <= 0} aria-label={tr('Moins')}>−</button>
+                <b style={{ minWidth: 28, textAlign: 'center' }}>{q}</b>
+                <button className="btn secondaire petit" onClick={() => regler(l.index, l.reste, 1)} disabled={q >= l.reste} aria-label={tr('Plus')}>+</button>
+              </span>
+            </div>
+          );
+        })}
+        <label className="champ"><span>{tr('Remboursé par')}</span>
+          <select value={mode} onChange={(e) => setMode(e.target.value)}>{modes.map((m) => <option key={m} value={m}>{m === MODE_CREDIT ? tr('Déduit de sa dette (crédit)') : tt(m)}</option>)}</select>
+        </label>
+        <label className="champ"><span>{tr('Motif du retour')}</span><input value={motif} onChange={(e) => setMotif(e.target.value)} maxLength={200} placeholder={tr('Ex : article abîmé, mauvaise taille…')} /></label>
+        <label className="ligne" style={{ gap: 8 }}>
+          <input type="checkbox" checked={remettre} onChange={(e) => setRemettre(e.target.checked)} />
+          <span className="petit">{tr('Remettre les articles en stock (décochez s’ils sont abîmés)')}</span>
+        </label>
+        <label className="champ"><span>{tr('Code PIN du gérant')}</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value)} placeholder="••••" onKeyDown={(e) => e.key === 'Enter' && pin.length === 4 && total > 0 && motif.trim() && confirmer()} /></label>
+        <p className="tres-petit muet">{tr('La vente d’origine ne change pas. Le retour est noté en négatif : il baisse le chiffre d’affaires du jour et, si vous rendez des espèces, l’argent attendu en caisse.')}</p>
       </div>
     </Feuille>
   );

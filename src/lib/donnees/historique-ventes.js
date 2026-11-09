@@ -76,11 +76,12 @@ export function filtrerVentes(ventes = [], filtres = {}, maintenant = new Date()
   const valides = liste.filter((v) => !v.annulee);
   const annulees = liste.filter((v) => v.annulee);
   const total = valides.reduce((n, v) => n + (Number(v.total) || 0), 0);
+  const nbTickets = valides.filter((v) => !v.retourDe).length;
   const modes = new Map();
   for (const v of valides) {
     const e = modes.get(v.paiement) || { mode: v.paiement, total: 0, nb: 0 };
     e.total += Number(v.total) || 0;
-    e.nb += 1;
+    if (!v.retourDe) e.nb += 1; // un retour d'article n'est pas un ticket (retours.js)
     modes.set(v.paiement, e);
   }
   const jours = [];
@@ -89,15 +90,15 @@ export function filtrerVentes(ventes = [], filtres = {}, maintenant = new Date()
     let j = jours[jours.length - 1];
     if (!j || j.cle !== cle) { j = { cle, date: new Date(v.date), total: 0, nb: 0, ventes: [] }; jours.push(j); }
     j.ventes.push(v);
-    if (!v.annulee) { j.total += Number(v.total) || 0; j.nb += 1; }
+    if (!v.annulee) { j.total += Number(v.total) || 0; if (!v.retourDe) j.nb += 1; }
   }
   return {
     liste,
     jours,
     resume: {
-      nb: valides.length,
+      nb: nbTickets,
       total,
-      panierMoyen: valides.length ? total / valides.length : 0,
+      panierMoyen: nbTickets ? total / nbTickets : 0,
       remises: valides.reduce((n, v) => n + (Number(v.remise) || 0), 0),
       nbAnnulees: annulees.length,
       totalAnnule: annulees.reduce((n, v) => n + (Number(v.total) || 0), 0),

@@ -275,6 +275,15 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Retour d'un article (ticket → « Retour d'un article »)
+
+Le client rapporte un ou plusieurs articles d'une vente : on choisit les quantités, le mode de remboursement (celui de la vente, un autre mode, ou « déduit de sa dette » pour une vente à crédit), le motif, et si l'article revient en stock (décocher s'il est abîmé). Code PIN du gérant obligatoire, comme une annulation.
+- Un retour est une vente « en négatif » (`retourDe` = vente d'origine, quantités et montants négatifs, daté du jour du retour, numéro `R1`, `R2`…). Le chiffre d'affaires, les espèces attendues en caisse, le carnet de crédit, les marges et les ventes par article en tiennent compte tout seuls ; il ne compte pas comme un ticket (nombre de tickets, panier moyen). La vente d'origine ne change pas.
+- Le montant rendu est le prix payé, remise comprise. On ne peut pas rendre plus que la vente (total cumulé), ni sur une vente annulée ; une vente qui a un retour ne peut plus être annulée.
+- Serveur (`api/lib/donnees.php`, `controlerRetour`) : un retour n'est accepté que s'il est négatif et cohérent, avec le code du gérant, sur une vente existante non annulée, sans dépasser son total ; il ne se modifie pas après coup.
+- Code : `src/lib/donnees/retours.js`, `FeuilleRetourArticle` (`FeuillesVente.jsx`), `retournerArticles` (`src/store/caisse.js`). Tests : `retour-article.test.mjs`, `api-retour-article.test.mjs`. Les retours apparaissent dans le journal d'activité.
+- Pour compter autre chose que des tickets dans un nouveau calcul : ignorer les ventes avec `retourDe`.
+
 ## Sauvegarde et restauration (Réglages → Profil → Vos données)
 
 - **Copie automatique** : une par jour, prise dans l'appareil avant la première modification de la journée (les 5 dernières sont gardées). Les commerces de démonstration n'en font pas.

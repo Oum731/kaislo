@@ -5,7 +5,7 @@
 // est noté dans d.journal au moment du geste : { id, date, par, type, ...détails }. Ce sont des ajouts : rien ne s'y modifie.
 // ------------------------------------------------------------
 
-export const TYPES_JOURNAL = ['annulation', 'remise', 'depense', 'depense-supprimee', 'stock', 'caisse', 'produit-supprime', 'prix', 'client-supprime', 'restauration'];
+export const TYPES_JOURNAL = ['annulation', 'remise', 'depense', 'depense-supprimee', 'stock', 'caisse', 'produit-supprime', 'prix', 'client-supprime', 'restauration', 'retour'];
 export const JOURNAL_MAX = 3000; // au-delà, les plus anciennes lignes de d.journal sont retirées
 
 let compteur = 0;
@@ -43,6 +43,7 @@ export function journalActivite(d, filtres = {}, maintenant = new Date()) {
   const toutes = [];
   for (const v of d.ventes || []) {
     if (v.annulee) toutes.push({ id: 'a' + v.id, date: v.annulee.date, par: v.annulee.par || '', type: 'annulation', numero: v.numero, total: v.total, vendeur: v.vendeurNom || '', motif: v.annulee.motif || '' });
+    if (v.retourDe) { toutes.push({ id: 'rt' + v.id, date: v.date, par: v.retourPar || v.vendeurNom || '', type: 'retour', numero: v.retourDeNumero, total: -v.total, mode: v.paiement, motif: v.motifRetour || '' }); continue; }
     if (v.remise > 0 && !v.annulee) toutes.push({ id: 'r' + v.id, date: v.date, par: v.vendeurNom || '', type: 'remise', numero: v.numero, total: v.total, remise: v.remise });
   }
   for (const x of d.depenses || []) toutes.push({ id: 'd' + x.id, date: x.date, par: x.utilisateurNom || '', type: 'depense', montant: x.montant, note: x.note || '', categorie: x.categorie || '' });
@@ -67,7 +68,7 @@ export function journalActivite(d, filtres = {}, maintenant = new Date()) {
 
 /** Une ligne est « à surveiller » : vente annulée, remise, dépense ou article supprimé, prix changé, écart de caisse, correction de stock en moins. */
 export function aSurveiller(l) {
-  if (l.type === 'annulation' || l.type === 'remise' || l.type === 'depense-supprimee' || l.type === 'produit-supprime' || l.type === 'client-supprime' || l.type === 'prix' || l.type === 'restauration') return true;
+  if (l.type === 'annulation' || l.type === 'remise' || l.type === 'depense-supprimee' || l.type === 'produit-supprime' || l.type === 'client-supprime' || l.type === 'prix' || l.type === 'restauration' || l.type === 'retour') return true;
   if (l.type === 'caisse') return l.etape === 'fermeture' && l.ecart !== 0;
   if (l.type === 'stock') return l.sens === 'ajustement' && l.quantite < 0;
   return false;

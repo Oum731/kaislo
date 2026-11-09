@@ -8,7 +8,7 @@ import { useKaislo } from '@/store/kaislo';
 import { journalActivite, aSurveiller } from '@/lib/donnees/journal';
 import { formatDate, formatHeure } from '@/lib/utils/format';
 import { Puces } from '@/components/ui';
-import { tr } from '@/lib/i18n';
+import { tr, tt } from '@/lib/i18n';
 
 const PAS = 50;
 
@@ -21,7 +21,7 @@ export default function Journal() {
   const j = useMemo(() => journalActivite(d, { periode, par, type }), [d, periode, par, type]);
   const libelles = {
     annulation: tr('Ventes annulées'), remise: tr('Remises'), depense: tr('Dépenses'), 'depense-supprimee': tr('Dépenses supprimées'), stock: tr('Stock'),
-    caisse: tr('Caisse'), 'produit-supprime': tr('Articles supprimés'), prix: tr('Prix changés'), 'client-supprime': tr('Clients supprimés'), restauration: tr('Restaurations'),
+    caisse: tr('Caisse'), 'produit-supprime': tr('Articles supprimés'), prix: tr('Prix changés'), 'client-supprime': tr('Clients supprimés'), restauration: tr('Restaurations'), retour: tr('Retours d’articles'),
   };
   const surveilles = j.lignes.filter(aSurveiller).length;
 
@@ -39,6 +39,7 @@ export default function Journal() {
         : l.ecart ? tr('Caisse fermée, écart de {0}', [(l.ecart > 0 ? '+' : '') + prix(l.ecart)]) : tr('Caisse fermée, compte juste');
       case 'produit-supprime': return tr('Article supprimé : {0}', [l.produit]);
       case 'prix': return tr('Prix de {0} changé : {1} → {2}', [l.produit, prix(l.avant), prix(l.apres)]);
+      case 'retour': return tr('Retour sur la vente n° {0} : {1} rendus ({2}){3}', [l.numero, prix(l.total), tt(l.mode), l.motif ? ' · ' + l.motif : '']);
       case 'restauration': return tr('Sauvegarde restaurée ({0} ventes, copie du {1})', [l.ventes, l.le ? formatDate(l.le) : '—']);
       case 'client-supprime': return tr('Client supprimé : {0}', [l.client]);
       default: return '';
