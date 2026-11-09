@@ -59,6 +59,7 @@ function routeDonneesLire(): never
     repondre([
         'ok' => true, 'heure' => $heure, 'suite' => $suite, 'elements' => $elements,
         'commerce' => versCommerce($commerce), 'utilisateurs' => equipe($u['commerce_id']), 'moi' => versUtilisateur($u),
+        'derniereFacture' => $u['role'] === 'gerant' ? derniereFactureDe($u['commerce_id']) : null, // « Votre facture est disponible » (écran d'accueil du gérant)
         'messagesNonLus' => messagesNonLus($u['commerce_id']), // réponses de l'équipe Kaislo pas encore lues
         'chatsNonLus' => chatsNonLus($u['commerce_id']), // messages de clients pas encore lus
         'tarif' => tarifCommerce($commerce), // formule, postes et prix de l'abonnement
@@ -76,6 +77,7 @@ function routeDonneesEcrire(): never
     if (abonnementExpire($commerce)) throw new ErreurApi('Abonnement expiré : réglez-le pour synchroniser de nouveau (vos données restent sur cet appareil). Contactez Kaislo.', 403);
     $elements = entree()['elements'] ?? null;
     if (!is_array($elements)) throw new ErreurApi('Liste « elements » attendue');
+    if ($elements) sauvegardeDuJour($u['commerce_id']); // copie du jour : prise avant la première écriture de la journée
     if (count($elements) > ELEMENTS_PAR_ENVOI) throw new ErreurApi('Trop d’éléments en une fois (' . ELEMENTS_PAR_ENVOI . ' au maximum)');
 
     $acceptes = [];

@@ -213,6 +213,57 @@ function routeAdminCreerAvoir(): never
         $pdo->rollBack();
         throw $err;
     }
+    $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$facture['commerce_id']])->fetch();
+    if ($commerce) notifierDocumentFacture($commerce, $a);
     journaliser($facture['commerce_id'], $admin['id'], 'amorac-avoir', ['numero' => $a['numero'], 'facture' => $facture['numero'], 'montant' => $a['totalTtc'], 'par' => $admin['email']]);
     repondre(['ok' => true, 'avoir' => $a], 201);
+}
+
+// ---------- Prévenir le gérant ----------
+
+/** Le dernier document (facture ou avoir) émis pour ce commerce depuis moins de 30 jours, ou null : { numero, type, date, totalTtc, devise }. */
+function derniereFactureDe(string $commerceId): ?array
+{
+    $depuis = maintenant(-30 * 86400);
+    $f = requete('SELECT numero, date, total_ttc, devise FROM factures WHERE commerce_id = ? AND date >= ? ORDER BY date DESC LIMIT 1', [$commerceId, $depuis])->fetch() ?: null;
+    $a = requete('SELECT numero, date, total_ttc, devise FROM avoirs WHERE commerce_id = ? AND date >= ? ORDER BY date DESC LIMIT 1', [$commerceId, $depuis])->fetch() ?: null;
+    // Un avoir vient toujours après sa facture : à la même seconde, c'est l'avoir le plus récent
+    $dernier = $a && (!$f || $a['date'] >= $f['date']) ? $a + ['type' => 'avoir'] : ($f ? $f + ['type' => 'facture'] : null);
+    return $dernier ? ['numero' => $dernier['numero'], 'type' => $dernier['type'], 'date' => $dernier['date'], 'totalTtc' => (float) $dernier['total_ttc'], 'devise' => $dernier['devise']] : null;
+}
+
+/**
+ * Prévient le gérant qu'une facture (ou un avoir) est prête : e-mail et notification sur ses appareils, selon ses réglages (pas de WhatsApp).
+ * Envoyé après la réponse ; un échec ne gêne jamais le paiement ni l'avoir.
+ */
+function notifierDocumentFacture(array $commerce, array $doc): void
+{
+    try {
+        $reglages = reglagesCommerce($commerce['id']);
+        $langue = langueNotifications($commerce, $reglages);
+        $en = $langue === 'en';
+        $avoir = ($doc['type'] ?? 'facture') === 'avoir';
+        $montant = montantTexte(abs((float) $doc['totalTtc']), (string) $doc['devise']);
+        $chemin = $en ? 'Settings → Profile → Subscription → “My invoices”' : 'Réglages → Profil → Abonnement → « Mes factures »';
+        $url = 'https://' . (domaineSite() ?: 'kaislo.com') . '/app/';
+        $sujet = $avoir
+            ? ($en ? 'Kaislo: your credit note ' : 'Kaislo : votre avoir ') . $doc['numero']
+            : ($en ? 'Kaislo: your invoice ' : 'Kaislo : votre facture ') . $doc['numero'];
+        $corps = ($en ? "Hello,\n\n" : "Bonjour,\n\n")
+            . ($avoir
+                ? ($en ? "A credit note of $montant ({$doc['numero']}) has been issued for {$commerce['nom']}.\n\n" : "Un avoir de $montant ({$doc['numero']}) a été émis pour {$commerce['nom']}.\n\n")
+                : ($en ? "Your invoice {$doc['numero']} ($montant) for {$commerce['nom']} is ready.\n\n" : "Votre facture {$doc['numero']} ($montant) pour {$commerce['nom']} est disponible.\n\n"))
+            . ($en ? "Download the PDF in Kaislo: $url\n($chemin)\n" : "Téléchargez le PDF dans Kaislo : $url\n($chemin)\n")
+            . "\nKaislo · kaislo.com";
+        $push = [$avoir ? ($en ? 'Your credit note is ready' : 'Votre avoir est disponible') : ($en ? 'Your invoice is ready' : 'Votre facture est disponible'), $doc['numero'] . ' · ' . $montant];
+        apresReponse(function () use ($commerce, $reglages, $sujet, $corps, $push, $langue, $avoir) {
+            try {
+                envoyerNotification($commerce, $reglages, $avoir ? 'avoir' : 'facture', ['sujet' => $sujet, 'corps' => $corps, 'variables' => [], 'push' => $push], $langue);
+            } catch (Throwable $e) {
+                error_log('[Kaislo notifications] facture : ' . $e->getMessage());
+            }
+        });
+    } catch (Throwable $e) {
+        error_log('[Kaislo notifications] facture : ' . $e->getMessage());
+    }
 }
