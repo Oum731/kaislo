@@ -19,6 +19,7 @@ import { stockDe, departStock } from '@/lib/donnees/stock.js';
 import { nettoyerGros, grosDisponible } from '@/lib/donnees/gros.js';
 import { articlesAPublier } from '@/lib/donnees/boutique.js';
 import { ligneJournal, ajouterAuJournal } from '@/lib/donnees/journal.js';
+import { verifierSauvegarde, appliquerSauvegarde, garderCopie } from '@/lib/donnees/sauvegarde.js';
 import { tr } from '@/lib/i18n';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
@@ -473,6 +474,25 @@ export const trancheGestion = (set, get) => ({
     get().ouvrir('recuRemboursement', { remboursement: r, client, soldeApres });
     if (get().imprimante.connectee) get().imprimerRemboursement(r, client, soldeApres);
     return { remboursement: r };
+  },
+
+  // ---------- Restauration ----------
+  // Remet les listes du commerce comme dans une sauvegarde (voir lib/donnees/sauvegarde.js). Renvoie un message d'erreur, ou null.
+  // L'état actuel est mis de côté avant (copie « avant restauration »).
+  restaurerSauvegarde(sauvegarde) {
+    const d = get().d;
+    const v = verifierSauvegarde(sauvegarde, d);
+    if (!v.ok) {
+      if (v.code === 'autre') return tr('Cette sauvegarde est celle d’un autre commerce (« {0} »)', [v.nom]);
+      return v.code === 'abimee' ? tr('Cette sauvegarde est abîmée') : tr('Ce fichier n’est pas une sauvegarde Kaislo');
+    }
+    try { garderCopie(d, 'avant-restauration'); } catch { return tr('Impossible de garder une copie de l’état actuel (mémoire de l’appareil pleine ?). Rien n’a été restauré.'); }
+    get().majDonnees((x) => ({
+      ...appliquerSauvegarde(x, sauvegarde),
+      journal: ajouterAuJournal(sauvegarde.journal, ligneJournal(get().utilisateur?.nom, 'restauration', { le: v.resume.le, ventes: v.resume.ventes })),
+    }));
+    get().message(tr('Sauvegarde restaurée'));
+    return null;
   },
 
   // ---------- Stock ----------

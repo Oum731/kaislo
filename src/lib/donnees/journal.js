@@ -5,7 +5,7 @@
 // est noté dans d.journal au moment du geste : { id, date, par, type, ...détails }. Ce sont des ajouts : rien ne s'y modifie.
 // ------------------------------------------------------------
 
-export const TYPES_JOURNAL = ['annulation', 'remise', 'depense', 'depense-supprimee', 'stock', 'caisse', 'produit-supprime', 'prix', 'client-supprime'];
+export const TYPES_JOURNAL = ['annulation', 'remise', 'depense', 'depense-supprimee', 'stock', 'caisse', 'produit-supprime', 'prix', 'client-supprime', 'restauration'];
 export const JOURNAL_MAX = 3000; // au-delà, les plus anciennes lignes de d.journal sont retirées
 
 let compteur = 0;
@@ -67,7 +67,7 @@ export function journalActivite(d, filtres = {}, maintenant = new Date()) {
 
 /** Une ligne est « à surveiller » : vente annulée, remise, dépense ou article supprimé, prix changé, écart de caisse, correction de stock en moins. */
 export function aSurveiller(l) {
-  if (l.type === 'annulation' || l.type === 'remise' || l.type === 'depense-supprimee' || l.type === 'produit-supprime' || l.type === 'client-supprime' || l.type === 'prix') return true;
+  if (l.type === 'annulation' || l.type === 'remise' || l.type === 'depense-supprimee' || l.type === 'produit-supprime' || l.type === 'client-supprime' || l.type === 'prix' || l.type === 'restauration') return true;
   if (l.type === 'caisse') return l.etape === 'fermeture' && l.ecart !== 0;
   if (l.type === 'stock') return l.sens === 'ajustement' && l.quantite < 0;
   return false;
