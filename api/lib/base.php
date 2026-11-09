@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 24;
+const VERSION_BASE = 25;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -76,6 +76,14 @@ const STRUCTURE = [
             'postes' => 'ENTIER', 'details' => 'LONG', // nombre de postes payés ; formule, remise… (JSON)
         ],
         'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id']],
+    ],
+    // Factures d'abonnement émises par Amorac (une par paiement, numéro sans trou : FAC-2026-0001)
+    'factures' => [
+        'colonnes' => [
+            'id' => 'ID', 'numero' => 'VARCHAR(20)', 'annee' => 'ENTIER', 'sequence' => 'ENTIER', 'paiement_id' => 'ID', 'commerce_id' => 'ID',
+            'date' => 'DATE', 'devise' => 'VARCHAR(6)', 'total_ht' => 'MONTANT', 'tva_taux' => 'MONTANT', 'tva' => 'MONTANT', 'total_ttc' => 'MONTANT', 'contenu' => 'LONG',
+        ],
+        'cle' => ['id'], 'uniques' => [['numero'], ['paiement_id'], ['annee', 'sequence']], 'index' => [['commerce_id']],
     ],
     // Empreinte / Face ID : clé publique de chaque appareil (la clé secrète ne quitte jamais le téléphone)
     'cles_biometriques' => [

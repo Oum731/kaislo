@@ -2276,4 +2276,6 @@ export const EN = {
   "Indiquez le montant payé": "Enter the amount paid",
   "Le montant dépasse ce qui est dû à ce fournisseur": "The amount is more than what is owed to this supplier",
   "Paiement noté : {0}": "Payment recorded: {0}",
+  "Impossible de créer le PDF, réessayez": "Could not create the PDF, try again",
+  "Mes factures": "My invoices",
 };

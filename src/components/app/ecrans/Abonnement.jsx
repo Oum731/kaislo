@@ -4,11 +4,14 @@
 // prix au mois et à l'année (2 mois offerts), tarif fondateur.
 // Commerce en ligne : tarif calculé par le serveur. Démo / sans serveur : grille par défaut.
 // ------------------------------------------------------------
+import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
 import { etatAbonnement, LIBELLES_STATUT } from '@/lib/donnees/abonnement';
 import { FORMULES, formuleDuType, prixAbonnement, REGLES_TARIFS } from '@/lib/donnees/tarifs';
 import { postesDe } from '@/lib/donnees/postes';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate, formatPrix } from '@/lib/utils/format';
+import { appelApi } from '@/lib/api';
+import { telechargerFacture } from '@/lib/export/telecharger-facture';
 import { estServeur } from '@/lib/donnees/synchro';
 import { Icone } from '@/components/ui';
 import { tr } from '@/lib/i18n';
@@ -80,6 +83,34 @@ export default function AbonnementCommerce() {
         <button className="btn secondaire bloc" onClick={() => s.ouvrir('virement')}><Icone nom="billet" /> {tr('Payer par virement bancaire')}</button>
       )}
       <p className="tres-petit muet">{tr('Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.')}</p>
+      {estServeur(s.d) && s.estGerant() && !s.estDemoActuel() && <MesFactures />}
+    </div>
+  );
+}
+
+// Factures d'abonnement émises par Amorac (une par paiement), en PDF
+function MesFactures() {
+  const s = useKaislo();
+  const [factures, setFactures] = useState(null);
+  const [erreur, setErreur] = useState(null);
+  useEffect(() => {
+    appelApi('GET', '/factures', null, s.jetonServeur()).then((r) => setFactures(r.factures)).catch(() => setFactures([]));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!factures?.length) return null;
+  const telecharger = async (f) => {
+    setErreur(null);
+    try { await telechargerFacture(f); } catch { setErreur(tr('Impossible de créer le PDF, réessayez')); }
+  };
+  return (
+    <div className="carte pile">
+      <b>{tr('Mes factures')}</b>
+      {factures.map((f) => (
+        <div key={f.id} className="ligne espace" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <span className="petit"><b>{f.numero}</b> · {formatDate(f.date)} · {formatPrix(f.totalTtc, f.devise)}</span>
+          <button className="btn secondaire petit" onClick={() => telecharger(f)}><Icone nom="installer" taille="sm" /> {tr('PDF')}</button>
+        </div>
+      ))}
+      {erreur && <p className="alerte">{erreur}</p>}
     </div>
   );
 }

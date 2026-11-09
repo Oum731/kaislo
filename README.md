@@ -275,6 +275,16 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Factures d'abonnement (Amorac → ses abonnés)
+
+Chaque paiement d'abonnement enregistré dans l'Espace Amorac donne une **facture acquittée** : numéro sans trou `FAC-2026-0001` (une suite par année, tous pays confondus), émetteur Amorac (forme, siège, RC, ICE, IF, TP), client (commerce, gérant, adresse, pays), désignation (formule, durée, postes), période couverte, HT / TVA / TTC, moyen et date de paiement.
+- **Figée** : une facture ne se modifie ni ne se supprime ; émetteur et client sont copiés à la date de la facture (table `factures`, base v25, index uniques sur le numéro, le paiement et l'année + suite).
+- **TVA par pays** (`regleTva`, `api/lib/facturation.php`) : au Maroc, le prix payé comprend 20 % de TVA (HT = TTC ÷ 1,2) ; dans les autres pays, prestation de services à un client établi hors du Maroc : pas de TVA, mention « exportation de services » sur la facture. **À faire valider par le comptable d'Amorac** (assujettissement, taux, mention).
+- **Où** : le gérant les trouve dans Réglages → Profil → Abonnement → « Mes factures » (PDF, partage sur téléphone) ; l'équipe, dans la fiche du commerce → Historique des paiements (bouton « Facture FAC-… »). Un paiement d'avant les factures n'en a pas : un administrateur peut la créer (« Créer la facture » : prochain numéro, date du jour).
+- **Émetteur** : `EMETTEUR_FACTURE` (api/lib/facturation.php) doit rester identique à `SOCIETE` (src/config.js) : un test le vérifie. Si l'adresse ou le capital change, modifier les deux ; les anciennes factures gardent l'ancienne identité.
+- PDF : `src/lib/export/facture-pdf.js` (français, police standard). Tests : `tests/api-factures.test.mjs`.
+- Pas encore : avoir (facture rectificative) en cas d'erreur ou de remboursement, devis, numéro fiscal du client (ICE, NIF) sur la facture.
+
 ## Achats et fournisseurs (Stock → Achats, gérant)
 
 - **Fournisseurs** : nom, téléphone (lien WhatsApp), note ; la liste montre ce qu'on doit à chacun.
