@@ -111,5 +111,6 @@ test('paiement d’avant les factures : la facture se crée à la demande, une s
 test('l’émetteur de la facture est celui de src/config.js', () => {
   const config = fs.readFileSync('src/config.js', 'utf8');
   for (const v of ['690767', '003786356000083', '68391830', '34215251', '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc']) assert.ok(config.includes(v), v);
-  assert.doesNotMatch(config, /formeJuridique: '[^']/); // le capital n'est affiché nulle part
+  assert.match(config, /formeJuridique: 'SARL',/); // la forme, jamais le capital
+  assert.doesNotMatch(config, /capital de/i);
 });
