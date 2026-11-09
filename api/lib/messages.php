@@ -64,7 +64,7 @@ function routeMessagesEcrire(): never
     $c = requete('SELECT nom, telephone, code FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
     alerterEquipe('message', 'Message de ' . $c['nom'], mb_substr($texte, 0, 140),
         'Kaislo — message de ' . $c['nom'],
-        "Nouveau message dans l'espace Amorac.\n\nCommerce : {$c['nom']} (code {$c['code']}, {$c['telephone']})\nDe : {$u['nom']} ({$u['telephone']})\n\n$texte\n\nRépondre : " . lienAdmin());
+        "Nouveau message dans l'espace Kaislo Équipe.\n\nCommerce : {$c['nom']} (code {$c['code']}, {$c['telephone']})\nDe : {$u['nom']} ({$u['telephone']})\n\n$texte\n\nRépondre : " . lienAdmin());
     repondre(['ok' => true, 'messages' => conversation($u['commerce_id'])], 201);
 }
 

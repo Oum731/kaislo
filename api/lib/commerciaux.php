@@ -449,7 +449,7 @@ function routeCommercialInscription(): never
     journaliser(null, null, 'commercial-inscription', ['commercial' => $nom, 'code' => $code]);
     alerterEquipe('commercial', 'Commercial à valider : ' . $nom, $pays . ' · ' . $num['affichage'],
         'Kaislo — nouveau commercial à valider : ' . $nom,
-        "Un commercial vient de s'inscrire.\n\nNom : $nom\nTéléphone : " . $num['affichage'] . "\nPays : $pays\n" . ($email !== '' ? "E-mail : $email\n" : '') . "\nÀ valider dans l'espace Amorac → Commerciaux : " . lienAdmin());
+        "Un commercial vient de s'inscrire.\n\nNom : $nom\nTéléphone : " . $num['affichage'] . "\nPays : $pays\n" . ($email !== '' ? "E-mail : $email\n" : '') . "\nÀ valider dans l'espace Kaislo Équipe → Commerciaux : " . lienAdmin());
     repondre(['ok' => true, 'enAttente' => true, 'code' => $code], 201);
 }
 

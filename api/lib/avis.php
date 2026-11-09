@@ -70,10 +70,10 @@ function routeAvisEnvoyer(): never
             [nouvelId('av'), $u['commerce_id'], $u['id'], $note, $texte, nomPourAvis($u['nom']), $c['type'], $c['ville'], $c['pays'], maintenant(), maintenant()]);
     }
     journaliser($u['commerce_id'], $u['id'], 'avis', ['note' => $note]);
-    // L'équipe est prévenue par e-mail (comme pour les messages des visiteurs) : l'avis est à relire dans l'espace Amorac → Avis
+    // L'équipe est prévenue par e-mail (comme pour les messages des visiteurs) : l'avis est à relire dans l'espace Kaislo Équipe → Avis
     alerterEquipe('avis', 'Nouvel avis ' . $note . '/5 : ' . $c['nom'], mb_substr($texte, 0, 140),
         'Kaislo — nouvel avis (' . $note . '/5) : ' . $c['nom'],
-        "Avis de " . nomPourAvis($u['nom']) . " ({$c['nom']}, {$c['ville']}) : $note/5\n\n$texte\n\nÀ relire et publier dans l'espace Amorac → Avis : " . lienAdmin());
+        "Avis de " . nomPourAvis($u['nom']) . " ({$c['nom']}, {$c['ville']}) : $note/5\n\n$texte\n\nÀ relire et publier dans l'espace Kaislo Équipe → Avis : " . lienAdmin());
     repondre(['ok' => true, 'etat' => 'attente'], 201);
 }
 

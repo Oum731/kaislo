@@ -252,7 +252,7 @@ function AlertesEquipe({ ctx }) {
       <span className="grandit">
         <b>Alertes sur ce téléphone</b>
         <span className="petit bloc-texte">{etat.abonne ? 'Activées : vous êtes prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur.' : 'Soyez prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur (en plus de l’e-mail).'}{serveur ? ` · ${serveur.appareils} appareil${serveur.appareils > 1 ? 's' : ''} de l’équipe` : ''}</span>
-        {ios && <span className="tres-petit muet bloc-texte">Sur iPhone : ajoutez d’abord Amorac à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.</span>}
+        {ios && <span className="tres-petit muet bloc-texte">Sur iPhone : ajoutez d’abord Kaislo Équipe à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.</span>}
         {!etat.supporte && <span className="tres-petit muet bloc-texte">Ce navigateur ne gère pas les notifications.</span>}
         {message && <span className="tres-petit bloc-texte" style={{ color: 'var(--rouge, #C8402F)' }}>{message}</span>}
       </span>

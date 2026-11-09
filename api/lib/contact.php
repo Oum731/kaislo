@@ -35,7 +35,7 @@ function routeContact(): never
     requete('INSERT INTO contacts (id, nom, contact, texte, page, ip_hash, cree_le) VALUES (?, ?, ?, ?, ?, ?, ?)', [nouvelId('ct'), $nom, $contact, $texte, $page, $ip, maintenant()]);
     alerterEquipe('visiteur', 'Question d’un visiteur : ' . $nom, mb_substr($texte, 0, 140),
         'Kaislo — question d’un visiteur : ' . $nom,
-        "Un visiteur a écrit depuis le site ($page).\n\nNom : $nom\nContact : $contact\n\n$texte\n\nÀ traiter dans l'espace Amorac → Messages → Visiteurs : " . lienAdmin());
+        "Un visiteur a écrit depuis le site ($page).\n\nNom : $nom\nContact : $contact\n\n$texte\n\nÀ traiter dans l'espace Kaislo Équipe → Messages → Visiteurs : " . lienAdmin());
     repondre(['ok' => true], 201);
 }
 

@@ -1,4 +1,4 @@
-// Alertes de l'équipe Amorac : notification sur ses appareils à chaque nouveau commerce, message d'un commerce et question d'un visiteur.
+// Alertes de l'équipe Kaislo : notification sur ses appareils à chaque nouveau commerce, message d'un commerce et question d'un visiteur.
 // NotificationsMode=test : aucun signal n'est envoyé aux navigateurs ; le signal préparé est noté dans la table notifications.
 // Lancer : npm test (PHP 8.1 ou plus doit être installé)
 import { test, before, after } from 'node:test';

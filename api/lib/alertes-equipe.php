@@ -1,8 +1,8 @@
 <?php
 // ------------------------------------------------------------
-// ALERTES DE L'ÉQUIPE AMORAC : à chaque nouveau commerce, message d'un commerce, question d'un visiteur, avis ou commercial à valider,
+// ALERTES DE L'ÉQUIPE KAISLO : à chaque nouveau commerce, message d'un commerce, question d'un visiteur, avis ou commercial à valider,
 // l'équipe reçoit un e-mail (EmailEquipe du .env) ET une notification sur les appareils où elle a activé les alertes
-// (espace Amorac → Accueil → « Alertes sur ce téléphone »). Les notifications réutilisent le push des commerçants (lib/push.php) :
+// (espace Kaislo Équipe → Accueil → « Alertes sur ce téléphone »). Les notifications réutilisent le push des commerçants (lib/push.php) :
 // les appareils de l'équipe sont des abonnements dont commerce_id vaut ABONNES_EQUIPE.
 //
 //   GET  /api/admin/push              clé publique et nombre d'appareils de l'équipe
