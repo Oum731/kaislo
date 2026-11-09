@@ -275,6 +275,13 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Carnet des retours utilisateurs (Espace Amorac → Retours)
+
+L'équipe note ce que disent les commerçants (WhatsApp, appel, visite) : ce qui leur plaît, ce qui les bloque, la fonction qui leur manque. Un retour est lié à un commerce (ou à une personne qui n'est pas encore cliente), avec un statut : reçu, prévu, fait, refusé.
+- Écran **Retours** : classement des *fonctions les plus demandées* (on compte les commerces différents, pas les messages ; accents et majuscules ignorés ; les refusées sortent du classement), puis la liste filtrable. Le statut se change d'un geste.
+- La fiche d'un commerce montre ses propres retours et permet d'en noter un.
+- API : `GET/POST /api/admin/retours` (`api/lib/retours.php`), table `retours` (base version 24). Le support note et suit ; seul un administrateur supprime.
+
 ## Avis des commerçants : arrivée au tableau de bord et invitation
 
 Un gérant envoie son avis dans l'application (Compte → « Donner mon avis sur Kaislo », une fois par commerce, modifiable). L'avis arrive tout de suite

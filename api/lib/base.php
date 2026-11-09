@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 23;
+const VERSION_BASE = 24;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -170,6 +170,18 @@ const STRUCTURE = [
             'cree_le' => 'DATE', 'modifie_le' => 'DATE', 'modere_le' => 'DATE', 'modere_par' => 'TEXTE',
         ],
         'cle' => ['id'], 'uniques' => [['commerce_id']], 'index' => [['statut', 'cree_le']],
+    ],
+    // Carnet des retours utilisateurs de l'équipe Amorac (ce que disent les commerçants : manque, problème, ce qui plaît) : voir lib/retours.php
+    'retours' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'nom_libre' => 'TEXTE', 'contact' => 'VARCHAR(40)',
+            'canal' => 'VARCHAR(12)',  // 'whatsapp', 'appel', 'visite' ou 'autre'
+            'type' => 'VARCHAR(12)',   // 'manque' (fonction demandée), 'probleme', 'aime' ou 'autre'
+            'fonction' => 'TEXTE', 'texte' => 'LONG',
+            'statut' => 'VARCHAR(12)', // 'recu', 'prevu', 'fait' ou 'refuse'
+            'cree_par' => 'TEXTE', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
+        ],
+        'cle' => ['id'], 'index' => [['statut', 'cree_le'], ['commerce_id']],
     ],
     // Commerciaux Kaislo (code parrain, commission sur les abonnements de leurs clients)
     'commerciaux' => [

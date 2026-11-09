@@ -17,6 +17,7 @@
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
 //   GET /api/parrainage     parrainage entre commerçants : code, filleuls, mois gagnés (voir lib/parrainage.php)
 //   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
+//   GET/POST /api/admin/retours   carnet des retours utilisateurs de l'équipe Amorac (voir lib/retours.php)
 //   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
 //   GET  /api/pays          pays du visiteur d'après son adresse IP (voir lib/pays.php)
 //   /api/notifications      notifications au commerçant : résumé du soir, nouvelles commandes (voir lib/notifications.php)
@@ -39,6 +40,7 @@ require __DIR__ . '/lib/messages.php';
 require __DIR__ . '/lib/admin.php';
 require __DIR__ . '/lib/contact.php';
 require __DIR__ . '/lib/avis.php';
+require __DIR__ . '/lib/retours.php';
 require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
@@ -115,6 +117,8 @@ try {
         'POST /avis' => routeAvisEnvoyer(),
         'GET /admin/avis' => routeAdminAvis(),
         'POST /admin/avis' => routeAdminAvisModerer(),
+        'GET /admin/retours' => routeAdminRetoursLire(),
+        'POST /admin/retours' => routeAdminRetoursEcrire(),
         'GET /admin/contacts' => routeAdminContacts(),
         'POST /admin/contact' => routeAdminContact(),
         'GET /admin/etat' => routeAdminEtat(),
