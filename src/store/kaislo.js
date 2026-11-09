@@ -40,6 +40,20 @@ const navigateur = () => typeof window !== 'undefined';
 const historiquePret = () => navigateur() && !String(window.history.pushState).includes('[native code]');
 export const ajouterEtape = (etape) => { if (historiquePret()) window.history.pushState(etape, ''); };
 
+// Garde-fou : une étape « racine » est posée sous l'écran d'accueil. Un retour depuis l'accueil ne quitte plus l'application :
+// il demande d'appuyer une seconde fois dans les 2 secondes (évite de sortir par erreur).
+let sortieDemandeeLe = 0;
+export function garderRacine() {
+  if (!navigateur()) return;
+  let essais = 0;
+  const poser = () => {
+    if (window.history.state?.kaislo) return; // déjà dans l'historique de l'application
+    if (historiquePret()) return window.history.pushState({ kaislo: 'racine' }, '');
+    if (++essais < 15) setTimeout(poser, 300);
+  };
+  poser();
+}
+
 const trancheCommune = (set, get) => ({
   pret: false, // devient true quand les données du téléphone sont chargées
   d: null, // données du commerce ouvert
@@ -184,6 +198,16 @@ const trancheCommune = (set, get) => ({
     const s = get();
     if (s.feuille) return set({ feuille: null }); // 1. ferme la fenêtre ouverte
     if (s.utilisateur) {
+      // Retour jusqu'à l'entrée d'origine (sous l'accueil) : on ne quitte qu'au deuxième appui rapproché
+      if (!etat?.kaislo) {
+        if (Date.now() - sortieDemandeeLe < 2000) { sortieDemandeeLe = 0; window.history.back(); return; }
+        sortieDemandeeLe = Date.now();
+        window.history.pushState({ kaislo: 'racine' }, '');
+        const accueil0 = s.utilisateur.role === 'gerant' ? 'accueil' : 'caisse';
+        set({ ecran: accueil0 });
+        get().message(tr('Appuyez encore une fois sur retour pour quitter'));
+        return;
+      }
       // 2. revient à l'écran précédent (ou à l'accueil)
       const accueil = s.utilisateur.role === 'gerant' ? 'accueil' : 'caisse';
       set({ ecran: etat?.kaislo === 'ecran' ? etat.ecran : accueil });

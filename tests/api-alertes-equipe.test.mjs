@@ -81,6 +81,12 @@ test('un message d’un commerce et une question d’un visiteur', async () => {
   assert.match(v[0].detail, /Question d’un visiteur : Visiteur — Quels sont vos tarifs/);
 });
 
+test('« J’ai payé » : alerte dédiée « Paiement à vérifier »', async () => {
+  assert.equal((await api('POST', '/messages', { texte: 'J’ai payé par Orange Money. Référence : KAISLO-X.', paiement: true }, gerant.jeton)).statut, 201);
+  const p = await alertes('paiement', 1);
+  assert.match(p[0].detail, /Paiement à vérifier : Chez Awa Alertes — J’ai payé par Orange Money/);
+});
+
 test('après désabonnement, plus aucune alerte sur cet appareil', async () => {
   assert.equal((await api('POST', '/admin/push/desabonner', { endpoint: ENDPOINT }, admin)).ok, true);
   assert.equal((await api('GET', '/admin/push', null, admin)).appareils, 0);

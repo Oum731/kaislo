@@ -8,7 +8,7 @@
 // Accès : comptes de l'équipe (e-mail + mot de passe), session de 8 heures.
 // Rôles : « admin » (tout) ou « support » (consultation, notes et messages).
 // ------------------------------------------------------------
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Chargement from '@/components/Chargement';
 import Marque from '@/components/Marque';
@@ -127,8 +127,38 @@ function InstallationAdmin({ surConnexion }) {
   );
 }
 
+// Bouton « retour » du téléphone dans l'espace Kaislo : referme la fiche ouverte, et ne quitte l'espace qu'au deuxième appui rapproché
+function useRetourTelephone(ficheOuverte, fermerFiche, prevenir) {
+  const etat = useRef({ fiche: false, ignorer: false, sortieLe: 0 });
+  etat.current.fiche = ficheOuverte;
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    if (!window.history.state?.admin) window.history.pushState({ admin: 'racine' }, '');
+    const surRetour = (e) => {
+      const r = etat.current;
+      if (r.ignorer) { r.ignorer = false; return; }
+      if (r.fiche) { fermerFiche(); return; }
+      if (!e.state?.admin) {
+        if (Date.now() - r.sortieLe < 2000) { r.sortieLe = 0; window.history.back(); return; }
+        r.sortieLe = Date.now();
+        window.history.pushState({ admin: 'racine' }, '');
+        prevenir('Appuyez encore une fois sur retour pour quitter');
+      }
+    };
+    window.addEventListener('popstate', surRetour);
+    return () => window.removeEventListener('popstate', surRetour);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Une fiche ouverte ajoute une étape ; refermée autrement que par « retour », on retire cette étape
+  useEffect(() => {
+    if (ficheOuverte) { window.history.pushState({ admin: 'fiche' }, ''); return; }
+    if (window.history.state?.admin === 'fiche') { etat.current.ignorer = true; window.history.back(); }
+  }, [ficheOuverte]);
+}
+
 function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [ecran, setEcran] = useState('tableau');
+  const [info, setInfo] = useState(null);
+  const annoncer = useCallback((texte) => { setInfo(texte); setTimeout(() => setInfo(null), 3500); }, []);
   const [donnees, setDonnees] = useState(null); // { commerces, formules, regles, fondateurs }
   const [ouvert, setOuvert] = useState(null);
   const [nonLus, setNonLus] = useState(0);
@@ -152,7 +182,8 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
-  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente, jeton, alertes };
+  useRetourTelephone(!!fiche, () => setOuvert(null), annoncer);
+  const ctx = { annoncer, api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente, jeton, alertes };
 
   return (
     <div className="coque admin-espace">
@@ -207,6 +238,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
         )}
       </main>
       {fiche && <FicheCommerce c={fiche} ctx={ctx} fermer={() => setOuvert(null)} />}
+      {info && <div className="toast" role="status">{info}</div>}
     </div>
   );
 }
@@ -261,7 +293,7 @@ function AlertesEquipe({ ctx }) {
     <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap', gap: 10 }}>
       <span className="grandit">
         <b>Alertes sur ce téléphone</b>
-        <span className="petit bloc-texte">Soyez prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur (en plus de l’e-mail).</span>
+        <span className="petit bloc-texte">Soyez prévenu à chaque nouveau commerce, paiement déclaré, message d’un commerce ou question d’un visiteur (en plus de l’e-mail).</span>
         {ios && <span className="tres-petit muet bloc-texte">Sur iPhone : ajoutez d’abord Kaislo Équipe à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.</span>}
         {!etat.supporte && <span className="tres-petit muet bloc-texte">Ce navigateur ne gère pas les notifications.</span>}
         {message && <span className="tres-petit bloc-texte" style={{ color: 'var(--rouge, #C8402F)' }}>{message}</span>}
@@ -963,7 +995,8 @@ function FicheCommerce({ c, ctx, fermer }) {
     try {
       await ctx.api('POST', '/admin/paiement', { commerceId: c.id, formule, postes, mois, montant: Number(montant), moyen });
       await ctx.recharger();
-      setMessage({ ok: true, texte: 'Paiement enregistré : abonnement actif' });
+      ctx.annoncer('Paiement enregistré : abonnement actif');
+      fermer();
     } catch (e) { setMessage({ ok: false, texte: e.message }); }
   };
   const telContact = c.gerantTelephone || c.commerce.telephone;
