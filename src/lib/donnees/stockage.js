@@ -139,6 +139,7 @@ export function creerCommerce(infos, serveur = null) {
     clients: [],
     remboursements: [],
     mouvements: [],
+    journal: [], // journal d'activité (lib/donnees/journal.js)
     commandes: [],
     prochainNumero: 1,
   };
@@ -164,7 +165,7 @@ export function commerceDepuisServeur(rep) {
       tables: [], creeLe: c.creeLe, conditionsAccepteesLe: c.conditionsAccepteesLe, abonnement: { ...nouvelAbonnement(), ...c.abonnement },
     },
     utilisateurs: [rep.utilisateur],
-    categories: [], produits: [], ventes: [], depenses: [], sessionsCaisse: [], clients: [], remboursements: [], mouvements: [], commandes: [],
+    categories: [], produits: [], ventes: [], depenses: [], sessionsCaisse: [], clients: [], remboursements: [], mouvements: [], journal: [], commandes: [],
     prochainNumero: 1,
   };
   ecrire('commerce:' + c.id, donnees);
