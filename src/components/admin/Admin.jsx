@@ -136,6 +136,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [commerciauxAttente, setCommerciauxAttente] = useState(0);
   const [avisAttente, setAvisAttente] = useState(0);
   const api = useCallback((m, c, corps) => appelApi(m, c, corps, jeton).catch((e) => { if (e.statut === 401) surDeconnexion(); throw e; }), [jeton, surDeconnexion]);
+  const alertes = useAlertesEquipe(api, jeton);
   const recharger = useCallback(async () => {
     const rep = await api('GET', '/admin/commerces');
     const commerces = rep.commerces.map((c) => ({ ...c, etat: etatAbonnement(c.commerce.abonnement) }));
@@ -151,7 +152,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
-  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente, jeton };
+  const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente, jeton, alertes };
 
   return (
     <div className="coque admin-espace">
@@ -175,6 +176,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
               {liens.slice(4).map(([e, l, i, p]) => (
                 <button key={e} className={`menu-plus-lien ${ecran === e ? 'actif' : ''}`} onClick={() => { setEcran(e); setPlusOuvert(false); window.scrollTo(0, 0); }}><Icone nom={i} /><span>{l}</span>{p ? <span className="badge safran" style={{ marginLeft: 'auto' }}>{p}</span> : null}</button>
               ))}
+              {alertes.etat?.abonne && <button className="menu-plus-lien" onClick={alertes.desactiver} disabled={alertes.enCours}><Icone nom="whatsapp" /><span>Désactiver les alertes</span></button>}
               <a className="menu-plus-lien" href={ADRESSE_SITE} onClick={voirLeSite}><Icone nom="lienExterne" /><span>Voir le site</span></a>
               <button className="menu-plus-lien" onClick={surDeconnexion}><Icone nom="sortie" /><span>Sortir ({initiales(admin.nom)})</span></button>
             </div>
@@ -182,6 +184,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
         )}
         <div className="menu-pied">
           <a className="menu-lien cache-mobile" href={ADRESSE_SITE} onClick={voirLeSite} style={{ textDecoration: 'none' }}><Icone nom="lienExterne" /><span className="tronque">Voir le site</span></a>
+          {alertes.etat?.abonne && <button className="menu-lien cache-mobile" onClick={alertes.desactiver} disabled={alertes.enCours}><Icone nom="whatsapp" /><span className="tronque">Désactiver les alertes</span></button>}
           <button className="carte-utilisateur" onClick={surDeconnexion}>
             <span className="avatar gerant">{initiales(admin.nom)}</span>
             <span className="infos"><b className="bloc-texte tronque">{admin.nom}</b><span className="tres-petit" style={{ opacity: 0.65 }}>{admin.role === 'admin' ? 'Administrateur' : 'Support'} · se déconnecter</span></span>
@@ -226,39 +229,44 @@ function parDevise(lignes) {
 const paiementsDe = (commerces) => commerces.flatMap((c) => (c.commerce.abonnement?.paiements || []).map((p) => ({ ...p, c })));
 
 // Alertes sur cet appareil : une notification à chaque nouveau commerce, message d'un commerce ou question d'un visiteur (voir api/lib/alertes-equipe.php)
-function AlertesEquipe({ ctx }) {
-  const [etat, setEtat] = useState(null);
-  const [serveur, setServeur] = useState(null);
+// L'état est tenu par le tableau de bord : le cadre d'activation disparaît une fois les alertes activées ; « Désactiver » est dans le menu.
+function useAlertesEquipe(api, jeton) {
+  const [etat, setEtat] = useState(null); // { supporte, permission, abonne }
+  const [serveur, setServeur] = useState(null); // { clePublique, appareils }
   const [message, setMessage] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const charger = useCallback(async () => {
     setEtat(await etatPush());
-    ctx.api('GET', '/admin/push').then(setServeur).catch(() => setServeur(null));
-  }, [ctx]);
+    api('GET', '/admin/push').then(setServeur).catch(() => setServeur(null));
+  }, [api]);
   useEffect(() => { charger(); }, [charger]);
-  if (!etat) return null;
   const agir = async (activer) => {
     setEnCours(true); setMessage(null);
     try {
-      if (activer) await activerPush(serveur?.clePublique, ctx.jeton, '/admin/push'); else await desactiverPush(ctx.jeton, '/admin/push');
+      if (activer) await activerPush(serveur?.clePublique, jeton, '/admin/push'); else await desactiverPush(jeton, '/admin/push');
       await charger();
     } catch (e) {
-      setMessage(e.code === 'refuse' ? 'Notifications refusées : autorisez-les dans les réglages du navigateur pour ce site.' : 'Impossible d’activer les alertes sur cet appareil.');
+      setMessage(e.code === 'refuse' ? 'Notifications refusées : autorisez-les dans les réglages du navigateur pour ce site.' : 'Impossible de modifier les alertes sur cet appareil.');
     } finally { setEnCours(false); }
   };
+  return { etat, serveur, message, enCours, activer: () => agir(true), desactiver: () => agir(false) };
+}
+
+// Cadre d'activation : visible seulement tant que les alertes ne sont pas activées sur cet appareil
+function AlertesEquipe({ ctx }) {
+  const { etat, serveur, message, enCours, activer } = ctx.alertes;
+  if (!etat || etat.abonne) return null;
   const ios = iosNonInstalle();
   return (
     <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap', gap: 10 }}>
       <span className="grandit">
         <b>Alertes sur ce téléphone</b>
-        <span className="petit bloc-texte">{etat.abonne ? 'Activées : vous êtes prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur.' : 'Soyez prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur (en plus de l’e-mail).'}{serveur ? ` · ${serveur.appareils} appareil${serveur.appareils > 1 ? 's' : ''} de l’équipe` : ''}</span>
+        <span className="petit bloc-texte">Soyez prévenu à chaque nouveau commerce, message d’un commerce ou question d’un visiteur (en plus de l’e-mail).</span>
         {ios && <span className="tres-petit muet bloc-texte">Sur iPhone : ajoutez d’abord Kaislo Équipe à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis ouvrez-le depuis l’icône.</span>}
         {!etat.supporte && <span className="tres-petit muet bloc-texte">Ce navigateur ne gère pas les notifications.</span>}
         {message && <span className="tres-petit bloc-texte" style={{ color: 'var(--rouge, #C8402F)' }}>{message}</span>}
       </span>
-      {etat.supporte && !ios && (etat.abonne
-        ? <button className="btn secondaire petit" onClick={() => agir(false)} disabled={enCours}>Désactiver</button>
-        : <button className="btn petit" onClick={() => agir(true)} disabled={enCours || !serveur?.clePublique}>Activer les alertes</button>)}
+      {etat.supporte && !ios && <button className="btn petit" onClick={activer} disabled={enCours || !serveur?.clePublique}>Activer les alertes</button>}
     </div>
   );
 }
@@ -811,18 +819,57 @@ function VueEquipe({ ctx }) {
   );
 }
 
-// Facture d'un paiement (créée toute seule à l'enregistrement du paiement) : télécharge le PDF
+// Facture d'un paiement (créée toute seule à l'enregistrement du paiement) : télécharge le PDF ; un administrateur peut émettre un avoir
 function BoutonFacture({ p, ctx, commerceId }) {
   const [enCours, setEnCours] = useState(false);
+  const [avoir, setAvoir] = useState(false);
   if (!p.facture) return null; // paiement enregistré avant les factures : pas de facture
-  const agir = async () => {
+  const telecharger = async (numero, type) => {
     setEnCours(true);
     try {
-      const f = (await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId))).factures.find((x) => x.numero === p.facture);
+      const rep = await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId));
+      const f = (type === 'avoir' ? rep.avoirs : rep.factures).find((x) => x.numero === numero);
       if (f) await telechargerFacture(f);
     } catch (e) { window.alert(e.message || 'Impossible de créer le PDF'); } finally { setEnCours(false); }
   };
-  return <button className="btn secondaire petit" onClick={agir} disabled={enCours}>{'Facture ' + p.facture}</button>;
+  return (
+    <>
+      <button className="btn secondaire petit" onClick={() => telecharger(p.facture, 'facture')} disabled={enCours}>{'Facture ' + p.facture}</button>
+      {(p.avoirs || []).map((a) => <button key={a.numero} className="btn secondaire petit" onClick={() => telecharger(a.numero, 'avoir')} disabled={enCours}>{'Avoir ' + a.numero + ' (' + formatPrix(a.totalTtc, p.devise) + ')'}</button>)}
+      {ctx.estAdmin && <button className="btn secondaire petit" onClick={() => setAvoir(true)}>Faire un avoir</button>}
+      {avoir && <FeuilleAvoir p={p} ctx={ctx} commerceId={commerceId} surFermer={() => setAvoir(false)} />}
+    </>
+  );
+}
+
+// Facture d'avoir : annule ou rembourse tout ou partie d'une facture (document comptable ; le remboursement et l'abonnement se règlent à part)
+function FeuilleAvoir({ p, ctx, commerceId, surFermer }) {
+  const [montant, setMontant] = useState('');
+  const [motif, setMotif] = useState('');
+  const [erreur, setErreur] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
+  const emettre = async () => {
+    setEnvoi(true); setErreur(null);
+    try {
+      const rep = await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId));
+      const facture = rep.factures.find((x) => x.numero === p.facture);
+      const r = await ctx.api('POST', '/admin/avoir', { factureId: facture.id, montant: montant === '' ? null : Number(montant), motif });
+      await ctx.recharger();
+      await telechargerFacture(r.avoir);
+      surFermer();
+    } catch (e) { setErreur(e.message); setEnvoi(false); }
+  };
+  return (
+    <Feuille titre={'Avoir sur la facture ' + p.facture} sousTitre={'Facture de ' + formatPrix(p.montant, p.devise)} surFermer={surFermer}
+      pied={<button className="btn bloc" onClick={emettre} disabled={envoi || motif.trim().length < 3}>{envoi ? 'Création…' : 'Émettre l’avoir'}</button>}>
+      <div className="pile">
+        <label className="champ"><span>Montant TTC à créditer (vide = tout ce qui reste)</span><input type="number" inputMode="decimal" min="0" step="any" value={montant} onChange={(e) => setMontant(e.target.value)} placeholder={String(p.montant)} /></label>
+        <label className="champ"><span>Motif</span><input value={motif} onChange={(e) => setMotif(e.target.value)} maxLength={200} placeholder="Ex : remboursement, erreur de montant, geste commercial" /></label>
+        {erreur && <p className="alerte">{erreur}</p>}
+        <p className="tres-petit muet">L’avoir est un document comptable : il prend le prochain numéro AV-… et ne se modifie plus. Il ne rembourse pas l’argent et ne change pas la date de fin d’abonnement : faites-le à part si besoin.</p>
+      </div>
+    </Feuille>
+  );
 }
 
 // ---------- Fiche d'un commerce : abonnement, paiements, suspension, numéro, équipe ----------

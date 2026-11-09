@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// FACTURE D'ABONNEMENT EN PDF (A4) : émetteur Amorac, client, désignation, totaux HT / TVA / TTC, « acquittée », mentions légales.
+// FACTURE D'ABONNEMENT OU FACTURE D'AVOIR EN PDF (A4) : émetteur Amorac, client, désignation, totaux HT / TVA / TTC, « acquittée » (ou référence de la facture créditée), mentions légales.
 // Les données viennent de l'API (api/lib/facturation.php, versFacture) : le PDF reprend exactement la facture figée à son émission.
 // Document en français (facture légale). Police standard du PDF : les caractères hors alphabet latin sont remplacés par « ? ».
 // ------------------------------------------------------------
@@ -13,18 +13,19 @@ const sur = (t) => String(t ?? '')
   .replace(/€/g, 'EUR').replace(/[^\x20-\x7E\xA1-\xFF]/g, '?');
 const monnaie = (x, dev) => sur(formatNombre(x, dev) + ' ' + (dev === 'EUR' ? 'EUR' : symbole(dev)));
 
-/** Nom de fichier de la facture : FAC-2026-0001.pdf */
+/** Nom de fichier : FAC-2026-0001.pdf (ou AV-2026-0001.pdf pour un avoir) */
 export const nomFichierFacture = (f) => `${f.numero}.pdf`;
 
 /** Construit le PDF (objet jsPDF). */
 export async function creerPdfFacture(f) {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  doc.setProperties({ title: `Facture ${f.numero}`, author: f.emetteur?.nom || 'Amorac', creator: 'Kaislo' });
+  doc.setProperties({ title: `${f.type === 'avoir' ? 'Avoir' : 'Facture'} ${f.numero}`, author: f.emetteur?.nom || 'Amorac', creator: 'Kaislo' });
   const L = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const marge = 16;
   const dev = f.devise;
+  const avoir = f.type === 'avoir';
   const e = f.emetteur || {};
   const c = f.client || {};
   let y = 18;
@@ -47,7 +48,7 @@ export async function creerPdfFacture(f) {
   doc.setTextColor(...VERT);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
-  doc.text('FACTURE', L - marge, y, { align: 'right' });
+  doc.text(avoir ? 'AVOIR' : 'FACTURE', L - marge, y, { align: 'right' });
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   doc.text(sur('N° ' + f.numero), L - marge, y + 7, { align: 'right' });
@@ -65,7 +66,7 @@ export async function creerPdfFacture(f) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(...GRIS);
-  doc.text('FACTURE A', marge + 4, y + 6);
+  doc.text(avoir ? 'CLIENT' : 'FACTURE A', marge + 4, y + 6);
   doc.setTextColor(30, 30, 30);
   doc.setFontSize(10);
   lignesClient.forEach((l, i) => {
@@ -89,7 +90,7 @@ export async function creerPdfFacture(f) {
   for (const l of f.lignes || []) {
     const coupe = doc.splitTextToSize(sur(l.designation), L - 2 * marge - 50);
     doc.text(coupe, marge + 3, y + 6);
-    if (f.periode?.du && f.periode?.au) {
+    if (!avoir && f.periode?.du && f.periode?.au) {
       doc.setFontSize(8.5);
       doc.setTextColor(...GRIS);
       doc.text(sur(`Période : du ${formatDate(f.periode.du)} au ${formatDate(f.periode.au)}`), marge + 3, y + 6 + coupe.length * 4.6);
@@ -97,7 +98,7 @@ export async function creerPdfFacture(f) {
       doc.setTextColor(30, 30, 30);
     }
     doc.text(monnaie(f.totalHt, dev), L - marge - 3, y + 6, { align: 'right' });
-    y += 8 + coupe.length * 4.6 + (f.periode?.du ? 4 : 0);
+    y += 8 + coupe.length * 4.6 + (!avoir && f.periode?.du ? 4 : 0);
     doc.setDrawColor(215, 220, 215);
     doc.line(marge, y, L - marge, y);
   }
@@ -126,8 +127,12 @@ export async function creerPdfFacture(f) {
   doc.setTextColor(...VERT);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.text(sur('FACTURE ACQUITTEE' + (f.reglement?.date ? ' le ' + formatDate(f.reglement.date) : '') + (f.reglement?.moyen ? ' - ' + f.reglement.moyen : '')), marge + 4, y + 7.5);
+  doc.text(sur(avoir
+    ? `AVOIR SUR LA FACTURE ${f.reference?.factureNumero || ''}${f.reference?.factureDate ? ' DU ' + formatDate(f.reference.factureDate) : ''}`
+    : 'FACTURE ACQUITTEE' + (f.reglement?.date ? ' le ' + formatDate(f.reglement.date) : '') + (f.reglement?.moyen ? ' - ' + f.reglement.moyen : '')), marge + 4, y + 7.5);
   y += 20;
+
+  if (avoir && f.motif) { doc.setTextColor(30, 30, 30); doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); const m = doc.splitTextToSize(sur('Motif : ' + f.motif), L - 2 * marge); doc.text(m, marge, y); y += m.length * 4.6 + 4; }
 
   // ----- Mention de TVA -----
   doc.setTextColor(...GRIS);
