@@ -11,6 +11,7 @@ import { NOMS_DEVISES, formatDate } from '@/lib/utils/format';
 import AbonnementCommerce from './Abonnement';
 import Postes from './Postes';
 import Journal from './Journal';
+import Sauvegardes from './Sauvegardes';
 import { posteParId } from '@/lib/donnees/postes';
 import { Icone, Segment, SelecteurLangue, Interrupteur, Avatar, ApercuTicket, Reglage, ChampMontant, ChoixImage, ImageStockee } from '@/components/ui';
 import { EnTete } from '../EnTete';
@@ -219,6 +220,7 @@ function InfosCommerce() {
         </div>
         <p className="tres-petit muet">{tr('La sauvegarde complète contient articles, ventes, clients, dépenses et journées de vente. Les codes PIN n’y figurent pas.')}</p>
       </div>
+      {!s.estDemoActuel() && <Sauvegardes />}
 
       <p className="section-titre">{tr('Cet appareil')}</p>
       <div className="carte pile">

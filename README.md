@@ -275,6 +275,14 @@ Pour que les photos arrivent en vraies images, l'écran de confirmation propose,
 la discussion avec la boutique est en haut de la liste puisqu'on vient de lui écrire). L'adresse d'image répond aussi aux requêtes `HEAD` (aperçus de
 liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement (`Content-Disposition: inline`). Test : `tests/api-boutique-logo.test.mjs`.
 
+## Sauvegarde et restauration (Réglages → Profil → Vos données)
+
+- **Copie automatique** : une par jour, prise dans l'appareil avant la première modification de la journée (les 5 dernières sont gardées). Les commerces de démonstration n'en font pas.
+- **Restaurer** une copie ou un fichier de sauvegarde (JSON, celui de « Sauvegarde complète ») : les listes du commerce (articles, ventes, clients, dépenses, stock, journées de caisse, journal…) reviennent comme dans la copie. L'abonnement, le code du commerce, les personnes autorisées et leurs PIN ne changent pas ; le numéro de ticket ne recule jamais ; une sauvegarde d'un autre commerce est refusée.
+- Avant chaque restauration, l'état actuel est gardé de côté (« Avant la dernière restauration ») : on peut revenir en arrière. La restauration est notée dans le journal d'activité.
+- Commerce en ligne : la restauration suit la synchronisation habituelle (ce qui n'est plus dans la copie est supprimé sur le serveur et sur les autres appareils).
+- Code : `src/lib/donnees/sauvegarde.js` (testé dans `tests/sauvegarde.test.mjs`), `src/components/app/ecrans/Sauvegardes.jsx`, action `restaurerSauvegarde` (`src/store/gestion.js`).
+
 ## Journal d'activité (Réglages → Journal)
 
 Le gérant voit en un fil qui a fait quoi et quand : ventes annulées (avec le motif), remises, dépenses, entrées et corrections de stock, ouvertures et fermetures de caisse (avec l'écart). Les gestes qui ne laissent aucune trace autrement (dépense, article ou client supprimé, prix changé) sont notés au moment du geste dans `d.journal` (collection synchronisée, ajouts seulement, 3 000 lignes au plus). Filtres : période, personne, type. Les gestes à surveiller sont marqués d'un « ! ».

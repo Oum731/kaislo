@@ -14,6 +14,7 @@
 // ------------------------------------------------------------
 import { create } from 'zustand';
 import { avecStocks } from '@/lib/donnees/stock.js';
+import { garderCopie, copieDuJourFaite } from '@/lib/donnees/sauvegarde.js';
 import { enregistrerCommerce, chargerPreferences, enregistrerPreferences, estDemo, initialiserStockage, surErreurStockage } from '@/lib/donnees/stockage.js';
 import { PAYS, paysDuNavigateur } from '@/lib/donnees/modeles.js';
 import { lirePaysChoisi, devinerPays, paysParIp } from '@/lib/pays-visiteur';
@@ -110,6 +111,8 @@ const trancheCommune = (set, get) => ({
   majDonnees(recette) {
     const d = get().d;
     const nouvelles = avecStocks({ ...d, ...recette(d) });
+    // Une copie de sauvegarde par jour, prise avant la première modification de la journée (voir lib/donnees/sauvegarde.js)
+    try { if (!estDemo(d.commerce.id) && !copieDuJourFaite(d.commerce.id)) garderCopie(d); } catch { /* la vente passe avant la sauvegarde */ }
     enregistrerCommerce(nouvelles);
     // Commerce en ligne : la modification part dans la file d'attente, envoyée au serveur
     if (estServeur(nouvelles)) get().planifierSynchro(noterChangements(d, nouvelles));

@@ -21,7 +21,7 @@ export default function Journal() {
   const j = useMemo(() => journalActivite(d, { periode, par, type }), [d, periode, par, type]);
   const libelles = {
     annulation: tr('Ventes annulées'), remise: tr('Remises'), depense: tr('Dépenses'), 'depense-supprimee': tr('Dépenses supprimées'), stock: tr('Stock'),
-    caisse: tr('Caisse'), 'produit-supprime': tr('Articles supprimés'), prix: tr('Prix changés'), 'client-supprime': tr('Clients supprimés'),
+    caisse: tr('Caisse'), 'produit-supprime': tr('Articles supprimés'), prix: tr('Prix changés'), 'client-supprime': tr('Clients supprimés'), restauration: tr('Restaurations'),
   };
   const surveilles = j.lignes.filter(aSurveiller).length;
 
@@ -39,6 +39,7 @@ export default function Journal() {
         : l.ecart ? tr('Caisse fermée, écart de {0}', [(l.ecart > 0 ? '+' : '') + prix(l.ecart)]) : tr('Caisse fermée, compte juste');
       case 'produit-supprime': return tr('Article supprimé : {0}', [l.produit]);
       case 'prix': return tr('Prix de {0} changé : {1} → {2}', [l.produit, prix(l.avant), prix(l.apres)]);
+      case 'restauration': return tr('Sauvegarde restaurée ({0} ventes, copie du {1})', [l.ventes, l.le ? formatDate(l.le) : '—']);
       case 'client-supprime': return tr('Client supprimé : {0}', [l.client]);
       default: return '';
     }
