@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 26;
+const VERSION_BASE = 27;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -84,6 +84,14 @@ const STRUCTURE = [
             'date' => 'DATE', 'devise' => 'VARCHAR(6)', 'total_ht' => 'MONTANT', 'tva_taux' => 'MONTANT', 'tva' => 'MONTANT', 'total_ttc' => 'MONTANT', 'contenu' => 'LONG',
         ],
         'cle' => ['id'], 'uniques' => [['numero'], ['paiement_id'], ['annee', 'sequence']], 'index' => [['commerce_id']],
+    ],
+    // Copies datées des données d'un commerce en ligne (voir lib/sauvegardes.php) : contenu = JSON compressé (gzip) en base64
+    'sauvegardes' => [
+        'colonnes' => [
+            'id' => 'ID', 'commerce_id' => 'ID', 'jour' => 'VARCHAR(10)', 'raison' => 'VARCHAR(20)', 'cree_le' => 'DATE', 'cree_par' => 'TEXTE',
+            'nb_elements' => 'ENTIER', 'taille' => 'ENTIER', 'details' => 'LONG', 'contenu' => 'LONG',
+        ],
+        'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id', 'cree_le']],
     ],
     // Factures d'avoir émises par Amorac (annulation ou remboursement, total ou partiel, d'une facture : AV-2026-0001)
     'avoirs' => [
