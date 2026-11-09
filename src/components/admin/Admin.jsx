@@ -21,6 +21,7 @@ import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixListeFormule,
 import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
+import { VueRetours, RetoursCommerce } from './Retours';
 
 const JOUR = 86400000;
 const DEVISES = ['FCFA', 'MAD', 'EUR', 'USD', 'CAD', 'GNF'];
@@ -145,7 +146,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   useEffect(() => { recharger(); const m = setInterval(recharger, 60000); return () => clearInterval(m); }, [recharger]);
 
   const estAdmin = admin.role === 'admin';
-  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null],
+  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
   const ctx = { api, recharger, formules: donnees?.formules || [], regles: donnees?.regles || {}, fondateurs: donnees?.fondateurs || 0, estAdmin, ouvrir: setOuvert, admin, allerA: setEcran, avisAttente };
@@ -193,6 +194,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
             {ecran === 'messages' && <VueMessages ctx={ctx} />}
             {ecran === 'paiements' && <VuePaiements commerces={donnees.commerces} ctx={ctx} />}
             {ecran === 'avis' && <VueAvis ctx={ctx} />}
+            {ecran === 'retours' && <VueRetours ctx={ctx} commerces={donnees.commerces} EnTeteAdmin={EnTeteAdmin} />}
             {ecran === 'tarifs' && <VueTarifs ctx={ctx} />}
             {ecran === 'commerciaux' && <VueCommerciaux ctx={ctx} EnTeteAdmin={EnTeteAdmin} />}
             {ecran === 'equipe' && <VueEquipe ctx={ctx} />}
@@ -847,6 +849,7 @@ function FicheCommerce({ c, ctx, fermer }) {
             <p className="tres-petit muet">Format du pays accepté ; le numéro doit être libre dans tout Kaislo.</p>
           </div>
           <RelanceFiche c={c} ctx={ctx} />
+          <RetoursCommerce c={c} ctx={ctx} />
           {c.signaux?.length > 0 && (
             <div className="carte pile" style={{ borderColor: 'var(--rouge, #C8402F)' }}>
               <h3>⚠ Activité à vérifier</h3>
