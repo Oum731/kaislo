@@ -1,7 +1,7 @@
 'use client';
 // ------------------------------------------------------------
-// « Payer par virement » : le gérant voit les comptes bancaires de l'équipe Kaislo, le montant exact à virer dans la devise du compte
-// et la référence à écrire dans le motif du virement. « J'ai fait le virement » prévient l'équipe par la messagerie (écran Aide).
+// « Payer mon abonnement » : le gérant voit les numéros de paiement mobile (Orange Money…) de l'équipe Kaislo avec le prix dans sa devise, et les comptes bancaires
+// avec le montant exact à virer dans la devise du compte, plus la référence à indiquer. « J'ai payé » / « J'ai fait le virement » prévient l'équipe par la messagerie (écran Aide).
 // L'équipe enregistre ensuite le paiement dans l'espace Kaislo (moyen « Virement »). Voir api/lib/virement.php.
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
@@ -32,6 +32,8 @@ export function FeuilleVirement() {
   const [erreur, setErreur] = useState('');
   const [copie, setCopie] = useState('');
   const [envoye, setEnvoye] = useState(false);
+  const [envoyeMobile, setEnvoyeMobile] = useState(false);
+  const [expediteur, setExpediteur] = useState(''); // numéro depuis lequel le gérant a payé en mobile money (aide l'équipe à retrouver le paiement)
 
   useEffect(() => {
     appelApi('GET', '/paiement-virement', null, s.jetonServeur())
@@ -53,12 +55,41 @@ export function FeuilleVirement() {
     } catch (e) { setErreur(e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message); }
   };
 
+  // Paiement mobile : prévient l'équipe avec le numéro d'envoi (facultatif) et la référence
+  const prevenirMobile = async (m) => {
+    setErreur('');
+    try {
+      await appelApi('POST', '/messages', { texte: `J’ai payé par ${m.operateur} au ${m.numero} (${montant(m.parMois, m.devise)} par mois).${expediteur.trim() ? ` Numéro d’envoi : ${expediteur.trim().slice(0, 30)}.` : ''} Référence : ${r.reference}.` }, s.jetonServeur());
+      setEnvoyeMobile(true);
+    } catch (e) { setErreur(e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message); }
+  };
+
   return (
-    <Feuille titre={tr('Payer par virement')} surFermer={s.fermer} pleine large>
+    <Feuille titre={tr('Payer mon abonnement')} surFermer={s.fermer} pleine large>
       <div className="pile">
         {erreur && <p className="alerte">{erreur}</p>}
         {!r && !erreur && <p className="muet petit">{tr('Chargement…')}</p>}
-        {r && !r.comptes.length && <p className="astuce">{tr('Le virement bancaire n’est pas encore disponible ici. Écrivez-nous (écran Aide) : nous vous donnons les coordonnées bancaires.')}</p>}
+        {r && !r.comptes.length && !(r.mobiles || []).length && <p className="astuce">{tr('Le paiement en ligne n’est pas encore disponible ici. Écrivez-nous (écran Aide) : nous vous donnons les coordonnées de paiement.')}</p>}
+        {r && (r.mobiles || []).length > 0 && (
+          <>
+            {r.mobiles.map((m, i) => (
+              <div key={'m' + i} className="carte pile">
+                <div className="ligne espace">
+                  <b>{tr('Payer par {0}', [m.operateur])}</b>
+                  <span className="badge safran">{montant(m.parMois, m.devise)} {tr('par mois')}</span>
+                </div>
+                <p className="petit muet">{tr('À l’année : {0} ({1} mois offerts).', [montant(m.annuel, m.devise), 2])}</p>
+                <Ligne libelle={tr('Envoyez au numéro')} valeur={m.numero} copie={copie === 'num' + i} surCopier={() => copier('num' + i, m.numero)} />
+                {m.titulaire && <Ligne libelle={tr('Au nom de')} valeur={m.titulaire} />}
+                <Ligne libelle={tr('Référence à indiquer si possible')} valeur={r.reference} copie={copie === 'refm' + i} surCopier={() => copier('refm' + i, r.reference)} />
+                {m.note && <p className="petit muet">{m.note}</p>}
+                <label className="champ"><span>{tr('Numéro depuis lequel vous avez payé (facultatif)')}</span><input type="tel" inputMode="tel" value={expediteur} onChange={(e) => setExpediteur(e.target.value)} maxLength={30} /></label>
+                <button className="btn bloc" onClick={() => prevenirMobile(m)} disabled={envoyeMobile}><Icone nom="ok" /> {envoyeMobile ? tr('L’équipe est prévenue') : tr('J’ai payé')}</button>
+              </div>
+            ))}
+            <p className="tres-petit muet">{tr('Votre abonnement est prolongé dès que l’équipe a vu le paiement. Gardez le message de confirmation de l’opérateur.')}</p>
+          </>
+        )}
         {r && r.comptes.length > 0 && (
           <>
             <p className="info-verte"><b>{tr('Dans le motif du virement, écrivez :')}</b> <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: 1 }}>{r.reference}</span>

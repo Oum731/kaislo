@@ -78,7 +78,7 @@ export default function AbonnementCommerce() {
         <button className="btn secondaire bloc" onClick={() => s.ouvrir('commerces')}>{(s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length) > 1 ? tr('Mes {0} commerces et le total à payer', [s.estDemoActuel() ? s.commercesDemo.length + 1 : s.commercesGerant().length]) : tr('Ajouter un autre commerce (autre activité)')}</button>
       )}
       {estServeur(s.d) && s.estGerant() && !s.estDemoActuel() && (
-        <button className="btn secondaire bloc" onClick={() => s.ouvrir('virement')}><Icone nom="billet" /> {tr('Payer par virement bancaire')}</button>
+        <button className="btn secondaire bloc" onClick={() => s.ouvrir('virement')}><Icone nom="billet" /> {tr('Payer mon abonnement (mobile money, virement)')}</button>
       )}
       <p className="tres-petit muet">{tr('Pour payer ou changer de formule : bouton « Discuter avec nous » ou écran Aide. Paiement par mobile money, virement ou espèces.')}</p>
       {estServeur(s.d) && s.estGerant() && !s.estDemoActuel() && <MesFactures />}

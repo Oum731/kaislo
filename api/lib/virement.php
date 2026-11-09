@@ -9,13 +9,28 @@
 //     · un bouton « J'ai fait le virement » qui prévient l'équipe par la messagerie.
 //   L'équipe enregistre ensuite le paiement dans l'espace Kaislo (moyen « Virement »), comme pour les autres moyens.
 //
-//   GET  /api/paiement-virement   comptes et montants pour le commerce du gérant connecté
+//   Paiement mobile (Orange Money, Wave, MTN MoMo…) : l'équipe enregistre ses numéros dans l'espace Kaislo → Tarifs ; le gérant d'un commerce
+//   dans la même devise voit le numéro, le montant en sa devise et la même référence KAISLO-code (qu'il indique à l'équipe avec « J'ai payé »).
+//
+//   GET  /api/paiement-virement   comptes, numéros mobiles et montants pour le commerce du gérant connecté
+//   GET  /api/admin/paiements-mobiles   numéros enregistrés (équipe Kaislo)
+//   POST /api/admin/paiements-mobiles   { moyens: [{ operateur, numero, titulaire?, devises: ['FCFA'], note? }] } (administrateur)
 //   GET  /api/admin/virement      comptes enregistrés (équipe Kaislo)
 //   POST /api/admin/virement      { comptes: [{ devise, beneficiaire, banque, iban, bic?, note? }] } (administrateur)
 // ------------------------------------------------------------
 
 const DEVISES_VIREMENT = ['EUR', 'MAD', 'USD', 'CAD', 'FCFA', 'GNF'];
 const COMPTES_VIREMENT_MAX = 6;
+const OPERATEURS_MOBILES = ['Orange Money', 'Wave', 'MTN MoMo', 'Moov Money', 'Airtel Money', 'M-Pesa'];
+const MOYENS_MOBILES_MAX = 8;
+// Numéro proposé tant que l'équipe n'a rien enregistré (modifiable dans l'espace Kaislo → Tarifs)
+const MOYENS_MOBILES_DEFAUT = [['operateur' => 'Orange Money', 'numero' => '+2250779872585', 'titulaire' => '', 'devises' => ['FCFA'], 'note' => '']];
+
+function moyensMobiles(): array
+{
+    $r = reglageAmorac('paiements_mobiles', ['moyens' => MOYENS_MOBILES_DEFAUT]);
+    return is_array($r['moyens'] ?? null) ? array_values($r['moyens']) : [];
+}
 
 function comptesVirement(): array
 {
@@ -40,7 +55,41 @@ function routePaiementVirement(): never
         if ($t['parMois'] <= 0) continue; // la formule n'a pas de prix dans cette devise
         $comptes[] = $compte + ['parMois' => $t['parMois'], 'annuel' => $t['annuel']];
     }
-    repondre(['ok' => true, 'reference' => referenceVirement($c), 'comptes' => $comptes]);
+    // Numéros de paiement mobile des devises du commerce, avec le prix dans sa devise
+    $mobiles = [];
+    foreach (moyensMobiles() as $m) {
+        if (!in_array($c['devise'], (array) ($m['devises'] ?? []), true)) continue;
+        $t = tarifCommerce($c, $c['devise']);
+        if ($t['parMois'] <= 0) continue;
+        $mobiles[] = $m + ['devise' => $c['devise'], 'parMois' => $t['parMois'], 'annuel' => $t['annuel']];
+    }
+    repondre(['ok' => true, 'reference' => referenceVirement($c), 'comptes' => $comptes, 'mobiles' => $mobiles]);
+}
+
+function routeAdminMoyensMobilesLire(): never
+{
+    adminConnecte();
+    repondre(['ok' => true, 'moyens' => moyensMobiles(), 'operateurs' => OPERATEURS_MOBILES]);
+}
+
+function routeAdminMoyensMobilesEnregistrer(): never
+{
+    $admin = adminConnecte(true);
+    $liste = is_array(entree()['moyens'] ?? null) ? array_values(entree()['moyens']) : [];
+    if (count($liste) > MOYENS_MOBILES_MAX) throw new ErreurApi('Huit numéros au plus');
+    $moyens = [];
+    foreach ($liste as $m) {
+        $operateur = (string) ($m['operateur'] ?? '');
+        if (!in_array($operateur, OPERATEURS_MOBILES, true)) throw new ErreurApi('Opérateur inconnu');
+        $numero = preg_replace('/[^\d+]/', '', (string) ($m['numero'] ?? ''));
+        if (!preg_match('/^\+?\d{8,15}$/', $numero)) throw new ErreurApi('Numéro invalide (8 à 15 chiffres, avec l’indicatif du pays)');
+        $devises = array_values(array_unique(array_filter((array) ($m['devises'] ?? []), fn ($d) => in_array($d, DEVISES_VIREMENT, true))));
+        if (!$devises) throw new ErreurApi('Choisissez au moins une devise (celle des commerces qui peuvent payer par ce numéro)');
+        $moyens[] = ['operateur' => $operateur, 'numero' => $numero, 'titulaire' => texte($m, 'titulaire', 'le nom du titulaire', false, 80), 'devises' => $devises, 'note' => texte($m, 'note', 'la note', false, 200)];
+    }
+    enregistrerReglageAmorac('paiements_mobiles', ['moyens' => $moyens]);
+    journaliser(null, null, 'amorac-paiements-mobiles', ['numeros' => count($moyens), 'par' => $admin['email']]);
+    repondre(['ok' => true, 'moyens' => $moyens]);
 }
 
 function routeAdminVirementLire(): never

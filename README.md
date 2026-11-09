@@ -282,6 +282,14 @@ liens WhatsApp et réseaux sociaux), annonce sa taille et s'affiche directement 
 - Technique : les appareils de l'équipe sont des abonnements push (`abonnements_push`) dont `commerce_id` vaut `amorac` ; `alerterEquipe()` (`api/lib/alertes-equipe.php`) envoie l'e-mail et la notification après la réponse, un échec ne gêne jamais l'action. Routes : `GET /api/admin/push`, `POST /api/admin/push/abonner` et `/desabonner`.
 - Pour une nouvelle alerte : appeler `alerterEquipe('type', 'Titre', 'Texte court', 'Sujet e-mail', 'Corps e-mail')` (type : 20 caractères au plus). Test : `tests/api-alertes-equipe.test.mjs`.
 
+## Paiement de l'abonnement : mobile money et virement
+
+Le gérant d'un commerce en ligne ouvre Réglages → Profil → Abonnement → « Payer mon abonnement » :
+- **Paiement mobile** (Orange Money, Wave, MTN MoMo…) : le numéro de l'équipe, le prix dans la devise du commerce (FCFA…), la référence `KAISLO-code`, un champ facultatif pour le numéro d'envoi et « J'ai payé » (message à l'équipe + alerte sur son téléphone). Les numéros se règlent dans l'Espace Kaislo → Tarifs → « Numéros de paiement mobile » (opérateur, numéro avec indicatif, titulaire, devises des commerces qui le voient, note). Tant que rien n'est enregistré, un numéro Orange Money par défaut est proposé aux commerces en FCFA ; une liste vide enregistrée supprime tout numéro.
+- **Virement bancaire** : comptes enregistrés dans Tarifs → « Comptes bancaires pour les virements », montant dans la devise du compte.
+- L'équipe enregistre ensuite le paiement (moyen « Orange Money », « Virement »…) : la facture se crée toute seule et le gérant est prévenu. API : `GET /api/paiement-virement` (comptes + numéros mobiles du gérant), `GET/POST /api/admin/paiements-mobiles` (`api/lib/virement.php`). Test : `tests/api-paiement-mobile.test.mjs`.
+- **À décider** (voir échanges avec le comptable) : devise de la facture quand l'argent arrive en dirhams sur un compte unique alors que le commerce est en FCFA ; TVA des prestations à l'étranger si l'encaissement n'est pas en devises.
+
 ## Factures d'abonnement (Amorac → ses abonnés)
 
 Chaque paiement d'abonnement enregistré dans l'Espace Amorac donne une **facture acquittée** : numéro sans trou `FAC-2026-0001` (une suite par année, tous pays confondus), émetteur Amorac (forme « SARL » sans le capital, siège, RC, ICE, IF, TP), client (commerce, gérant, adresse, pays), désignation (formule, durée, postes), période couverte, HT / TVA / TTC, moyen et date de paiement.

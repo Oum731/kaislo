@@ -147,6 +147,8 @@ try {
         'POST /admin/paiement' => routeAdminPaiement(),
         'POST /admin/paiement-groupe' => routeAdminPaiementGroupe(),
         'POST /admin/tarifs' => routeAdminTarifs(),
+        'GET /admin/paiements-mobiles' => routeAdminMoyensMobilesLire(),
+        'POST /admin/paiements-mobiles' => routeAdminMoyensMobilesEnregistrer(),
         'GET /admin/virement' => routeAdminVirementLire(),
         'POST /admin/virement' => routeAdminVirementEnregistrer(),
         'GET /paiement-virement' => routePaiementVirement(),

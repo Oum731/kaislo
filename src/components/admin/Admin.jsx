@@ -627,6 +627,45 @@ function VueAvis({ ctx }) {
   );
 }
 
+// ---------- Numéros de paiement mobile (Orange Money, Wave…) affichés aux gérants : Compte → Abonnement → Payer mon abonnement ----------
+function MoyensMobiles({ ctx }) {
+  const [moyens, setMoyens] = useState(null);
+  const [operateurs, setOperateurs] = useState([]);
+  const [message, setMessage] = useState(null);
+  useEffect(() => { ctx.api('GET', '/admin/paiements-mobiles').then((r) => { setMoyens(r.moyens); setOperateurs(r.operateurs); }).catch((e) => setMessage({ ok: false, texte: e.message })); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const maj = (i, x) => setMoyens(moyens.map((m, j) => (j === i ? { ...m, ...x } : m)));
+  const basculer = (i, dev) => { const d = moyens[i].devises || []; maj(i, { devises: d.includes(dev) ? d.filter((x) => x !== dev) : [...d, dev] }); };
+  const enregistrer = async () => {
+    try { const r = await ctx.api('POST', '/admin/paiements-mobiles', { moyens }); setMoyens(r.moyens); setMessage({ ok: true, texte: 'Numéros enregistrés' }); } catch (e) { setMessage({ ok: false, texte: e.message }); }
+  };
+  return (
+    <div className="carte pile" style={{ marginBottom: 14 }}>
+      <h3>Numéros de paiement mobile</h3>
+      <p className="petit muet">Orange Money, Wave, MTN MoMo… Les gérants des commerces dont la devise est cochée voient le numéro, leur prix dans leur devise et leur référence <b>KAISLO-code</b>, puis « J’ai payé » vous prévient par la messagerie (et par l’alerte sur votre téléphone). Quand l’argent arrive, enregistrez le paiement avec le moyen correspondant : la facture se crée toute seule.</p>
+      {message && <p className={message.ok ? 'info-verte' : 'alerte'}>{message.texte}</p>}
+      {(moyens || []).map((m, i) => (
+        <div key={i} className="groupe-edition pile">
+          <div className="grille-3">
+            <label className="champ"><span>Opérateur</span><select value={m.operateur} onChange={(e) => maj(i, { operateur: e.target.value })}>{operateurs.map((o) => <option key={o}>{o}</option>)}</select></label>
+            <label className="champ"><span>Numéro (avec l’indicatif)</span><input value={m.numero} onChange={(e) => maj(i, { numero: e.target.value })} placeholder="+225 07 00 00 00 00" /></label>
+            <label className="champ"><span>Au nom de (facultatif)</span><input value={m.titulaire || ''} onChange={(e) => maj(i, { titulaire: e.target.value })} maxLength={80} /></label>
+          </div>
+          <div className="ligne" style={{ gap: 10, flexWrap: 'wrap' }}>
+            <span className="petit muet">Commerces qui voient ce numéro (devise) :</span>
+            {DEVISES_COMPTES.map((d) => <label key={d} className="ligne petit" style={{ gap: 4 }}><input type="checkbox" checked={(m.devises || []).includes(d)} onChange={() => basculer(i, d)} /> {d}</label>)}
+          </div>
+          <label className="champ"><span>Note pour le client (facultatif)</span><input value={m.note || ''} onChange={(e) => maj(i, { note: e.target.value })} maxLength={200} placeholder="Ex : depuis un autre pays, vérifiez que votre opérateur permet l’envoi" /></label>
+          <button className="btn secondaire petit" onClick={() => setMoyens(moyens.filter((_, j) => j !== i))}>Retirer ce numéro</button>
+        </div>
+      ))}
+      <div className="grille-2">
+        {moyens && moyens.length < 8 && <button className="btn secondaire" onClick={() => setMoyens([...moyens, { operateur: operateurs[0] || 'Orange Money', numero: '', titulaire: '', devises: ['FCFA'], note: '' }])}>+ Ajouter un numéro</button>}
+        <button className="btn" onClick={enregistrer} disabled={!moyens}>Enregistrer les numéros</button>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Comptes bancaires pour les virements (affichés aux gérants : Compte → Abonnement → Payer par virement) ----------
 const DEVISES_COMPTES = ['EUR', 'MAD', 'USD', 'CAD', 'FCFA', 'GNF'];
 function ComptesVirement({ ctx }) {
@@ -696,6 +735,7 @@ function VueTarifs({ ctx }) {
       </EnTeteAdmin>
       <div className="contenu" style={{ maxWidth: 960 }}>
         {message && <p className={message.ok ? 'info-verte' : 'alerte'} style={{ marginBottom: 14 }}>{message.texte}</p>}
+        <MoyensMobiles ctx={ctx} />
         <ComptesVirement ctx={ctx} />
         <div className="carte pile" style={{ marginBottom: 14 }}>
           <h3>Taux de change</h3>
