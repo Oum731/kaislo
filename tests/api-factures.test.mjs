@@ -1,8 +1,8 @@
-// Tests des factures d'abonnement (Amorac → abonnés) : une par paiement, numéros sans trou, TVA selon le pays, droits, paiements anciens.
+// Tests des factures d'abonnement (Amorac → abonnés) : une par paiement, numéros sans trou, TVA selon le pays, droits, paiement groupé.
 // Lancer : npm test (PHP 8.1 ou plus doit être installé)
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -24,7 +24,6 @@ async function api(methode, chemin, corps, jeton) {
   });
   return { statut: r.status, ...(await r.json()) };
 }
-const sql = (requete) => execFileSync('php', ['-r', `$p = new PDO('sqlite:${fichierBase}'); $p->exec(${JSON.stringify(requete)});`]);
 const inscrire = (nom, tel, pays, ville) => api('POST', '/inscription', {
   commerce: { nom, type: 'epicerie', pays, ville, quartier: 'Centre', telephone: tel },
   gerant: { nom: 'Gérant ' + nom, telephone: tel.replace(/.$/, '9'), pin: '1234' }, conditionsAcceptees: true,
@@ -82,7 +81,7 @@ test('numéros sans trou et sans doublon, une facture par paiement', async () =>
   assert.ok(m.commerce.abonnement.paiements.every((p) => /^FAC-/.test(p.facture)));
 });
 
-test('un gérant ne voit que ses factures ; le support lit mais ne crée pas', async () => {
+test('un gérant ne voit que ses factures ; le support lit', async () => {
   const deMaroc = await api('GET', '/factures', null, maroc.jeton);
   assert.equal(deMaroc.factures.length, 2);
   assert.ok(deMaroc.factures.every((f) => f.commerceId === maroc.commerce.id));
@@ -90,22 +89,13 @@ test('un gérant ne voit que ses factures ; le support lit mais ne crée pas', a
   assert.equal((await api('GET', '/factures')).statut, 401);
   assert.equal((await api('GET', '/admin/factures', null, maroc.jeton)).statut, 401);
   assert.equal((await api('GET', '/admin/factures', null, support)).ok, true);
-  assert.equal((await api('POST', '/admin/facture', { paiementId: 'x' }, support)).statut, 403);
   const filtre = await api('GET', `/admin/factures?commerceId=${ivoire.commerce.id}`, null, admin);
   assert.equal(filtre.factures.length, 1);
 });
 
-test('paiement d’avant les factures : la facture se crée à la demande, une seule fois, avec le numéro suivant', async () => {
-  const fiche = await api('GET', '/admin/commerces', null, admin);
-  const p = fiche.commerces.find((x) => x.commerce.id === ivoire.commerce.id).commerce.abonnement.paiements[0];
-  sql(`DELETE FROM factures WHERE paiement_id = '${p.id}'`);
-  const premiere = await api('POST', '/admin/facture', { paiementId: p.id }, admin);
-  assert.equal(premiere.statut, 201, JSON.stringify(premiere));
-  assert.equal(premiere.facture.numero, `FAC-${annee}-0004`); // suite après le plus grand numéro déjà émis
-  const seconde = await api('POST', '/admin/facture', { paiementId: p.id }, admin);
-  assert.equal(seconde.statut, 200);
-  assert.equal(seconde.facture.numero, premiere.facture.numero);
-  assert.equal((await api('POST', '/admin/facture', { paiementId: 'inconnu' }, admin)).statut, 404);
+test('il n’existe aucun moyen de créer une facture à la main : seul l’enregistrement d’un paiement en crée', async () => {
+  assert.equal((await api('POST', '/admin/facture', { paiementId: 'x' }, admin)).statut, 404);
+  assert.equal((await api('POST', '/factures', { paiementId: 'x' }, maroc.jeton)).statut, 404);
 });
 
 test('l’émetteur de la facture est celui de src/config.js', () => {

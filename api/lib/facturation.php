@@ -11,7 +11,6 @@
 //
 //   GET  /api/factures                          les factures du commerce (gérant)
 //   GET  /api/admin/factures[?commerceId=…]     toutes les factures, ou celles d'un commerce (équipe Amorac)
-//   POST /api/admin/facture   { paiementId }    crée la facture d'un paiement qui n'en a pas (paiements d'avant les factures)
 // ------------------------------------------------------------
 
 // Émetteur (même contenu que SOCIETE dans src/config.js : un test le vérifie)
@@ -125,26 +124,4 @@ function routeAdminFactures(): never
     $commerceId = (string) ($_GET['commerceId'] ?? '');
     $lignes = requete('SELECT * FROM factures' . ($commerceId !== '' ? ' WHERE commerce_id = ?' : '') . ' ORDER BY date DESC LIMIT 1000', $commerceId !== '' ? [$commerceId] : [])->fetchAll();
     repondre(['ok' => true, 'factures' => array_map('versFacture', $lignes)]);
-}
-
-function routeAdminCreerFacture(): never
-{
-    $admin = adminConnecte(true);
-    $paiementId = (string) (entree()['paiementId'] ?? '');
-    $p = requete('SELECT * FROM paiements WHERE id = ?', [$paiementId])->fetch();
-    if (!$p) throw new ErreurApi('Paiement introuvable', 404);
-    $c = requete('SELECT * FROM commerces WHERE id = ?', [$p['commerce_id']])->fetch();
-    if (!$c) throw new ErreurApi('Commerce introuvable', 404);
-    $deja = (bool) requete('SELECT 1 FROM factures WHERE paiement_id = ?', [$paiementId])->fetch();
-    $pdo = base();
-    $pdo->beginTransaction();
-    try {
-        $f = creerFacturePaiement($c, $p, json_decode($p['details'] ?? '{}', true) ?: [], null, $admin['email']);
-        $pdo->commit();
-    } catch (Throwable $err) {
-        $pdo->rollBack();
-        throw $err;
-    }
-    if (!$deja) journaliser($c['id'], $admin['id'], 'amorac-facture', ['numero' => $f['numero'], 'paiement' => $paiementId, 'par' => $admin['email']]);
-    repondre(['ok' => true, 'facture' => $f], $deja ? 200 : 201);
 }

@@ -17,7 +17,7 @@
 //   POST /api/contact       message d'un visiteur du site (voir lib/contact.php)
 //   GET /api/parrainage     parrainage entre commerçants : code, filleuls, mois gagnés (voir lib/parrainage.php)
 //   GET/POST /api/avis      avis des gérants sur Kaislo, publiés après validation (voir lib/avis.php)
-//   GET /api/factures, GET /api/admin/factures, POST /api/admin/facture   factures d'abonnement émises par Amorac (voir lib/facturation.php)
+//   GET /api/factures, GET /api/admin/factures   factures d'abonnement émises par Amorac (voir lib/facturation.php)
 //   GET/POST /api/admin/retours   carnet des retours utilisateurs de l'équipe Amorac (voir lib/retours.php)
 //   GET  /api/tarifs        formules et règles en vigueur (voir lib/tarifs.php)
 //   GET  /api/pays          pays du visiteur d'après son adresse IP (voir lib/pays.php)
@@ -121,7 +121,6 @@ try {
         'GET /admin/avis' => routeAdminAvis(),
         'POST /admin/avis' => routeAdminAvisModerer(),
         'GET /admin/factures' => routeAdminFactures(),
-        'POST /admin/facture' => routeAdminCreerFacture(),
         'GET /admin/retours' => routeAdminRetoursLire(),
         'POST /admin/retours' => routeAdminRetoursEcrire(),
         'GET /admin/contacts' => routeAdminContacts(),

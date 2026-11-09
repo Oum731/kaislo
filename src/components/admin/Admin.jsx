@@ -771,24 +771,18 @@ function VueEquipe({ ctx }) {
   );
 }
 
-// Facture d'un paiement : télécharge le PDF ; sans facture (paiement d'avant les factures), un administrateur peut la créer
+// Facture d'un paiement (créée toute seule à l'enregistrement du paiement) : télécharge le PDF
 function BoutonFacture({ p, ctx, commerceId }) {
   const [enCours, setEnCours] = useState(false);
+  if (!p.facture) return null; // paiement enregistré avant les factures : pas de facture
   const agir = async () => {
     setEnCours(true);
     try {
-      let f;
-      if (p.facture) f = (await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId))).factures.find((x) => x.numero === p.facture);
-      else {
-        if (!window.confirm('Créer la facture de ce paiement ? Elle prendra le prochain numéro et la date d’aujourd’hui.')) return;
-        f = (await ctx.api('POST', '/admin/facture', { paiementId: p.id })).facture;
-        await ctx.recharger();
-      }
+      const f = (await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId))).factures.find((x) => x.numero === p.facture);
       if (f) await telechargerFacture(f);
-    } catch (e) { window.alert(e.message || 'Impossible de créer la facture'); } finally { setEnCours(false); }
+    } catch (e) { window.alert(e.message || 'Impossible de créer le PDF'); } finally { setEnCours(false); }
   };
-  if (!p.facture && !ctx.estAdmin) return <span className="tres-petit muet">sans facture</span>;
-  return <button className="btn secondaire petit" onClick={agir} disabled={enCours}>{p.facture ? 'Facture ' + p.facture : 'Créer la facture'}</button>;
+  return <button className="btn secondaire petit" onClick={agir} disabled={enCours}>{'Facture ' + p.facture}</button>;
 }
 
 // ---------- Fiche d'un commerce : abonnement, paiements, suspension, numéro, équipe ----------
