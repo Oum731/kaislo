@@ -14,6 +14,7 @@ import { Icone, Segment } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import InvitationAvis from '../InvitationAvis';
 import ResumeDuJour from '../ResumeDuJour';
+import { BandeauFacture } from '../feuilles/FeuilleFactures';
 import { etatAbonnement } from '@/lib/donnees/abonnement';
 import { CONTACT_WHATSAPP } from '@/config';
 import { tr, tt } from '@/lib/i18n';
@@ -49,6 +50,7 @@ export default function Accueil() {
       <EnTete surTitre={formatJourLong(new Date()) + ' · ' + d.commerce.nom} titre={tr('Bonjour, {0}', [prenom])} avecLogo />
       <div className="contenu">
         <BandeauAbonnement />
+        <BandeauFacture />
         <PremiersPas />
         <InvitationAvis />
         {gerant && (
