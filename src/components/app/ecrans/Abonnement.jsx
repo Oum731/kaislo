@@ -54,6 +54,13 @@ export default function AbonnementCommerce() {
         </div>
         <span className={`badge ${classe}`}>{tr(LIBELLES_STATUT[etat.statut])}</span>
       </div>
+      {ab?.provisoire && etat.statut !== 'suspendu' && (
+        <p className={etat.statut === 'expire' ? 'alerte petit' : 'astuce petit'}>
+          {etat.statut === 'expire'
+            ? tr('Abonnement non payé : rapports, exports, nouveaux articles et vendeurs et validation des commandes sont suspendus jusqu’au paiement. La caisse reste utilisable.')
+            : tr('Activation provisoire : payez avant le {0}, sinon certaines fonctions seront suspendues.', [formatDate(etat.fin)])}
+        </p>
+      )}
       {tarif && (
         <div className="grille-2">
           <div>

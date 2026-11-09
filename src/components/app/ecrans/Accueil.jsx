@@ -16,6 +16,7 @@ import InvitationAvis from '../InvitationAvis';
 import ResumeDuJour from '../ResumeDuJour';
 import { BandeauFacture } from '../feuilles/FeuilleFactures';
 import { etatAbonnement } from '@/lib/donnees/abonnement';
+import { estServeur } from '@/lib/donnees/synchro';
 import { CONTACT_WHATSAPP } from '@/config';
 import { tr, tt } from '@/lib/i18n';
 
@@ -242,20 +243,40 @@ function Classement({ titre, liste, suffixe }) {
   );
 }
 
-// Les 4 premières étapes d'un nouveau commerce
-// Essai gratuit en cours, ou abonnement terminé
+// Essai gratuit en cours, activation provisoire (à payer avant la date) ou abonnement non payé
 function BandeauAbonnement() {
   const s = useKaislo();
-  const etat = etatAbonnement(s.d.commerce.abonnement);
-  if (etat.statut === 'actif' || etat.statut === 'suspendu') return null;
+  const [attente, setAttente] = useState(false);
+  const ab = s.d.commerce.abonnement;
+  const etat = etatAbonnement(ab);
+  if (etat.statut === 'suspendu') return null;
+  const gerant = s.estGerant();
+  const serveur = estServeur(s.d);
+  const provisoire = etat.statut === 'actif' && ab?.provisoire;
+  if (etat.statut === 'actif' && !provisoire) return null;
   const expire = etat.statut === 'expire';
   const lien = 'https://wa.me/' + CONTACT_WHATSAPP + '?text=' + encodeURIComponent(tr('Bonjour, je souhaite activer mon abonnement Kaislo pour « {0} » (code {1}).', [s.d.commerce.nom, s.d.commerce.code]));
+  const activer = async () => {
+    setAttente(true);
+    const err = await s.activerAbonnement();
+    setAttente(false);
+    if (err) s.message(err, 'erreur');
+  };
+  let texte;
+  if (provisoire) texte = tr('Abonnement activé : payez avant le {0} pour continuer sans limite.', [formatDate(etat.fin)]);
+  else if (expire && ab?.provisoire) texte = tr('Abonnement non payé : rapports, exports, nouveaux articles et vendeurs et validation des commandes sont suspendus. Payez pour tout retrouver.');
+  else if (expire) texte = tr('Votre période d’essai est terminée. Activez votre abonnement pour continuer sereinement.');
+  else texte = tr('Essai gratuit : encore {0} jour{1}.', [etat.joursRestants, etat.joursRestants > 1 ? 's' : '']);
   return (
     <div className={expire ? 'alerte ligne' : 'astuce ligne'} style={{ marginBottom: 16, maxWidth: 720, flexWrap: 'wrap' }}>
-      <span className="grandit">
-        {expire ? tr('Votre période d’essai est terminée. Activez votre abonnement pour continuer sereinement.') : tr('Essai gratuit : encore {0} jour{1}.', [etat.joursRestants, etat.joursRestants > 1 ? 's' : ''])}
-      </span>
-      <a className="btn petit" href={lien} target="_blank" rel="noreferrer">{tr('Activer l’abonnement')}</a>
+      <span className="grandit">{texte}</span>
+      {gerant && serveur && !s.estDemoActuel() && (provisoire || (expire && ab?.provisoire)) && (
+        <button className="btn petit" onClick={() => s.ouvrir('virement')}>{tr('Payer maintenant')}</button>
+      )}
+      {gerant && serveur && !s.estDemoActuel() && !provisoire && !(expire && ab?.provisoire) && (
+        <button className="btn petit" disabled={attente} onClick={expire ? activer : () => s.ouvrir('virement')}>{tr('Activer l’abonnement')}</button>
+      )}
+      {!(gerant && serveur) && <a className="btn petit" href={lien} target="_blank" rel="noreferrer">{tr('Activer l’abonnement')}</a>}
     </div>
   );
 }

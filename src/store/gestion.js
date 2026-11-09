@@ -21,6 +21,7 @@ import { articlesAPublier } from '@/lib/donnees/boutique.js';
 import { ligneJournal, ajouterAuJournal } from '@/lib/donnees/journal.js';
 import { verifierSauvegarde, appliquerSauvegarde, garderCopie } from '@/lib/donnees/sauvegarde.js';
 import { creerAchat, creerReglement } from '@/lib/donnees/achats.js';
+import { abonnementLimite } from '@/lib/donnees/abonnement.js';
 import { tr } from '@/lib/i18n';
 
 const nombre = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
@@ -259,11 +260,37 @@ export const trancheGestion = (set, get) => ({
     get().majDonnees((d) => ({ utilisateurs: d.utilisateurs.map((x) => (x.id === id ? { ...x, actif: !x.actif } : x)) }));
   },
 
+  // ---------- Abonnement non payé ----------
+  // Vrai (avec un message) si le délai pour payer est passé : à appeler avant une action suspendue. La caisse n'est jamais bloquée.
+  limiteSiImpaye(action) {
+    if (!abonnementLimite(get().d)) return false;
+    get().message(tr('Abonnement non payé : payez-le pour {0}.', [action]), 'erreur');
+    if (get().estGerant()) get().ouvrir('virement');
+    return true;
+  },
+
+  // Le gérant active son abonnement tout de suite ; il a quelques jours pour payer. Renvoie un message d'erreur, ou null
+  async activerAbonnement() {
+    try {
+      const rep = await appelApi('POST', '/abonnement/activer', {}, get().jetonServeur());
+      const d = get().d;
+      const nouveau = { ...d, commerce: { ...d.commerce, abonnement: { ...(d.commerce.abonnement || {}), ...rep.commerce.abonnement, paiements: d.commerce.abonnement?.paiements || [] } } };
+      enregistrerCommerce(nouveau);
+      set({ d: nouveau });
+      get().message(tr('Abonnement activé : vous avez {0} jours pour payer.', [rep.jours]));
+      get().ouvrir('virement');
+      return null;
+    } catch (e) {
+      return e.horsLigne ? tr('Connexion internet nécessaire pour activer l’abonnement') : e.message;
+    }
+  },
+
   // ---------- Postes (points d'impression) ----------
   // Renvoie un message d'erreur, ou null
   enregistrerPoste(b) {
     const nom = (b.nom || '').trim();
     if (!nom) return tr('Donnez un nom au poste (ex : Comptoir, Terrasse, Comptoir 2)');
+    if (!b.id && get().limiteSiImpaye(tr('ajouter un poste'))) return tr('Abonnement non payé');
     const actuels = postesDe(get().d);
     if (actuels.some((p) => p.id !== b.id && p.nom.toLowerCase() === nom.toLowerCase())) return tr('Un poste porte déjà ce nom');
     get().majDonnees((d) => {

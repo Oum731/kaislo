@@ -290,6 +290,16 @@ Le gérant d'un commerce en ligne ouvre Réglages → Profil → Abonnement → 
 - L'équipe enregistre ensuite le paiement (moyen « Orange Money », « Virement »…) : la facture se crée toute seule et le gérant est prévenu. API : `GET /api/paiement-virement` (comptes + numéros mobiles du gérant), `GET/POST /api/admin/paiements-mobiles` (`api/lib/virement.php`). Test : `tests/api-paiement-mobile.test.mjs`.
 - **À décider** (voir échanges avec le comptable) : devise de la facture quand l'argent arrive en dirhams sur un compte unique alors que le commerce est en FCFA ; TVA des prestations à l'étranger si l'encaissement n'est pas en devises.
 
+## Activation provisoire de l'abonnement
+
+Quand l'essai ou la période payée est terminé, le gérant touche **Activer l'abonnement** (Accueil) : l'abonnement est actif tout de suite pour **5 jours** (réglable : Espace Kaislo → Tarifs → « Jours pour payer »). L'écran de paiement (mobile money, virement) s'ouvre ; l'équipe reçoit une alerte (e-mail + notification).
+
+- Sans paiement enregistré avant la fin, l'abonnement se désactive tout seul (la date de fin passe, aucune tâche planifiée).
+- **Une seule fois, puis seulement après un paiement** : une deuxième activation est refusée tant qu'aucun paiement n'a eu lieu depuis la dernière. Pas d'activation pendant l'essai ni sur un commerce suspendu.
+- Un paiement enregistré fait démarrer la période payée à cet instant (le provisoire déjà écoulé n'est pas déduit) et retire la marque « provisoire ».
+- Délai passé sans paiement, sont suspendus : rapports et exports Excel/PDF/CSV (la sauvegarde complète reste permise), résumé du soir et notifications, nouveaux vendeurs / postes / articles / import, validation et modification des commandes en ligne (refuser reste possible), boutique en ligne fermée tout de suite. **La caisse reste utilisable** ; la synchronisation entre appareils se ferme 7 jours après (inchangé).
+- Code : `api/lib/activation.php` (`POST /api/abonnement/activer`, `abonnementTermine`, `exigerAbonnementPaye`), `abonnementLimite` côté application. Base : version 28 (`periode_provisoire`, `activation_provisoire_le`).
+
 ## Factures d'abonnement (Amorac → ses abonnés)
 
 Chaque paiement d'abonnement enregistré dans l'Espace Amorac donne une **facture acquittée** : numéro sans trou `FAC-2026-0001` (une suite par année, tous pays confondus), émetteur Amorac (forme « SARL » sans le capital, siège, RC, ICE, IF, TP), client (commerce, gérant, adresse, pays), désignation (formule, durée, postes), période couverte, HT / TVA / TTC, moyen et date de paiement.
