@@ -2310,4 +2310,12 @@ export const EN = {
   "Code QR {0}": "{0} QR code",
   "Scannez ce code avec l’application {0} pour payer, puis saisissez le montant de votre formule : {1} par mois ou {2} à l’année.": "Scan this code with the {0} app to pay, then enter the amount of your plan: {1} per month or {2} per year.",
   "Sur ce même téléphone, vous ne pouvez pas scanner votre propre écran : ouvrez ce code sur un autre écran, ou écrivez-nous (écran Aide) pour recevoir un lien de paiement.": "On this same phone you cannot scan your own screen: open this code on another screen, or write to us (Help screen) to get a payment link.",
+  "1 mois": "1 month",
+  "12 mois": "12 months",
+  "Code QR {0} avec le montant": "{0} QR code with the amount",
+  "Scannez ce code avec l’application {0} : le montant de votre formule ({1}) s’affiche tout seul. Vérifiez-le avant de confirmer.": "Scan this code with the {0} app: the amount of your plan ({1}) appears by itself. Check it before confirming.",
+  "Sur ce téléphone : payer {0} avec {1}": "On this phone: pay {0} with {1}",
+  "Sur ce même téléphone, vous ne pouvez pas scanner votre propre écran : touchez le bouton ci-dessus.": "On this same phone you cannot scan your own screen: tap the button above.",
+  "Le montant ne s’affiche pas ? Utiliser le code fixe": "Amount not showing? Use the fixed code",
+  "Scannez ce code, puis saisissez {0} vous-même.": "Scan this code, then enter {0} yourself.",
 };

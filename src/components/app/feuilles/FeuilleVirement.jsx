@@ -10,6 +10,7 @@ import { Feuille, Icone } from '@/components/ui';
 import { appelApi } from '@/lib/api';
 import { symbole } from '@/lib/utils/format';
 import { chemin } from '@/config';
+import { qrDataUrl } from '@/lib/qr';
 import { tr } from '@/lib/i18n';
 
 const montant = (x, devise) => Math.round(x).toLocaleString('fr-FR').replace(/[  ]/g, ' ') + ' ' + symbole(devise);
@@ -23,6 +24,47 @@ function Ligne({ libelle, valeur, copie, surCopier }) {
         <b style={{ wordBreak: 'break-all' }}>{valeur}</b>
       </span>
       {surCopier && <button className="btn secondaire petit" onClick={surCopier}>{copie ? tr('Copié') : tr('Copier')}</button>}
+    </div>
+  );
+}
+
+// Code QR de paiement d'un moyen mobile :
+//  - lien de paiement (Wave) : un code créé ici avec le montant de la formule (1 mois ou 12 mois) : le montant s'affiche tout seul à l'ouverture dans l'application ;
+//    sur téléphone, on ne peut pas scanner son propre écran : le bouton ouvre le même lien d'un geste. Le code fixe (sans montant) reste en secours ;
+//  - sinon, code fixe (image du site) : le gérant saisit le montant de sa formule.
+function BlocPaiementQr({ m }) {
+  const [mois, setMois] = useState(1);
+  const liens = m.liens || [];
+  const lien = liens.find((l) => l.mois === mois) || liens[0];
+  const image = (src, alt) => <img src={src} alt={alt} width={240} height={240} style={{ maxWidth: '100%', height: 'auto', borderRadius: 12, border: '1px solid rgba(0,0,0,.12)', background: '#fff' }} />;
+  if (lien) {
+    return (
+      <div className="pile" style={{ alignItems: 'center', gap: 8 }}>
+        <div className="puces" style={{ justifyContent: 'center' }}>
+          {liens.map((l) => <button key={l.mois} className={`puce ${l.mois === lien.mois ? 'actif' : ''}`} onClick={() => setMois(l.mois)}>{l.mois === 1 ? tr('1 mois') : tr('12 mois')} · {montant(l.montant, m.devise)}</button>)}
+        </div>
+        {image(qrDataUrl(lien.url), tr('Code QR {0} avec le montant', [m.operateur]))}
+        <p className="petit" style={{ textAlign: 'center' }}>{tr('Scannez ce code avec l’application {0} : le montant de votre formule ({1}) s’affiche tout seul. Vérifiez-le avant de confirmer.', [m.operateur, montant(lien.montant, m.devise)])}</p>
+        <a className="btn bloc" href={lien.url} target="_blank" rel="noreferrer"><Icone nom="billet" /> {tr('Sur ce téléphone : payer {0} avec {1}', [montant(lien.montant, m.devise), m.operateur])}</a>
+        <p className="tres-petit muet" style={{ textAlign: 'center' }}>{tr('Sur ce même téléphone, vous ne pouvez pas scanner votre propre écran : touchez le bouton ci-dessus.')}</p>
+        {m.qr && (
+          <details style={{ width: '100%' }}>
+            <summary className="petit muet" style={{ cursor: 'pointer', textAlign: 'center' }}>{tr('Le montant ne s’affiche pas ? Utiliser le code fixe')}</summary>
+            <div className="pile" style={{ alignItems: 'center', gap: 8, marginTop: 8 }}>
+              {image(chemin(m.qr), tr('Code QR {0}', [m.operateur]))}
+              <p className="tres-petit muet" style={{ textAlign: 'center' }}>{tr('Scannez ce code, puis saisissez {0} vous-même.', [montant(lien.montant, m.devise)])}</p>
+            </div>
+          </details>
+        )}
+      </div>
+    );
+  }
+  if (!m.qr) return null;
+  return (
+    <div className="pile" style={{ alignItems: 'center', gap: 8 }}>
+      {image(chemin(m.qr), tr('Code QR {0}', [m.operateur]))}
+      <p className="petit" style={{ textAlign: 'center' }}>{tr('Scannez ce code avec l’application {0} pour payer, puis saisissez le montant de votre formule : {1} par mois ou {2} à l’année.', [m.operateur, montant(m.parMois, m.devise), montant(m.annuel, m.devise)])}</p>
+      <p className="tres-petit muet" style={{ textAlign: 'center' }}>{tr('Sur ce même téléphone, vous ne pouvez pas scanner votre propre écran : ouvrez ce code sur un autre écran, ou écrivez-nous (écran Aide) pour recevoir un lien de paiement.')}</p>
     </div>
   );
 }
@@ -80,23 +122,7 @@ export function FeuilleVirement() {
                   <span className="badge safran">{montant(m.parMois, m.devise)} {tr('par mois')}</span>
                 </div>
                 <p className="petit muet">{tr('À l’année : {0} ({1} mois offerts).', [montant(m.annuel, m.devise), 2])}</p>
-                {m.qr && (
-                  <div className="pile" style={{ alignItems: 'center', gap: 8 }}>
-                    <img src={chemin(m.qr)} alt={tr('Code QR {0}', [m.operateur])} width={240} height={240} style={{ maxWidth: '100%', height: 'auto', borderRadius: 12, border: '1px solid rgba(0,0,0,.12)', background: '#fff' }} />
-                    <p className="petit" style={{ textAlign: 'center' }}>{tr('Scannez ce code avec l’application {0} pour payer, puis saisissez le montant de votre formule : {1} par mois ou {2} à l’année.', [m.operateur, montant(m.parMois, m.devise), montant(m.annuel, m.devise)])}</p>
-                    <p className="tres-petit muet" style={{ textAlign: 'center' }}>{tr('Sur ce même téléphone, vous ne pouvez pas scanner votre propre écran : ouvrez ce code sur un autre écran, ou écrivez-nous (écran Aide) pour recevoir un lien de paiement.')}</p>
-                  </div>
-                )}
-                {(m.liens || []).length > 0 && (
-                  <div className="pile" style={{ gap: 8 }}>
-                    {m.liens.map((l) => (
-                      <a key={l.mois} className={l.mois === 1 ? 'btn bloc' : 'btn secondaire bloc'} href={l.url} target="_blank" rel="noreferrer">
-                        <Icone nom="billet" /> {l.mois === 1 ? tr('Payer {0} avec {1} (1 mois)', [montant(l.montant, m.devise), m.operateur]) : tr('Payer {0} avec {1} (12 mois)', [montant(l.montant, m.devise), m.operateur])}
-                      </a>
-                    ))}
-                    <p className="tres-petit muet">{tr('Le lien s’ouvre dans l’application {0} avec le montant de votre formule. Vérifiez-le avant de confirmer.', [m.operateur])}</p>
-                  </div>
-                )}
+                <BlocPaiementQr m={m} />
                 {m.numero && <Ligne libelle={m.liens?.length ? tr('Ou envoyez au numéro') : tr('Envoyez au numéro')} valeur={m.numero} copie={copie === 'num' + i} surCopier={() => copier('num' + i, m.numero)} />}
                 {m.titulaire && <Ligne libelle={tr('Au nom de')} valeur={m.titulaire} />}
                 <Ligne libelle={tr('Référence à indiquer si possible')} valeur={r.reference} copie={copie === 'refm' + i} surCopier={() => copier('refm' + i, r.reference)} />

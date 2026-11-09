@@ -51,11 +51,13 @@ test('par défaut : Orange Money et le code QR Wave pour la Côte d’Ivoire, av
   assert.equal(orange.qr, '/paiement/orange-money.png');
   assert.equal(orange.devise, 'FCFA');
   assert.ok(orange.parMois > 0 && orange.annuel > orange.parMois);
-  // Wave : le code QR (image du site) remplace le lien ; le titulaire est affiché
+  // Wave : le lien reçoit le montant de la formule (1 mois, 12 mois) : l'application en tire un code QR qui remplit le montant au scan ; le code fixe reste en secours
   assert.equal(wave.titulaire, 'Traoreservice');
   assert.equal(wave.qr, '/paiement/wave.png');
-  assert.deepEqual(wave.liens, []);
-  assert.equal(wave.lien, undefined);
+  assert.deepEqual(wave.liens.map((l) => l.mois), [1, 12]);
+  assert.equal(wave.liens[0].url, `https://pay.wave.com/m/M_ci_9JyOKoTX4xvQ/c/ci/?amount=${wave.parMois}`);
+  assert.equal(wave.liens[1].url, `https://pay.wave.com/m/M_ci_9JyOKoTX4xvQ/c/ci/?amount=${wave.annuel}`);
+  assert.equal(wave.lien, undefined); // le gérant reçoit les liens calculés, pas le modèle
   assert.match(r.reference, /^KAISLO-\d{6}$/);
   // Pays où ces moyens n'existent pas : aucun moyen mobile (le virement reste affiché par l'application)
   assert.deepEqual((await api('GET', '/paiement-virement', null, maroc.jeton)).mobiles, []);
