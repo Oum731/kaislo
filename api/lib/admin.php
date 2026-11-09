@@ -135,9 +135,11 @@ function resumesCommerces(?string $seulId = null): array
         $ca[$l['commerce_id']]['ca'] = ($ca[$l['commerce_id']]['ca'] ?? 0) + (float) ($v['total'] ?? 0);
         $ca[$l['commerce_id']]['tickets'] = ($ca[$l['commerce_id']]['tickets'] ?? 0) + 1;
     }
+    $facturesDe = []; // paiement -> numéro de facture
+    foreach (requete('SELECT paiement_id, numero FROM factures' . ($seulId ? ' WHERE commerce_id = ?' : ''), $seulId ? [$seulId] : [])->fetchAll() as $f) $facturesDe[$f['paiement_id']] = $f['numero'];
     $paiements = [];
     foreach (requete('SELECT * FROM paiements' . ($seulId ? ' WHERE commerce_id = ?' : '') . ' ORDER BY date', $seulId ? [$seulId] : [])->fetchAll() as $p) {
-        $paiements[$p['commerce_id']][] = ['id' => $p['id'], 'date' => $p['date'], 'montant' => (float) $p['montant'], 'devise' => $p['devise'], 'mois' => (int) $p['mois'], 'moyen' => $p['moyen'], 'note' => $p['note'], 'creePar' => $p['cree_par'], 'postes' => (int) ($p['postes'] ?? 1), 'details' => json_decode($p['details'] ?? '{}', true) ?: []];
+        $paiements[$p['commerce_id']][] = ['id' => $p['id'], 'date' => $p['date'], 'montant' => (float) $p['montant'], 'devise' => $p['devise'], 'mois' => (int) $p['mois'], 'moyen' => $p['moyen'], 'note' => $p['note'], 'creePar' => $p['cree_par'], 'postes' => (int) ($p['postes'] ?? 1), 'details' => json_decode($p['details'] ?? '{}', true) ?: [], 'facture' => $facturesDe[$p['id']] ?? null];
     }
     $gerants = [];
     $groupes = []; // numéro du gérant -> commerces qu'il gère
@@ -328,14 +330,17 @@ function enregistrerPaiement(array $admin, array $e): array
         json_encode($details, JSON_UNESCAPED_UNICODE),
     ]);
     // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
+    $finPeriode = prolongerDate($debut, $joursPayes);
     requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, jours_offerts = 0, modifie_le = ? WHERE id = ?", [
-        $formule['id'], prolongerDate($debut, $joursPayes), maintenant(), $c['id'],
+        $formule['id'], $finPeriode, maintenant(), $c['id'],
     ]);
+    // Facture acquittée de ce paiement (numéro sans trou, voir lib/facturation.php)
+    $facture = creerFacturePaiement($c, ['id' => $idPaiement, 'montant' => $montant, 'devise' => $c['devise'], 'mois' => $mois, 'postes' => $postes, 'moyen' => $moyen, 'date' => maintenant()], $details, ['du' => $debut ?? maintenant(), 'au' => $finPeriode], $admin['email']);
     // Commissions du commercial qui a apporté ce commerce
     if (!empty($c['commercial_id'])) creerCommissions($c, $idPaiement, $montant, $mois);
     // Parrainage entre commerçants : au premier paiement du filleul, le parrain gagne ses jours offerts
     recompenserParrain($c);
-    return ['commerce' => $c, 'montant' => $montant, 'mois' => $mois, 'postes' => $postes, 'formule' => $formule];
+    return ['commerce' => $c, 'montant' => $montant, 'mois' => $mois, 'postes' => $postes, 'formule' => $formule, 'facture' => $facture];
 }
 
 function journaliserPaiement(array $admin, array $r): void

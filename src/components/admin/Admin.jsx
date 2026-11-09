@@ -21,6 +21,7 @@ import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixListeFormule,
 import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
 import VueCommerciaux from './Commerciaux';
+import { telechargerFacture } from '@/lib/export/telecharger-facture';
 import { VueRetours, RetoursCommerce } from './Retours';
 
 const JOUR = 86400000;
@@ -770,6 +771,20 @@ function VueEquipe({ ctx }) {
   );
 }
 
+// Facture d'un paiement (créée toute seule à l'enregistrement du paiement) : télécharge le PDF
+function BoutonFacture({ p, ctx, commerceId }) {
+  const [enCours, setEnCours] = useState(false);
+  if (!p.facture) return null; // paiement enregistré avant les factures : pas de facture
+  const agir = async () => {
+    setEnCours(true);
+    try {
+      const f = (await ctx.api('GET', '/admin/factures?commerceId=' + encodeURIComponent(commerceId))).factures.find((x) => x.numero === p.facture);
+      if (f) await telechargerFacture(f);
+    } catch (e) { window.alert(e.message || 'Impossible de créer le PDF'); } finally { setEnCours(false); }
+  };
+  return <button className="btn secondaire petit" onClick={agir} disabled={enCours}>{'Facture ' + p.facture}</button>;
+}
+
 // ---------- Fiche d'un commerce : abonnement, paiements, suspension, numéro, équipe ----------
 function FicheCommerce({ c, ctx, fermer }) {
   const ab = c.commerce.abonnement || {};
@@ -975,9 +990,12 @@ function FicheCommerce({ c, ctx, fermer }) {
           <div className="carte">
             <h3>Historique des paiements</h3>
             {(ab.paiements || []).slice().reverse().map((p) => (
-              <div key={p.id} className="ligne espace petit" style={{ marginTop: 10 }}>
+              <div key={p.id} className="ligne espace petit" style={{ marginTop: 10, gap: 8, flexWrap: 'wrap' }}>
                 <span>{formatDate(p.date)} · {p.mois} mois · {p.postes || 1} poste(s) · {p.moyen || '—'}</span>
-                <b className="chiffre">{formatPrix(p.montant, p.devise)}</b>
+                <span className="ligne" style={{ gap: 8 }}>
+                  <b className="chiffre">{formatPrix(p.montant, p.devise)}</b>
+                  <BoutonFacture p={p} ctx={ctx} commerceId={c.id} />
+                </span>
               </div>
             ))}
             {!(ab.paiements || []).length && <p className="muet petit" style={{ marginTop: 10 }}>Aucun paiement.</p>}
