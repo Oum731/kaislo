@@ -1,6 +1,6 @@
 // ------------------------------------------------------------
-// RELANCES de l'équipe Amorac : à quel moment de l'essai écrire à un commerçant, et quel message envoyer sur WhatsApp.
-// Les messages sont proposés dans l'espace Amorac (tableau de bord et fiche d'un commerce) : l'équipe les relit, les adapte si besoin,
+// RELANCES de l'équipe Kaislo : à quel moment de l'essai écrire à un commerçant, et quel message envoyer sur WhatsApp.
+// Les messages sont proposés dans l'espace Kaislo (tableau de bord et fiche d'un commerce) : l'équipe les relit, les adapte si besoin,
 // et WhatsApp s'ouvre avec le texte déjà écrit. Rien n'est envoyé automatiquement.
 // Texte en français (espace réservé à l'équipe). Fonctions pures, testées dans tests/relances.test.mjs.
 // ------------------------------------------------------------
@@ -19,7 +19,7 @@ export const ETAPES = {
   'merci-avis': { titre: 'Merci, avis et parrainage', quand: 'Abonné satisfait (à envoyer à la main)' },
 };
 
-// Étape à proposer maintenant pour ce commerce (ligne de l'espace Amorac), ou null s'il n'y a rien à faire
+// Étape à proposer maintenant pour ce commerce (ligne de l'espace Kaislo), ou null s'il n'y a rien à faire
 export function etapeRelance(c, maintenant = Date.now()) {
   const statut = c.etat?.statut;
   if (!statut || statut === 'suspendu' || statut === 'actif') return null;

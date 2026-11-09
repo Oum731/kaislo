@@ -52,7 +52,7 @@ const SECTIONS = [
           {MESURE && <tr><td>kaislo-mesure</td><td>Se souvenir de votre réponse au bandeau de mesure (accepté ou refusé).</td><td>Jusqu’à suppression</td></tr>}
           {!!GOOGLE_ADS_ID && <tr><td>_gcl_aw, _gcl_au… (cookies, seulement si vous acceptez)</td><td>Mesure Google Ads : relier une inscription à la publicité sur laquelle vous avez cliqué.</td><td>Environ 90 jours</td></tr>}
           {!!FACEBOOK_PIXEL_ID && <tr><td>_fbp (cookie, seulement si vous acceptez)</td><td>Mesure Meta (Facebook et Instagram) : relier une inscription à la publicité sur laquelle vous avez cliqué. Le pixel n’enregistre ni vos clics sur les boutons ni le contenu des formulaires.</td><td>Environ 90 jours</td></tr>}
-          <tr><td>kaislo:admin-jeton</td><td>Session de l’espace Amorac (équipe Amorac uniquement).</td><td>Fermeture de l’onglet</td></tr>
+          <tr><td>kaislo:admin-jeton</td><td>Session de l’espace Kaislo (équipe Kaislo uniquement).</td><td>Fermeture de l’onglet</td></tr>
           <tr><td>kaislo:commercial-jeton</td><td>Session de l’espace des commerciaux Kaislo.</td><td>30 jours, ou « Sortir »</td></tr>
         </tbody>
       </table>

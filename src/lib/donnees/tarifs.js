@@ -4,7 +4,7 @@
 // plus le gérant. Au-delà de 5 vendeurs, il faut un poste de plus.
 //
 // Les mêmes valeurs existent côté serveur (api/lib/tarifs.php) : à garder identiques.
-// L'équipe Amorac peut modifier les prix dans l'espace Amorac → Tarifs.
+// L'équipe Kaislo peut modifier les prix dans l'espace Kaislo → Tarifs.
 // MAD et FCFA : grille officielle. EUR, CAD, USD, GNF : conversions arrondies (à confirmer).
 //
 // Les prix de la grille sont ceux des clients inscrits AVEC un code parrain (les tarifs actuels, inchangés).
@@ -16,7 +16,7 @@
 export const VENDEURS_PAR_POSTE = 5;
 
 // Taux de change de la grille : combien d'unités de chaque devise pour 1 euro (le FCFA est fixe : 655,957).
-// Changer un prix dans une devise recalcule les autres avec ces taux (espace Amorac → Tarifs).
+// Changer un prix dans une devise recalcule les autres avec ces taux (espace Kaislo → Tarifs).
 export const TAUX_CHANGE = { EUR: 1, FCFA: 655.957, MAD: 10.8, CAD: 1.5, USD: 1.1, GNF: 9840 };
 
 /**
@@ -82,7 +82,7 @@ export const FORMULES = [
   },
 ];
 
-// Règles communes (modifiables dans l'espace Amorac → Tarifs)
+// Règles communes (modifiables dans l'espace Kaislo → Tarifs)
 export const REGLES_TARIFS = {
   taux: TAUX_CHANGE, // devises pour 1 euro : une modification de prix dans une devise recalcule les autres
   moisOffertsAnnuel: 2, // paiement annuel : 12 mois pour le prix de 10

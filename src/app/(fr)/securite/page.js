@@ -37,7 +37,7 @@ const SECTIONS = [
         <li>Code de vérification par SMS ou WhatsApp lors de la connexion d’un nouvel appareil ; le gérant voit les appareils reliés et peut en retirer un.</li>
         <li>Séparation stricte des données entre commerces, contrôlée à chaque requête.</li>
         <li>Sauvegardes automatiques quotidiennes, conservées dans un lieu distinct.</li>
-        <li>Accès de l’équipe Amorac limité au strict nécessaire (support, abonnements), avec double authentification et journal des actions.</li>
+        <li>Accès de l’équipe Kaislo limité au strict nécessaire (support, abonnements), avec double authentification et journal des actions.</li>
         <li>Paiements traités par des prestataires agréés : nous ne voyons ni ne stockons les numéros de carte.</li>
       </ul>
     ),
@@ -52,7 +52,7 @@ const SECTIONS = [
         <li>Verrouillez le téléphone ou la tablette du commerce avec un code.</li>
         <li>Faites la fermeture de la journée chaque soir et regardez les écarts.</li>
         <li>Téléchargez régulièrement une copie de vos données (Réglages → Profil → Vos données).</li>
-        <li>Méfiez-vous des messages qui vous demandent votre code : l’équipe Amorac ne vous le demandera <b>jamais</b>.</li>
+        <li>Méfiez-vous des messages qui vous demandent votre code : l’équipe Kaislo ne vous le demandera <b>jamais</b>.</li>
       </ul>
     ),
   },

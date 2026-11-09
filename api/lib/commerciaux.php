@@ -4,7 +4,7 @@
 //
 // Chaque commercial a un code parrain, saisi à la création du compte d'un commerce
 // (ou dans le lien kaislo.com/app/?ref=CODE).
-// Règle (modifiable dans l'espace Amorac → Commerciaux → Règles) :
+// Règle (modifiable dans l'espace Kaislo → Commerciaux → Règles) :
 //  - 25 % de tout ce que paie le client pendant ses 12 premiers mois payés
 //    (formule et postes supplémentaires compris) ;
 //  - rien n'est payable avant la validation : 6 mois payés ET des ventes chaque semaine ;
@@ -17,7 +17,7 @@
 //
 // Une ligne de commission par mois payé : statut attente → a_payer → payee (ou annulee).
 //
-//   Espace Amorac (administrateurs) :
+//   Espace Kaislo (administrateurs) :
 //     GET  /api/admin/commerciaux                 liste, totaux, règles du programme
 //     GET  /api/admin/commercial?id=…             clients, contrôle de validation, commissions, primes
 //     POST /api/admin/commercial                  créer / modifier un commercial
@@ -251,7 +251,7 @@ function commercialParCode(string $saisie): ?array
     return $c;
 }
 
-// ---------- Espace Amorac ----------
+// ---------- Espace Kaislo ----------
 
 function routeAdminCommerciaux(): never
 {
@@ -418,7 +418,7 @@ function commercialConnecte(): array
     return $c;
 }
 
-// ---------- Inscription d'un commercial par lui-même (validée ensuite par l'équipe Amorac) ----------
+// ---------- Inscription d'un commercial par lui-même (validée ensuite par l'équipe Kaislo) ----------
 // { nom, telephone, pays, email?, pin, conditionsAcceptees: true }
 function routeCommercialInscription(): never
 {

@@ -244,7 +244,7 @@ export function FeuilleUtilisateur({ utilisateur }) {
   return (
     <Feuille titre={b.id ? b.nom : tr('Nouveau vendeur')} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer} disabled={enCours}>{enCours ? tr('Enregistrement…') : tr('Enregistrer')}</button>}>
       <div className="pile">
-        <label className="champ"><span>{tr('Nom et prénom')}</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder={tr('Ex : Amorac Kaislo')} /></label>
+        <label className="champ"><span>{tr('Nom et prénom')}</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder={tr('Ex : Kaislo')} /></label>
         <ChampTelephone libelle={tr('Numéro de téléphone (pour se connecter)')} pays={s.d.commerce.pays} verifier={!s.estDemoActuel()} valeur={b.telephone || ''} surChanger={(v) => setB({ ...b, telephone: v })} />
         <label className="champ"><span>{tr('Code PIN (4 chiffres)')}</span><input className="pin-saisie" inputMode="numeric" maxLength={4} value={b.pin || ''} onChange={(e) => setB({ ...b, pin: e.target.value })} placeholder="••••" /></label>
         {enLigne && b.id && <p className="tres-petit muet">{tr('Laissez vide pour garder le code actuel. Les codes sont gardés chiffrés sur le serveur : personne ne peut les lire.')}</p>}
@@ -308,7 +308,7 @@ export function FeuilleClient({ client }) {
   return (
     <Feuille titre={b.id ? tr('Modifier le client') : tr('Nouveau client')} surFermer={s.fermer} pied={<button className="btn bloc" onClick={enregistrer}>{tr('Enregistrer')}</button>}>
       <div className="pile">
-        <label className="champ"><span>{tr('Nom')}</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder={tr('Ex : Amorac Kaislo')} autoFocus /></label>
+        <label className="champ"><span>{tr('Nom')}</span><input value={b.nom} onChange={(e) => setB({ ...b, nom: e.target.value })} placeholder={tr('Ex : Kaislo')} autoFocus /></label>
         <label className="champ"><span>{tr('Téléphone (pour le rappel WhatsApp)')}</span><input type="tel" value={b.telephone} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder={tr('Ex : 06 12 34 56 78')} /></label>
         <BoutonContacts avecNom surChoisir={(c) => setB({ ...b, telephone: c.telephone, nom: b.nom.trim() ? b.nom : c.nomContact })} />
         <label className="champ"><span>{tr('Note')}</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder={tr('Ex : paie en fin de mois')} /></label>

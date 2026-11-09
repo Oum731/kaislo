@@ -359,7 +359,7 @@ export function FeuilleChoixClient() {
     return (
       <Feuille titre={tr('Nouveau client')} surFermer={() => setNouveau(null)} pied={<button className="btn bloc" onClick={creer}>{tr('Créer et choisir')}</button>}>
         <div className="pile">
-          <label className="champ"><span>{tr('Nom')}</span><input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} autoFocus placeholder={tr('Ex : Amorac Kaislo')} /></label>
+          <label className="champ"><span>{tr('Nom')}</span><input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} autoFocus placeholder={tr('Ex : Kaislo')} /></label>
           <label className="champ"><span>{tr('Téléphone (pour le rappel WhatsApp)')}</span><input type="tel" value={nouveau.telephone} onChange={(e) => setNouveau({ ...nouveau, telephone: e.target.value })} placeholder={tr('Ex : 06 12 34 56 78')} /></label>
           <BoutonContacts avecNom surChoisir={(c) => setNouveau({ ...nouveau, telephone: c.telephone, nom: nouveau.nom.trim() ? nouveau.nom : c.nomContact })} />
         </div>

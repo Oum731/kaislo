@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// ABONNEMENTS des commerces (gérés par l'équipe Amorac dans /admin)
+// ABONNEMENTS des commerces (gérés par l'équipe Kaislo dans /admin)
 //
 // Chaque commerce a un champ commerce.abonnement :
 //   { offre, statut, essaiFin, periodeFin, paiements: [], notes }

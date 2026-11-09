@@ -39,7 +39,7 @@ function routeContact(): never
     repondre(['ok' => true], 201);
 }
 
-// Nombre de messages de visiteurs pas encore traités (pastille de l'espace Amorac)
+// Nombre de messages de visiteurs pas encore traités (pastille de l'espace Kaislo)
 function contactsNonTraites(): int
 {
     return (int) requete('SELECT COUNT(*) AS n FROM contacts WHERE traite_le IS NULL')->fetch()['n'];

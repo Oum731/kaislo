@@ -117,7 +117,7 @@ function envoyerPush(string $commerceId, string $type, string $titre, string $te
     return diffuserPush($abos, $commerceId, $type, $titre, $texte, $url);
 }
 
-/** Envoie la notification à ces appareils (les gérants d'un commerce, ou l'équipe Amorac : voir alertes-equipe.php). Renvoie [joints, appareils]. */
+/** Envoie la notification à ces appareils (les gérants d'un commerce, ou l'équipe Kaislo : voir alertes-equipe.php). Renvoie [joints, appareils]. */
 function diffuserPush(array $abos, string $commerceId, string $type, string $titre, string $texte, string $url): array
 {
     $joints = 0;

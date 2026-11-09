@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// MON ESPACE : retient où la personne est connectée sur cet appareil (application, espace Amorac ou espace commercial)
+// MON ESPACE : retient où la personne est connectée sur cet appareil (application, espace Kaislo ou espace commercial)
 // pour qu'elle arrive directement chez elle, et non sur la page d'accueil publique du site.
 // Seul le NOM de l'espace est gardé (jamais de code ni de jeton). Effacé à la déconnexion.
 // ------------------------------------------------------------
@@ -44,7 +44,7 @@ export const enModeApplication = () => typeof window !== 'undefined' && (!!windo
 export const SCRIPT_REDIRECTION_ESPACE =
   `try{var s=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true,e=localStorage.getItem('${CLE}'),a=${JSON.stringify(ADRESSES_ESPACES)},v=/[?&]site\\b/.test(location.search);if(v)sessionStorage.setItem('kaislo-site','1');v=v||sessionStorage.getItem('kaislo-site')==='1';if(!v){if(s)location.replace('${BASE_PATH}'+a[e&&a[e]?e:'app']);else if(e&&a[e])location.replace('${BASE_PATH}'+a[e])}}catch(_){}`;
 
-// Service worker du site : nécessaire à l'installation sur l'écran d'accueil et à l'ouverture rapide (espaces Amorac et commercial)
+// Service worker du site : nécessaire à l'installation sur l'écran d'accueil et à l'ouverture rapide (espaces Kaislo Équipe et commercial)
 export function enregistrerServiceWorker() {
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
     navigator.serviceWorker.register(chemin('/sw.js')).catch(() => {});

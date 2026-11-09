@@ -31,7 +31,7 @@ export async function etatPush() {
   return { supporte: true, permission: Notification.permission, abonne };
 }
 
-/** Demande l'autorisation, abonne cet appareil et le déclare au serveur (base : '/push' pour un gérant, '/admin/push' pour l'équipe Amorac). Lance une erreur avec un `code` : 'refuse' | 'indisponible'. */
+/** Demande l'autorisation, abonne cet appareil et le déclare au serveur (base : '/push' pour un gérant, '/admin/push' pour l'équipe Kaislo). Lance une erreur avec un `code` : 'refuse' | 'indisponible'. */
 export async function activerPush(clePublique, jeton, base = '/push') {
   const erreur = (code) => Object.assign(new Error(code), { code });
   if (!pushSupporte() || !clePublique) throw erreur('indisponible');

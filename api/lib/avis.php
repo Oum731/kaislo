@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // AVIS DES GÉRANTS SUR KAISLO
 // Seul un vrai gérant connecté peut laisser un avis (un seul par commerce, modifiable). Il n'est montré sur le
-// site qu'après validation par l'équipe Amorac, avec le prénom, la ville et l'activité (jamais le numéro).
+// site qu'après validation par l'équipe Kaislo, avec le prénom, la ville et l'activité (jamais le numéro).
 //
 //   GET  /api/avis         avis publiés (public) : { avis: [...], nombre, moyenne }
 //   GET  /api/mon-avis     l'avis du commerce connecté (gérant)

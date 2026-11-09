@@ -83,7 +83,7 @@ export function PiedSite() {
         <div className="colonnes">
           <div>
             <span className="logo"><Marque /> {tr('Kaislo')}</span>
-            <p style={{ marginTop: 12, maxWidth: 360 }}>{tr('Gestion des ventes et du stock pour tous les commerces. Développé par Amorac.')}</p>
+            <p style={{ marginTop: 12, maxWidth: 360 }}>{tr('Gestion des ventes et du stock pour tous les commerces. Développé par Kaislo.')}</p>
           </div>
           <div>
             <h4>{tr('Kaislo')}</h4>

@@ -1,6 +1,6 @@
 <?php
 // ------------------------------------------------------------
-// MESSAGERIE entre chaque commerce et l'équipe Amorac.
+// MESSAGERIE entre chaque commerce et l'équipe Kaislo.
 // Chaque commerce a une seule conversation avec l'équipe.
 // À chaque message d'un commerce, un e-mail prévient l'équipe (EmailEquipe du .env).
 //
@@ -60,7 +60,7 @@ function routeMessagesEcrire(): never
     requete('INSERT INTO messages (id, commerce_id, auteur, auteur_id, auteur_nom, texte, cree_le, lu_le) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)', [
         nouvelId('m'), $u['commerce_id'], 'commerce', $u['id'], $u['nom'], $texte, maintenant(),
     ]);
-    // Prévient l'équipe Amorac par e-mail
+    // Prévient l'équipe Kaislo par e-mail
     $c = requete('SELECT nom, telephone, code FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
     alerterEquipe('message', 'Message de ' . $c['nom'], mb_substr($texte, 0, 140),
         'Kaislo — message de ' . $c['nom'],
@@ -74,7 +74,7 @@ function messagesNonLus(string $commerceId): int
     return (int) requete("SELECT COUNT(*) AS n FROM messages WHERE commerce_id = ? AND auteur = 'amorac' AND lu_le IS NULL", [$commerceId])->fetch()['n'];
 }
 
-// ---------- Côté équipe Amorac ----------
+// ---------- Côté équipe Kaislo ----------
 
 function routeAdminConversations(): never
 {

@@ -4,7 +4,7 @@
 //  - tableau de bord : commerces, essais, abonnés, revenus, à relancer
 //  - commerces : fiche, abonnement, paiements, suspension, numéro, notes
 //  - messages : conversations avec les commerces
-//  - paiements, tarifs (formules par métier, postes, fondateur), commerciaux, équipe Amorac
+//  - paiements, tarifs (formules par métier, postes, fondateur), commerciaux, équipe Kaislo
 // Accès : comptes de l'équipe (e-mail + mot de passe), session de 8 heures.
 // Rôles : « admin » (tout) ou « support » (consultation, notes et messages).
 // ------------------------------------------------------------
@@ -61,8 +61,8 @@ export default function Admin() {
     setEtat({ pret: true, admin: null, installe: true, jeton: null });
   };
 
-  if (!etat.pret) return <Chargement texte="Ouverture de l’espace Amorac…" />;
-  if (!API_ACTIVE) return <Cadre><p className="astuce">L’espace Amorac fonctionne sur le serveur (version hébergée). Cette version de test n’a pas de serveur.</p></Cadre>;
+  if (!etat.pret) return <Chargement texte="Ouverture de l’espace Kaislo…" />;
+  if (!API_ACTIVE) return <Cadre><p className="astuce">L’espace Kaislo fonctionne sur le serveur (version hébergée). Cette version de test n’a pas de serveur.</p></Cadre>;
   if (!etat.admin) return etat.installe ? <ConnexionAdmin surConnexion={connecte} /> : <InstallationAdmin surConnexion={connecte} />;
   return <TableauAdmin admin={etat.admin} jeton={etat.jeton} surDeconnexion={deconnexion} />;
 }
@@ -71,7 +71,7 @@ function Cadre({ children }) {
   return (
     <div className="ecran-chargement" style={{ padding: 20 }}>
       <div className="carte pile" style={{ width: '100%', maxWidth: 440 }}>
-        <span className="logo"><Marque /> Kaislo · Amorac</span>
+        <span className="logo"><Marque /> Kaislo Équipe</span>
         {children}
       </div>
     </div>
@@ -113,7 +113,7 @@ function InstallationAdmin({ surConnexion }) {
   };
   return (
     <Cadre>
-      <h2>Installer l’espace Amorac</h2>
+      <h2>Installer l’espace Kaislo</h2>
       <p className="petit muet">Création du premier compte administrateur. La clé d’installation est la valeur « CleAdmin » du fichier .env du serveur.</p>
       <form className="pile" onSubmit={valider}>
         <label className="champ"><span>Clé d’installation</span><input type="password" value={f.cle} onChange={maj('cle')} autoFocus /></label>
@@ -155,8 +155,8 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
 
   return (
     <div className="coque admin-espace">
-      <nav className="menu" aria-label="Menu Amorac">
-        <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Amorac</span></span></div>
+      <nav className="menu" aria-label="Menu Kaislo">
+        <div className="menu-marque"><span className="logo"><Marque /><span className="logo-texte">Kaislo</span></span></div>
         <div className="menu-liens">
           {/* Téléphone : 4 onglets + « Plus » (Commerciaux, Tarifs, Équipe, Sortir) ; tablette et ordinateur : tous les liens */}
           {liens.map(([e, l, i, pastille], n) => (
@@ -282,7 +282,7 @@ function VueTableau({ commerces, ctx }) {
   };
   return (
     <>
-      <EnTeteAdmin surTitre="Équipe Amorac" titre="Tableau de bord" />
+      <EnTeteAdmin surTitre="Équipe Kaislo" titre="Tableau de bord" />
       <div className="contenu">
         <div className="kpis">
           <div className="carte kpi"><p className="petit muet">Commerces</p><p className="kpi-valeur">{commerces.length}</p><p className="sous">{actifsSemaine} actifs cette semaine</p></div>
@@ -754,7 +754,7 @@ function VueTarifs({ ctx }) {
   );
 }
 
-// ---------- Équipe Amorac : comptes et rôles ----------
+// ---------- Équipe Kaislo : comptes et rôles ----------
 function VueEquipe({ ctx }) {
   const [equipe, setEquipe] = useState(null);
   const [edition, setEdition] = useState(null);
@@ -770,7 +770,7 @@ function VueEquipe({ ctx }) {
   };
   return (
     <>
-      <EnTeteAdmin surTitre="Comptes de l’espace Amorac" titre="Équipe">
+      <EnTeteAdmin surTitre="Comptes de l’espace Kaislo" titre="Équipe">
         <button className="btn" onClick={() => setEdition({ nom: '', email: '', role: 'support', actif: true, motDePasse: '' })}><Icone nom="plus" /> Compte</button>
       </EnTeteAdmin>
       <div className="contenu" style={{ maxWidth: 800 }}>

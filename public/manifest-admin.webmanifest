@@ -1,7 +1,7 @@
 {
-  "name": "Kaislo Équipe — Espace Amorac",
+  "name": "Kaislo Équipe — Espace Kaislo",
   "short_name": "Kaislo Équipe",
-  "description": "Espace de l’équipe Amorac pour gérer Kaislo.",
+  "description": "Espace de l’équipe Kaislo pour gérer Kaislo.",
   "lang": "fr",
   "id": "./admin/",
   "start_url": "./admin/",
