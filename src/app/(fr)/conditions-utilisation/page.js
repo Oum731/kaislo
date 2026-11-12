@@ -100,7 +100,11 @@ const SECTIONS = [
     id: 'retard',
     titre: 'Retard ou défaut de paiement',
     contenu: (
-      <p>Si une échéance n’est pas réglée, nous vous prévenons dans l’application et par message. Sans régularisation <b>7 jours après l’échéance</b>, l’accès au compte peut être suspendu. Vos données ne sont pas supprimées pendant la suspension, et l’accès est rétabli dès le paiement reçu.</p>
+      <>
+        <p>À la fin de l’essai ou de la période payée, le gérant peut toucher « Activer l’abonnement » : l’abonnement est alors activé immédiatement pour quelques jours (5 par défaut) afin de laisser le temps de payer. Cette activation provisoire n’est accordée qu’une fois ; une nouvelle ne l’est qu’après un paiement.</p>
+        <p>Si le paiement n’est pas reçu avant la fin de ce délai, l’abonnement se désactive automatiquement et certaines fonctions sont suspendues jusqu’au paiement : rapports et exports, résumé du soir et notifications, ajout de vendeurs, de postes et d’articles, validation des commandes en ligne, et affichage de la boutique en ligne. La caisse reste utilisable. Sans régularisation <b>7 jours après l’échéance</b>, la synchronisation entre appareils peut aussi être suspendue.</p>
+        <p>Vos données ne sont pas supprimées pendant la suspension, et l’accès est rétabli dès le paiement reçu.</p>
+      </>
     ),
   },
   {

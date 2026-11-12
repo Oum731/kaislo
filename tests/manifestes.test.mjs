@@ -15,6 +15,8 @@ test('manifestes : chaque espace s\'ouvre sur sa propre page, dans son périmèt
     assert.equal(m.display, 'standalone');
     assert.ok(m.icons.some((i) => i.sizes === '512x512'), `${fichier} : icône 512`);
   }
+  // L'application des commerces ne couvre que /app : un lien de boutique (/boutique/nom/) s'ouvre dans le navigateur, pas dans l'application installée
+  assert.equal(lire('manifest.webmanifest').scope, './app/');
   // Identifiants distincts : installer les trois applications est possible
   assert.equal(new Set(['manifest.webmanifest', 'manifest-admin.webmanifest', 'manifest-commercial.webmanifest'].map((f) => lire(f).id)).size, 3);
 });
