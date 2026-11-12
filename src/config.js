@@ -66,7 +66,7 @@ export const HEBERGEUR = {
 };
 
 // Date affichée en haut des pages légales (à changer à chaque modification)
-export const DATE_PAGES_LEGALES = '9 novembre 2026';
+export const DATE_PAGES_LEGALES = '12 novembre 2026';
 
 // L'espace Amorac (/admin) est protégé par le serveur : comptes de l'équipe (e-mail + mot de passe).
 // Premier compte : clé « CleAdmin » du fichier .env du serveur.
