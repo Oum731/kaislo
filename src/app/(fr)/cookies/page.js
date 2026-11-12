@@ -4,6 +4,7 @@
 // chat…) : il faudrait alors demander le consentement du visiteur.
 // ------------------------------------------------------------
 import PageLegale from '@/components/site/PageLegale';
+import GererCookies from '@/components/site/GererCookies';
 import { metaPage } from '@/lib/seo';
 import { GOOGLE_ADS_ID, FACEBOOK_PIXEL_ID, REGIES_MESURE } from '@/config';
 
@@ -25,7 +26,8 @@ const SECTIONS = [
     contenu: (
       MESURE ? (
         <div className="encadre">
-          <p><b>Des cookies de mesure facultatifs, seulement avec votre accord.</b> Kaislo enregistre sur votre appareil ce qui est utile pour faire fonctionner Kaislo et se souvenir de vos choix (comme votre pays). Si vous l’acceptez dans le bandeau, Kaislo place en plus des cookies de mesure de {REGIES_MESURE}, pour savoir quelles publicités amènent de vrais commerces. Ils ne contiennent jamais vos ventes ni vos clients. Si vous refusez, rien n’est chargé et rien ne change dans Kaislo.</p>
+          <p><b>Des cookies de mesure facultatifs, seulement avec votre accord.</b> Kaislo enregistre sur votre appareil ce qui est utile pour faire fonctionner Kaislo et se souvenir de vos choix (comme votre pays). Si vous l’acceptez dans le bandeau, Kaislo place en plus des cookies de mesure de {REGIES_MESURE}, pour savoir quelles publicités amènent de vrais commerces. Ils ne contiennent jamais vos ventes ni vos clients. Si vous refusez, rien n’est chargé et rien ne change dans Kaislo. Vous pouvez changer d’avis à tout moment :</p>
+          <p><GererCookies className="btn secondaire petit" /></p>
         </div>
       ) : (
         <div className="encadre">
@@ -40,20 +42,20 @@ const SECTIONS = [
     contenu: (
       <table className="tableau-legal">
         <thead>
-          <tr><th>Nom</th><th>À quoi ça sert</th><th>Durée</th></tr>
+          <tr><th>Nom</th><th>Type</th><th>À quoi ça sert</th><th>Durée</th></tr>
         </thead>
         <tbody>
-          <tr><td>kaislo:preferences</td><td>Commerce relié à l’appareil, session ouverte, derniers comptes utilisés, largeur du ticket, pays choisi pour la démo.</td><td>Jusqu’à la déconnexion de l’appareil</td></tr>
-          <tr><td>kaislo:commerce:…</td><td>Données du commerce gardées sur l’appareil pour que Kaislo marche même avec une mauvaise connexion.</td><td>Jusqu’à suppression ou déconnexion</td></tr>
-          <tr><td>kaislo:comptes</td><td>Liste des commerces enregistrés sur cet appareil.</td><td>Jusqu’à suppression</td></tr>
-          <tr><td>kaislo-images</td><td>Photos des articles et logo, pour un affichage rapide.</td><td>Jusqu’à suppression</td></tr>
-          <tr><td>kaislo-v… (cache)</td><td>Copie de l’application pour qu’elle s’ouvre vite et hors connexion.</td><td>Remplacée à chaque mise à jour</td></tr>
-          <tr><td>kaislo_pays (cookie)</td><td>Se souvenir du pays que vous avez choisi, pour afficher les tarifs dans la monnaie de votre pays. Contient seulement un code de pays (par exemple « CI »).</td><td>1 an</td></tr>
-          {MESURE && <tr><td>kaislo-mesure</td><td>Se souvenir de votre réponse au bandeau de mesure (accepté ou refusé).</td><td>Jusqu’à suppression</td></tr>}
-          {!!GOOGLE_ADS_ID && <tr><td>_gcl_aw, _gcl_au… (cookies, seulement si vous acceptez)</td><td>Mesure Google Ads : relier une inscription à la publicité sur laquelle vous avez cliqué.</td><td>Environ 90 jours</td></tr>}
-          {!!FACEBOOK_PIXEL_ID && <tr><td>_fbp (cookie, seulement si vous acceptez)</td><td>Mesure Meta (Facebook et Instagram) : relier une inscription à la publicité sur laquelle vous avez cliqué. Le pixel n’enregistre ni vos clics sur les boutons ni le contenu des formulaires.</td><td>Environ 90 jours</td></tr>}
-          <tr><td>kaislo:admin-jeton</td><td>Session de l’espace Kaislo (équipe Kaislo uniquement).</td><td>Fermeture de l’onglet</td></tr>
-          <tr><td>kaislo:commercial-jeton</td><td>Session de l’espace des commerciaux Kaislo.</td><td>30 jours, ou « Sortir »</td></tr>
+          <tr><td>kaislo:preferences</td><td>Stockage local</td><td>Commerce relié à l’appareil, session ouverte, derniers comptes utilisés, largeur du ticket, pays choisi pour la démo.</td><td>Jusqu’à la déconnexion de l’appareil</td></tr>
+          <tr><td>kaislo:commerce:…</td><td>Stockage local</td><td>Données du commerce gardées sur l’appareil pour que Kaislo marche même avec une mauvaise connexion.</td><td>Jusqu’à suppression ou déconnexion</td></tr>
+          <tr><td>kaislo:comptes</td><td>Stockage local</td><td>Liste des commerces enregistrés sur cet appareil.</td><td>Jusqu’à suppression</td></tr>
+          <tr><td>kaislo-images</td><td>Stockage local</td><td>Photos des articles et logo, pour un affichage rapide.</td><td>Jusqu’à suppression</td></tr>
+          <tr><td>kaislo-v… (cache)</td><td>Cache de l’application</td><td>Copie de l’application pour qu’elle s’ouvre vite et hors connexion.</td><td>Remplacée à chaque mise à jour</td></tr>
+          <tr><td>kaislo_pays (cookie)</td><td>Cookie</td><td>Se souvenir du pays que vous avez choisi, pour afficher les tarifs dans la monnaie de votre pays. Contient seulement un code de pays (par exemple « CI »).</td><td>1 an</td></tr>
+          {MESURE && <tr><td>kaislo-mesure</td><td>Stockage local</td><td>Se souvenir de votre réponse au bandeau de mesure (accepté ou refusé).</td><td>Jusqu’à suppression</td></tr>}
+          {!!GOOGLE_ADS_ID && <tr><td>_gcl_aw, _gcl_au… (cookies, seulement si vous acceptez)</td><td>Cookie tiers (Google)</td><td>Mesure Google Ads : relier une inscription à la publicité sur laquelle vous avez cliqué.</td><td>Environ 90 jours</td></tr>}
+          {!!FACEBOOK_PIXEL_ID && <tr><td>_fbp (cookie, seulement si vous acceptez)</td><td>Cookie tiers (Meta)</td><td>Mesure Meta (Facebook et Instagram) : relier une inscription à la publicité sur laquelle vous avez cliqué. Le pixel n’enregistre ni vos clics sur les boutons ni le contenu des formulaires.</td><td>Environ 90 jours</td></tr>}
+          <tr><td>kaislo:admin-jeton</td><td>Stockage local</td><td>Session de l’espace Kaislo (équipe Kaislo uniquement).</td><td>Fermeture de l’onglet</td></tr>
+          <tr><td>kaislo:commercial-jeton</td><td>Stockage local</td><td>Session de l’espace des commerciaux Kaislo.</td><td>30 jours, ou « Sortir »</td></tr>
         </tbody>
       </table>
     ),

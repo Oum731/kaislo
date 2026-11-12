@@ -29,7 +29,7 @@ const reglages = (extra) => ({ type: 'reglages', id: 'commerce', modifieLe: main
 before(async () => {
   fs.mkdirSync(path.join(dossier, 'boutique'));
   fs.writeFileSync(path.join(dossier, 'boutique', 'index.html'), '<!DOCTYPE html><html><head><title>Boutique</title><meta name="robots" content="noindex, nofollow"><meta property="og:image" content="x"></head><body>vitrine</body></html>');
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nNotificationsMode=test\nDossierSite=${dossier}\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nDefi=non\nNotificationsMode=test\nDossierSite=${dossier}\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }

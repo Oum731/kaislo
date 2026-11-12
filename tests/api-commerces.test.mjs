@@ -29,7 +29,7 @@ const element = (type, id, contenu) => ({ type, id, contenu, modifieLe: maintena
 const produit = (id, nom, extra = {}) => element('produits', id, { id, nom, categorieId: 'c1', prix: 1000, prixAchat: 600, stock: 10, unite: 'pièce', groupes: [], ...extra });
 
 before(async () => {
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nDefi=non\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }

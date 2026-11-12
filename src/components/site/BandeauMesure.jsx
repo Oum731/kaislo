@@ -39,14 +39,24 @@ export default function BandeauMesure() {
     // Application ouverte sur un téléphone en anglais : le texte passe en anglais (le reste du site connaît sa langue par son adresse)
     if (window.location.pathname.startsWith('/app') && /^en/i.test(navigator.language || '')) setT(TEXTES.en());
   }, []);
+  // « Gérer mes cookies » (pied de page, page Cookies) : le bandeau revient pour changer de choix
+  useEffect(() => {
+    const rouvrir = () => { if (mesureActive()) setVisible(true); };
+    window.addEventListener('kaislo-gerer-mesure', rouvrir);
+    return () => window.removeEventListener('kaislo-gerer-mesure', rouvrir);
+  }, []);
   if (!visible) return null;
-  const choisir = (accepte) => { (accepte ? accepterMesure : refuserMesure)(); setVisible(false); };
+  const choisir = (accepte) => {
+    (accepte ? accepterMesure : refuserMesure)();
+    document.documentElement.setAttribute('data-mesure', 'fait');
+    setVisible(false);
+  };
   return (
     <div className={'bandeau-mesure' + (dansApp ? ' dans-app' : '')} role="dialog" aria-live="polite" aria-label={t.titre}>
       <p><b>{t.titre}</b> {t.texte} <Link href={t.lien}>{t.plus}</Link></p>
       <div className="bandeau-mesure-actions">
         <button className="btn secondaire petit" onClick={() => choisir(false)}>{t.refuser}</button>
-        <button className="btn petit" onClick={() => choisir(true)}>{t.accepter}</button>
+        <button className="btn secondaire petit" onClick={() => choisir(true)}>{t.accepter}</button>
       </div>
     </div>
   );

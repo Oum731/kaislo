@@ -6,6 +6,7 @@
 // ------------------------------------------------------------
 import { chemin } from '@/config';
 import { tr } from './i18n/index.js';
+import { ROUTES_DEFI, resoudreDefi } from './defi.js';
 
 export const API_ACTIVE = process.env.NEXT_PUBLIC_API !== 'non';
 const DELAI_MS = 20000;
@@ -25,6 +26,11 @@ export class ErreurApi extends Error {
  */
 export async function appelApi(methode, adresse, corps = null, jeton = null) {
   if (!API_ACTIVE) throw new ErreurApi(tr('Serveur non disponible dans cette version'), 0, true);
+  // Formulaires publics : défi anti-robot résolu par le navigateur avant l'envoi (voir lib/defi.js)
+  if (methode === 'POST' && ROUTES_DEFI.has(adresse)) {
+    const defi = await resoudreDefi(() => appelApi('GET', '/defi'));
+    if (defi) corps = { ...(corps || {}), defi };
+  }
   // « navigator.onLine » se trompe parfois sur téléphone (application installée, changement de réseau) : on tente toujours la requête
   const controle = new AbortController();
   const minuterie = setTimeout(() => controle.abort(), DELAI_MS);

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 function navigateurFactice() {
   const stock = {};
   const scripts = [];
-  globalThis.window = { addEventListener: () => {}, location: { pathname: '/', search: '' } };
+  globalThis.window = { addEventListener: () => {}, location: { pathname: '/', search: '', hostname: 'www.kaislo.com' } };
   globalThis.localStorage = { getItem: (k) => stock[k] ?? null, setItem: (k, v) => { stock[k] = String(v); }, removeItem: (k) => { delete stock[k]; } };
   const ecrits = [];
   globalThis.document = { readyState: 'complete', get cookie() { return '_fbp=fb.1.123; _gcl_au=1; kaislo_pays=CI'; }, set cookie(v) { ecrits.push(v); }, ecrits, head: { appendChild: (s) => scripts.push(s) }, createElement: () => ({}) };
@@ -34,8 +34,10 @@ test('pixel Meta : rien avant l\'accord, puis page vue + inscription sans aucune
   assert.deepEqual(fb, [['set', 'autoConfig', false, '2023668061621044'], ['init', '2023668061621044'], ['track', 'PageView'], ['track', 'CompleteRegistration']]);
   // Un refus efface les cookies du pixel (et de Google), pas les autres
   m.refuserMesure();
-  const effaces = document.ecrits.map((c) => c.split('=')[0]);
+  const effaces = [...new Set(document.ecrits.map((c) => c.split('=')[0]))];
   assert.deepEqual(effaces.sort(), ['_fbp', '_gcl_au']);
+  // Effacés aussi sur le domaine parent, où le pixel les pose
+  assert.ok(document.ecrits.some((c) => c.includes('domain=.kaislo.com')));
 });
 
 test('jamais de pixel dans les espaces de l\'équipe', async () => {
