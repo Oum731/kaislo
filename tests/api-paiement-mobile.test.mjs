@@ -25,7 +25,7 @@ const inscrire = (nom, tel, pays, ville) => api('POST', '/inscription', {
 const ORANGE = { operateur: 'Orange Money', pays: ['CI'], numero: '+225 07 00 00 00 01', titulaire: 'Amorac', note: 'Envoyez depuis votre compte Orange Money' };
 
 before(async () => {
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${path.join(dossier, 't.sqlite')}\nCleAdmin=cle-de-test-0123456789\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${path.join(dossier, 't.sqlite')}\nCleAdmin=cle-de-test-0123456789\nDefi=non\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }

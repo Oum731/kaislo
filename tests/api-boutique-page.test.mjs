@@ -48,7 +48,7 @@ async function creerCommerce(nom, tel, slug, { publique = true, articles = true 
 before(async () => {
   fs.mkdirSync(path.join(dossier, 'boutique'));
   fs.writeFileSync(path.join(dossier, 'boutique', 'index.html'), VITRINE);
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nDossierSite=${dossier}\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nDefi=non\nDossierSite=${dossier}\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }

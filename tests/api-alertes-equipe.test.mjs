@@ -38,7 +38,7 @@ const inscrire = (nom, tel) => api('POST', '/inscription', {
 });
 
 before(async () => {
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nNotificationsMode=test\nEmailEquipe=equipe@kaislo.test\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nDefi=non\nNotificationsMode=test\nEmailEquipe=equipe@kaislo.test\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }

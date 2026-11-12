@@ -290,6 +290,11 @@ Le gérant d'un commerce en ligne ouvre Réglages → Profil → Abonnement → 
 - L'équipe enregistre ensuite le paiement (moyen « Orange Money », « Virement »…) : la facture se crée toute seule et le gérant est prévenu. API : `GET /api/paiement-virement` (comptes + numéros mobiles du gérant), `GET/POST /api/admin/paiements-mobiles` (`api/lib/virement.php`). Test : `tests/api-paiement-mobile.test.mjs`.
 - **À décider** (voir échanges avec le comptable) : devise de la facture quand l'argent arrive en dirhams sur un compte unique alors que le commerce est en FCFA ; TVA des prestations à l'étranger si l'encaissement n'est pas en devises.
 
+## Défi anti-robot et cookies
+
+- **Défi anti-robot** (`api/lib/defi.php`, `src/lib/defi.js`) : sans cookie ni service extérieur. L'application demande un défi (`GET /api/defi`), son navigateur cherche un nombre tel que `sha256(sel + nombre)` commence par N zéros binaires (une fraction de seconde), puis l'envoie avec le formulaire. Chaque défi ne sert qu'une fois (table `defis_utilises`) et expire en 10 minutes. Routes concernées : inscription, connexion (anti-devinette de PIN), contact, chat et commande de la boutique, avis, espace commerciaux et espace Kaislo. Réglages `.env` : `Defi=non` (désactive, utilisé par les tests), `DefiBits=16` (8 à 22). Il freine les robots et les envois en masse ; contre les injections, ce sont les requêtes préparées qui protègent.
+- **Cookies** : lien « Gérer mes cookies » (pied de page et page Cookies) qui rouvre le bandeau pour accepter ou retirer son accord ; boutons Accepter / Refuser au même poids ; un refus efface aussi les cookies du domaine parent ; la page Cookies indique le type de chaque élément (cookie, stockage local, cache).
+
 ## Activation provisoire de l'abonnement
 
 Quand l'essai ou la période payée est terminé, le gérant touche **Activer l'abonnement** (Accueil) : l'abonnement est actif tout de suite pour **5 jours** (réglable : Espace Kaislo → Tarifs → « Jours pour payer »). L'écran de paiement (mobile money, virement) s'ouvre ; l'équipe reçoit une alerte (e-mail + notification).

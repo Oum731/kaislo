@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 28;
+const VERSION_BASE = 29;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -142,6 +142,11 @@ const STRUCTURE = [
     'reglages_amorac' => [
         'colonnes' => ['cle' => 'VARCHAR(40)', 'valeur' => 'LONG', 'modifie_le' => 'DATE'],
         'cle' => ['cle'], 'uniques' => [], 'index' => [],
+    ],
+    // Défis anti-robot déjà utilisés (un défi ne sert qu'une fois) : voir lib/defi.php
+    'defis_utilises' => [
+        'colonnes' => ['sel' => 'VARCHAR(40)', 'expire' => 'ENTIER'],
+        'cle' => ['sel'], 'uniques' => [], 'index' => [],
     ],
     // Notifications envoyées aux commerçants (résumé du soir, nouvelles commandes) : historique et limite des essais
     'notifications' => [

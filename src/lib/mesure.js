@@ -76,13 +76,24 @@ export function accepterMesure() {
 
 export function refuserMesure() {
   memoriser('non');
-  // Retire les cookies de mesure déjà posés (Google Ads : _gcl_* ; pixel Meta : _fbp, _fbc)
+  // Retire les cookies de mesure déjà posés (Google Ads : _gcl_* ; pixel Meta : _fbp, _fbc), sur le site et sur son domaine parent
+  // (le pixel Meta les pose sur « .kaislo.com »)
   try {
+    const hote = window.location.hostname;
+    const domaines = [undefined, hote, '.' + hote, '.' + hote.split('.').slice(-2).join('.')];
     for (const c of document.cookie.split(';')) {
       const nom = c.split('=')[0].trim();
-      if (/^(_gcl_|_fbp$|_fbc$)/.test(nom)) document.cookie = nom + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      if (!/^(_gcl_|_fbp$|_fbc$)/.test(nom)) continue;
+      for (const domaine of domaines) document.cookie = nom + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (domaine ? '; domain=' + domaine : '');
     }
   } catch { /* rien */ }
+}
+
+/** « Gérer mes cookies » : rouvre le bandeau pour changer d'avis (accepter après un refus, ou retirer son accord). */
+export function gererMesure() {
+  if (typeof window === 'undefined') return;
+  document.documentElement.removeAttribute('data-mesure');
+  window.dispatchEvent(new Event('kaislo-gerer-mesure'));
 }
 
 /** Une inscription vient d'avoir lieu : la compter dans Google Ads et dans le pixel Meta (seulement si le visiteur a accepté). */

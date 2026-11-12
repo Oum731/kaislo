@@ -20,6 +20,7 @@ import { lien } from '@/lib/site-routes';
 import ImageCapture from './ImageCapture';
 import { LecteurVideo, AfficheVignette } from './MediasDevise';
 import { FORMULES } from '@/lib/donnees/tarifs';
+import GererCookies from './GererCookies';
 import { tr, langueActive, choisirLangue } from '@/lib/i18n';
 
 export const LIEN_INSCRIPTION = '/app/?inscription=1';
@@ -106,6 +107,7 @@ export function PiedSite() {
           <div>
             <h4>{tr('Informations légales')}</h4>
             {PAGES_LEGALES().map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
+            <GererCookies />
             {langueActive() === 'en' && <p className="tres-petit" style={{ opacity: 0.7 }}>{tr('Pages juridiques en français')}</p>}
           </div>
           <div>

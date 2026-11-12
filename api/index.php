@@ -49,6 +49,7 @@ require __DIR__ . '/lib/facturation.php';
 require __DIR__ . '/lib/alertes-equipe.php';
 require __DIR__ . '/lib/sauvegardes.php';
 require __DIR__ . '/lib/activation.php';
+require __DIR__ . '/lib/defi.php';
 require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
 require __DIR__ . '/lib/pays.php';
@@ -77,8 +78,10 @@ $chemin = ['boutique' => '/page-boutique', 'plan-boutiques' => '/plan-boutiques'
 
 try {
     $route = "$methode $chemin";
+    if (in_array($route, DEFI_ROUTES, true)) verifierDefi(entree()); // défi anti-robot résolu par l'application (lib/defi.php)
     match ($route) {
         'GET /sante', 'GET /' => routeSante(),
+        'GET /defi' => routeDefi(),
         'POST /inscription' => routeInscription(),
         'POST /connexion' => routeConnexion(),
         'GET /moi' => routeMoi(),

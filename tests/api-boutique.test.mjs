@@ -29,7 +29,7 @@ const maintenant = () => new Date().toISOString();
 const el = (type, id, contenu) => ({ type, id, contenu, modifieLe: maintenant() });
 
 before(async () => {
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${path.join(dossier, 't.sqlite')}\nCleAdmin=cle-de-test-0123456789\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${path.join(dossier, 't.sqlite')}\nCleAdmin=cle-de-test-0123456789\nDefi=non\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }
