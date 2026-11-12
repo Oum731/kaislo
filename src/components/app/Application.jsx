@@ -3,7 +3,7 @@
 // Point de départ de l'application (/app)
 // ------------------------------------------------------------
 import { useEffect } from 'react';
-import { useKaislo, ajouterEtape } from '@/store/kaislo';
+import { useKaislo, ajouterEtape, garderRacine } from '@/store/kaislo';
 import Connexion from './Connexion';
 import Coque from './Coque';
 import { chemin } from '@/config';
@@ -36,10 +36,12 @@ export default function Application() {
     window.addEventListener('popstate', surRetour);
     // Écrans de connexion / inscription : une étape d'historique pour pouvoir revenir à l'accueil
     const desabonner = useKaislo.subscribe((etat, avant) => {
+      if (etat.utilisateur && !avant.utilisateur) garderRacine();
       if (!etat.utilisateur && etat.etapeConnexion !== avant.etapeConnexion && avant.etapeConnexion === 'accueil') {
         ajouterEtape({ kaislo: 'etape' });
       }
     });
+    if (useKaislo.getState().utilisateur) garderRacine();
     // Garde les données de l'appareil : sans cela, un navigateur à court de place peut les effacer et déconnecter la personne
     navigator.storage?.persist?.().catch(() => {});
     // Verrouillage au retour dans l'application après un moment en arrière-plan

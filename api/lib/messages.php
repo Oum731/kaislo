@@ -62,9 +62,11 @@ function routeMessagesEcrire(): never
     ]);
     // Prévient l'équipe Kaislo par e-mail
     $c = requete('SELECT nom, telephone, code FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
-    alerterEquipe('message', 'Message de ' . $c['nom'], mb_substr($texte, 0, 140),
-        'Kaislo — message de ' . $c['nom'],
-        "Nouveau message dans l'espace Kaislo Équipe.\n\nCommerce : {$c['nom']} (code {$c['code']}, {$c['telephone']})\nDe : {$u['nom']} ({$u['telephone']})\n\n$texte\n\nRépondre : " . lienAdmin());
+    // « J'ai payé » (virement ou mobile money) : alerte dédiée, pour vérifier le paiement et l'enregistrer
+    $paiement = !empty(entree()['paiement']);
+    alerterEquipe($paiement ? 'paiement' : 'message', ($paiement ? 'Paiement à vérifier : ' : 'Message de ') . $c['nom'], mb_substr($texte, 0, 140),
+        'Kaislo — ' . ($paiement ? 'paiement à vérifier : ' : 'message de ') . $c['nom'],
+        ($paiement ? "Le gérant dit avoir payé son abonnement : vérifiez la réception puis enregistrez le paiement dans la fiche du commerce." : "Nouveau message dans l'espace Kaislo Équipe.") . "\n\nCommerce : {$c['nom']} (code {$c['code']}, {$c['telephone']})\nDe : {$u['nom']} ({$u['telephone']})\n\n$texte\n\nRépondre : " . lienAdmin());
     repondre(['ok' => true, 'messages' => conversation($u['commerce_id'])], 201);
 }
 

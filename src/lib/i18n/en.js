@@ -2332,4 +2332,6 @@ export const EN = {
   "importer des articles": "import items",
   "ajouter des articles": "add items",
   "ajouter des vendeurs": "add sellers",
+  "Appuyez encore une fois sur retour pour quitter": "Press back once more to exit",
+  "L’équipe est prévenue : votre abonnement est activé dès réception du paiement": "The team has been notified: your subscription is activated as soon as the payment is received",
 };
