@@ -1007,7 +1007,6 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 
 /* ---- Bandeau de mesure des inscriptions (Google Ads) ---- */
 .bandeau-mesure { position: fixed; left: 0; right: 0; bottom: 0; z-index: 350; background: var(--encre); color: var(--creme); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 16px; font-size: 13px; line-height: 1.4; }
-.bandeau-mesure.dans-app { z-index: 45; } /* sous les fenêtres de l'application (voile à 50), au-dessus du menu */
 .bandeau-mesure p { margin: 0; max-width: 720px; }
 .bandeau-mesure a { color: var(--safran, #E8A317); }
 .bandeau-mesure-actions { display: flex; gap: 8px; justify-content: flex-end; flex: none; }

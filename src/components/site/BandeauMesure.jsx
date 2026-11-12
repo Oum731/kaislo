@@ -1,7 +1,7 @@
 'use client';
 // ------------------------------------------------------------
 // Bandeau « Accepter / Refuser » pour la mesure des inscriptions (Google Ads, pixel Meta).
-// N'existe que si GOOGLE_ADS_ID ou FACEBOOK_PIXEL_ID est rempli (src/config.js) ; jamais dans /admin/ et /commercial/.
+// N'existe que si GOOGLE_ADS_ID ou FACEBOOK_PIXEL_ID est rempli (src/config.js) ; seulement sur le site public (jamais dans /app, /admin, /commercial ni les boutiques).
 // Écrit dans la page générée à l'avance (donc visible dès le premier affichage, sans apparaître d'un coup après le chargement du programme) ;
 // le script lib/garde-barres.js le cache avant l'affichage pour qui a déjà répondu. Position fixe : aucun décalage de la mise en page.
 // ------------------------------------------------------------
@@ -27,7 +27,6 @@ const TEXTES = {
 
 export default function BandeauMesure() {
   const chemin = usePathname() || '';
-  const dansApp = chemin.startsWith('/app'); // dans l'application, les fenêtres (reçu, clôture…) passent au-dessus du bandeau
   // Même rendu côté serveur et au premier rendu du navigateur : présent si la mesure existe et si la page en a une
   const [visible, setVisible] = useState(() => mesureActive() && !pageSansMesure(chemin));
   const [t, setT] = useState(() => (chemin.startsWith('/en/') ? TEXTES.en() : TEXTES.fr()));
@@ -52,7 +51,7 @@ export default function BandeauMesure() {
     setVisible(false);
   };
   return (
-    <div className={'bandeau-mesure' + (dansApp ? ' dans-app' : '')} role="dialog" aria-live="polite" aria-label={t.titre}>
+    <div className="bandeau-mesure" role="dialog" aria-live="polite" aria-label={t.titre}>
       <p><b>{t.titre}</b> {t.texte} <Link href={t.lien}>{t.plus}</Link></p>
       <div className="bandeau-mesure-actions">
         <button className="btn secondaire petit" onClick={() => choisir(false)}>{t.refuser}</button>

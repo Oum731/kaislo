@@ -52,6 +52,6 @@ test('avec identifiant : rien avant l\'accord, la conversion seulement après', 
 
 test('jamais de mesure dans les espaces de l\'équipe', async () => {
   const m = await import('../src/lib/mesure.js');
-  for (const p of ['/admin/', '/admin', '/commercial/']) assert.equal(m.pageSansMesure(p), true, p);
-  for (const p of ['/', '/app/', '/tarifs/', '/en/', '/administration/']) assert.equal(m.pageSansMesure(p), false, p);
+  for (const p of ['/admin/', '/admin', '/commercial/', '/app/', '/app', '/boutique/chez-awa/']) assert.equal(m.pageSansMesure(p), true, p);
+  for (const p of ['/', '/tarifs/', '/en/', '/administration/', '/application/']) assert.equal(m.pageSansMesure(p), false, p);
 });

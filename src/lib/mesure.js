@@ -3,14 +3,14 @@
 // Sert à savoir quelles publicités amènent de vrais commerces. Respecte le choix du visiteur :
 //  - aucun identifiant (GOOGLE_ADS_ID et FACEBOOK_PIXEL_ID vides) : le module ne fait rien du tout ;
 //  - identifiant rempli : les balises (Google, Meta) ne se chargent QU'APRÈS l'accord du visiteur (bandeau), et un refus est gardé ;
-//  - jamais dans les espaces /admin/ et /commercial/ (équipe) ;
+//  - jamais dans l'application (/app), les boutiques et les espaces /admin/ et /commercial/ : le bandeau n'existe que sur le site public ;
 //  - la balise se charge sans bloquer l'affichage (après le chargement de la page, au repos), pour ne pas ralentir le site.
 // Les données de vente et de clients de Kaislo ne sont JAMAIS envoyées : seulement « une inscription a eu lieu ».
 // ------------------------------------------------------------
 import { GOOGLE_ADS_ID, GOOGLE_ADS_INSCRIPTION, FACEBOOK_PIXEL_ID } from '../config.js';
 
 const CLE = 'kaislo-mesure'; // 'oui' | 'non' (absent = pas encore répondu)
-const PAGES_SANS_MESURE = /^\/(admin|commercial|boutique)(\/|$)/;
+const PAGES_SANS_MESURE = /^\/(admin|commercial|boutique|app)(\/|$)/;
 
 export const mesureActive = () => !!(GOOGLE_ADS_ID || FACEBOOK_PIXEL_ID);
 export const pageSansMesure = (chemin) => PAGES_SANS_MESURE.test(chemin || '');
