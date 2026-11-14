@@ -129,3 +129,20 @@ test('commerce suspendu : activation refusée ; délai réglable par l’équipe
   assert.equal((await api('POST', '/abonnement/activer', {}, bako.jeton)).statut, 403);
   assert.equal(lire(`SELECT periode_provisoire AS p FROM commerces WHERE id = '${bako.commerce.id}'`)[0].p, 1);
 });
+
+test('« J’ai payé » : le paiement est signalé à l’équipe jusqu’à son enregistrement, puis l’indicateur disparaît', async () => {
+  const fiche = async () => (await api('GET', '/admin/commerces', null, admin)).commerces.find((c) => c.commerce.id === awa.commerce.id).commerce.abonnement;
+  assert.equal((await fiche()).paiementDeclareLe, null);
+  const r = await api('POST', '/messages', { texte: 'J’ai payé par Wave. Référence : KAISLO-X.', paiement: true, moyen: 'Wave' }, awa.jeton);
+  assert.equal(r.statut, 201, JSON.stringify(r));
+  const declare = await fiche();
+  assert.ok(declare.paiementDeclareLe);
+  assert.equal(declare.paiementDeclareMoyen, 'Wave');
+  // Un simple message ne signale pas de paiement
+  assert.equal((await api('POST', '/messages', { texte: 'Bonjour, une question.' }, bako.jeton)).statut, 201);
+  const fb = (await api('GET', '/admin/commerces', null, admin)).commerces.find((c) => c.commerce.id === bako.commerce.id).commerce.abonnement;
+  assert.equal(fb.paiementDeclareLe, null);
+  // Le paiement enregistré par l'équipe efface le signalement
+  assert.equal((await api('POST', '/admin/paiement', { commerceId: awa.commerce.id, mois: 1, postes: 1, montant: 5000, moyen: 'Wave' }, admin)).ok, true);
+  assert.equal((await fiche()).paiementDeclareLe, null);
+});

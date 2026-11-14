@@ -54,6 +54,9 @@ export default function AbonnementCommerce() {
         </div>
         <span className={`badge ${classe}`}>{tr(LIBELLES_STATUT[etat.statut])}</span>
       </div>
+      {ab?.paiementDeclareLe && (
+        <p className="astuce petit">{tr('Paiement signalé le {0} : l’équipe Kaislo le vérifie. Votre abonnement est prolongé dès sa réception.', [formatDate(ab.paiementDeclareLe)])}</p>
+      )}
       {ab?.provisoire && etat.statut !== 'suspendu' && (
         <p className={etat.statut === 'expire' ? 'alerte petit' : 'astuce petit'}>
           {etat.statut === 'expire'

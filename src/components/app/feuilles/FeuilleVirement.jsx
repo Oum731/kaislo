@@ -93,7 +93,8 @@ export function FeuilleVirement() {
     setErreur('');
     try {
       // Message pour l'équipe Kaislo : toujours en français, quelle que soit la langue de l'application
-      await appelApi('POST', '/messages', { texte: `J’ai fait un virement (compte en ${compte.devise}, ${montant(compte.parMois, compte.devise)} par mois). Référence : ${r.reference}.`, paiement: true }, s.jetonServeur());
+      await appelApi('POST', '/messages', { texte: `J’ai fait un virement (compte en ${compte.devise}, ${montant(compte.parMois, compte.devise)} par mois). Référence : ${r.reference}.`, paiement: true, moyen: 'Virement' }, s.jetonServeur());
+      s.paiementSignale('Virement');
       setEnvoye(true);
       s.fermer();
       s.message(tr('L’équipe est prévenue : votre abonnement est activé dès réception du paiement'));
@@ -104,7 +105,8 @@ export function FeuilleVirement() {
   const prevenirMobile = async (m) => {
     setErreur('');
     try {
-      await appelApi('POST', '/messages', { texte: `J’ai payé par ${m.operateur}${m.numero ? ' au ' + m.numero : ''} (${montant(m.parMois, m.devise)} par mois).${expediteur.trim() ? ` Numéro d’envoi : ${expediteur.trim().slice(0, 30)}.` : ''} Référence : ${r.reference}.`, paiement: true }, s.jetonServeur());
+      await appelApi('POST', '/messages', { texte: `J’ai payé par ${m.operateur}${m.numero ? ' au ' + m.numero : ''} (${montant(m.parMois, m.devise)} par mois).${expediteur.trim() ? ` Numéro d’envoi : ${expediteur.trim().slice(0, 30)}.` : ''} Référence : ${r.reference}.`, paiement: true, moyen: m.operateur }, s.jetonServeur());
+      s.paiementSignale(m.operateur);
       setEnvoyeMobile(true);
       s.fermer();
       s.message(tr('L’équipe est prévenue : votre abonnement est activé dès réception du paiement'));

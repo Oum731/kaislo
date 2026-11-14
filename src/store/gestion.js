@@ -269,6 +269,15 @@ export const trancheGestion = (set, get) => ({
     return true;
   },
 
+  // « J'ai payé » touché : l'application l'affiche tout de suite (« paiement en cours de vérification ») ; le serveur le garde jusqu'à l'enregistrement du paiement
+  paiementSignale(moyen) {
+    const d = get().d;
+    if (!d?.commerce) return;
+    const nouveau = { ...d, commerce: { ...d.commerce, abonnement: { ...(d.commerce.abonnement || {}), paiementDeclareLe: new Date().toISOString(), paiementDeclareMoyen: moyen } } };
+    enregistrerCommerce(nouveau);
+    set({ d: nouveau });
+  },
+
   // Le gérant active son abonnement tout de suite ; il a quelques jours pour payer. Renvoie un message d'erreur, ou null
   async activerAbonnement() {
     try {
