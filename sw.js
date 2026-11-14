@@ -3,7 +3,7 @@
 // pour qu'elle s'ouvre vite, même avec une mauvaise connexion.
 // La version est remplacée automatiquement à chaque construction du site (scripts/version-sw.mjs).
 // ------------------------------------------------------------
-const VERSION = 'kaislo-202611121633'; // v8 : notifications push ; v7 : images, vidéos et icônes toujours à jour (seuls les fichiers /_next/static/ sont gardés tels quels)
+const VERSION = 'kaislo-202611141343'; // v8 : notifications push ; v7 : images, vidéos et icônes toujours à jour (seuls les fichiers /_next/static/ sont gardés tels quels)
 // Dossier du site ("/" sur Hostinger, "/kaislo/" sur GitHub Pages)
 const RACINE = new URL(self.registration.scope).pathname;
 
@@ -27,7 +27,9 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       fetch(e.request)
         .then((r) => { const copie = r.clone(); caches.open(VERSION).then((c) => c.put(e.request, copie)); return r; })
-        .catch(() => caches.match(e.request).then((r) => r || caches.match(RACINE + 'app/')))
+        // Sans internet : la copie de la page ; l'écran de l'application seulement pour /app (une boutique ou une page du site ne doit pas
+        // se retrouver sur l'application)
+        .catch(() => caches.match(e.request).then((r) => r || (adresse.pathname.startsWith(RACINE + 'app') ? caches.match(RACINE + 'app/') : Response.error())))
     );
     return;
   }
