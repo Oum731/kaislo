@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// FACTURE D'ABONNEMENT OU FACTURE D'AVOIR EN PDF (A4) : modèle de la facture d'Amorac (logo, société au capital de…, RC / ICE / IF / TP,
+// FACTURE D'ABONNEMENT OU FACTURE D'AVOIR EN PDF (A4) : modèle de la facture d'Amorac (logo Kaislo, société Amorac au capital de…, RC / ICE / IF / TP,
 // client, numéro et date, tableau DESCRIPTION / PRIX / TOTAL, MONTANT HT, TVA ou mention d'exonération, TOTAL TTC, conditions de paiement).
 // Les données viennent de l'API (api/lib/facturation.php, versFacture) : le PDF reprend exactement la facture figée à son émission.
 // Document en français (facture légale). Police standard du PDF : les caractères hors alphabet latin sont remplacés par « ? ».
@@ -19,10 +19,11 @@ const monnaie = (x, dev) => sur(formatNombre(x, dev) + ' ' + dev);
 /** Nom de fichier : FAC-2026-0001.pdf (ou AV-2026-0001.pdf pour un avoir) */
 export const nomFichierFacture = (f) => `${f.numero}.pdf`;
 
-// Logo d'Amorac (public/logo/amorac-logo.png) en image pour le PDF ; sans lui (hors ligne), le nom de la société s'écrit en texte
+// Logo de Kaislo (public/logo/kaislo-logo.png) en image pour le PDF ; sans lui (hors ligne), le nom s'écrit en texte.
+// La société qui émet la facture reste Amorac (bloc de droite et pied de page) : Kaislo est sa marque.
 async function chargerLogo() {
   try {
-    const r = await fetch(chemin('/logo/amorac-logo.png'));
+    const r = await fetch(chemin('/logo/kaislo-logo.png'));
     if (!r.ok) return null;
     const blob = await r.blob();
     return await new Promise((ok, ko) => { const l = new FileReader(); l.onload = () => ok(l.result); l.onerror = ko; l.readAsDataURL(blob); });
@@ -56,8 +57,14 @@ export async function creerPdfFacture(f, logo) {
 
   // ----- En-tête : logo à gauche, identité de la société à droite -----
   let y = 16;
-  if (image) doc.addImage(image, 'PNG', marge, y - 2, 56, 56 * 214 / 700);
-  else { doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.text(sur(e.nom || 'AMORAC'), marge, y + 10); }
+  if (image) doc.addImage(image, 'PNG', marge - 4, y - 4, 52, 52 * 160 / 520);
+  else { doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.text('Kaislo', marge, y + 10); }
+  // Trace d'Amorac sous le logo : la marque Kaislo est exploitée par la société qui facture
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...GRIS);
+  doc.text(sur('Kaislo est une marque exploitée par ' + [e.nom, e.forme].filter(Boolean).join(' ') + '.'), marge, y + 17);
+  doc.setTextColor(...NOIR);
   const xE = 108;
   let yE = y + 2;
   doc.setFontSize(9);
