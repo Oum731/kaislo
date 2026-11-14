@@ -1476,3 +1476,8 @@ body:has(.proposer-install.compact) .retour-haut { bottom: calc(84px + env(safe-
 body:has(.proposer-install.compact):has(.bandeau-mesure) .retour-haut { bottom: calc(150px + env(safe-area-inset-bottom)); }
 @media (max-width: 600px) { body:has(.proposer-install.compact):has(.bandeau-mesure) .retour-haut { bottom: calc(230px + env(safe-area-inset-bottom)); } }
 @media (max-width: 380px) { .proposer-install-texte .muet { display: none; } }
+
+/* Écran Abonnement : l'état d'abord, une seule action principale, le prix en gros */
+.abo-etat h3 { font-size: 20px; }
+.abo-etat .jauge { height: 8px; }
+.abo-prix .abo-montant { font-size: 22px; letter-spacing: -0.02em; }
