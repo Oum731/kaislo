@@ -64,6 +64,10 @@ function routeMessagesEcrire(): never
     $c = requete('SELECT nom, telephone, code FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
     // « J'ai payé » (virement ou mobile money) : alerte dédiée, pour vérifier le paiement et l'enregistrer
     $paiement = !empty(entree()['paiement']);
+    if ($paiement) {
+        // Le gérant voit « paiement en cours de vérification » jusqu'à l'enregistrement du paiement par l'équipe
+        requete('UPDATE commerces SET paiement_declare_le = ?, paiement_declare_moyen = ?, modifie_le = ? WHERE id = ?', [maintenant(), mb_substr(trim((string) (entree()['moyen'] ?? '')), 0, 40) ?: null, maintenant(), $u['commerce_id']]);
+    }
     alerterEquipe($paiement ? 'paiement' : 'message', ($paiement ? 'Paiement à vérifier : ' : 'Message de ') . $c['nom'], mb_substr($texte, 0, 140),
         'Kaislo — ' . ($paiement ? 'paiement à vérifier : ' : 'message de ') . $c['nom'],
         ($paiement ? "Le gérant dit avoir payé son abonnement : vérifiez la réception puis enregistrez le paiement dans la fiche du commerce." : "Nouveau message dans l'espace Kaislo Équipe.") . "\n\nCommerce : {$c['nom']} (code {$c['code']}, {$c['telephone']})\nDe : {$u['nom']} ({$u['telephone']})\n\n$texte\n\nRépondre : " . lienAdmin());

@@ -334,7 +334,7 @@ function enregistrerPaiement(array $admin, array $e): array
     ]);
     // L'échéance avance de 30 jours par mois payé, à partir de la fin de la période en cours
     $finPeriode = prolongerDate($debut, $joursPayes);
-    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, jours_offerts = 0, periode_provisoire = 0, modifie_le = ? WHERE id = ?", [
+    requete("UPDATE commerces SET offre = ?, statut = 'actif', periode_fin = ?, jours_offerts = 0, periode_provisoire = 0, paiement_declare_le = NULL, paiement_declare_moyen = NULL, modifie_le = ? WHERE id = ?", [
         $formule['id'], $finPeriode, maintenant(), $c['id'],
     ]);
     // Facture acquittée de ce paiement (numéro sans trou, voir lib/facturation.php)
