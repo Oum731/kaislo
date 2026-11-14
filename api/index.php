@@ -49,6 +49,7 @@ require __DIR__ . '/lib/facturation.php';
 require __DIR__ . '/lib/alertes-equipe.php';
 require __DIR__ . '/lib/sauvegardes.php';
 require __DIR__ . '/lib/activation.php';
+require __DIR__ . '/lib/rappels.php';
 require __DIR__ . '/lib/defi.php';
 require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
