@@ -117,7 +117,7 @@ export async function creerPdfContrat({ commercial, contrat, societe = {} }) {
 
   // Parties
   const nomSociete = societe.nom || 'Kaislo';
-  const lignesSociete = [societe.formeJuridique, societe.adresse && 'siège : ' + societe.adresse, societe.immatriculation].filter(Boolean).join(', ');
+  const lignesSociete = [societe.formeJuridique && societe.formeJuridique + (societe.capital ? ' au capital de ' + societe.capital : ''), societe.adresse && 'siège : ' + societe.adresse, societe.immatriculation].filter(Boolean).join(', ');
   const pays = PAYS.find((p) => p.id === commercial.pays);
   ecrire('ENTRE LES SOUSSIGNÉS', { gras: true, couleur: VERT, taille: 11 });
   ecrire(`${nomSociete}${lignesSociete ? ', ' + lignesSociete : ''}, qui exploite l'application Kaislo, représentée par ${societe.directeurPublication || 'son représentant légal'}, ci-après « Kaislo ».`);
