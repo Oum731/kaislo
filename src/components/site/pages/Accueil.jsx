@@ -2,6 +2,7 @@
 // PAGE D'ACCUEIL DU SITE (la plus importante pour Google)
 // Les images viennent de public/captures/ (vraies captures de l'application).
 // ------------------------------------------------------------
+import { DessinBoutique, DessinPanier, DessinTelephone } from '../Dessins';
 import Link from 'next/link';
 import { chemin } from '@/config';
 import { ACTIVITES } from '@/components/site/activites';
@@ -45,9 +46,9 @@ const QUESTIONS_BOUTIQUES = [
 ];
 
 const ETAPES_CLIENT = [
-  ['1', 'Choisissez une boutique', 'Près de chez vous, par rayon.'],
-  ['2', 'Remplissez votre panier', 'Touchez les articles que vous voulez.'],
-  ['3', 'Confirmez sur WhatsApp', 'La commande part à la boutique.'],
+  ['1', 'Choisissez une boutique', 'Près de chez vous, par rayon.', DessinBoutique],
+  ['2', 'Remplissez votre panier', 'Touchez les articles que vous voulez.', DessinPanier],
+  ['3', 'Confirmez sur WhatsApp', 'La commande part à la boutique.', DessinTelephone],
 ];
 
 const TUILES_COMMERCANT = () => ([
@@ -70,8 +71,8 @@ export default function Accueil({ lang }) {
         <section className="hero accueil-hero">
           <div className="site-largeur accueil-hero-grille">
             <div className="accueil-hero-texte">
-              <h1>{fr ? 'Le cahier du soir, sans le crayon.' : tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}</h1>
-              <p className="chapo">{fr ? 'Vos ventes, votre stock et vos crédits sur le téléphone. Chaque soir, les comptes sont faits : vous n’avez plus rien à recopier.' : tr('Restaurants, épiceries, boutiques, bars, boulangeries : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir.')}</p>
+              <h1>{fr ? 'Le cahier du commerçant, dans la poche.' : tr('Gérez les ventes et le stock de votre commerce, partout dans le monde.')}</h1>
+              <p className="chapo">{fr ? 'Vous notez les ventes, le stock et les crédits de vos clients. Le soir, Kaislo fait les comptes à votre place.' : tr('Restaurants, épiceries, boutiques, bars, boulangeries : enregistrez vos ventes en quelques touches, suivez votre stock, votre inventaire et le crédit de vos clients, et retrouvez vos comptes chaque soir.')}</p>
               <div className="boutons">
                 <Link prefetch={false} href={LIEN_INSCRIPTION} className="btn grand">{tr('Essayer gratuitement 30 jours')}</Link>
                 <Link prefetch={false} href={LIEN_DEMO_RESTO} className="btn secondaire grand">{tr('Voir la démo')}</Link>
@@ -87,10 +88,10 @@ export default function Accueil({ lang }) {
         {fr && (
           <section className="section claire">
             <div className="site-largeur">
-              <h2>Commander, c’est simple.</h2>
+              <h2>Commander en trois étapes.</h2>
               <ol className="etapes-liste">
-                {ETAPES_CLIENT.map(([n, t, d]) => (
-                  <li key={n}><span className="numero">{n}</span><div><h3>{t}</h3><p className="muet">{d}</p></div></li>
+                {ETAPES_CLIENT.map(([n, t, d, Dessin]) => (
+                  <li key={n}><Dessin /><div><h3><span className="numero">{n}.</span> {t}</h3><p className="muet">{d}</p></div></li>
                 ))}
               </ol>
               <p className="muet petit accueil-pont">Kaislo est un outil et un pont entre les boutiques et leurs clients. Chaque boutique est seule responsable de ce qu’elle vend. <Link href="/conditions-utilisation/#boutiques-en-ligne">Lire les règles des boutiques en ligne</Link></p>
@@ -100,8 +101,7 @@ export default function Accueil({ lang }) {
 
         <section className="section" id="fonctions">
           <div className="site-largeur">
-            <span className="etiquette">{tr('Pour les commerçants')}</span>
-            <h2>{tr('Votre commerce, simple à gérer.')}</h2>
+            <h2>{tr('Ce que Kaislo fait derrière votre comptoir.')}</h2>
             <div className="tuiles-commercant">
               {TUILES_COMMERCANT().map(([t, d, src, alt]) => (
                 <div key={t} className="tuile-commercant">
@@ -120,14 +120,13 @@ export default function Accueil({ lang }) {
 
         <section className="section claire" id="questions">
           <div className="site-largeur">
-            <span className="etiquette">{tr('Questions fréquentes')}</span>
-            <h2>{tr('Vous vous demandez peut-être…')}</h2>
+            <h2>{tr('Vos questions, nos réponses.')}</h2>
             <Faq questions={fr ? [...QUESTIONS_BOUTIQUES, ...QUESTIONS()] : QUESTIONS()} />
           </div>
         </section>
 
         <AppelFinal
-          titre={tr('Essayez Kaislo dans votre commerce.')}
+          titre={tr('Testez Kaislo 30 jours derrière votre comptoir.')}
           texte={tr('Créez votre compte en deux minutes, ou testez la démo avec un restaurant et une épicerie déjà remplis.')}
           lienDemo={LIEN_DEMO_EPICERIE}
         />
