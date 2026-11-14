@@ -195,6 +195,8 @@ function versCommerce(array $c): array
         'abonnement' => [
             'offre' => $c['offre'], 'statut' => $c['statut'], 'essaiFin' => $c['essai_fin'], 'periodeFin' => $c['periode_fin'],
             'provisoire' => !empty($c['periode_provisoire']), // activé pour quelques jours en attendant le paiement
+            'paiementDeclareLe' => $c['paiement_declare_le'] ?? null, // « J'ai payé » touché, en cours de vérification par l'équipe
+            'paiementDeclareMoyen' => $c['paiement_declare_moyen'] ?? null,
         ],
     ];
 }

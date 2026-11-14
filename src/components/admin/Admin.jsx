@@ -164,6 +164,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   const [nonLus, setNonLus] = useState(0);
   const [plusOuvert, setPlusOuvert] = useState(false);
   const [commerciauxAttente, setCommerciauxAttente] = useState(0);
+  const [paiementsAttente, setPaiementsAttente] = useState(0);
   const [avisAttente, setAvisAttente] = useState(0);
   const api = useCallback((m, c, corps) => appelApi(m, c, corps, jeton).catch((e) => { if (e.statut === 401) surDeconnexion(); throw e; }), [jeton, surDeconnexion]);
   const alertes = useAlertesEquipe(api, jeton);
@@ -175,11 +176,12 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
     setNonLus(commerces.reduce((n, c) => n + c.messagesNonLus, 0) + (rep.contactsNonTraites || 0));
     setAvisAttente(rep.avisEnAttente || 0); // pastille « Avis » : avis à relire avant publication
     setCommerciauxAttente(rep.commerciauxEnAttente || 0); // pastille « Commerciaux » : inscriptions à valider
+    setPaiementsAttente(paiementsAVerifier(commerces).length); // pastille « Paiements » : « J'ai payé » à vérifier
   }, [api]);
   useEffect(() => { recharger(); const m = setInterval(recharger, 60000); return () => clearInterval(m); }, [recharger]);
 
   const estAdmin = admin.role === 'admin';
-  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes'], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
+  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes', paiementsAttente || null], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
   useRetourTelephone(!!fiche, () => setOuvert(null), annoncer);
@@ -476,12 +478,34 @@ function VueCommerces({ commerces, ctx }) {
   );
 }
 
+// Commerces dont le gérant a touché « J'ai payé » : à vérifier (réception de l'argent) puis à enregistrer dans la fiche
+const paiementsAVerifier = (commerces) => commerces.filter((c) => c.commerce.abonnement?.paiementDeclareLe)
+  .sort((a, b) => a.commerce.abonnement.paiementDeclareLe.localeCompare(b.commerce.abonnement.paiementDeclareLe));
+
 function VuePaiements({ commerces, ctx }) {
   const paiements = paiementsDe(commerces).sort((a, b) => b.date.localeCompare(a.date));
+  const aVerifier = paiementsAVerifier(commerces);
   return (
     <>
       <EnTeteAdmin surTitre={paiements.length + ' paiements'} titre="Paiements" />
       <div className="contenu" style={{ maxWidth: 900 }}>
+        {aVerifier.length > 0 && (
+          <div className="carte pile" style={{ marginBottom: 14, borderColor: 'var(--safran)' }}>
+            <h3>À vérifier ({aVerifier.length})</h3>
+            <p className="petit muet">Ces gérants ont touché « J’ai payé ». Vérifiez que l’argent est arrivé (mobile money, banque), puis ouvrez la fiche et enregistrez le paiement : l’abonnement est prolongé et la facture part toute seule.</p>
+            <div className="liste">
+              {aVerifier.map((c) => (
+                <button key={c.id} className="liste-item" onClick={() => ctx.ouvrir(c.id)}>
+                  <span className="grandit">
+                    <b className="bloc-texte tronque">{c.commerce.nom}</b>
+                    <span className="tres-petit muet">Signalé le {formatDate(c.commerce.abonnement.paiementDeclareLe)} {formatHeure(c.commerce.abonnement.paiementDeclareLe)} · {c.commerce.abonnement.paiementDeclareMoyen || 'moyen non précisé'} · {c.commerce.pays}</span>
+                  </span>
+                  <span className="badge safran">Enregistrer</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="carte kpi" style={{ marginBottom: 14 }}><p className="petit muet">Total encaissé</p><p className="kpi-valeur">{parDevise(paiements)}</p></div>
         <div className="liste">
           {paiements.map((p) => (
@@ -1088,6 +1112,7 @@ function FicheCommerce({ c, ctx, fermer }) {
               <h3>Abonnement</h3>
               <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}</span>
             </div>
+            {ab.paiementDeclareLe && <p className="astuce petit"><b>Paiement signalé</b> le {formatDate(ab.paiementDeclareLe)} {formatHeure(ab.paiementDeclareLe)}{ab.paiementDeclareMoyen ? ' (' + ab.paiementDeclareMoyen + ')' : ''} : vérifiez la réception de l’argent, puis enregistrez le paiement ci-dessous.</p>}
             {ab.provisoire && c.etat.statut !== 'suspendu' && <p className="astuce petit">Activation provisoire : {c.etat.statut === 'expire' ? 'délai passé sans paiement, fonctions limitées (rapports, exports, nouveaux articles et vendeurs, validation des commandes, boutique fermée).' : 'à payer avant le ' + formatDate(c.etat.fin) + '.'}</p>}
             <p className="petit">
               Formule : <b>{c.tarif.nom}</b> · {c.tarif.postes} poste(s) · <b>{formatPrix(c.tarif.parMois, dev)}</b>/mois{c.commerce.fondateur ? ' (fondateur)' : ''}
