@@ -16,7 +16,8 @@
 // Émetteur (même contenu que SOCIETE dans src/config.js : un test le vérifie)
 const EMETTEUR_FACTURE = [
     'nom' => 'AMORAC',
-    'forme' => 'SARL', // sans le capital (comme SOCIETE.formeJuridique)
+    'forme' => 'SARL',
+    'capital' => '10 000,00 MAD', // « SARL au capital de 10 000,00 MAD » : à ce jour, comme sur le modèle de facture d'Amorac
     'adresse' => '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc',
     'identifiants' => ['RC' => '690767', 'ICE' => '003786356000083', 'IF' => '68391830', 'TP' => '34215251'],
     'email' => 'contact@kaislo.com',
@@ -24,7 +25,7 @@ const EMETTEUR_FACTURE = [
 ];
 
 const TVA_MAROC = 20.0;
-const MENTION_TVA_EXPORT = 'TVA non applicable : prestation de services fournie à un client établi hors du Maroc (exportation de services).';
+const MENTION_TVA_EXPORT = 'Exonérée : prestation de services à l’exportation, en vertu de l’article 92-I-1° du Code général des impôts.';
 
 /** Règle de TVA d'un pays : ['taux' => % compris dans le prix payé, 'mention' => texte à afficher]. */
 function regleTva(string $pays): array
@@ -83,7 +84,7 @@ function creerFacturePaiement(array $commerce, array $paiement, array $details, 
         'emetteur' => EMETTEUR_FACTURE,
         'client' => [
             'nom' => $commerce['nom'], 'gerant' => $gerant['nom'] ?? '', 'telephone' => $gerant['telephone'] ?? ($commerce['telephone'] ?? ''),
-            'adresse' => (string) ($reglages['adresse'] ?? ''), 'ville' => (string) ($commerce['ville'] ?? ''), 'pays' => $pays, 'paysId' => $commerce['pays'],
+            'email' => (string) ($reglages['email'] ?? ''), 'adresse' => (string) ($reglages['adresse'] ?? ''), 'ville' => (string) ($commerce['ville'] ?? ''), 'pays' => $pays, 'paysId' => $commerce['pays'],
         ],
         'lignes' => [['designation' => $designation, 'quantite' => 1, 'montantTtc' => $m['ttc']]],
         'periode' => $periode,
