@@ -372,10 +372,11 @@ function routeCronNotifications(): never
     if (!hash_equals($cle, $recue)) throw new ErreurApi('Clé incorrecte', 403);
 
     $maintenantUtc = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-    $envoyes = 0; $ignores = 0; $echecs = 0;
+    $envoyes = 0; $ignores = 0; $echecs = 0; $rappels = 0;
     foreach (requete("SELECT * FROM commerces WHERE statut <> 'suspendu'")->fetchAll() as $commerce) {
         try {
             $reglages = reglagesCommerce($commerce['id']);
+            if (envoyerRappelSiDu($commerce, $reglages, $maintenantUtc)) $rappels++; // rappels d'abonnement (lib/rappels.php)
             if (!resumeDu($commerce, $reglages, $maintenantUtc)) { $ignores++; continue; }
             $local = $maintenantUtc->setTimezone(fuseauDuCommerce($commerce));
             // Marqué avant l'envoi : un commerce n'est jamais servi deux fois le même jour, même si l'envoi échoue
@@ -389,7 +390,7 @@ function routeCronNotifications(): never
             error_log('[Kaislo notifications] ' . $commerce['id'] . ' : ' . $e->getMessage());
         }
     }
-    repondre(['ok' => true, 'envoyes' => $envoyes, 'ignores' => $ignores, 'echecs' => $echecs]);
+    repondre(['ok' => true, 'envoyes' => $envoyes, 'ignores' => $ignores, 'echecs' => $echecs, 'rappels' => $rappels]);
 }
 
 // ---------- Nouvelle commande en ligne ----------

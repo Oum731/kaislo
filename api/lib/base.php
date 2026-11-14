@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 30;
+const VERSION_BASE = 31;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -31,6 +31,7 @@ const STRUCTURE = [
             'avis_restauration_le' => 'DATE', // date où le commerçant a confirmé que Kaislo est un outil de gestion (pays aux règles particulières pour la restauration)
             'paiement_declare_le' => 'DATE', // « J'ai payé » touché par le gérant, pas encore enregistré par l'équipe : voir lib/messages.php
             'paiement_declare_moyen' => 'VARCHAR(40)',
+            'rappel_abo' => 'VARCHAR(50)', // dernier rappel d'abonnement envoyé (« fin|palier ») : voir lib/rappels.php
             'periode_provisoire' => 'ENTIER', // 1 = la période en cours vient d'une activation provisoire (à payer avant la fin) : voir lib/activation.php
             'activation_provisoire_le' => 'DATE', // dernière activation provisoire (un nouveau droit seulement après un paiement)
             'resume_envoye_le' => 'VARCHAR(10)', // dernier jour (date locale du commerce, AAAA-MM-JJ) où le résumé du soir a été envoyé
@@ -400,6 +401,9 @@ function migrer(PDO $pdo, string $driver): void
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
     }
+
+    // Bases en version 1 à 30 : rappels d'abonnement (un message par palier)
+    if ($version >= 1 && $version < 31) $essayer('ALTER TABLE commerces ADD COLUMN rappel_abo VARCHAR(50) NULL');
 
     // Bases en version 1 à 29 : paiement signalé par le gérant (« J'ai payé »), à vérifier par l'équipe
     if ($version >= 1 && $version < 30) {
