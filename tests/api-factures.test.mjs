@@ -62,11 +62,12 @@ test('un paiement crée sa facture : numéro, TVA comprise au Maroc, mention d�
   assert.equal(fm.client.nom, 'Épicerie Awa');
   assert.equal(fm.client.pays, 'Maroc');
   assert.equal(fm.emetteur.identifiants.ICE, '003786356000083');
+  assert.equal(fm.emetteur.capital, '10 000,00 MAD');
   assert.match(fm.lignes[0].designation, /Abonnement Kaislo/);
   assert.ok(fm.periode.au > fm.periode.du);
   const fc = l.factures.find((f) => f.commerceId === ivoire.commerce.id);
   assert.deepEqual([fc.totalHt, fc.tva, fc.totalTtc, fc.tvaTaux, fc.devise], [15000, 0, 15000, 0, 'FCFA']);
-  assert.match(fc.mentionTva, /exportation de services/);
+  assert.match(fc.mentionTva, /article 92-I-1°/);
   assert.equal(fc.client.pays, 'Côte d’Ivoire');
 });
 
@@ -101,8 +102,8 @@ test('il n’existe aucun moyen de créer une facture à la main : seul l’enre
 test('l’émetteur de la facture est celui de src/config.js', () => {
   const config = fs.readFileSync('src/config.js', 'utf8');
   for (const v of ['690767', '003786356000083', '68391830', '34215251', '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc']) assert.ok(config.includes(v), v);
-  assert.match(config, /formeJuridique: 'SARL',/); // la forme, jamais le capital
-  assert.doesNotMatch(config, /capital de/i);
+  assert.match(config, /formeJuridique: 'SARL',/);
+  assert.match(config, /capital: '10 000 MAD'/); // le même capital que sur les factures (EMETTEUR_FACTURE)
 });
 
 test('paiement groupé : une facture par commerce, numéros qui se suivent ; un paiement refusé ne laisse aucune facture', async () => {
@@ -153,7 +154,7 @@ test('facture d’avoir : numéro propre AV-…, montants négatifs, TVA de la f
   const a3 = await api('POST', '/admin/avoir', { factureId: fc.id, montant: 5000, motif: 'Geste commercial' }, admin);
   assert.deepEqual([a3.avoir.totalHt, a3.avoir.tva, a3.avoir.totalTtc], [-5000, 0, -5000]);
   assert.equal(a3.avoir.numero, `AV-${annee}-0003`);
-  assert.match(a3.avoir.mentionTva, /exportation de services/);
+  assert.match(a3.avoir.mentionTva, /article 92-I-1°/);
   // Les factures ne changent pas ; le gérant voit ses avoirs ; la fiche indique les avoirs de chaque paiement
   const apres = (await api('GET', '/admin/factures', null, admin));
   assert.equal(apres.avoirs.length, 3);

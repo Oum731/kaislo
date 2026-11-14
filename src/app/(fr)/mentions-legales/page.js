@@ -27,6 +27,7 @@ const SECTIONS = [
       <ul>
         <Info libelle="Société" valeur={SOCIETE.nom} />
         <Info libelle="Forme juridique" valeur={SOCIETE.formeJuridique} />
+        <Info libelle="Capital social" valeur={SOCIETE.capital} />
         <Info libelle="Siège" valeur={SOCIETE.adresse} />
         <Info libelle="Immatriculation" valeur={SOCIETE.immatriculation} />
         <Info libelle="Responsable de la publication" valeur={SOCIETE.directeurPublication} />
