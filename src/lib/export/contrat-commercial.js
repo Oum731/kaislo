@@ -143,7 +143,8 @@ export async function creerPdfContrat({ commercial, contrat, societe = {} }) {
   doc.text(sur('Pour ' + nomSociete), marge + 3, hauteur + 6);
   doc.text('Le Commercial', marge + largeur / 2 + 6, hauteur + 6);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-  doc.text(sur(societe.directeurPublication || 'Représentant de l\'équipe Kaislo'), marge + 3, hauteur + 12);
+  const signataire = societe.directeurPublication || 'Représentant de l\'équipe Kaislo';
+  doc.text(sur(signataire.charAt(0).toUpperCase() + signataire.slice(1)), marge + 3, hauteur + 12);
   doc.text(sur(commercial.nom), marge + largeur / 2 + 6, hauteur + 12);
   doc.setTextColor(...GRIS);
   if (contrat.accepteLe) {
