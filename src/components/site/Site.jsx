@@ -70,6 +70,7 @@ export function EnTeteSite({ lang = 'fr' }) {
 export const PAGES_LEGALES = () => ([
   ['/conditions-utilisation/', tr('Conditions d’utilisation')],
   ['/confidentialite/', tr('Confidentialité')],
+  ['/annexes-pays/', tr('Annexes par pays')],
   ['/conditions-vente-boutiques/', tr('Conditions de vente des boutiques')],
   ['/supprimer-mon-compte/', tr('Supprimer mon compte')],
   ['/cookies/', tr('Cookies et stockage')],

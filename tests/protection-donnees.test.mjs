@@ -22,3 +22,18 @@ test('la page Confidentialité affiche la table des pays et les conditions de ve
   assert.match(boutique, /conditions-vente-boutiques/);
   assert.match(boutique, /if \(!accepte\)/); // la commande exige la case cochée
 });
+
+import { ANNEXES_PAYS } from '../src/lib/donnees/annexes-pays.js';
+test('annexes par pays : Maroc, Côte d’Ivoire, Sénégal, Burkina Faso, Congo ; chaque annexe a une loi des données vérifiée ; la clause de droit applicable est marocaine', () => {
+  assert.deepEqual(ANNEXES_PAYS.map((a) => a.id), ['maroc', 'cote-d-ivoire', 'senegal', 'burkina-faso', 'congo']);
+  for (const a of ANNEXES_PAYS) {
+    assert.ok(PROTECTION_DONNEES.some((p) => p.pays === a.protection), a.pays);
+    assert.ok(a.taxes.length > 30 && a.vente.length > 30 && a.monnaie, a.pays);
+  }
+  assert.match(ANNEXES_PAYS.find((a) => a.id === 'maroc').taxes, /20 %/);
+  assert.match(ANNEXES_PAYS.find((a) => a.id === 'senegal').taxes, /92-I-1°/);
+  const cgu = fs.readFileSync('src/app/(fr)/conditions-utilisation/page.js', 'utf8');
+  assert.match(cgu, /droit marocain/);
+  assert.match(cgu, /tribunaux de Casablanca/);
+  assert.match(cgu, /annexes-pays/);
+});
