@@ -25,7 +25,7 @@ function nomPourAvis(string $nom): string
 
 function versAvisPublic(array $a): array
 {
-    return ['note' => (int) $a['note'], 'texte' => $a['texte'], 'nom' => $a['nom_affiche'], 'activite' => $a['activite'], 'ville' => $a['ville'], 'pays' => $a['pays'], 'le' => substr((string) $a['cree_le'], 0, 10)];
+    return ['note' => (int) $a['note'], 'texte' => $a['texte'], 'texteEn' => $a['texte_en'] ?? null, 'nom' => $a['nom_affiche'], 'activite' => $a['activite'], 'ville' => $a['ville'], 'pays' => $a['pays'], 'le' => substr((string) $a['cree_le'], 0, 10)];
 }
 
 function routeAvisPublics(): never
@@ -63,7 +63,7 @@ function routeAvisEnvoyer(): never
     $existant = requete('SELECT id FROM avis WHERE commerce_id = ?', [$u['commerce_id']])->fetch();
     // Un avis modifié repart en validation
     if ($existant) {
-        requete("UPDATE avis SET note = ?, texte = ?, nom_affiche = ?, activite = ?, ville = ?, pays = ?, statut = 'attente', modifie_le = ?, modere_le = NULL, modere_par = NULL WHERE id = ?",
+        requete("UPDATE avis SET note = ?, texte = ?, nom_affiche = ?, activite = ?, ville = ?, pays = ?, texte_en = NULL, statut = 'attente', modifie_le = ?, modere_le = NULL, modere_par = NULL WHERE id = ?",
             [$note, $texte, nomPourAvis($u['nom']), $c['type'], $c['ville'], $c['pays'], maintenant(), $existant['id']]);
     } else {
         requete("INSERT INTO avis (id, commerce_id, utilisateur_id, note, texte, nom_affiche, activite, ville, pays, statut, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'attente', ?, ?)",
@@ -94,9 +94,17 @@ function routeAdminAvisModerer(): never
     $admin = adminConnecte();
     $e = entree();
     $id = (string) ($e['id'] ?? '');
-    $statut = ['publier' => 'publie', 'refuser' => 'refuse', 'attente' => 'attente'][(string) ($e['action'] ?? '')] ?? null;
-    if (!$statut) throw new ErreurApi('Action inconnue');
+    $action = (string) ($e['action'] ?? '');
     if (!requete('SELECT 1 FROM avis WHERE id = ?', [$id])->fetch()) throw new ErreurApi('Avis introuvable', 404);
+    // Traduction anglaise : saisie par l'équipe (vide = pas de traduction, le site montre le texte d'origine)
+    if (array_key_exists('texteEn', $e)) {
+        $en = trim((string) $e['texteEn']);
+        if (mb_strlen($en) > AVIS_TEXTE_MAX * 2) throw new ErreurApi('Traduction trop longue');
+        requete('UPDATE avis SET texte_en = ? WHERE id = ?', [$en === '' ? null : $en, $id]);
+    }
+    if ($action === 'traduire') repondre(['ok' => true]);
+    $statut = ['publier' => 'publie', 'refuser' => 'refuse', 'attente' => 'attente'][$action] ?? null;
+    if (!$statut) throw new ErreurApi('Action inconnue');
     requete('UPDATE avis SET statut = ?, modere_le = ?, modere_par = ? WHERE id = ?', [$statut, $statut === 'attente' ? null : maintenant(), $statut === 'attente' ? null : $admin['nom'], $id]);
     repondre(['ok' => true]);
 }

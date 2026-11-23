@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { appelApi } from '@/lib/api';
 import { typeCommerce, paysParId } from '@/lib/donnees/modeles';
 import { Icone } from '@/components/ui';
-import { tr, tt } from '@/lib/i18n';
+import { tr, tt, langueActive } from '@/lib/i18n';
 
 function Etoiles({ note }) {
   return (
@@ -40,7 +40,7 @@ export default function AvisClients() {
           {rep.avis.map((a, i) => (
             <figure key={i} className="carte-avis">
               <Etoiles note={a.note} />
-              <blockquote>{a.texte}</blockquote>
+              <blockquote lang={langueActive() === 'en' && a.texteEn ? 'en' : undefined}>{langueActive() === 'en' && a.texteEn ? a.texteEn : a.texte}</blockquote>
               <figcaption><b>{a.nom}</b> · {tt(typeCommerce(a.activite).nom)} · {a.ville}{a.pays && paysParId(a.pays)?.nom ? `, ${tt(paysParId(a.pays).nom)}` : ''}</figcaption>
             </figure>
           ))}
