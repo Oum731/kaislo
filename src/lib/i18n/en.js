@@ -2352,4 +2352,5 @@ export const EN = {
   "Paiement par Orange Money, Wave, MTN MoMo (selon votre pays) ou virement. Un reçu et une facture sont envoyés à chaque paiement.": "Payment by Orange Money, Wave, MTN MoMo (depending on your country) or bank transfer. A receipt and an invoice are sent with every payment.",
   "Une question sur votre abonnement ? Bouton « Discuter avec nous » ou écran Aide.": "A question about your subscription? Use the \"Chat with us\" button or the Help screen.",
   "Conditions de vente des boutiques": "Shop terms of sale",
+  "Annexes par pays": "Country annexes",
 };

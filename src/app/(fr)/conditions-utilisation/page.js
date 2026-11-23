@@ -215,7 +215,10 @@ const SECTIONS = [
     id: 'litiges',
     titre: 'Droit applicable et litiges',
     contenu: (
-      <p>En cas de désaccord, écrivez-nous d’abord à <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> : nous cherchons une solution amiable dans les 30 jours. À défaut, le litige est soumis aux tribunaux compétents du lieu du siège d’Amorac, sauf disposition légale impérative contraire.</p>
+      <>
+        <p>Le contrat d’abonnement est régi par le <b>droit marocain</b>, Amorac étant une société marocaine, <b>sans priver le commerce des dispositions impératives de son pays</b> (consommateurs, données personnelles, impôts). Les <Link href="/annexes-pays/">annexes par pays</Link> précisent ce qui s’applique en plus selon le pays du commerce.</p>
+        <p>En cas de désaccord, écrivez-nous d’abord à <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> : nous cherchons une solution amiable dans les 30 jours. À défaut, le litige est soumis aux tribunaux de Casablanca (Maroc), sauf disposition légale impérative contraire.</p>
+      </>
     ),
   },
 ];
