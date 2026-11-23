@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 31;
+const VERSION_BASE = 32;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -125,6 +125,7 @@ const STRUCTURE = [
         'colonnes' => [
             'id' => 'ID', 'email' => 'VARCHAR(190)', 'nom' => 'TEXTE', 'mdp_hash' => 'TEXTE', 'cree_le' => 'DATE',
             'role' => 'VARCHAR(20)', 'actif' => 'ENTIER', 'vu_le' => 'DATE', // role : 'admin' (tout) ou 'support' (messages, consultation)
+            'totp_secret' => 'VARCHAR(64)', 'totp_actif' => 'ENTIER', 'totp_dernier' => 'ENTIER', 'codes_secours' => 'LONG', // double authentification : voir lib/admin-2fa.php
         ],
         'cle' => ['id'], 'uniques' => [['email']], 'index' => [],
     ],
@@ -400,6 +401,14 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 31 : double authentification de l'espace Kaislo
+    if ($version >= 1 && $version < 32) {
+        $essayer('ALTER TABLE admins ADD COLUMN totp_secret VARCHAR(64) NULL');
+        $essayer('ALTER TABLE admins ADD COLUMN totp_actif INTEGER NULL');
+        $essayer('ALTER TABLE admins ADD COLUMN totp_dernier INTEGER NULL');
+        $essayer('ALTER TABLE admins ADD COLUMN codes_secours TEXT NULL');
     }
 
     // Bases en version 1 à 30 : rappels d'abonnement (un message par palier)

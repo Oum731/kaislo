@@ -17,6 +17,7 @@ import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnee
 import { paysParId, typeCommerce, numeroWhatsApp, PAYS } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
 import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
+import { qrDataUrl } from '@/lib/qr';
 import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixListeFormule, prixTouteDevise, TAUX_CHANGE } from '@/lib/donnees/tarifs';
 import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
@@ -79,13 +80,18 @@ function Cadre({ children }) {
 }
 
 function ConnexionAdmin({ surConnexion }) {
-  const [f, setF] = useState({ email: '', motDePasse: '' });
+  const [f, setF] = useState({ email: '', motDePasse: '', code: '' });
+  const [etapeCode, setEtapeCode] = useState(false); // le compte a la double authentification : le code est demandé
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const valider = async (e) => {
     e.preventDefault();
     setEnCours(true);
-    try { surConnexion(await appelApi('POST', '/admin/connexion', f)); } catch (err) { setErreur(err.message); }
+    setErreur('');
+    try {
+      const rep = await appelApi('POST', '/admin/connexion', f);
+      if (rep.code2fa) setEtapeCode(true); else surConnexion(rep);
+    } catch (err) { setErreur(err.message); }
     setEnCours(false);
   };
   return (
@@ -95,8 +101,14 @@ function ConnexionAdmin({ surConnexion }) {
       <form className="pile" onSubmit={valider}>
         <label className="champ"><span>E-mail</span><input type="email" autoComplete="username" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} autoFocus /></label>
         <label className="champ"><span>Mot de passe</span><input type="password" autoComplete="current-password" value={f.motDePasse} onChange={(e) => setF({ ...f, motDePasse: e.target.value })} /></label>
+        {etapeCode && (
+          <label className="champ"><span>Code de vérification</span>
+            <input inputMode="numeric" autoComplete="one-time-code" autoFocus value={f.code} onChange={(e) => setF({ ...f, code: e.target.value })} placeholder="6 chiffres" />
+            <span className="tres-petit muet" style={{ fontWeight: 400 }}>Ouvrez votre application d’authentification (Google Authenticator, Authy…). Appareil perdu : saisissez un code de secours.</span>
+          </label>
+        )}
         {erreur && <p className="alerte">{erreur}</p>}
-        <button className="btn bloc" disabled={enCours}>{enCours ? 'Connexion…' : 'Se connecter'}</button>
+        <button className="btn bloc" disabled={enCours}>{enCours ? 'Connexion…' : etapeCode ? 'Valider le code' : 'Se connecter'}</button>
       </form>
     </Cadre>
   );
@@ -286,6 +298,75 @@ function useAlertesEquipe(api, jeton) {
   return { etat, serveur, message, enCours, activer: () => agir(true), desactiver: () => agir(false) };
 }
 
+// Double authentification du compte (code à 6 chiffres d'une application) : recommandée à toute l'équipe, indispensable aux administrateurs
+function SecuriteCompte({ ctx }) {
+  const [actif, setActif] = useState(!!ctx.admin.deuxFacteurs);
+  const [etape, setEtape] = useState(null); // null | 'activer' | 'codes' | 'desactiver'
+  const [secret, setSecret] = useState(null); // { secret, adresse }
+  const [code, setCode] = useState('');
+  const [mdp, setMdp] = useState('');
+  const [codes, setCodes] = useState([]);
+  const [erreur, setErreur] = useState('');
+  const [copie, setCopie] = useState(false);
+  const fermer = () => { setEtape(null); setCode(''); setMdp(''); setErreur(''); setSecret(null); };
+  const commencer = async () => {
+    try { setSecret(await ctx.api('POST', '/admin/2fa/preparer')); setEtape('activer'); setErreur(''); } catch (e) { setErreur(e.message); }
+  };
+  const activer = async () => {
+    try { const r = await ctx.api('POST', '/admin/2fa/activer', { code }); setCodes(r.codesSecours); setActif(true); setEtape('codes'); setCode(''); setErreur(''); } catch (e) { setErreur(e.message); }
+  };
+  const desactiver = async () => {
+    try { await ctx.api('POST', '/admin/2fa/desactiver', { motDePasse: mdp, code }); setActif(false); fermer(); ctx.annoncer('Double authentification désactivée'); } catch (e) { setErreur(e.message); }
+  };
+  const copier = async () => { try { await navigator.clipboard.writeText(codes.join('\n')); setCopie(true); } catch { /* copie impossible : les codes restent affichés */ } };
+  return (
+    <>
+      <div className={`carte ${actif ? '' : 'astuce'}`} style={{ marginBottom: 14, maxWidth: 720 }}>
+        <div className="ligne espace" style={{ gap: 12, flexWrap: 'wrap' }}>
+          <span className="grandit">
+            <b>Double authentification : {actif ? 'activée' : 'non activée'}</b>
+            <span className="petit bloc-texte">{actif ? 'Un code de votre téléphone est demandé à chaque connexion.' : ctx.admin.role === 'admin' ? 'Votre compte donne accès à tous les commerces et à tous les paiements : activez-la (2 minutes).' : 'Protégez votre compte : un mot de passe volé ne suffira plus.'}</span>
+          </span>
+          {actif ? <button className="btn secondaire petit" onClick={() => { setEtape('desactiver'); setErreur(''); }}>Désactiver</button> : <button className="btn petit" onClick={commencer}>Activer</button>}
+        </div>
+        {erreur && !etape && <p className="alerte" style={{ marginTop: 8 }}>{erreur}</p>}
+      </div>
+      {etape === 'activer' && secret && (
+        <Feuille titre="Activer la double authentification" surFermer={fermer} pied={<button className="btn bloc" onClick={activer} disabled={code.trim().length < 6}>Vérifier et activer</button>}>
+          <div className="pile">
+            <p className="petit">1. Installez <b>Google Authenticator</b>, <b>Microsoft Authenticator</b> ou <b>Authy</b> sur votre téléphone.</p>
+            <p className="petit">2. Dans l’application, ajoutez un compte et scannez ce code (ou saisissez la clé à la main).</p>
+            <div style={{ textAlign: 'center' }}><img src={qrDataUrl(secret.adresse, { cellule: 5 })} alt="Code QR de la double authentification" width={200} height={200} style={{ background: '#fff', borderRadius: 6 }} /></div>
+            <p className="tres-petit muet" style={{ wordBreak: 'break-all', textAlign: 'center' }}>Clé : <b>{secret.secret.replace(/(.{4})/g, '$1 ').trim()}</b></p>
+            <p className="petit">3. Saisissez le code à 6 chiffres affiché par l’application.</p>
+            <label className="champ"><span>Code à 6 chiffres</span><input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" /></label>
+            {erreur && <p className="alerte">{erreur}</p>}
+          </div>
+        </Feuille>
+      )}
+      {etape === 'codes' && (
+        <Feuille titre="Gardez ces codes de secours" surFermer={fermer} pied={<button className="btn bloc" onClick={fermer}>J’ai noté mes codes</button>}>
+          <div className="pile">
+            <p className="alerte petit">Ils ne seront <b>plus jamais affichés</b>. Chaque code sert une seule fois si vous perdez votre téléphone. Notez-les sur papier ou dans un gestionnaire de mots de passe.</p>
+            <div className="carte" style={{ fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: 17, lineHeight: 1.9, textAlign: 'center' }}>{codes.map((c) => <div key={c}>{c}</div>)}</div>
+            <button className="btn secondaire" onClick={copier}>{copie ? 'Copiés' : 'Copier les codes'}</button>
+          </div>
+        </Feuille>
+      )}
+      {etape === 'desactiver' && (
+        <Feuille titre="Désactiver la double authentification" surFermer={fermer} pied={<button className="btn bloc danger" onClick={desactiver} disabled={!mdp || !code}>Désactiver</button>}>
+          <div className="pile">
+            <p className="petit">Confirmez avec votre mot de passe et un code de votre application (ou un code de secours).</p>
+            <label className="champ"><span>Mot de passe</span><input type="password" autoComplete="current-password" value={mdp} onChange={(e) => setMdp(e.target.value)} /></label>
+            <label className="champ"><span>Code</span><input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} /></label>
+            {erreur && <p className="alerte">{erreur}</p>}
+          </div>
+        </Feuille>
+      )}
+    </>
+  );
+}
+
 // Cadre d'activation : visible seulement tant que les alertes ne sont pas activées sur cet appareil
 function AlertesEquipe({ ctx }) {
   const { etat, serveur, message, enCours, activer } = ctx.alertes;
@@ -334,6 +415,7 @@ function VueTableau({ commerces, ctx }) {
           <div className="carte kpi"><p className="petit muet">Suspendus</p><p className="kpi-valeur">{compte('suspendu')}</p><p className="sous">accès bloqué</p></div>
           <div className="carte kpi"><p className="petit muet">Encaissé ce mois</p><p className="kpi-valeur petit" style={{ fontSize: 17 }}>{parDevise(duMois)}</p><p className="sous">{duMois.length} paiement(s)</p></div>
         </div>
+        <SecuriteCompte ctx={ctx} />
         <AlertesEquipe ctx={ctx} />
         {ctx.avisAttente > 0 && (
           <div className="astuce ligne" style={{ marginTop: 16, flexWrap: 'wrap' }}>
@@ -888,7 +970,7 @@ function VueEquipe({ ctx }) {
               <span className="avatar gerant">{initiales(a.nom)}</span>
               <span className="grandit">
                 <b className="bloc-texte">{a.nom} {a.id === ctx.admin.id ? <span className="badge">vous</span> : null}</b>
-                <span className="tres-petit muet">{a.email} · dernière connexion {a.vuLe ? formatDate(a.vuLe) : '—'}</span>
+                <span className="tres-petit muet">{a.email} · dernière connexion {a.vuLe ? formatDate(a.vuLe) : '—'} · {a.deuxFacteurs ? 'double authentification activée' : 'sans double authentification'}</span>
               </span>
               <span className={`badge ${a.role === 'admin' ? 'safran' : 'gris'}`}>{a.role === 'admin' ? 'Administrateur' : 'Support'}{a.actif ? '' : ' · désactivé'}</span>
             </button>
@@ -910,6 +992,7 @@ function VueEquipe({ ctx }) {
               <input type="password" autoComplete="new-password" value={edition.motDePasse} onChange={(e) => setEdition({ ...edition, motDePasse: e.target.value })} />
             </label>
             {edition.id && <label className="case-accord"><input type="checkbox" checked={edition.actif} onChange={(e) => setEdition({ ...edition, actif: e.target.checked })} /><span>Compte actif</span></label>}
+            {edition.id && edition.id !== ctx.admin.id && edition.deuxFacteurs && <label className="case-accord"><input type="checkbox" checked={!!edition.reinitialiser2fa} onChange={(e) => setEdition({ ...edition, reinitialiser2fa: e.target.checked })} /><span>Retirer la double authentification de ce compte (téléphone et codes de secours perdus). La personne devra la réactiver.</span></label>}
             {erreur && <p className="alerte">{erreur}</p>}
           </div>
         </Feuille>

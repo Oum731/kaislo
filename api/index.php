@@ -50,6 +50,7 @@ require __DIR__ . '/lib/alertes-equipe.php';
 require __DIR__ . '/lib/sauvegardes.php';
 require __DIR__ . '/lib/activation.php';
 require __DIR__ . '/lib/rappels.php';
+require __DIR__ . '/lib/admin-2fa.php';
 require __DIR__ . '/lib/defi.php';
 require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
@@ -147,6 +148,9 @@ try {
         'POST /admin/installer' => routeAdminInstaller(),
         'POST /admin/connexion' => routeAdminConnexion(),
         'POST /admin/deconnexion' => routeAdminDeconnexion(),
+        'POST /admin/2fa/preparer' => routeAdmin2faPreparer(),
+        'POST /admin/2fa/activer' => routeAdmin2faActiver(),
+        'POST /admin/2fa/desactiver' => routeAdmin2faDesactiver(),
         'GET /admin/moi' => routeAdminMoi(),
         'GET /admin/commerces' => routeAdminCommerces(),
         'GET /admin/commerce' => routeAdminCommerce(),

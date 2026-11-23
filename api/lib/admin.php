@@ -25,13 +25,13 @@ function adminConnecte(bool $adminSeulement = false): array
     if (!$a['actif']) throw new ErreurApi('Compte désactivé', 403);
     if ($adminSeulement && $a['role'] !== 'admin') throw new ErreurApi('Réservé aux administrateurs Kaislo', 403);
     requete('UPDATE jetons_admin SET expire_le = ? WHERE jeton_hash = ?', [maintenant(DUREE_SESSION_ADMIN), $empreinte]);
-    unset($a['expire_le'], $a['mdp_hash']);
+    unset($a['expire_le'], $a['mdp_hash'], $a['totp_secret'], $a['codes_secours']);
     return $a;
 }
 
 function versAdmin(array $a): array
 {
-    return ['id' => $a['id'], 'email' => $a['email'], 'nom' => $a['nom'], 'role' => $a['role'], 'actif' => (bool) $a['actif'], 'vuLe' => $a['vu_le'] ?? null];
+    return ['id' => $a['id'], 'email' => $a['email'], 'nom' => $a['nom'], 'role' => $a['role'], 'actif' => (bool) $a['actif'], 'vuLe' => $a['vu_le'] ?? null, 'deuxFacteurs' => !empty($a['totp_actif'])];
 }
 
 function ouvrirSessionAdmin(array $a): array
@@ -95,6 +95,16 @@ function routeAdminConnexion(): never
         $bloque = noterEchec($cleEmail);
         $bloque = noterEchec($cleIp, 20) || $bloque;
         throw new ErreurApi($bloque ? 'Trop d’essais : réessayez dans ' . MINUTES_BLOCAGE . ' minutes.' : 'E-mail ou mot de passe incorrect', $bloque ? 429 : 401);
+    }
+    // Double authentification : sans code, aucune session (l'application redemande avec le code) ; un code faux compte comme un échec
+    if (!empty($a['totp_actif'])) {
+        $code = trim((string) ($e['code'] ?? ''));
+        if ($code === '') repondre(['ok' => true, 'code2fa' => true]);
+        if (!verifierDeuxFacteurs($a, $code)) {
+            $bloque = noterEchec($cleEmail);
+            $bloque = noterEchec($cleIp, 20) || $bloque;
+            throw new ErreurApi($bloque ? 'Trop d’essais : réessayez dans ' . MINUTES_BLOCAGE . ' minutes.' : 'Code incorrect ou déjà utilisé : essayez le code suivant, ou un code de secours', $bloque ? 429 : 401);
+        }
     }
     effacerEchecs($cleEmail);
     journaliser(null, $a['id'], 'admin-connexion');
@@ -433,6 +443,7 @@ function routeAdminEquipeEnregistrer(): never
     if ($id === $moi['id'] && (!$actif || $role !== 'admin')) throw new ErreurApi('Vous ne pouvez pas retirer vos propres droits');
     if ($id) {
         requete('UPDATE admins SET email = ?, nom = ?, role = ?, actif = ? WHERE id = ?', [$email, $nom, $role, $actif ? 1 : 0, $id]);
+        if (!empty($e['reinitialiser2fa']) && $id !== $moi['id']) reinitialiserDeuxFacteurs($moi, $id);
         if ($mdp !== '') { verifierMotDePasse($mdp); requete('UPDATE admins SET mdp_hash = ? WHERE id = ?', [password_hash($mdp, PASSWORD_DEFAULT), $id]); }
         if (!$actif || $mdp !== '') requete('DELETE FROM jetons_admin WHERE admin_id = ?', [$id]);
     } else {
