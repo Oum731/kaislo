@@ -50,11 +50,11 @@ export const RESEAUX = { youtube: 'https://www.youtube.com/@kaislo-amorac', face
 // À COMPLÉTER avant le lancement commercial : un champ vide n'est pas affiché.
 export const SOCIETE = {
   nom: 'Amorac',
-  formeJuridique: 'SARL',
+  formeJuridique: 'SARL AU (société à responsabilité limitée d’associé unique)',
   capital: '10 000 MAD', // « SARL au capital de 10 000 MAD » (comme sur le modèle de facture d'Amorac)
   adresse: '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc', // siège
   immatriculation: 'RC 690767 · ICE 003786356000083 · IF 68391830 · TP 34215251',
-  directeurPublication: 'le gérant d’Amorac SARL', // responsable de la publication (sans le nom de la personne : à remplacer par son nom si besoin)
+  directeurPublication: 'Oumar Sourougé Traoré, gérant d’Amorac SARL AU', // responsable de la publication : le gérant (associé unique), d'après les statuts
   recepisseCndp: '', // numéro du récépissé de déclaration à la CNDP (loi 09-08) : à remplir quand la déclaration est faite ; s'affiche alors sur la page Confidentialité
   emailDonnees: 'contact@kaislo.com', // demandes sur les données personnelles
   emailSecurite: 'contact@kaislo.com', // signalement de failles de sécurité

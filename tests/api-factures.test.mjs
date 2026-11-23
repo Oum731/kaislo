@@ -102,7 +102,7 @@ test('il n’existe aucun moyen de créer une facture à la main : seul l’enre
 test('l’émetteur de la facture est celui de src/config.js', () => {
   const config = fs.readFileSync('src/config.js', 'utf8');
   for (const v of ['690767', '003786356000083', '68391830', '34215251', '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc']) assert.ok(config.includes(v), v);
-  assert.match(config, /formeJuridique: 'SARL',/);
+  assert.match(config, /formeJuridique: 'SARL AU/);
   assert.match(config, /capital: '10 000 MAD'/); // le même capital que sur les factures (EMETTEUR_FACTURE)
 });
 
