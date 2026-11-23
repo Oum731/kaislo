@@ -5,7 +5,7 @@
 // est noté dans d.journal au moment du geste : { id, date, par, type, ...détails }. Ce sont des ajouts : rien ne s'y modifie.
 // ------------------------------------------------------------
 
-export const TYPES_JOURNAL = ['annulation', 'remise', 'depense', 'depense-supprimee', 'stock', 'caisse', 'produit-supprime', 'prix', 'client-supprime', 'restauration', 'retour'];
+export const TYPES_JOURNAL = ['annulation', 'remise', 'depense', 'depense-supprimee', 'stock', 'caisse', 'produit-supprime', 'prix', 'client-supprime', 'restauration', 'retour', 'credit', 'credit-annule'];
 export const JOURNAL_MAX = 3000; // au-delà, les plus anciennes lignes de d.journal sont retirées
 
 let compteur = 0;
@@ -55,6 +55,11 @@ export function journalActivite(d, filtres = {}, maintenant = new Date()) {
     toutes.push({ id: 'o' + s.id, date: s.ouverteLe, par: s.ouvertePar || '', type: 'caisse', etape: 'ouverture', fond: s.fondDeCaisse || 0 });
     if (s.fermeLe) toutes.push({ id: 'f' + s.id, date: s.fermeLe, par: s.fermePar || '', type: 'caisse', etape: 'fermeture', ecart: s.cloture?.ecart || 0 });
   }
+  const nomClient = (id) => (d.clients || []).find((c) => c.id === id)?.nom || '';
+  for (const x of d.dettes || []) {
+    toutes.push({ id: 'cr' + x.id, date: x.date, par: x.utilisateurNom || '', type: 'credit', client: nomClient(x.clientId), montant: x.montant, note: x.note || '' });
+    if (x.annulee) toutes.push({ id: 'cra' + x.id, date: x.annulee.date, par: x.annulee.par || '', type: 'credit-annule', client: nomClient(x.clientId), montant: x.montant, note: x.note || '' });
+  }
   for (const j of d.journal || []) toutes.push(j);
 
   const dansPeriode = toutes.filter((x) => x.date && (!debut || new Date(x.date) >= debut));
@@ -68,7 +73,7 @@ export function journalActivite(d, filtres = {}, maintenant = new Date()) {
 
 /** Une ligne est « à surveiller » : vente annulée, remise, dépense ou article supprimé, prix changé, écart de caisse, correction de stock en moins. */
 export function aSurveiller(l) {
-  if (l.type === 'annulation' || l.type === 'remise' || l.type === 'depense-supprimee' || l.type === 'produit-supprime' || l.type === 'client-supprime' || l.type === 'prix' || l.type === 'restauration' || l.type === 'retour') return true;
+  if (l.type === 'annulation' || l.type === 'remise' || l.type === 'depense-supprimee' || l.type === 'produit-supprime' || l.type === 'client-supprime' || l.type === 'prix' || l.type === 'restauration' || l.type === 'retour' || l.type === 'credit-annule') return true;
   if (l.type === 'caisse') return l.etape === 'fermeture' && l.ecart !== 0;
   if (l.type === 'stock') return l.sens === 'ajustement' && l.quantite < 0;
   return false;

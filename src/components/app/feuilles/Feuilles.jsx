@@ -9,7 +9,7 @@ import {
 } from './FeuillesVente';
 import {
   FeuilleProduit, FeuilleCategorie, FeuilleUtilisateur, FeuilleDepense, FeuilleClient, FeuilleFicheClient,
-  FeuilleRemboursement, FeuilleRecuRemboursement, FeuilleEntreeStock, FeuilleAjustement, FeuilleCompte, FeuilleMenu, FeuilleBiometrie,
+  FeuilleCredit, FeuilleRemboursement, FeuilleRecuRemboursement, FeuilleEntreeStock, FeuilleAjustement, FeuilleCompte, FeuilleMenu, FeuilleBiometrie,
 } from './FeuillesGestion';
 
 import { FeuilleAchat, FeuilleFournisseur } from './FeuillesAchats';
@@ -46,6 +46,7 @@ const FEUILLES = {
   depense: FeuilleDepense,
   client: FeuilleClient,
   ficheClient: FeuilleFicheClient,
+  credit: FeuilleCredit,
   remboursement: FeuilleRemboursement,
   recuRemboursement: FeuilleRecuRemboursement,
   entreeStock: FeuilleEntreeStock,
