@@ -16,7 +16,7 @@
 // Émetteur (même contenu que SOCIETE dans src/config.js : un test le vérifie)
 const EMETTEUR_FACTURE = [
     'nom' => 'AMORAC',
-    'forme' => 'SARL',
+    'forme' => 'SARL AU',
     'capital' => '10 000,00 MAD', // « SARL au capital de 10 000,00 MAD » : à ce jour, comme sur le modèle de facture d'Amorac
     'adresse' => '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc',
     'identifiants' => ['RC' => '690767', 'ICE' => '003786356000083', 'IF' => '68391830', 'TP' => '34215251'],
