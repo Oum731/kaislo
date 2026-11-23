@@ -155,6 +155,10 @@ function calculerResume(array $commerce, array $reglages, ?DateTimeImmutable $ma
         $pid = is_array($m) ? (string) ($m['produitId'] ?? '') : '';
         if ($pid !== '' && isset($produits[$pid]) && (string) ($m['date'] ?? '') >= $depuisDe($produits[$pid])) $delta[$pid] += (float) ($m['quantite'] ?? 0);
     }
+    foreach (requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'dettes' AND supprime = 0", [$id]) as $l) {
+        $x = json_decode($l['contenu'], true);
+        if (is_array($x) && !empty($x['clientId']) && empty($x['annulee'])) $credit[$x['clientId']] = ($credit[$x['clientId']] ?? 0) + (float) ($x['montant'] ?? 0); // crédit noté à la main
+    }
     foreach (requete("SELECT contenu FROM elements WHERE commerce_id = ? AND type = 'remboursements' AND supprime = 0", [$id]) as $l) {
         $r = json_decode($l['contenu'], true);
         if (is_array($r) && !empty($r['clientId'])) $credit[$r['clientId']] = ($credit[$r['clientId']] ?? 0) - (float) ($r['montant'] ?? 0);
