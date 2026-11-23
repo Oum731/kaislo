@@ -16,7 +16,7 @@ import { enregistrerImage, lireImage } from './images.js';
 // Listes du commerce synchronisées élément par élément
 export const COLLECTIONS = ['postes', 'categories', 'produits', 'ventes', 'commandes', 'clients', 'remboursements', 'dettes', 'sessionsCaisse', 'depenses', 'mouvements', 'journal', 'fournisseurs', 'achats', 'reglementsFournisseurs'];
 // Champs du commerce gérés par le serveur : jamais envoyés comme « réglages »
-const CHAMPS_SERVEUR = ['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur', 'tarif'];
+const CHAMPS_SERVEUR = ['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur', 'tarif', 'suppressionPrevueLe'];
 
 export const estServeur = (d) => d?.commerce?.serveur === true;
 
@@ -139,6 +139,8 @@ export function fusionServeur(d, rep) {
       ...d.commerce,
       // Numéro du commerce : tenu par le serveur (identifiant, changé seulement par l'équipe Kaislo)
       ...(rep.commerce?.telephone ? { telephone: rep.commerce.telephone } : {}),
+      // Suppression du compte demandée : date de l'effacement définitif (null = pas de demande)
+      ...(rep.commerce ? { suppressionPrevueLe: rep.commerce.suppressionPrevueLe || null } : {}),
       ...(ab ? { abonnement: { ...(d.commerce.abonnement || {}), ...ab, paiements: d.commerce.abonnement?.paiements || [] } } : {}),
       // Formule, nombre de postes et prix de l'abonnement (calculés par le serveur)
       ...(rep.tarif ? { tarif: rep.tarif } : {}),

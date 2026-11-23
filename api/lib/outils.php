@@ -198,5 +198,6 @@ function versCommerce(array $c): array
             'paiementDeclareLe' => $c['paiement_declare_le'] ?? null, // « J'ai payé » touché, en cours de vérification par l'équipe
             'paiementDeclareMoyen' => $c['paiement_declare_moyen'] ?? null,
         ],
+        'suppressionPrevueLe' => suppressionPrevueLe($c), // suppression du compte demandée : date de l'effacement définitif
     ];
 }

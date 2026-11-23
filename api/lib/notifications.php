@@ -357,7 +357,7 @@ function pushResume(array $commerce, array $r, string $langue): array
 // Un commerce reçoit-il son résumé maintenant ? (heure locale choisie, pas déjà envoyé aujourd'hui, abonnement en cours)
 function resumeDu(array $commerce, array $reglages, DateTimeImmutable $maintenantUtc): bool
 {
-    if (($commerce['statut'] ?? '') === 'suspendu' || abonnementTermine($commerce)) return false; // abonnement terminé : plus de résumé du soir (lib/activation.php)
+    if (($commerce['statut'] ?? '') === 'suspendu' || !empty($commerce['suppression_demandee_le']) || abonnementTermine($commerce)) return false; // abonnement terminé : plus de résumé du soir (lib/activation.php)
     $prefs = prefsNotifications($reglages);
     if (!$prefs['resume']) return false;
     $canaux = canauxDuCompte($commerce, $reglages);
@@ -377,6 +377,7 @@ function routeCronNotifications(): never
 
     $maintenantUtc = new DateTimeImmutable('now', new DateTimeZone('UTC'));
     $envoyes = 0; $ignores = 0; $echecs = 0; $rappels = 0;
+    $supprimes = purgerCommercesAEffacer(); // comptes dont le délai de suppression est passé (lib/suppression.php)
     foreach (requete("SELECT * FROM commerces WHERE statut <> 'suspendu'")->fetchAll() as $commerce) {
         try {
             $reglages = reglagesCommerce($commerce['id']);
@@ -394,7 +395,7 @@ function routeCronNotifications(): never
             error_log('[Kaislo notifications] ' . $commerce['id'] . ' : ' . $e->getMessage());
         }
     }
-    repondre(['ok' => true, 'envoyes' => $envoyes, 'ignores' => $ignores, 'echecs' => $echecs, 'rappels' => $rappels]);
+    repondre(['ok' => true, 'envoyes' => $envoyes, 'ignores' => $ignores, 'echecs' => $echecs, 'rappels' => $rappels, 'supprimes' => $supprimes]);
 }
 
 // ---------- Nouvelle commande en ligne ----------

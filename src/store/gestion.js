@@ -401,6 +401,35 @@ export const trancheGestion = (set, get) => ({
     get().message(tr('Commerce supprimé'));
   },
 
+  // Suppression du compte (commerce en ligne) : le gérant la demande avec son code PIN ; effacement définitif 30 jours plus tard, annulable
+  async demanderSuppressionCompte(pin) {
+    try {
+      const rep = await appelApi('POST', '/compte/supprimer', { pin }, get().jetonServeur());
+      get().majSuppressionCompte(rep.suppressionPrevueLe);
+      return null;
+    } catch (e) {
+      return e.horsLigne ? tr('Connexion internet nécessaire pour supprimer le compte') : e.message;
+    }
+  },
+
+  async annulerSuppressionCompte() {
+    try {
+      await appelApi('POST', '/compte/supprimer/annuler', {}, get().jetonServeur());
+      get().majSuppressionCompte(null);
+      get().message(tr('Suppression annulée : votre compte est conservé'));
+      return null;
+    } catch (e) {
+      return e.horsLigne ? tr('Connexion internet nécessaire') : e.message;
+    }
+  },
+
+  majSuppressionCompte(date) {
+    const d = get().d;
+    const nouveau = { ...d, commerce: { ...d.commerce, suppressionPrevueLe: date } };
+    enregistrerCommerce(nouveau);
+    set({ d: nouveau });
+  },
+
   // ---------- Dépenses ----------
   enregistrerDepense(b) {
     const montant = Number(b.montant);
