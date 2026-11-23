@@ -50,6 +50,7 @@ require __DIR__ . '/lib/alertes-equipe.php';
 require __DIR__ . '/lib/sauvegardes.php';
 require __DIR__ . '/lib/activation.php';
 require __DIR__ . '/lib/rappels.php';
+require __DIR__ . '/lib/suppression.php';
 require __DIR__ . '/lib/defi.php';
 require __DIR__ . '/lib/parrainage.php';
 require __DIR__ . '/lib/tarifs.php';
@@ -90,6 +91,8 @@ try {
         'GET /mes-commerces' => routeMesCommerces(),
         'GET /factures' => routeFacturesCommerce(),
         'POST /abonnement/activer' => routeActiverAbonnement(),
+        'POST /compte/supprimer' => routeCompteSupprimer(),
+        'POST /compte/supprimer/annuler' => routeCompteSupprimerAnnuler(),
         'GET /sauvegardes' => routeSauvegardesLire(),
         'POST /sauvegardes' => routeSauvegardesCreer(),
         'POST /sauvegardes/restaurer' => routeSauvegardesRestaurer(),

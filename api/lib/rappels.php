@@ -16,7 +16,7 @@ const RAPPEL_ANCIENNETE_MAX_JOURS = 14;
 /** Rappel à envoyer maintenant à ce commerce : ['genre', 'fin', 'palier', 'jours'], ou null. */
 function rappelAbonnementDu(array $c, DateTimeImmutable $maintenant): ?array
 {
-    if (($c['statut'] ?? '') === 'suspendu' || !empty($c['paiement_declare_le'])) return null;
+    if (($c['statut'] ?? '') === 'suspendu' || !empty($c['paiement_declare_le']) || !empty($c['suppression_demandee_le'])) return null; // suspendu, paiement signalé ou suppression demandée : pas de rappel
     if (($c['statut'] ?? '') === 'actif') {
         $fin = (string) ($c['periode_fin'] ?? '');
         $genre = !empty($c['periode_provisoire']) ? 'provisoire' : 'paye';
