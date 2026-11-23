@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 32;
+const VERSION_BASE = 33;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -202,6 +202,7 @@ const STRUCTURE = [
             'id' => 'ID', 'commerce_id' => 'ID', 'utilisateur_id' => 'ID', 'note' => 'ENTIER', 'texte' => 'LONG',
             'nom_affiche' => 'TEXTE', 'activite' => 'VARCHAR(20)', 'ville' => 'TEXTE', 'pays' => 'VARCHAR(4)',
             'statut' => 'VARCHAR(12)', // 'attente', 'publie' ou 'refuse'
+            'texte_en' => 'LONG', // traduction anglaise saisie par l'équipe (le site l'affiche en anglais)
             'cree_le' => 'DATE', 'modifie_le' => 'DATE', 'modere_le' => 'DATE', 'modere_par' => 'TEXTE',
         ],
         'cle' => ['id'], 'uniques' => [['commerce_id']], 'index' => [['statut', 'cree_le']],
@@ -401,6 +402,11 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 32 : traduction anglaise des avis
+    if ($version >= 1 && $version < 33) {
+        $essayer("ALTER TABLE avis ADD COLUMN texte_en $texteLong NULL");
     }
 
     // Bases en version 1 à 31 : suppression du compte demandée par le gérant

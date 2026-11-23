@@ -23,9 +23,45 @@ function nomPourAvis(string $nom): string
     return $prenom . $initiale;
 }
 
+/**
+ * Traduction automatique en anglais (DeepL), si la ligne « CleDeepL=… » est dans le fichier .env du serveur
+ * (clé gratuite : se termine par « :fx »). Renvoie null sans clé ou si le service ne répond pas : l'avis garde
+ * alors son texte d'origine et l'équipe peut saisir la traduction à la main.
+ */
+function traduireEnAnglais(string $texte): ?string
+{
+    $texte = trim($texte);
+    if ($texte === '') return null;
+    if (modeEssaiNotifications()) return '[EN] ' . $texte; // tests : pas d'appel réseau
+    $cle = lireFichierEnvCle('CleDeepL');
+    if (!$cle) return null;
+    $hote = str_ends_with($cle, ':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
+    $ctx = stream_context_create(['http' => [
+        'method' => 'POST', 'timeout' => 8, 'ignore_errors' => true,
+        'header' => "Authorization: DeepL-Auth-Key $cle\r\nContent-Type: application/x-www-form-urlencoded\r\n",
+        'content' => http_build_query(['text' => $texte, 'target_lang' => 'EN-GB']),
+    ]]);
+    $rep = @file_get_contents("https://$hote/v2/translate", false, $ctx);
+    $statut = isset($http_response_header[0]) && preg_match('#\s(\d{3})\s#', $http_response_header[0], $m) ? (int) $m[1] : 0;
+    if ($rep === false || $statut !== 200) return null;
+    $json = json_decode($rep, true);
+    $t = trim((string) ($json['translations'][0]['text'] ?? ''));
+    return $t === '' ? null : $t;
+}
+
+/** Traduit les avis publiés qui n'ont pas encore de traduction (quelques-uns à la fois). */
+function traduireAvisManquants(int $max = 5): void
+{
+    foreach (requete("SELECT id, texte FROM avis WHERE statut = 'publie' AND (texte_en IS NULL OR texte_en = '') ORDER BY cree_le DESC LIMIT " . (int) $max)->fetchAll() as $a) {
+        $en = traduireEnAnglais($a['texte']);
+        if ($en === null) return; // service indisponible ou pas de clé : on réessaiera plus tard
+        requete('UPDATE avis SET texte_en = ? WHERE id = ?', [$en, $a['id']]);
+    }
+}
+
 function versAvisPublic(array $a): array
 {
-    return ['note' => (int) $a['note'], 'texte' => $a['texte'], 'nom' => $a['nom_affiche'], 'activite' => $a['activite'], 'ville' => $a['ville'], 'pays' => $a['pays'], 'le' => substr((string) $a['cree_le'], 0, 10)];
+    return ['note' => (int) $a['note'], 'texte' => $a['texte'], 'texteEn' => $a['texte_en'] ?? null, 'nom' => $a['nom_affiche'], 'activite' => $a['activite'], 'ville' => $a['ville'], 'pays' => $a['pays'], 'le' => substr((string) $a['cree_le'], 0, 10)];
 }
 
 function routeAvisPublics(): never
@@ -63,7 +99,7 @@ function routeAvisEnvoyer(): never
     $existant = requete('SELECT id FROM avis WHERE commerce_id = ?', [$u['commerce_id']])->fetch();
     // Un avis modifié repart en validation
     if ($existant) {
-        requete("UPDATE avis SET note = ?, texte = ?, nom_affiche = ?, activite = ?, ville = ?, pays = ?, statut = 'attente', modifie_le = ?, modere_le = NULL, modere_par = NULL WHERE id = ?",
+        requete("UPDATE avis SET note = ?, texte = ?, nom_affiche = ?, activite = ?, ville = ?, pays = ?, texte_en = NULL, statut = 'attente', modifie_le = ?, modere_le = NULL, modere_par = NULL WHERE id = ?",
             [$note, $texte, nomPourAvis($u['nom']), $c['type'], $c['ville'], $c['pays'], maintenant(), $existant['id']]);
     } else {
         requete("INSERT INTO avis (id, commerce_id, utilisateur_id, note, texte, nom_affiche, activite, ville, pays, statut, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'attente', ?, ?)",
@@ -80,6 +116,7 @@ function routeAvisEnvoyer(): never
 function routeAdminAvis(): never
 {
     adminConnecte();
+    traduireAvisManquants();
     $lignes = requete("SELECT a.*, c.nom AS commerce_nom FROM avis a LEFT JOIN commerces c ON c.id = a.commerce_id ORDER BY CASE a.statut WHEN 'attente' THEN 0 ELSE 1 END, a.modifie_le DESC LIMIT 300")->fetchAll();
     repondre(['ok' => true, 'avis' => array_map(fn ($a) => versAvisPublic($a) + ['id' => $a['id'], 'statut' => $a['statut'], 'commerce' => $a['commerce_nom'], 'moderePar' => $a['modere_par']], $lignes), 'enAttente' => avisEnAttente()]);
 }
@@ -94,9 +131,18 @@ function routeAdminAvisModerer(): never
     $admin = adminConnecte();
     $e = entree();
     $id = (string) ($e['id'] ?? '');
-    $statut = ['publier' => 'publie', 'refuser' => 'refuse', 'attente' => 'attente'][(string) ($e['action'] ?? '')] ?? null;
-    if (!$statut) throw new ErreurApi('Action inconnue');
+    $action = (string) ($e['action'] ?? '');
     if (!requete('SELECT 1 FROM avis WHERE id = ?', [$id])->fetch()) throw new ErreurApi('Avis introuvable', 404);
+    // Traduction anglaise : saisie par l'équipe (vide = pas de traduction, le site montre le texte d'origine)
+    if (array_key_exists('texteEn', $e)) {
+        $en = trim((string) $e['texteEn']);
+        if (mb_strlen($en) > AVIS_TEXTE_MAX * 2) throw new ErreurApi('Traduction trop longue');
+        requete('UPDATE avis SET texte_en = ? WHERE id = ?', [$en === '' ? null : $en, $id]);
+    }
+    if ($action === 'traduire') repondre(['ok' => true]);
+    $statut = ['publier' => 'publie', 'refuser' => 'refuse', 'attente' => 'attente'][$action] ?? null;
+    if (!$statut) throw new ErreurApi('Action inconnue');
     requete('UPDATE avis SET statut = ?, modere_le = ?, modere_par = ? WHERE id = ?', [$statut, $statut === 'attente' ? null : maintenant(), $statut === 'attente' ? null : $admin['nom'], $id]);
+    if ($statut === 'publie') traduireAvisManquants(); // la traduction automatique se fait à la publication (sauf si l'équipe en a saisi une)
     repondre(['ok' => true]);
 }
