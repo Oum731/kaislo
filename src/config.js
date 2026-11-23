@@ -55,6 +55,7 @@ export const SOCIETE = {
   adresse: '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc', // siège
   immatriculation: 'RC 690767 · ICE 003786356000083 · IF 68391830 · TP 34215251',
   directeurPublication: 'le gérant d’Amorac SARL', // responsable de la publication (sans le nom de la personne : à remplacer par son nom si besoin)
+  recepisseCndp: '', // numéro du récépissé de déclaration à la CNDP (loi 09-08) : à remplir quand la déclaration est faite ; s'affiche alors sur la page Confidentialité
   emailDonnees: 'contact@kaislo.com', // demandes sur les données personnelles
   emailSecurite: 'contact@kaislo.com', // signalement de failles de sécurité
 };
@@ -67,7 +68,7 @@ export const HEBERGEUR = {
 };
 
 // Date affichée en haut des pages légales (à changer à chaque modification)
-export const DATE_PAGES_LEGALES = '14 novembre 2026';
+export const DATE_PAGES_LEGALES = '23 novembre 2026';
 
 // L'espace Amorac (/admin) est protégé par le serveur : comptes de l'équipe (e-mail + mot de passe).
 // Premier compte : clé « CleAdmin » du fichier .env du serveur.
