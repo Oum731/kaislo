@@ -659,7 +659,7 @@ function VueAvis({ ctx }) {
     <>
       <EnTeteAdmin surTitre="Avis des gérants sur Kaislo" titre="Avis" />
       <div className="contenu pile" style={{ maxWidth: 760 }}>
-        <p className="petit muet">Seuls les avis que vous publiez ici apparaissent sur le site (prénom, initiale, ville, activité). Ne modifiez jamais le texte d’origine : publiez ou refusez. Ajoutez la traduction anglaise pour que le site l’affiche aux visiteurs en anglais.</p>
+        <p className="petit muet">Seuls les avis que vous publiez ici apparaissent sur le site (prénom, initiale, ville, activité). Ne modifiez jamais le texte d’origine : publiez ou refusez. La traduction anglaise se fait automatiquement à la publication.</p>
         {liste && <p className="petit"><b>{liste.length}</b> avis reçu{liste.length > 1 ? 's' : ''}{liste.length ? <> · note moyenne <b>{(liste.reduce((t, a) => t + a.note, 0) / liste.length).toFixed(1).replace('.', ',')} / 5</b></> : null}. Un avis arrive ici dès qu’un gérant l’envoie depuis l’application (Compte → Donner mon avis sur Kaislo) ; vous recevez aussi un e-mail.</p>}
         <Puces enveloppe options={[['attente', `À relire (${nb('attente')})`], ['publie', `Publiés (${nb('publie')})`], ['refuse', `Refusés (${nb('refuse')})`], ['tous', 'Tous']]} valeur={filtre} surChanger={setFiltre} />
         {message && <p className="alerte">{message}</p>}
@@ -681,7 +681,7 @@ function CarteAvis({ a, agir, LIBELLE }) {
       <p style={{ overflowWrap: 'anywhere' }}>{a.texte}</p>
       <p className="tres-petit muet">{a.nom} · {typeCommerce(a.activite).nom} · {a.ville} · commerce : {a.commerce || '—'} · {a.le}{a.moderePar ? ' · vu par ' + a.moderePar : ''}</p>
       <label className="pile" style={{ gap: 4 }}>
-        <span className="petit"><b>Traduction anglaise</b> <span className="muet">(affichée aux visiteurs du site en anglais ; vide = le texte d’origine est montré)</span></span>
+        <span className="petit"><b>Traduction anglaise</b> <span className="muet">(créée automatiquement à la publication ; vous pouvez la corriger ici)</span></span>
         <textarea rows={3} value={en} onChange={(ev) => setEn(ev.target.value)} placeholder="English translation of the review" />
       </label>
       <div className="grille-2">

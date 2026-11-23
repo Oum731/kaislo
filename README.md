@@ -616,4 +616,4 @@ Ce motif est normal pour une ancienne adresse : Google n'indexe pas une page qui
 - Ancienne adresse `/videos/` : 301 vers `/tutoriels/`.
 
 ### Avis traduits
-Chaque avis peut avoir une traduction anglaise (colonne `avis.texte_en`, base v33), saisie par l'équipe dans Espace Kaislo → Avis. Le site l'affiche aux visiteurs en anglais ; sans traduction, le texte d'origine reste affiché. Un avis modifié par le gérant perd sa traduction (il repart en relecture).
+Chaque avis publié est traduit automatiquement en anglais par DeepL (ligne `CleDeepL=` dans le `.env` du serveur ; clé gratuite finissant par `:fx`), colonne `avis.texte_en` (base v33). L'équipe peut corriger la traduction dans Espace Kaislo → Avis. Le site l'affiche aux visiteurs en anglais ; sans traduction, le texte d'origine reste affiché. Un avis modifié par le gérant perd sa traduction (il repart en relecture).
