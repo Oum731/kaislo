@@ -1,7 +1,7 @@
 // ------------------------------------------------------------
 // CARNET DE CRÉDIT (le « karné ») : ventes à crédit et remboursements.
 //
-// Solde d'un client = total de ses achats à crédit − ses remboursements.
+// Solde d'un client = total de ses achats à crédit + ses crédits notés à la main (d.dettes : ancien crédit, argent prêté, sans vente) − ses remboursements.
 // ------------------------------------------------------------
 import { CREDIT, numeroWhatsApp } from './modeles.js';
 import { tr } from '../i18n/index.js';
@@ -16,12 +16,17 @@ export function historiqueClient(d, clientId) {
   const remboursements = (d.remboursements || [])
     .filter((r) => r.clientId === clientId)
     .map((r) => ({ type: 'remboursement', date: r.date, montant: r.montant, remboursement: r }));
-  return [...achats, ...remboursements].sort((a, b) => b.date.localeCompare(a.date));
+  // Crédits notés sans vente (les annulés restent visibles, sans effet sur le solde)
+  const dettes = (d.dettes || [])
+    .filter((x) => x.clientId === clientId)
+    .map((x) => ({ type: 'dette', date: x.date, montant: x.montant, dette: x }));
+  return [...achats, ...dettes, ...remboursements].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export function soldeClient(d, clientId) {
   let solde = 0;
   for (const v of d.ventes) if (venteACredit(v) && v.clientId === clientId) solde += v.total;
+  for (const x of d.dettes || []) if (x.clientId === clientId && !x.annulee) solde += x.montant;
   for (const r of d.remboursements || []) if (r.clientId === clientId) solde -= r.montant;
   return Math.max(0, Math.round(solde * 100) / 100);
 }

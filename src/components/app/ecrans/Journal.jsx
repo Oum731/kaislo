@@ -21,7 +21,7 @@ export default function Journal() {
   const j = useMemo(() => journalActivite(d, { periode, par, type }), [d, periode, par, type]);
   const libelles = {
     annulation: tr('Ventes annulées'), remise: tr('Remises'), depense: tr('Dépenses'), 'depense-supprimee': tr('Dépenses supprimées'), stock: tr('Stock'),
-    caisse: tr('Caisse'), 'produit-supprime': tr('Articles supprimés'), prix: tr('Prix changés'), 'client-supprime': tr('Clients supprimés'), restauration: tr('Restaurations'), retour: tr('Retours d’articles'),
+    caisse: tr('Caisse'), 'produit-supprime': tr('Articles supprimés'), prix: tr('Prix changés'), 'client-supprime': tr('Clients supprimés'), restauration: tr('Restaurations'), retour: tr('Retours d’articles'), credit: tr('Crédits notés'), 'credit-annule': tr('Crédits annulés'),
   };
   const surveilles = j.lignes.filter(aSurveiller).length;
 
@@ -42,6 +42,8 @@ export default function Journal() {
       case 'retour': return tr('Retour sur la vente n° {0} : {1} rendus ({2}){3}', [l.numero, prix(l.total), tt(l.mode), l.motif ? ' · ' + l.motif : '']);
       case 'restauration': return tr('Sauvegarde restaurée ({0} ventes, copie du {1})', [l.ventes, l.le ? formatDate(l.le) : '—']);
       case 'client-supprime': return tr('Client supprimé : {0}', [l.client]);
+      case 'credit': return tr('Crédit noté : {0} doit {1}{2}', [l.client, prix(l.montant), l.note ? ' · ' + l.note : '']);
+      case 'credit-annule': return tr('Crédit annulé : {0} ({1}){2}', [l.client, prix(l.montant), l.note ? ' · ' + l.note : '']);
       default: return '';
     }
   };

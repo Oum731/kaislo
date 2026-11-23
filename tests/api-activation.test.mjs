@@ -146,3 +146,12 @@ test('« J’ai payé » : le paiement est signalé à l’équipe jusqu’à so
   assert.equal((await api('POST', '/admin/paiement', { commerceId: awa.commerce.id, mois: 1, postes: 1, montant: 5000, moyen: 'Wave' }, admin)).ok, true);
   assert.equal((await fiche()).paiementDeclareLe, null);
 });
+
+test('le serveur accepte les crédits notés à la main (« dettes ») et les compte dans le crédit du résumé', async () => {
+  const r = await api('POST', '/donnees', { elements: [
+    el('clients', 'k1', { id: 'k1', nom: 'Koffi', telephone: '0700000001' }),
+    el('dettes', 'dt1', { id: 'dt1', date: new Date().toISOString(), clientId: 'k1', montant: 12000, note: 'Ancien crédit', utilisateurNom: 'Awa' }),
+  ] }, awa.jeton);
+  assert.deepEqual(r.refuses, [], JSON.stringify(r));
+  assert.equal(lire(`SELECT COUNT(*) AS n FROM elements WHERE type = 'dettes' AND commerce_id = '${awa.commerce.id}'`)[0].n, 1);
+});

@@ -300,9 +300,14 @@ export function FeuilleDepense({ depense }) {
 export function FeuilleClient({ client }) {
   const s = useKaislo();
   const [b, setB] = useState(client ? { ...client } : { id: null, nom: '', telephone: '', note: '' });
+  const [doitDeja, setDoitDeja] = useState(''); // nouveau client : ce qu'il doit déjà (ancien crédit du cahier)
   const enregistrer = () => {
     const res = s.enregistrerClient(b);
     if (res.erreur) return s.message(res.erreur, 'erreur');
+    if (!b.id && Number(doitDeja) > 0) {
+      const c = s.noterCredit(res.client, doitDeja, tr('Crédit de départ'));
+      if (c.erreur) s.message(c.erreur, 'erreur');
+    }
     s.ouvrir('ficheClient', { clientId: res.client.id });
   };
   return (
@@ -312,6 +317,7 @@ export function FeuilleClient({ client }) {
         <label className="champ"><span>{tr('Téléphone (pour le rappel WhatsApp)')}</span><input type="tel" value={b.telephone} onChange={(e) => setB({ ...b, telephone: e.target.value })} placeholder={tr('Ex : 06 12 34 56 78')} /></label>
         <BoutonContacts avecNom surChoisir={(c) => setB({ ...b, telephone: c.telephone, nom: b.nom.trim() ? b.nom : c.nomContact })} />
         <label className="champ"><span>{tr('Note')}</span><input value={b.note} onChange={(e) => setB({ ...b, note: e.target.value })} placeholder={tr('Ex : paie en fin de mois')} /></label>
+        {!b.id && <label className="champ"><span>{tr('Il vous doit déjà (facultatif)')}</span><ChampMontant valeur={doitDeja} surChanger={setDoitDeja} /><span className="tres-petit muet">{tr('Ancien crédit de votre cahier : il sera ajouté à son compte.')}</span></label>}
         {grosDisponible(s.d.commerce) && <Reglage titre={tr('Client grossiste')} aide={tr('Pour vous rappeler qu’il achète en gros : choisissez « Gros » à la caisse pour lui appliquer vos prix de gros.')} actif={!!b.gros} surChanger={(v) => setB({ ...b, gros: v })} />}
         {b.id && s.estGerant() && (
           <button className="btn danger bloc" onClick={() => { const err = s.supprimerClient(b.id); err ? s.message(err, 'erreur') : s.fermer(); }}>{tr('Supprimer le client')}</button>
@@ -339,6 +345,7 @@ export function FeuilleFicheClient({ clientId }) {
             <button className="btn secondaire" onClick={() => s.ouvrir('client', { client })}>{tr('Modifier')}</button>
           )}
           <button className="btn" disabled={solde <= 0} onClick={() => s.ouvrir('remboursement', { clientId: client.id })}>{tr('Remboursement')}</button>
+          <button className="btn secondaire" style={{ gridColumn: '1 / -1' }} onClick={() => s.ouvrir('credit', { clientId: client.id })}><Icone nom="plus" /> {tr('Noter un crédit')}</button>
         </div>
       }>
       <div className="carte centre">
@@ -350,15 +357,44 @@ export function FeuilleFicheClient({ clientId }) {
       <p className="section-titre">{tr('Historique')}</p>
       <div className="liste">
         {historique.map((h) => (
-          <div key={h.type + (h.vente?.id || h.remboursement?.id)} className={`liste-item ${h.vente ? 'cliquable' : ''}`} onClick={() => h.vente && s.ouvrir('ticket', { vente: h.vente })}>
+          <div key={h.type + (h.vente?.id || h.remboursement?.id || h.dette?.id)} className={`liste-item ${h.vente ? 'cliquable' : ''}`} onClick={() => h.vente && s.ouvrir('ticket', { vente: h.vente })}>
             <span className="grandit">
-              <b className="bloc-texte petit">{h.type === 'achat' ? tr('Achat à crédit · ticket n° {0}', [h.vente.numero]) : tr('Remboursement · {0}', [h.remboursement.mode])}</b>
-              <span className="tres-petit muet">{formatDate(h.date)} à {formatHeure(h.date)}{h.vente ? ' · ' + h.vente.lignes.map((l) => l.produitNom).join(', ') : ''}</span>
+              <b className="bloc-texte petit">{h.type === 'achat' ? tr('Achat à crédit · ticket n° {0}', [h.vente.numero]) : h.type === 'dette' ? tr('Crédit noté{0}', [h.dette.note ? ' · ' + h.dette.note : '']) : tr('Remboursement · {0}', [h.remboursement.mode])}{h.dette?.annulee ? <span className="badge rouge" style={{ marginLeft: 6 }}>{tr('Annulé')}</span> : null}</b>
+              <span className="tres-petit muet">{formatDate(h.date)} à {formatHeure(h.date)}{h.vente ? ' · ' + h.vente.lignes.map((l) => l.produitNom).join(', ') : ''}{h.dette?.utilisateurNom ? ' · ' + tr('noté par {0}', [h.dette.utilisateurNom]) : ''}</span>
+              {h.dette && !h.dette.annulee && s.estGerant() && (
+                <button className="lien" style={{ display: 'block', marginTop: 4 }} onClick={(e) => { e.stopPropagation(); if (confirm(tr('Annuler ce crédit de {0} ?', [s.prix(h.montant)]))) { const err = s.annulerCredit(h.dette.id); if (err) s.message(err, 'erreur'); } }}>{tr('Annuler ce crédit')}</button>
+              )}
             </span>
-            <span className={h.type === 'achat' ? 'mouvement-moins' : 'mouvement-plus'}>{h.type === 'achat' ? '+' : '−'}{s.prix(h.montant)}</span>
+            <span className={h.type === 'remboursement' ? 'mouvement-plus' : 'mouvement-moins'} style={h.dette?.annulee ? { textDecoration: 'line-through', opacity: 0.5 } : undefined}>{h.type === 'remboursement' ? '−' : '+'}{s.prix(h.montant)}</span>
           </div>
         ))}
-        {!historique.length && <p className="muet petit" style={{ padding: 16 }}>{tr('Aucun achat à crédit pour l’instant.')}</p>}
+        {!historique.length && <p className="muet petit" style={{ padding: 16 }}>{tr('Aucun crédit pour l’instant : touchez « Noter un crédit » pour ajouter ce que ce client vous doit.')}</p>}
+      </div>
+    </Feuille>
+  );
+}
+
+// Noter un crédit qui ne vient pas d'une vente (ancien crédit du cahier, argent avancé…)
+export function FeuilleCredit({ clientId }) {
+  const s = useKaislo();
+  const client = s.d.clients.find((c) => c.id === clientId);
+  const solde = soldeClient(s.d, clientId);
+  const [montant, setMontant] = useState('');
+  const [note, setNote] = useState('');
+  if (!client) return null;
+  const valider = () => {
+    const res = s.noterCredit(client, montant, note);
+    if (res.erreur) return s.message(res.erreur, 'erreur');
+    s.message(tr('Crédit noté : {0} doit maintenant {1}', [client.nom, s.prix(solde + res.dette.montant)]));
+    s.ouvrir('ficheClient', { clientId });
+  };
+  return (
+    <Feuille titre={tr('Noter un crédit')} sousTitre={client.nom + (solde > 0 ? ' · ' + tr('doit déjà {0}', [s.prix(solde)]) : '')} surFermer={() => s.ouvrir('ficheClient', { clientId })}
+      pied={<button className="btn grand bloc" onClick={valider} disabled={!(Number(montant) > 0)}><Icone nom="ok" /> {tr('Ajouter {0} au crédit', [Number(montant) > 0 ? s.prix(Number(montant)) : ''])}</button>}>
+      <div className="pile">
+        <label className="champ"><span>{tr('Montant que le client vous doit')}</span><ChampMontant valeur={montant} surChanger={setMontant} grand autoFocus /></label>
+        <label className="champ"><span>{tr('Pourquoi ? (facultatif)')}</span><input value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder={tr('Ex : ancien crédit du cahier, riz du 5 novembre')} /></label>
+        <p className="tres-petit muet">{tr('Pour un crédit qui ne vient pas d’une vente de Kaislo : ancien crédit du cahier, argent avancé… Il s’ajoute à ce que le client doit et apparaît dans son historique avec votre nom. Seul le gérant peut l’annuler.')}</p>
       </div>
     </Feuille>
   );

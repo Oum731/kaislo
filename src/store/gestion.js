@@ -499,6 +499,24 @@ export const trancheGestion = (set, get) => ({
     return null;
   },
 
+  // Noter un crédit qui ne vient pas d'une vente (ancien crédit du cahier, argent avancé…) : le solde du client augmente
+  noterCredit(client, montant, note) {
+    const m = Number(montant);
+    if (!(m > 0)) return { erreur: tr('Indiquez le montant que le client doit') };
+    if (m > 1e9) return { erreur: tr('Montant trop grand') };
+    const u = get().utilisateur;
+    const dette = { id: genId('dt'), date: new Date().toISOString(), clientId: client.id, montant: arrondir(m, get().devise()), note: String(note || '').trim().slice(0, 120), utilisateurId: u?.id || null, utilisateurNom: u?.nom || '' };
+    get().majDonnees((d) => ({ dettes: [...(d.dettes || []), dette] }));
+    return { dette };
+  },
+
+  // Le gérant annule un crédit noté par erreur (il reste visible dans l'historique, sans effet sur le solde)
+  annulerCredit(id) {
+    if (!get().estGerant()) return tr('Seul le gérant peut annuler un crédit noté');
+    get().majDonnees((d) => ({ dettes: (d.dettes || []).map((x) => (x.id === id && !x.annulee ? { ...x, annulee: { date: new Date().toISOString(), par: get().utilisateur?.nom || '' } } : x)) }));
+    return null;
+  },
+
   // Le client rembourse tout ou partie de son crédit
   enregistrerRemboursement(client, montant, mode) {
     const m = Number(montant);
