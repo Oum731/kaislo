@@ -614,3 +614,6 @@ Ce motif est normal pour une ancienne adresse : Google n'indexe pas une page qui
 - Anciennes adresses d'activité (`/caisse-restaurant/`… vers `/gestion-restaurant/`), `http://` vers `https://`, `www.` vers `kaislo.com`, `…hostingersite.com` vers `kaislo.com` : redirections 301 voulues (`public/.htaccess`).
 - Pages retirées (pharmacie) : réponse « 410 Gone », sans redirection vers l'accueil (Google la rangerait parmi les pages avec redirection ou les soft 404) ; le fichier de secours `scripts/anciennes-adresses.mjs` est une page `noindex` sans redirection.
 - Ancienne adresse `/videos/` : 301 vers `/tutoriels/`.
+
+### Avis traduits
+Chaque avis peut avoir une traduction anglaise (colonne `avis.texte_en`, base v33), saisie par l'équipe dans Espace Kaislo → Avis. Le site l'affiche aux visiteurs en anglais ; sans traduction, le texte d'origine reste affiché. Un avis modifié par le gérant perd sa traduction (il repart en relecture).

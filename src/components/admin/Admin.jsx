@@ -649,8 +649,8 @@ function VueAvis({ ctx }) {
   const [message, setMessage] = useState(null);
   const charger = useCallback(async () => setListe((await ctx.api('GET', '/admin/avis')).avis), [ctx]);
   useEffect(() => { charger(); }, [charger]);
-  const agir = async (id, action) => {
-    try { await ctx.api('POST', '/admin/avis', { id, action }); await charger(); await ctx.recharger(); setMessage(null); } catch (e) { setMessage(e.message); }
+  const agir = async (id, action, texteEn) => {
+    try { await ctx.api('POST', '/admin/avis', texteEn === undefined ? { id, action } : { id, action, texteEn }); await charger(); await ctx.recharger(); setMessage(null); } catch (e) { setMessage(e.message); }
   };
   const nb = (st) => (liste || []).filter((a) => a.statut === st).length;
   const vus = (liste || []).filter((a) => filtre === 'tous' || a.statut === filtre);
@@ -659,27 +659,38 @@ function VueAvis({ ctx }) {
     <>
       <EnTeteAdmin surTitre="Avis des gérants sur Kaislo" titre="Avis" />
       <div className="contenu pile" style={{ maxWidth: 760 }}>
-        <p className="petit muet">Seuls les avis que vous publiez ici apparaissent sur le site (prénom, initiale, ville, activité). Ne modifiez jamais le texte : publiez ou refusez.</p>
+        <p className="petit muet">Seuls les avis que vous publiez ici apparaissent sur le site (prénom, initiale, ville, activité). Ne modifiez jamais le texte d’origine : publiez ou refusez. Ajoutez la traduction anglaise pour que le site l’affiche aux visiteurs en anglais.</p>
         {liste && <p className="petit"><b>{liste.length}</b> avis reçu{liste.length > 1 ? 's' : ''}{liste.length ? <> · note moyenne <b>{(liste.reduce((t, a) => t + a.note, 0) / liste.length).toFixed(1).replace('.', ',')} / 5</b></> : null}. Un avis arrive ici dès qu’un gérant l’envoie depuis l’application (Compte → Donner mon avis sur Kaislo) ; vous recevez aussi un e-mail.</p>}
         <Puces enveloppe options={[['attente', `À relire (${nb('attente')})`], ['publie', `Publiés (${nb('publie')})`], ['refuse', `Refusés (${nb('refuse')})`], ['tous', 'Tous']]} valeur={filtre} surChanger={setFiltre} />
         {message && <p className="alerte">{message}</p>}
-        {!liste ? <p className="muet petit">Chargement…</p> : !vus.length ? <p className="muet petit">Aucun avis ici pour le moment.</p> : vus.map((a) => (
-          <div key={a.id} className="carte pile">
-            <div className="ligne espace" style={{ flexWrap: 'wrap', gap: 8 }}>
-              <b>{'★'.repeat(a.note)}<span className="muet">{'★'.repeat(5 - a.note)}</span> <span className="petit muet">{a.note}/5</span></b>
-              <span className={`badge ${a.statut === 'publie' ? '' : a.statut === 'refuse' ? 'rouge' : 'safran'}`}>{LIBELLE[a.statut]}</span>
-            </div>
-            <p style={{ overflowWrap: 'anywhere' }}>{a.texte}</p>
-            <p className="tres-petit muet">{a.nom} · {typeCommerce(a.activite).nom} · {a.ville} · commerce : {a.commerce || '—'} · {a.le}{a.moderePar ? ' · vu par ' + a.moderePar : ''}</p>
-            <div className="grille-2">
-              {a.statut !== 'publie' && <button className="btn petit" onClick={() => agir(a.id, 'publier')}>Publier sur le site</button>}
-              {a.statut !== 'refuse' && <button className="btn secondaire petit" onClick={() => agir(a.id, 'refuser')}>Refuser</button>}
-              {a.statut !== 'attente' && <button className="btn secondaire petit" onClick={() => agir(a.id, 'attente')}>Remettre à relire</button>}
-            </div>
-          </div>
-        ))}
+        {!liste ? <p className="muet petit">Chargement…</p> : !vus.length ? <p className="muet petit">Aucun avis ici pour le moment.</p> : vus.map((a) => <CarteAvis key={a.id} a={a} agir={agir} LIBELLE={LIBELLE} />)}
       </div>
     </>
+  );
+}
+
+function CarteAvis({ a, agir, LIBELLE }) {
+  const [en, setEn] = useState(a.texteEn || '');
+  const change = en.trim() !== (a.texteEn || '');
+  return (
+    <div className="carte pile">
+      <div className="ligne espace" style={{ flexWrap: 'wrap', gap: 8 }}>
+        <b>{'★'.repeat(a.note)}<span className="muet">{'★'.repeat(5 - a.note)}</span> <span className="petit muet">{a.note}/5</span></b>
+        <span className={`badge ${a.statut === 'publie' ? '' : a.statut === 'refuse' ? 'rouge' : 'safran'}`}>{LIBELLE[a.statut]}</span>
+      </div>
+      <p style={{ overflowWrap: 'anywhere' }}>{a.texte}</p>
+      <p className="tres-petit muet">{a.nom} · {typeCommerce(a.activite).nom} · {a.ville} · commerce : {a.commerce || '—'} · {a.le}{a.moderePar ? ' · vu par ' + a.moderePar : ''}</p>
+      <label className="pile" style={{ gap: 4 }}>
+        <span className="petit"><b>Traduction anglaise</b> <span className="muet">(affichée aux visiteurs du site en anglais ; vide = le texte d’origine est montré)</span></span>
+        <textarea rows={3} value={en} onChange={(ev) => setEn(ev.target.value)} placeholder="English translation of the review" />
+      </label>
+      <div className="grille-2">
+        {change && <button className="btn secondaire petit" onClick={() => agir(a.id, 'traduire', en)}>Enregistrer la traduction</button>}
+        {a.statut !== 'publie' && <button className="btn petit" onClick={() => agir(a.id, 'publier', en)}>Publier sur le site</button>}
+        {a.statut !== 'refuse' && <button className="btn secondaire petit" onClick={() => agir(a.id, 'refuser')}>Refuser</button>}
+        {a.statut !== 'attente' && <button className="btn secondaire petit" onClick={() => agir(a.id, 'attente')}>Remettre à relire</button>}
+      </div>
+    </div>
   );
 }
 

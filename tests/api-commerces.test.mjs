@@ -218,6 +218,12 @@ test('avis : un gérant donne son avis, rien n’est public avant validation, le
   assert.equal(publics.avis[0].nom, 'Awa K.');
   assert.equal(publics.avis[0].texte, texte);
   assert.equal(JSON.stringify(publics).includes('0712345702'), false, 'le numéro ne doit jamais apparaître');
+  // Traduction anglaise saisie par l'équipe : servie avec l'avis, texte d'origine inchangé
+  assert.equal(publics.avis[0].texteEn, null);
+  assert.equal((await api('POST', '/admin/avis', { id: liste.avis[0].id, action: 'traduire', texteEn: 'Very good, really.' }, admin)).ok, true);
+  const publicsEn = await api('GET', '/avis');
+  assert.equal(publicsEn.avis[0].texteEn, 'Very good, really.');
+  assert.equal(publicsEn.avis[0].texte, texte);
   // Refus : l'avis disparaît du site
   await api('POST', '/admin/avis', { id: liste.avis[0].id, action: 'refuser' }, admin);
   assert.equal((await api('GET', '/avis')).nombre, 0);
