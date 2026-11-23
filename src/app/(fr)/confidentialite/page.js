@@ -85,6 +85,7 @@ const SECTIONS = [
           <li><b>Hébergeur</b> du site et des données (voir les <Link href="/mentions-legales/">mentions légales</Link>).</li>
           <li><b>Moyens de paiement de l’abonnement</b> (Orange Money, Wave, MTN MoMo, banque) : vous payez directement l’opérateur ou la banque, qui applique ses propres règles ; nous recevons seulement la confirmation du paiement (montant, date, moyen).</li>
           <li><b>Messages de service</b> : e-mails (factures, rappels d’abonnement, résumé du soir), messages WhatsApp si vous les avez activés, et notifications sur vos appareils (acheminées par le service de notification de votre navigateur ou de votre téléphone).</li>
+          <li><b>Traduction automatique</b> : le texte d’un avis publié sur le site peut être traduit en anglais par un service de traduction (DeepL), sans votre nom de famille ni vos coordonnées.</li>
           <li><b>Cartographie</b> : OpenStreetMap affiche la carte lorsque vous placez votre commerce.</li>
           {!!(GOOGLE_ADS_ID || FACEBOOK_PIXEL_ID) && <li><b>Mesure publicitaire</b> — {REGIES_MESURE} : seulement si vous acceptez le bandeau, pour compter les inscriptions venues de nos publicités.</li>}
         </ul>

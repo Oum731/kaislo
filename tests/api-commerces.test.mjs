@@ -29,7 +29,7 @@ const element = (type, id, contenu) => ({ type, id, contenu, modifieLe: maintena
 const produit = (id, nom, extra = {}) => element('produits', id, { id, nom, categorieId: 'c1', prix: 1000, prixAchat: 600, stock: 10, unite: 'pièce', groupes: [], ...extra });
 
 before(async () => {
-  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nDefi=non\n`);
+  fs.writeFileSync(fichierEnv, `DbDriver=sqlite\nDbFichier=${fichierBase}\nCleAdmin=cle-de-test-0123456789\nDefi=non\nNotificationsMode=test\n`);
   serveur = spawn('php', ['-S', `127.0.0.1:${PORT}`, 'api/index.php'], { env: { ...process.env, KAISLO_ENV_FICHIER: fichierEnv }, stdio: 'ignore' });
   for (let i = 0; i < 50; i++) {
     try { if ((await api('GET', '/sante')).ok) break; } catch { /* le serveur démarre */ }
@@ -219,7 +219,7 @@ test('avis : un gérant donne son avis, rien n’est public avant validation, le
   assert.equal(publics.avis[0].texte, texte);
   assert.equal(JSON.stringify(publics).includes('0712345702'), false, 'le numéro ne doit jamais apparaître');
   // Traduction anglaise saisie par l'équipe : servie avec l'avis, texte d'origine inchangé
-  assert.equal(publics.avis[0].texteEn, null);
+  assert.equal(publics.avis[0].texteEn, '[EN] ' + texte, 'traduction automatique à la publication (mode essai)');
   assert.equal((await api('POST', '/admin/avis', { id: liste.avis[0].id, action: 'traduire', texteEn: 'Very good, really.' }, admin)).ok, true);
   const publicsEn = await api('GET', '/avis');
   assert.equal(publicsEn.avis[0].texteEn, 'Very good, really.');
