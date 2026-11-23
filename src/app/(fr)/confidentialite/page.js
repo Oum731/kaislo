@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PageLegale from '@/components/site/PageLegale';
 import { SOCIETE, GOOGLE_ADS_ID, FACEBOOK_PIXEL_ID, REGIES_MESURE } from '@/config';
 import { metaPage } from '@/lib/seo';
+import { PROTECTION_DONNEES } from '@/lib/donnees/protection-donnees';
 
 export const metadata = metaPage({
   title: 'Politique de confidentialité',
@@ -82,8 +83,8 @@ const SECTIONS = [
         <ul>
           <li><b>Équipe Kaislo</b> : seuls les membres de l’équipe, avec un compte personnel protégé par mot de passe, accèdent aux informations des commerces pour l’assistance et les abonnements. Chaque action est enregistrée.</li>
           <li><b>Hébergeur</b> du site et des données (voir les <Link href="/mentions-legales/">mentions légales</Link>).</li>
-          <li><b>Prestataires de paiement</b> (carte bancaire, mobile money, banque) pour les abonnements.</li>
-          <li><b>Envoi de SMS ou de messages WhatsApp</b> pour les codes de vérification.</li>
+          <li><b>Moyens de paiement de l’abonnement</b> (Orange Money, Wave, MTN MoMo, banque) : vous payez directement l’opérateur ou la banque, qui applique ses propres règles ; nous recevons seulement la confirmation du paiement (montant, date, moyen).</li>
+          <li><b>Messages de service</b> : e-mails (factures, rappels d’abonnement, résumé du soir), messages WhatsApp si vous les avez activés, et notifications sur vos appareils (acheminées par le service de notification de votre navigateur ou de votre téléphone).</li>
           <li><b>Cartographie</b> : OpenStreetMap affiche la carte lorsque vous placez votre commerce.</li>
           {!!(GOOGLE_ADS_ID || FACEBOOK_PIXEL_ID) && <li><b>Mesure publicitaire</b> — {REGIES_MESURE} : seulement si vous acceptez le bandeau, pour compter les inscriptions venues de nos publicités.</li>}
         </ul>
@@ -122,7 +123,31 @@ const SECTIONS = [
         <p>Écrivez à {mail} en précisant votre numéro de téléphone de connexion. Nous répondons dans un délai d’un mois. Nous pouvons vous demander de justifier votre identité.</p>
         <p>Pour supprimer votre compte et vos données : la marche à suivre est sur la page <Link href="/supprimer-mon-compte/">Supprimer mon compte</Link>.</p>
         <p>Les clients d’un commerce s’adressent d’abord au commerce, qui est responsable de leurs données ; nous l’aidons à répondre.</p>
-        <p>Vous pouvez aussi saisir l’autorité de protection des données de votre pays, par exemple la CNDP au Maroc, l’ARTCI en Côte d’Ivoire, la CDP au Sénégal ou la CNIL en France.</p>
+        <p>Vous pouvez aussi saisir l’autorité de protection des données de votre pays : voir la section « La loi et l’autorité de votre pays » ci-dessous.</p>
+      </>
+    ),
+  },
+  {
+    id: 'pays',
+    titre: 'La loi et l’autorité de votre pays',
+    contenu: (
+      <>
+        <p>{SOCIETE.nom} est établie au Maroc : ses traitements de données sont soumis à la loi marocaine n° 09-08 et au contrôle de la CNDP. Kaislo est utilisé dans plusieurs pays : nous appliquons les mêmes protections partout (finalités limitées, durée de conservation, sécurité, vos droits) et nous respectons la loi du pays du commerce lorsqu’elle prévoit davantage.</p>
+        <table className="tableau-legal">
+          <thead><tr><th>Pays</th><th>Loi</th><th>Autorité à qui vous adresser</th></tr></thead>
+          <tbody>
+            {PROTECTION_DONNEES.map((p) => (
+              <tr key={p.pays}>
+                <td>{p.pays}</td>
+                <td>{p.loi}</td>
+                <td>{p.autorite}{p.site ? <> — <a href={p.site} target="_blank" rel="noreferrer">{p.site.replace('https://www.', '')}</a></> : null}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p>Autres pays (Mali, Bénin, Togo, Niger, Guinée, Cameroun, Gabon, Canada et tout autre pays) : la loi locale sur la protection des données et son autorité s’appliquent ; écrivez-nous à {mail} si vous ne trouvez pas laquelle saisir.</p>
+        {SOCIETE.recepisseCndp ? <p>Déclaration à la CNDP : {SOCIETE.recepisseCndp}.</p> : null}
+        <p>Ces informations sont données à titre d’orientation : les lois évoluent et seul le texte officiel de votre pays fait foi.</p>
       </>
     ),
   },

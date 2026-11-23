@@ -41,6 +41,7 @@ export default function Boutique() {
   const [panierOuvert, setPanierOuvert] = useState(false);
   const [envoi, setEnvoi] = useState(null); // commande envoyée : { commande, lien }
   const [occupe, setOccupe] = useState(false);
+  const [accepte, setAccepte] = useState(false); // conditions de vente cochées (obligatoire avant de confirmer la commande)
   const [form, setForm] = useState({ nom: '', telephone: '', adresse: '', note: '', site: '' });
   const [message, setMessage] = useState('');
   const [anciens, setAnciens] = useState([]); // clients déjà venus depuis cet appareil
@@ -133,6 +134,7 @@ export default function Boutique() {
     setMessage('');
     if (form.nom.trim().length < 2) return setMessage('Indiquez votre nom.');
     if (form.adresse.trim().length < 3) return setMessage('Indiquez votre adresse de livraison (quartier, rue ou repère).');
+    if (!accepte) return setMessage('Cochez la case pour accepter les conditions de vente avant de confirmer.');
     const n = normaliserTelephone(form.telephone, boutique.pays);
     if (!n.ok && !demo) return setMessage(n.erreur);
     setOccupe(true);
@@ -233,7 +235,7 @@ export default function Boutique() {
           ))}
         </div>
         <p className="vitrine-pied petit muet"><Marque taille={16} /> Boutique propulsée par <a href="https://kaislo.com">Kaislo</a></p>
-        <p className="vitrine-avertissement tres-petit muet">Cette boutique est tenue par un commerçant indépendant. Kaislo est un outil qui relie les boutiques et leurs clients : Kaislo n’est pas le vendeur et n’est en aucun cas responsable des articles, des photos et autres contenus publiés par la boutique, des prix, de la livraison ni de la vente. Confirmez le prix et la disponibilité avec la boutique avant de payer. <a href="/conditions-utilisation/#boutiques-en-ligne">Lire les règles des boutiques en ligne</a></p>
+        <p className="vitrine-avertissement tres-petit muet">Cette boutique est tenue par un commerçant indépendant. Kaislo est un outil qui relie les boutiques et leurs clients : Kaislo n’est pas le vendeur et n’est en aucun cas responsable des articles, des photos et autres contenus publiés par la boutique, des prix, de la livraison ni de la vente. Confirmez le prix et la disponibilité avec la boutique avant de payer. <a href="/conditions-utilisation/#boutiques-en-ligne">Lire les règles des boutiques en ligne</a> · <a href="/conditions-vente-boutiques/">Conditions de vente</a></p>
       </main>
 
       {boutique.chat && !demo && !panierOuvert && !choix && <ChatBoutique slug={slug} nomBoutique={boutique.nom} releve={panier.length > 0} />}
@@ -295,6 +297,7 @@ export default function Boutique() {
             <ChampTelephone libelle="Votre numéro (WhatsApp)" pays={boutique.pays} valeur={form.telephone} surChanger={(v) => setForm({ ...form, telephone: v })} verifier={!demo} />
             <label className="champ"><span>Adresse de livraison</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>
             <label className="champ"><span>Note pour le vendeur (facultatif)</span><input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} maxLength={300} /></label>
+            <label className="case-accord"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /><span>J’ai lu et j’accepte les <a href="/conditions-vente-boutiques/" target="_blank" rel="noreferrer">conditions de vente</a> de la boutique.</span></label>
             <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} />
             {message && <p className="alerte">{message}</p>}
             <p className="tres-petit muet">Après avoir confirmé, WhatsApp s’ouvre avec votre commande déjà écrite : il suffit de l’envoyer à {boutique.nom} pour qu’elle soit prise en compte.</p>
