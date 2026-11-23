@@ -15,6 +15,7 @@ import { Feuille, Icone, Segment, Reglage, ChampMontant, ApercuTicket, Avatar, C
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { UNITES_GROS, grosDisponible } from '@/lib/donnees/gros';
 import { dire, voixDisponible } from '@/lib/voix';
+import { exporterTout } from '@/lib/donnees/export';
 import BoutonContacts from '../BoutonContacts';
 import { liensMenu } from '../Coque';
 import { biometrieDisponible, nomBiometrie } from '@/lib/biometrie';
@@ -395,6 +396,37 @@ export function FeuilleCredit({ clientId }) {
         <label className="champ"><span>{tr('Montant que le client vous doit')}</span><ChampMontant valeur={montant} surChanger={setMontant} grand autoFocus /></label>
         <label className="champ"><span>{tr('Pourquoi ? (facultatif)')}</span><input value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder={tr('Ex : ancien crédit du cahier, riz du 5 novembre')} /></label>
         <p className="tres-petit muet">{tr('Pour un crédit qui ne vient pas d’une vente de Kaislo : ancien crédit du cahier, argent avancé… Il s’ajoute à ce que le client doit et apparaît dans son historique avec votre nom. Seul le gérant peut l’annuler.')}</p>
+      </div>
+    </Feuille>
+  );
+}
+
+// Suppression du compte : ce qui est effacé, ce qui est gardé, code PIN du gérant, puis délai de 30 jours pour changer d'avis
+export function FeuilleSuppressionCompte() {
+  const s = useKaislo();
+  const [pin, setPin] = useState('');
+  const [compris, setCompris] = useState(false);
+  const [attente, setAttente] = useState(false);
+  const [erreur, setErreur] = useState('');
+  const demander = async () => {
+    setAttente(true);
+    setErreur('');
+    const err = await s.demanderSuppressionCompte(pin);
+    setAttente(false);
+    if (err) return setErreur(err);
+    s.message(tr('Suppression demandée : vous avez 30 jours pour changer d’avis'));
+    s.fermer();
+  };
+  return (
+    <Feuille titre={tr('Supprimer mon compte')} sousTitre={s.d.commerce.nom} surFermer={s.fermer}
+      pied={<button className="btn grand bloc danger" disabled={attente || !compris || pin.length !== 4} onClick={demander}>{attente ? tr('Envoi…') : tr('Demander la suppression')}</button>}>
+      <div className="pile">
+        <p className="alerte petit">{tr('Dans 30 jours, le commerce et toutes ses données seront effacés pour de bon : articles, ventes, clients, crédits, vendeurs, appareils. Vous pouvez annuler pendant ces 30 jours.')}</p>
+        <p className="petit">{tr('Ce que la loi nous oblige à garder : les factures et les paiements de votre abonnement.')}</p>
+        <button className="btn secondaire bloc" onClick={() => exporterTout(s.d)}>{tr('Télécharger mes données d’abord (sauvegarde complète)')}</button>
+        <label className="champ"><span>{tr('Votre code PIN de gérant')}</span><input type="password" inputMode="numeric" autoComplete="off" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} placeholder="••••" /></label>
+        <label className="case-accord"><input type="checkbox" checked={compris} onChange={(e) => setCompris(e.target.checked)} /><span>{tr('Je comprends que la suppression est définitive après 30 jours.')}</span></label>
+        {erreur && <p className="alerte">{erreur}</p>}
       </div>
     </Feuille>
   );

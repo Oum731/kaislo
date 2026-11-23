@@ -1112,6 +1112,7 @@ function FicheCommerce({ c, ctx, fermer }) {
               <h3>Abonnement</h3>
               <span className={`badge ${CLASSE_STATUT[c.etat.statut]}`}>{LIBELLES_STATUT[c.etat.statut]}</span>
             </div>
+            {c.commerce.suppressionPrevueLe && <p className="alerte petit"><b>Suppression du compte demandée</b> par le gérant : effacement des données prévu le {formatDate(c.commerce.suppressionPrevueLe)} (les factures et paiements sont conservés).</p>}
             {ab.paiementDeclareLe && <p className="astuce petit"><b>Paiement signalé</b> le {formatDate(ab.paiementDeclareLe)} {formatHeure(ab.paiementDeclareLe)}{ab.paiementDeclareMoyen ? ' (' + ab.paiementDeclareMoyen + ')' : ''} : vérifiez la réception de l’argent, puis enregistrez le paiement ci-dessous.</p>}
             {ab.provisoire && c.etat.statut !== 'suspendu' && <p className="astuce petit">Activation provisoire : {c.etat.statut === 'expire' ? 'délai passé sans paiement, fonctions limitées (rapports, exports, nouveaux articles et vendeurs, validation des commandes, boutique fermée).' : 'à payer avant le ' + formatDate(c.etat.fin) + '.'}</p>}
             <p className="petit">

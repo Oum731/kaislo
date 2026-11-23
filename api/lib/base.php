@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 31;
+const VERSION_BASE = 32;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -31,6 +31,7 @@ const STRUCTURE = [
             'avis_restauration_le' => 'DATE', // date où le commerçant a confirmé que Kaislo est un outil de gestion (pays aux règles particulières pour la restauration)
             'paiement_declare_le' => 'DATE', // « J'ai payé » touché par le gérant, pas encore enregistré par l'équipe : voir lib/messages.php
             'paiement_declare_moyen' => 'VARCHAR(40)',
+            'suppression_demandee_le' => 'DATE', 'supprime_le' => 'DATE', // suppression du compte : voir lib/suppression.php
             'rappel_abo' => 'VARCHAR(50)', // dernier rappel d'abonnement envoyé (« fin|palier ») : voir lib/rappels.php
             'periode_provisoire' => 'ENTIER', // 1 = la période en cours vient d'une activation provisoire (à payer avant la fin) : voir lib/activation.php
             'activation_provisoire_le' => 'DATE', // dernière activation provisoire (un nouveau droit seulement après un paiement)
@@ -400,6 +401,12 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 31 : suppression du compte demandée par le gérant
+    if ($version >= 1 && $version < 32) {
+        $essayer('ALTER TABLE commerces ADD COLUMN suppression_demandee_le VARCHAR(30) NULL');
+        $essayer('ALTER TABLE commerces ADD COLUMN supprime_le VARCHAR(30) NULL');
     }
 
     // Bases en version 1 à 30 : rappels d'abonnement (un message par palier)

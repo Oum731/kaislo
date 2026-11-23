@@ -8,6 +8,7 @@ import { typeCommerce, paysParId, VIREMENT } from '@/lib/donnees/modeles';
 import { enregistrerImage, supprimerImage } from '@/lib/donnees/images';
 import { exporterTout, exporterVentesCsv } from '@/lib/donnees/export';
 import { NOMS_DEVISES, formatDate } from '@/lib/utils/format';
+import { estServeur } from '@/lib/donnees/synchro';
 import AbonnementCommerce from './Abonnement';
 import Postes from './Postes';
 import Journal from './Journal';
@@ -231,10 +232,28 @@ function InfosCommerce() {
         )}
         {s.estDemoActuel() ? (
           <button className="btn danger bloc" onClick={() => confirm(tr('Remettre ce commerce de démo à zéro ?')) && s.reinitialiserDemo()}>{tr('Réinitialiser les données de démo')}</button>
-        ) : (
+        ) : estServeur(d) ? null : (
           <button className="btn danger bloc" onClick={() => confirm(tr('Supprimer définitivement « {0} » et toutes ses ventes de cet appareil ?', [d.commerce.nom])) && s.supprimerCeCommerce()}>{tr('Supprimer ce commerce')}</button>
         )}
       </div>
+      {estServeur(d) && s.estGerant() && !s.estDemoActuel() && (
+        <>
+          <p className="section-titre">{tr('Supprimer mon compte')}</p>
+          <div className="carte pile">
+            {d.commerce.suppressionPrevueLe ? (
+              <>
+                <p className="alerte petit">{tr('Suppression demandée : vos données seront effacées le {0}.', [formatDate(d.commerce.suppressionPrevueLe)])}</p>
+                <button className="btn bloc" onClick={() => s.annulerSuppressionCompte().then((err) => err && s.message(err, 'erreur'))}>{tr('Annuler la suppression')}</button>
+              </>
+            ) : (
+              <>
+                <p className="petit muet">{tr('Vous pouvez demander la suppression de votre compte et de toutes les données du commerce. Elle est effective après 30 jours, pendant lesquels vous pouvez changer d’avis.')}</p>
+                <button className="btn danger bloc" onClick={() => s.ouvrir('suppressionCompte')}>{tr('Supprimer mon compte')}</button>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

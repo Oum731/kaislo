@@ -50,6 +50,7 @@ export default function Accueil() {
     <>
       <EnTete surTitre={formatJourLong(new Date()) + ' · ' + d.commerce.nom} titre={tr('Bonjour, {0}', [prenom])} avecLogo />
       <div className="contenu">
+        <BandeauSuppression />
         <BandeauAbonnement />
         <BandeauFacture />
         <PremiersPas />
@@ -239,6 +240,19 @@ function Classement({ titre, liste, suffixe }) {
         ))}
         {!liste.length && <p className="muet petit">{tr('Aucune vente sur cette période.')}</p>}
       </div>
+    </div>
+  );
+}
+
+// Suppression du compte demandée : rappel et bouton pour changer d'avis
+function BandeauSuppression() {
+  const s = useKaislo();
+  const date = s.d.commerce.suppressionPrevueLe;
+  if (!date || !s.estGerant()) return null;
+  return (
+    <div className="alerte ligne" style={{ marginBottom: 16, maxWidth: 720, flexWrap: 'wrap' }}>
+      <span className="grandit">{tr('Suppression de votre compte prévue le {0}. Après cette date, vos données seront effacées.', [formatDate(date)])}</span>
+      <button className="btn petit" onClick={() => s.annulerSuppressionCompte().then((err) => err && s.message(err, 'erreur'))}>{tr('Annuler la suppression')}</button>
     </div>
   );
 }

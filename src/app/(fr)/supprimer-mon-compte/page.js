@@ -22,11 +22,13 @@ const SECTIONS = [
     contenu: (
       <>
         <p>Vous pouvez demander à tout moment la suppression de votre compte Kaislo et des données du commerce. C’est gratuit.</p>
+        <p><b>Le plus simple : dans l’application.</b> Le gérant ouvre Réglages → Profil → <b>Supprimer mon compte</b>, saisit son code PIN et confirme. Le commerce et ses données sont effacés <b>30 jours plus tard</b> ; pendant ces 30 jours, il peut annuler la suppression (bouton « Annuler la suppression » sur l’accueil ou dans Réglages).</p>
+        <p>Vous ne pouvez pas ouvrir l’application (téléphone perdu, accès impossible) ? Suivez les étapes ci-dessous.</p>
         <ol>
           <li><b>Facultatif : récupérez vos données.</b> Le gérant exporte les ventes, les produits et les clients dans l’application : Réglages → Profil → Vos données. Une fois le compte supprimé, il n’est plus possible de les retrouver.</li>
           <li><b>Écrivez-nous</b> à {mail}, avec pour objet « Suppression de mon compte Kaislo ». Indiquez le <b>numéro de téléphone avec lequel vous vous connectez</b> et le nom du commerce. Si vous avez plusieurs commerces, précisez lesquels supprimer (un seul, ou tous).</li>
           <li><b>Nous vérifions que c’est bien vous</b> : nous pouvons vous rappeler ou vous écrire sur WhatsApp à ce numéro. <b>Nous ne vous demandons jamais votre code PIN</b>, ni par e-mail, ni par message.</li>
-          <li><b>Nous supprimons</b> le compte et vous le confirmons par écrit, au plus tard sous <b>un mois</b>.</li>
+          <li><b>Nous supprimons</b> le compte et vous le confirmons par écrit, au plus tard sous <b>un mois</b>. La suppression demandée dans l’application est effacée après 30 jours.</li>
         </ol>
         <p className="petit muet">Vous pouvez aussi nous écrire par WhatsApp depuis la bulle « Discuter avec nous » du site ou de l’application.</p>
       </>
