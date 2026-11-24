@@ -14,7 +14,7 @@ import Postes from './Postes';
 import Journal from './Journal';
 import Sauvegardes from './Sauvegardes';
 import { posteParId } from '@/lib/donnees/postes';
-import { Icone, Segment, SelecteurLangue, Interrupteur, Avatar, ApercuTicket, Reglage, ChampMontant, ChoixImage, ImageStockee } from '@/components/ui';
+import { ChampVille, Icone, Segment, SelecteurLangue, Interrupteur, Avatar, ApercuTicket, Reglage, ChampMontant, ChoixImage, ImageStockee } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { tr, tt, langueActive } from '@/lib/i18n';
 
@@ -165,7 +165,7 @@ function InfosCommerce() {
           <label className="champ"><span>{tr('E-mail (facultatif)')}</span><input type="email" value={b.email || ''} onChange={maj('email')} placeholder={tr('contact@…')} /></label>
         </div>
         <label className="champ"><span>{tr('Adresse')}</span><input value={b.adresse || ''} onChange={maj('adresse')} placeholder={tr('N°, rue, quartier')} /></label>
-        <label className="champ"><span>{tr('Ville')}</span><input value={b.ville || ''} onChange={maj('ville')} /></label>
+        <ChampVille libelle={tr('Ville')} pays={s.d.commerce.pays} valeur={b.ville || ''} surChanger={(v) => setB({ ...b, ville: v })} />
         <label className="champ"><span>{tr('Message en bas du ticket')}</span><textarea value={b.piedTicket || ''} onChange={maj('piedTicket')} /></label>
       </div>
 

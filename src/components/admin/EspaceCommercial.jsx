@@ -13,7 +13,7 @@ import Marque from '@/components/Marque';
 import { API_ACTIVE, appelApi } from '@/lib/api';
 import { PAYS } from '@/lib/donnees/modeles';
 import { SITE_URL, CONTACT_WHATSAPP } from '@/config';
-import { Icone, ChampTelephone } from '@/components/ui';
+import { Icone, ChampTelephone, ChampVille } from '@/components/ui';
 import { BonusHebdo, CarteClient, CarteContrat, totalDevises } from './Commerciaux';
 import BulleChat from '@/components/BulleChat';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
@@ -124,7 +124,7 @@ function FormulaireInscription() {
         </label>
         <ChampTelephone libelle="Votre numéro (WhatsApp de préférence)" pays={f.pays} valeur={f.telephone} surChanger={(v) => setF({ ...f, telephone: v })} />
         <div className="grille-2">
-          <label className="champ"><span>Ville</span><input value={f.ville} onChange={maj('ville')} placeholder="Ex : Abidjan" autoComplete="address-level2" /></label>
+          <ChampVille libelle="Ville" pays={f.pays} valeur={f.ville} surChanger={(v) => setF({ ...f, ville: v })} />
           <label className="champ"><span>Quartier</span><input value={f.quartier} onChange={maj('quartier')} placeholder="Ex : Yopougon" /></label>
         </div>
         <label className="champ"><span>E-mail (facultatif)</span><input type="email" value={f.email} onChange={maj('email')} autoComplete="email" /></label>

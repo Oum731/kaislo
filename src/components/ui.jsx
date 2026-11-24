@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { lireImage, estImageLocale, adresseImage, reduireImage } from '@/lib/donnees/images';
 import { normaliserTelephone, exempleTelephone, indicatifPays } from '@/lib/donnees/telephone';
 import { tr, LANGUES } from '@/lib/i18n';
+import { DONNEES_PAYS } from '@/lib/donnees/liste-pays';
+import { nomPropreSiUniforme } from '@/lib/donnees/saisie';
 
 // Dessins des icônes (style "Lucide", trait de 2 px)
 const DESSINS = {
@@ -303,6 +305,30 @@ export function ChampTelephone({ libelle, valeur, surChanger, pays, aide, autoFo
       {vu && n && !n.ok && <span className="tres-petit rouge-texte">{n.erreur}</span>}
       {n?.ok && <span className="tres-petit vert-texte">✓ {n.affichage}</span>}
       {aide && !(vu && n && !n.ok) && !n?.ok && <span className="tres-petit muet">{aide}</span>}
+    </label>
+  );
+}
+
+// Ville : liste déroulante des villes du pays, et saisie libre quand la ville n'y est pas (majuscules corrigées à la sortie du champ)
+export function ChampVille({ libelle, valeur, surChanger, pays, placeholder }) {
+  const villes = DONNEES_PAYS.find((p) => p.id === pays)?.villes || [];
+  const v = String(valeur || '');
+  const [autre, setAutre] = useState(!!v && !villes.includes(v));
+  useEffect(() => { if (v && !villes.includes(v)) setAutre(true); }, [v, pays]); // eslint-disable-line react-hooks/exhaustive-deps
+  const libre = (
+    <input value={v} onChange={(e) => surChanger(e.target.value)} onBlur={(e) => surChanger(nomPropreSiUniforme(e.target.value))}
+      placeholder={placeholder || tr('Écrivez le nom de votre ville')} autoComplete="address-level2" maxLength={80} />
+  );
+  if (!villes.length) return <label className="champ"><span>{libelle}</span>{libre}</label>;
+  return (
+    <label className="champ">
+      <span>{libelle}</span>
+      <select value={autre ? '__autre' : villes.includes(v) ? v : ''} onChange={(e) => { if (e.target.value === '__autre') { setAutre(true); surChanger(''); } else { setAutre(false); surChanger(e.target.value); } }}>
+        <option value="">{tr('Choisir la ville')}</option>
+        {villes.map((x) => <option key={x} value={x}>{x}</option>)}
+        <option value="__autre">{tr('Autre ville…')}</option>
+      </select>
+      {autre && libre}
     </label>
   );
 }

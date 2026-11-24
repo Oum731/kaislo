@@ -29,7 +29,7 @@ async function demarrer(extra) {
   return { api, jeton: g.jeton };
 }
 after(() => { serveurs.forEach((s) => s.kill()); fs.rmSync(dossier, { recursive: true, force: true }); });
-const client = { nom: 'Sara', telephone: '0612345678', adresse: '12 rue Ibn Sina' };
+const client = { nom: 'Sara', telephone: '0661482735', adresse: '12 rue Ibn Sina' };
 const commande = (api, plus = {}) => api('POST', '/public/commande', { b: 'epicerie-l1', client, lignes: [{ produitId: 'p1', quantite: 3 }], ...plus });
 
 test('livraison coupée : la commande reste celle d’avant (pas de frais, pas de suivi)', async () => {
@@ -57,14 +57,14 @@ test('livraison ouverte : frais, minimum, retrait sans adresse et suivi par le c
   assert.equal(l.commande.mode, 'livraison');
   assert.match(l.commande.suivi, /^[a-f0-9]{20}$/);
   // Retrait : sans frais et sans adresse
-  const r = await commande(api, { mode: 'retrait', client: { nom: 'Sara', telephone: '0612345678' } });
+  const r = await commande(api, { mode: 'retrait', client: { nom: 'Sara', telephone: '0661482735' } });
   assert.equal(r.statut, 201, JSON.stringify(r));
   assert.equal(r.commande.total, 30);
   assert.equal(r.commande.mode, 'retrait');
   // Minimum de commande
   assert.equal((await commande(api, { lignes: [{ produitId: 'p1', quantite: 1 }] })).statut, 400);
   // Livraison sans adresse : refusée ; retrait désactivé : refusé
-  assert.equal((await commande(api, { client: { nom: 'Sara', telephone: '0612345678' } })).statut, 400);
+  assert.equal((await commande(api, { client: { nom: 'Sara', telephone: '0661482735' } })).statut, 400);
   assert.equal((await api('POST', '/boutique', { actif: true, slug: 'epicerie-l1', whatsapp: '0612340001', retrait: false }, jeton)).ok, true);
   assert.equal((await commande(api, { mode: 'retrait' })).statut, 400);
   assert.equal((await api('POST', '/boutique', { actif: true, slug: 'epicerie-l1', whatsapp: '0612340001', retrait: false, livre: false }, jeton)).statut, 400);

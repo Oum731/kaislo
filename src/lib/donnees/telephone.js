@@ -13,6 +13,7 @@
 // ------------------------------------------------------------
 import { tr } from '../i18n/index.js';
 import { DONNEES_PAYS } from './liste-pays.js';
+import { numeroFactice } from './saisie.js';
 // Règles de chaque pays : api/lib/pays.json (même fichier que le serveur).
 export const REGLES_TELEPHONE = Object.fromEntries(DONNEES_PAYS.filter((p) => p.telephone).map((p) => [p.id, { indicatif: p.indicatif, ...p.telephone }]));
 
@@ -48,6 +49,7 @@ export function normaliserTelephone(saisie, paysId) {
     if (!trouves.length) {
       // Pays non répertorié : accepté si la longueur est plausible (8 à 15 chiffres)
       if (chiffres.length < 8 || chiffres.length > 15) return { ok: false, erreur: tr('Numéro international incomplet (ex : +225 07 07 12 34 56)') };
+      if (numeroFactice(chiffres)) return { ok: false, erreur: tr('Ce numéro ne semble pas réel : vérifiez-le') };
       return { ok: true, e164: '+' + chiffres, affichage: '+' + chiffres, pays: null };
     }
     pays = trouves[0][0];
@@ -65,6 +67,8 @@ export function normaliserTelephone(saisie, paysId) {
   if (!r.longueurs.includes(national.length)) {
     return { ok: false, erreur: tr('Numéro incomplet ou trop long. Exemple : {0}', [r.exemple]) };
   }
+  if (numeroFactice(national)) return { ok: false, erreur: tr('Ce numéro ne semble pas réel : vérifiez-le') };
+  if (r.debuts && !r.debuts.includes(Number(national[0]))) return { ok: false, erreur: tr('Ce numéro ne correspond à aucun opérateur de ce pays : vérifiez le début du numéro. Exemple : {0}', [r.exemple]) };
   return { ok: true, e164: '+' + r.indicatif + national, affichage: '+' + r.indicatif + ' ' + grouper(national, r.groupes), pays };
 }
 

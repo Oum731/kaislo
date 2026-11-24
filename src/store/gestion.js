@@ -11,6 +11,7 @@ import { estServeur } from '@/lib/donnees/synchro.js';
 import { appelApi } from '@/lib/api.js';
 import { cleTelephone, COULEURS } from '@/lib/donnees/modeles.js';
 import { normaliserTelephone } from '@/lib/donnees/telephone.js';
+import { nomPropre, nomPropreSiUniforme, nomAvecLettres } from '@/lib/donnees/saisie.js';
 import { supprimerImage } from '@/lib/donnees/images.js';
 import { postesDe, postePlein, vendeursDuPoste } from '@/lib/donnees/postes.js';
 import { VENDEURS_PAR_POSTE } from '@/lib/donnees/tarifs.js';
@@ -508,9 +509,14 @@ export const trancheGestion = (set, get) => ({
 
   // ---------- Clients à crédit ----------
   enregistrerClient(b) {
-    const nom = b.nom.trim();
+    const nom = nomPropre(b.nom || '');
     if (!nom) return { erreur: tr('Indiquez le nom du client') };
-    const client = { ...b, nom, telephone: (b.telephone || '').trim(), id: b.id || genId('k') };
+    if (!nomAvecLettres(nom)) return { erreur: tr('Indiquez un nom valide') };
+    // Numéro facultatif, mais s'il est donné il doit être vrai : bon pays, bonne longueur, pas de 0000000 ni de 1234567
+    const tel = (b.telephone || '').trim();
+    const n = tel ? normaliserTelephone(tel, get().d.commerce.pays) : null;
+    if (n && !n.ok) return { erreur: n.erreur };
+    const client = { ...b, nom, telephone: n ? n.affichage : '', id: b.id || genId('k') };
     get().majDonnees((d) =>
       b.id
         ? { clients: d.clients.map((c) => (c.id === b.id ? client : c)) }
@@ -563,11 +569,14 @@ export const trancheGestion = (set, get) => ({
   // ---------- Fournisseurs et achats (voir lib/donnees/achats.js) ----------
   // Renvoie un message d'erreur, ou null ; la fiche créée est donnée à `surCree(fournisseur)`
   enregistrerFournisseur(b, surCree) {
-    const nom = (b.nom || '').trim();
+    const nom = nomPropreSiUniforme(b.nom || '');
     if (!nom) return tr('Indiquez le nom du fournisseur');
+    const tel = (b.telephone || '').trim();
+    const n = tel ? normaliserTelephone(tel, get().d.commerce.pays) : null;
+    if (n && !n.ok) return n.erreur;
     const { d } = get();
     if ((d.fournisseurs || []).some((f) => f.id !== b.id && f.nom.toLowerCase() === nom.toLowerCase())) return tr('Ce fournisseur existe déjà');
-    const f = { id: b.id || genId('f'), nom: nom.slice(0, 80), telephone: (b.telephone || '').trim().slice(0, 30), note: (b.note || '').trim().slice(0, 200) };
+    const f = { id: b.id || genId('f'), nom: nom.slice(0, 80), telephone: n ? n.affichage : '', note: (b.note || '').trim().slice(0, 200) };
     get().majDonnees((x) => ({ fournisseurs: b.id ? x.fournisseurs.map((y) => (y.id === b.id ? f : y)) : [...(x.fournisseurs || []), f] }));
     surCree?.(f);
     return null;

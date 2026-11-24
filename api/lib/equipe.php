@@ -20,7 +20,7 @@ function routeUtilisateur(): never
     if ($id !== '' && !$existant) throw new ErreurApi('Vendeur introuvable', 404);
     if (!$existant) exigerAbonnementPaye($moi['commerce_id'], 'Abonnement non payé : activez-le pour ajouter des vendeurs.');
 
-    $nom = texte($e, 'nom', 'le nom');
+    $nom = texte($e, 'nom', 'le nom', true, 120, 'personne');
     // Numéro au format international du pays du commerce, unique dans tout Kaislo
     $pays = (string) requete('SELECT pays FROM commerces WHERE id = ?', [$moi['commerce_id']])->fetch()['pays'];
     $numero = telephoneValide(texte($e, 'telephone', 'le numéro de téléphone', true, 40), $pays, 'numéro de téléphone');

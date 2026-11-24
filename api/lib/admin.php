@@ -67,7 +67,7 @@ function routeAdminInstaller(): never
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new ErreurApi('Adresse e-mail invalide');
     $mdp = (string) ($e['motDePasse'] ?? '');
     verifierMotDePasse($mdp);
-    $a = ['id' => nouvelId('a'), 'email' => $email, 'nom' => texte($e, 'nom', 'votre nom'), 'role' => 'admin', 'actif' => 1];
+    $a = ['id' => nouvelId('a'), 'email' => $email, 'nom' => texte($e, 'nom', 'votre nom', true, 120, 'personne'), 'role' => 'admin', 'actif' => 1];
     requete('INSERT INTO admins (id, email, nom, mdp_hash, cree_le, role, actif) VALUES (?, ?, ?, ?, ?, ?, 1)', [$a['id'], $email, $a['nom'], password_hash($mdp, PASSWORD_DEFAULT), maintenant(), 'admin']);
     journaliser(null, $a['id'], 'admin-installation', ['email' => $email]);
     repondre(ouvrirSessionAdmin($a), 201);
@@ -424,7 +424,7 @@ function routeAdminEquipeEnregistrer(): never
     $id = (string) ($e['id'] ?? '');
     $role = in_array($e['role'] ?? '', ['admin', 'support'], true) ? $e['role'] : 'support';
     $actif = array_key_exists('actif', $e) ? (bool) $e['actif'] : true;
-    $nom = texte($e, 'nom', 'le nom');
+    $nom = texte($e, 'nom', 'le nom', true, 120, 'personne');
     $email = strtolower(texte($e, 'email', 'l’e-mail', true, 190));
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new ErreurApi('Adresse e-mail invalide');
     $mdp = (string) ($e['motDePasse'] ?? '');

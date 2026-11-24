@@ -5,12 +5,14 @@
   "devise": "MAD",
   "indicatif": "212",
   "ville": "Casablanca",
+  "villes": ["Casablanca", "Rabat", "Marrakech", "Fès", "Tanger", "Agadir", "Meknès", "Oujda", "Kénitra", "Tétouan", "Salé", "Témara", "Safi", "Mohammedia", "El Jadida", "Béni Mellal", "Nador", "Taza", "Khouribga", "Settat", "Laâyoune", "Dakhla", "Essaouira", "Ouarzazate", "Errachidia", "Larache", "Guelmim", "Berrechid", "Khémisset", "Al Hoceïma"],
   "paiements": ["Espèces", "Carte"],
   "telephone": {
    "longueurs": [9],
    "zeroNational": true,
    "groupes": [1, 2, 2, 2, 2],
-   "exemple": "06 12 34 56 78"
+   "exemple": "06 61 48 27 35",
+   "debuts": [5, 6, 7]
   },
   "fuseaux": ["Africa/Casablanca", "Africa/El_Aaiun"],
   "article": "au",
@@ -29,12 +31,14 @@
   "devise": "FCFA",
   "indicatif": "225",
   "ville": "Abidjan",
+  "villes": ["Abidjan", "Bouaké", "Yamoussoukro", "Daloa", "San-Pédro", "Korhogo", "Man", "Gagnoa", "Divo", "Abengourou", "Anyama", "Grand-Bassam", "Bondoukou", "Odienné", "Séguéla", "Soubré", "Agboville", "Dabou", "Ferkessédougou"],
   "paiements": ["Espèces", "Wave", "Orange Money", "MTN MoMo", "Carte"],
   "telephone": {
    "longueurs": [10],
    "zeroNational": false,
    "groupes": [2, 2, 2, 2, 2],
-   "exemple": "07 07 12 34 56"
+   "exemple": "07 48 15 62 39",
+   "debuts": [0, 2]
   },
   "fuseaux": ["Africa/Abidjan"],
   "article": "en",
@@ -53,12 +57,14 @@
   "devise": "FCFA",
   "indicatif": "221",
   "ville": "Dakar",
+  "villes": ["Dakar", "Thiès", "Touba", "Saint-Louis", "Kaolack", "Ziguinchor", "Mbour", "Rufisque", "Diourbel", "Louga", "Tambacounda", "Kolda", "Pikine", "Guédiawaye", "Richard-Toll", "Saly", "Kaffrine", "Fatick"],
   "paiements": ["Espèces", "Wave", "Orange Money", "Free Money", "Carte"],
   "telephone": {
    "longueurs": [9],
    "zeroNational": false,
    "groupes": [2, 3, 2, 2],
-   "exemple": "77 123 45 67"
+   "exemple": "77 158 42 63",
+   "debuts": [3, 7]
   },
   "fuseaux": ["Africa/Dakar"],
   "article": "au",
@@ -77,12 +83,13 @@
   "devise": "FCFA",
   "indicatif": "223",
   "ville": "Bamako",
+  "villes": ["Bamako", "Sikasso", "Kayes", "Ségou", "Mopti", "Koutiala", "Gao", "Tombouctou", "Kidal", "Kati"],
   "paiements": ["Espèces", "Orange Money", "Moov Money", "Carte"],
   "telephone": {
    "longueurs": [8],
    "zeroNational": false,
    "groupes": [2, 2, 2, 2],
-   "exemple": "76 12 34 56"
+   "exemple": "76 24 81 53"
   },
   "fuseaux": ["Africa/Bamako"],
   "article": "au",
@@ -101,12 +108,13 @@
   "devise": "FCFA",
   "indicatif": "226",
   "ville": "Ouagadougou",
+  "villes": ["Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora", "Ouahigouya", "Kaya", "Dédougou", "Fada N’Gourma", "Tenkodogo", "Dori"],
   "paiements": ["Espèces", "Orange Money", "Moov Money", "Carte"],
   "telephone": {
    "longueurs": [8],
    "zeroNational": false,
    "groupes": [2, 2, 2, 2],
-   "exemple": "70 12 34 56"
+   "exemple": "70 25 48 61"
   },
   "fuseaux": ["Africa/Ouagadougou"],
   "article": "au",
@@ -125,12 +133,13 @@
   "devise": "FCFA",
   "indicatif": "229",
   "ville": "Cotonou",
+  "villes": ["Cotonou", "Porto-Novo", "Parakou", "Abomey-Calavi", "Djougou", "Bohicon", "Natitingou", "Ouidah", "Lokossa", "Kandi"],
   "paiements": ["Espèces", "MTN MoMo", "Moov Money", "Carte"],
   "telephone": {
    "longueurs": [10],
    "zeroNational": false,
    "groupes": [2, 2, 2, 2, 2],
-   "exemple": "01 97 12 34 56"
+   "exemple": "01 97 25 48 61"
   },
   "fuseaux": ["Africa/Porto-Novo"],
   "article": "au",
@@ -149,12 +158,13 @@
   "devise": "FCFA",
   "indicatif": "228",
   "ville": "Lomé",
+  "villes": ["Lomé", "Sokodé", "Kara", "Atakpamé", "Kpalimé", "Dapaong", "Tsévié", "Aného", "Bassar"],
   "paiements": ["Espèces", "Flooz", "T-Money", "Carte"],
   "telephone": {
    "longueurs": [8],
    "zeroNational": false,
    "groupes": [2, 2, 2, 2],
-   "exemple": "90 12 34 56"
+   "exemple": "90 25 48 16"
   },
   "fuseaux": ["Africa/Lome"],
   "article": "au",
@@ -173,12 +183,13 @@
   "devise": "FCFA",
   "indicatif": "227",
   "ville": "Niamey",
+  "villes": ["Niamey", "Zinder", "Maradi", "Agadez", "Tahoua", "Dosso", "Tillabéri", "Diffa"],
   "paiements": ["Espèces", "Airtel Money", "Moov Money", "Carte"],
   "telephone": {
    "longueurs": [8],
    "zeroNational": false,
    "groupes": [2, 2, 2, 2],
-   "exemple": "90 12 34 56"
+   "exemple": "90 36 82 47"
   },
   "fuseaux": ["Africa/Niamey"],
   "article": "au",
@@ -197,12 +208,13 @@
   "devise": "GNF",
   "indicatif": "224",
   "ville": "Conakry",
+  "villes": ["Conakry", "Nzérékoré", "Kankan", "Kindia", "Labé", "Mamou", "Boké", "Faranah", "Siguiri"],
   "paiements": ["Espèces", "Orange Money", "MTN MoMo", "Carte"],
   "telephone": {
    "longueurs": [9],
    "zeroNational": false,
    "groupes": [3, 2, 2, 2],
-   "exemple": "622 12 34 56"
+   "exemple": "622 58 41 93"
   },
   "fuseaux": ["Africa/Conakry"],
   "article": "en",
@@ -221,12 +233,13 @@
   "devise": "FCFA",
   "indicatif": "237",
   "ville": "Douala",
+  "villes": ["Douala", "Yaoundé", "Bafoussam", "Garoua", "Bamenda", "Maroua", "Ngaoundéré", "Bertoua", "Kribi", "Limbé", "Ebolowa", "Edéa"],
   "paiements": ["Espèces", "Orange Money", "MTN MoMo", "Carte"],
   "telephone": {
    "longueurs": [9],
    "zeroNational": false,
    "groupes": [1, 2, 2, 2, 2],
-   "exemple": "6 71 23 45 67"
+   "exemple": "6 71 58 24 93"
   },
   "fuseaux": ["Africa/Douala"],
   "article": "au",
@@ -245,12 +258,13 @@
   "devise": "FCFA",
   "indicatif": "241",
   "ville": "Libreville",
+  "villes": ["Libreville", "Port-Gentil", "Franceville", "Oyem", "Moanda", "Lambaréné", "Mouila", "Tchibanga"],
   "paiements": ["Espèces", "Airtel Money", "Moov Money", "Carte"],
   "telephone": {
    "longueurs": [8, 7],
    "zeroNational": false,
    "groupes": [2, 2, 2, 2],
-   "exemple": "06 12 34 56"
+   "exemple": "06 25 84 17"
   },
   "fuseaux": ["Africa/Libreville"],
   "article": "au",
@@ -269,12 +283,13 @@
   "devise": "FCFA",
   "indicatif": "242",
   "ville": "Brazzaville",
+  "villes": ["Brazzaville", "Pointe-Noire", "Dolisie", "Nkayi", "Ouesso", "Owando", "Impfondo"],
   "paiements": ["Espèces", "MTN MoMo", "Airtel Money", "Carte"],
   "telephone": {
    "longueurs": [9],
    "zeroNational": false,
    "groupes": [2, 3, 2, 2],
-   "exemple": "06 612 34 56"
+   "exemple": "06 618 45 92"
   },
   "fuseaux": ["Africa/Brazzaville"],
   "article": "au",
@@ -293,12 +308,13 @@
   "devise": "EUR",
   "indicatif": "33",
   "ville": "Paris",
+  "villes": ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Montpellier", "Strasbourg", "Bordeaux", "Lille", "Rennes", "Reims", "Le Havre", "Saint-Étienne", "Toulon", "Grenoble", "Dijon", "Angers", "Nîmes", "Villeurbanne", "Clermont-Ferrand", "Aix-en-Provence", "Brest", "Tours", "Amiens", "Limoges", "Metz", "Perpignan", "Besançon", "Orléans", "Rouen", "Mulhouse", "Caen", "Nancy", "Saint-Denis", "Argenteuil", "Montreuil", "Créteil"],
   "paiements": ["Espèces", "Carte", "Ticket resto"],
   "telephone": {
    "longueurs": [9],
    "zeroNational": true,
    "groupes": [1, 2, 2, 2, 2],
-   "exemple": "06 12 34 56 78"
+   "exemple": "06 61 48 27 35"
   },
   "fuseaux": ["Europe/Paris"],
   "article": "en",
@@ -318,12 +334,13 @@
   "devise": "EUR",
   "indicatif": "32",
   "ville": "Bruxelles",
+  "villes": ["Bruxelles", "Anvers", "Gand", "Charleroi", "Liège", "Bruges", "Namur", "Louvain", "Mons", "Alost", "Malines", "La Louvière", "Courtrai", "Hasselt", "Ostende", "Tournai", "Seraing", "Verviers"],
   "paiements": ["Espèces", "Carte", "Payconiq"],
   "telephone": {
    "longueurs": [9, 8],
    "zeroNational": true,
    "groupes": [3, 2, 2, 2],
-   "exemple": "0470 12 34 56"
+   "exemple": "0470 58 42 63"
   },
   "fuseaux": ["Europe/Brussels"],
   "article": "en",
@@ -343,6 +360,7 @@
   "devise": "CAD",
   "indicatif": "1",
   "ville": "Montréal",
+  "villes": ["Montréal", "Toronto", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Québec", "Winnipeg", "Hamilton", "Kitchener", "London", "Victoria", "Halifax", "Oshawa", "Gatineau", "Laval", "Longueuil", "Sherbrooke", "Saskatoon", "Regina"],
   "paiements": ["Espèces", "Carte", "Interac"],
   "telephone": {
    "longueurs": [10],

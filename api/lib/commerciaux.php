@@ -276,7 +276,7 @@ function routeAdminCommercialEnregistrer(): never
     $id = (string) ($e['id'] ?? '');
     $avant = $id ? requete('SELECT * FROM commerciaux WHERE id = ?', [$id])->fetch() : null;
     if ($id && !$avant) throw new ErreurApi('Commercial introuvable', 404);
-    $nom = texte($e, 'nom', 'le nom');
+    $nom = texte($e, 'nom', 'le nom', true, 120, 'personne');
     $pays = strtoupper((string) ($e['pays'] ?? 'MA'));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Pays non pris en charge');
     $num = telephoneValide(texte($e, 'telephone', 'le téléphone', true, 40), $pays, 'téléphone du commercial');
@@ -297,8 +297,8 @@ function routeAdminCommercialEnregistrer(): never
     if ((!$id || $pin !== '') && !preg_match('/^\d{6}$/', $pin)) throw new ErreurApi('Code PIN du commercial : 6 chiffres');
     $actif = array_key_exists('actif', $e) ? ((bool) $e['actif'] ? 1 : 0) : 1;
     $notes = mb_substr((string) ($e['notes'] ?? ''), 0, 2000);
-    $ville = texte($e, 'ville', 'la ville', false, 80);
-    $quartier = texte($e, 'quartier', 'le quartier', false, 80);
+    $ville = texte($e, 'ville', 'la ville', false, 80, 'lieu');
+    $quartier = texte($e, 'quartier', 'le quartier', false, 80, 'lieu');
     if ($id) {
         requete('UPDATE commerciaux SET nom = ?, telephone = ?, cle_telephone = ?, email = ?, pays = ?, ville = ?, quartier = ?, code = ?, taux = ?, actif = ?, notes = ? WHERE id = ?',
             [$nom, $num['affichage'], $num['cle'], $email, $pays, $ville, $quartier, $code, $taux, $actif, $notes, $id]);
@@ -426,7 +426,7 @@ function routeCommercialInscription(): never
     $cleIp = 'ip-inscription-commercial:' . adresseIp();
     verifierBlocage($cleIp);
     if (($e['conditionsAcceptees'] ?? false) !== true) throw new ErreurApi('Merci d’accepter les conditions du programme commercial');
-    $nom = texte($e, 'nom', 'votre nom', true, 80);
+    $nom = texte($e, 'nom', 'votre nom', true, 80, 'personne');
     $pays = strtoupper((string) ($e['pays'] ?? ''));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Choisissez votre pays');
     $num = telephoneValide(texte($e, 'telephone', 'votre téléphone', true, 40), $pays, 'votre téléphone');
@@ -434,8 +434,8 @@ function routeCommercialInscription(): never
         noterEchec($cleIp, 10);
         throw new ErreurApi('Ce numéro a déjà un compte commercial : connectez-vous, ou attendez la validation de l’équipe.', 409);
     }
-    $ville = texte($e, 'ville', 'votre ville', true, 80);
-    $quartier = texte($e, 'quartier', 'votre quartier', true, 80);
+    $ville = texte($e, 'ville', 'votre ville', true, 80, 'lieu');
+    $quartier = texte($e, 'quartier', 'votre quartier', true, 80, 'lieu');
     $email = trim((string) ($e['email'] ?? ''));
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) throw new ErreurApi('Adresse e-mail invalide');
     $pin = (string) ($e['pin'] ?? '');
