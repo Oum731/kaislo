@@ -52,6 +52,7 @@ export default function Boutique({ slugFixe = '' }) {
   const [l1, setL1] = useState(false); // commande dans Kaislo (retrait ou livraison, suivi) : seulement quand le chantier est activé
   const [mode, setMode] = useState('livraison');
   const [suiviCle, setSuiviCle] = useState('');
+  const [payer, setPayer] = useState('livraison'); // comment payer : à la réception, ou en ligne (lot L4, si la boutique l'accepte)
   useEffect(() => { livraisonActive().then(setL1); }, []);
   const [anciens, setAnciens] = useState([]); // clients déjà venus depuis cet appareil
   const [choisi, setChoisi] = useState(null); // numéro du client choisi dans la liste, '' = un autre numéro
@@ -164,7 +165,7 @@ export default function Boutique({ slugFixe = '' }) {
         return;
       }
       const r = await appelApi('POST', '/public/commande', {
-        b: slug, ...(pro ? { pro } : {}), ...(cmd ? { mode: modeEff } : {}), site: form.site, note: form.note, client: { nom: form.nom.trim(), telephone: form.telephone, adresse: form.adresse.trim() },
+        b: slug, ...(pro ? { pro } : {}), ...(cmd ? { mode: modeEff, paiement: cmd.paiementEnLigne && payer === 'en_ligne' ? 'en_ligne' : 'livraison' } : {}), site: form.site, note: form.note, client: { nom: form.nom.trim(), telephone: form.telephone, adresse: form.adresse.trim() },
         lignes: panier.map((l) => ({ produitId: l.produitId, quantite: l.quantite, options: l.optionIds })),
       });
       if (!r.commande) { setOccupe(false); return; }
@@ -176,6 +177,7 @@ export default function Boutique({ slugFixe = '' }) {
       // Commande dans Kaislo : le client la suit ici ; WhatsApp reste un bouton pour prévenir la boutique. Sinon, WhatsApp s'ouvre avec le message déjà écrit
       if (r.commande.suivi) suivreCommande({ cle: r.commande.suivi, numero: r.commande.numero, boutique: boutique.nom, le: new Date().toISOString() });
       else window.location.href = lien;
+      if (r.commande.paiementUrl) { window.location.href = r.commande.paiementUrl; return; } // paiement en ligne : la page du prestataire
     } catch (err) {
       setMessage(err.horsLigne ? tr('Pas de connexion internet : réessayez dans un instant.') : err.message);
     }
@@ -323,6 +325,15 @@ export default function Boutique({ slugFixe = '' }) {
                 </div>
               </div>
             )}
+            {cmd?.paiementEnLigne && (
+              <div className="pile" role="group" aria-label={tr('Comment payer ?')}>
+                <span className="petit"><b>{tr('Comment payer ?')}</b></span>
+                <div className="ligne" style={{ gap: 8 }}>
+                  <button type="button" className={'btn petit ' + (payer === 'livraison' ? '' : 'secondaire')} aria-pressed={payer === 'livraison'} onClick={() => setPayer('livraison')}>{tr('À la réception')}</button>
+                  <button type="button" className={'btn petit ' + (payer === 'en_ligne' ? '' : 'secondaire')} aria-pressed={payer === 'en_ligne'} onClick={() => setPayer('en_ligne')}>{tr('En ligne maintenant')}</button>
+                </div>
+              </div>
+            )}
             {cmd && cmd.minimum > 0 && <p className="petit muet">{tr('Commande minimum : {0}.', [formatPrix(cmd.minimum, devise)])}</p>}
             {frais > 0 && <p className="petit">{tr('Livraison :')} <b>{formatPrix(frais, devise)}</b></p>}
             <p className="vitrine-total">{tr('Total :')} <b>{formatPrix(total + frais, devise)}</b></p>
@@ -344,7 +355,7 @@ export default function Boutique({ slugFixe = '' }) {
             <label className="case-accord"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /><span>{tr('J’ai lu et j’accepte les')} <a href="/conditions-vente-boutiques/" target="_blank" rel="noreferrer">{tr('conditions de vente')}</a> {tr('de la boutique.')}</span></label>
             <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} />
             {message && <p className="alerte">{message}</p>}
-            {cmd ? <p className="tres-petit muet">{tr('Après avoir confirmé, {0} reçoit votre commande tout de suite et vous pouvez la suivre ici.', [boutique.nom])}</p> : <p className="tres-petit muet">{tr('Après avoir confirmé, WhatsApp s’ouvre avec votre commande déjà écrite : il suffit de l’envoyer à {0} pour qu’elle soit prise en compte.', [boutique.nom])}</p>}
+            {cmd?.paiementEnLigne && payer === 'en_ligne' ? <p className="tres-petit muet">{tr('Après avoir confirmé, vous êtes envoyé sur la page de paiement sécurisée de notre prestataire. {0} reçoit votre commande dès que le paiement est confirmé.', [boutique.nom])}</p> : cmd ? <p className="tres-petit muet">{tr('Après avoir confirmé, {0} reçoit votre commande tout de suite et vous pouvez la suivre ici.', [boutique.nom])}</p> : <p className="tres-petit muet">{tr('Après avoir confirmé, WhatsApp s’ouvre avec votre commande déjà écrite : il suffit de l’envoyer à {0} pour qu’elle soit prise en compte.', [boutique.nom])}</p>}
             <button className="btn grand bloc" type="submit" disabled={occupe}>{occupe ? tr('Confirmation…') : tr('Confirmer la commande')}</button>
             <button type="button" className="btn fantome bloc" onClick={() => setPanierOuvert(false)}>{tr('Continuer mes achats')}</button>
           </form>

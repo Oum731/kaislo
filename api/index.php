@@ -64,6 +64,7 @@ require __DIR__ . '/lib/chat.php';
 require __DIR__ . '/lib/boutique-page.php';
 require __DIR__ . '/lib/virement.php';
 require __DIR__ . '/lib/livraison.php';
+require __DIR__ . '/lib/paiement-ligne.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -118,6 +119,8 @@ try {
         'POST /commandes-en-ligne' => routeCommandesEnLigneStatut(),
         'POST /commandes-en-ligne/assigner' => routeCommandeAssigner(),
         'GET /livreurs' => routeLivreursLire(),
+        'POST /commandes-en-ligne/rembourser' => routeCommandeRembourser(),
+        'GET /paiements-en-ligne' => routePaiementsEnLigne(),
         'POST /livreurs' => routeLivreursEcrire(),
         'GET /public/boutique' => routeBoutiquePublique(),
         'GET /page-boutique' => routePageBoutique(),
@@ -137,6 +140,9 @@ try {
         'POST /public/course/statut' => routeCourseStatut(),
         'POST /public/course/position' => routeCoursePosition(),
         'POST /public/commande-suivi/notifier' => routeSuiviNotifier(),
+        'POST /public/commande-suivi/payer' => routeSuiviPayer(),
+        'POST /paiement/notification' => routePaiementNotification(),
+        'GET /public/paiement-essai' => routePaiementEssai(),
         'GET /notifications' => routeNotificationsEtat(),
         'POST /push/abonner' => routePushAbonner(),
         'POST /push/desabonner' => routePushDesabonner(),

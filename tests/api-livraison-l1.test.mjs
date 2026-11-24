@@ -48,7 +48,7 @@ test('livraison ouverte : frais, minimum, retrait sans adresse et suivi par le c
   const { api, jeton } = await demarrer('LivraisonActive=oui\n');
   assert.equal((await api('POST', '/boutique', { actif: true, slug: 'epicerie-l1', whatsapp: '0612340001', fraisLivraison: 10, minimumCommande: 20 }, jeton)).ok, true);
   const pub = (await api('GET', '/public/boutique?b=epicerie-l1')).boutique.commande;
-  assert.deepEqual(pub, { livre: true, retrait: true, frais: 10, minimum: 20 });
+  assert.deepEqual(pub, { livre: true, retrait: true, frais: 10, minimum: 20, paiementEnLigne: false });
   // Livraison : frais ajoutés
   const l = await commande(api);
   assert.equal(l.statut, 201, JSON.stringify(l));

@@ -30,7 +30,8 @@ function exigerLivraison(): void
 
 function routeLivraisonEtat(): never
 {
-    repondre(['ok' => true, 'actif' => livraisonActive()]);
+    $options = array_values(array_filter(['carte', 'paiement', 'independants'], 'optionLivraison'));
+    repondre(['ok' => true, 'actif' => livraisonActive(), 'options' => $options, 'paiementEnLigne' => paiementEnLigneActif()]);
 }
 
 // ---------- Notification du client quand le statut de sa commande change (lot L1) ----------

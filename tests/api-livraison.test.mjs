@@ -29,7 +29,7 @@ test('la livraison est coupée par défaut', async () => {
   const url = await demarrer('');
   const r = await fetch(url + '/livraison/etat');
   assert.equal(r.status, 200);
-  assert.deepEqual(await r.json(), { ok: true, actif: false });
+  assert.deepEqual(await r.json(), { ok: true, actif: false, options: [], paiementEnLigne: false });
 });
 
 test('LivraisonActive=oui ouvre l’interrupteur ; une autre valeur le laisse coupé', async () => {

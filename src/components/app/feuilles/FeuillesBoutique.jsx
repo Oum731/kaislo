@@ -15,8 +15,8 @@ import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
 import { lienWhatsApp } from '@/lib/donnees/whatsapp';
 import { choixDepuisCommande, STATUTS_COMMANDE, articlesAPublier, messageAnnuaire, venteDeCommande } from '@/lib/donnees/boutique';
 import { chemin } from '@/config';
-import { livraisonActive } from '@/lib/livraison';
-import { BlocLivraison } from './LivraisonCommande';
+import { livraisonActive, paiementEnLigneActif } from '@/lib/livraison';
+import { BlocLivraison, BlocPaiement, ResumePaiements } from './LivraisonCommande';
 
 const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), en_route: tr('En route'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
 
@@ -31,6 +31,8 @@ export function FeuilleBoutique() {
   const [occupe, setOccupe] = useState(false);
   const [l1, setL1] = useState(false); // commande dans Kaislo : réglages de livraison visibles seulement quand le chantier est activé
   useEffect(() => { livraisonActive().then(setL1); }, []);
+  const [pay, setPay] = useState(false); // paiement en ligne disponible sur le serveur (lot L4)
+  useEffect(() => { paiementEnLigneActif().then(setPay); }, []);
 
   useEffect(() => {
     if (demo) return;
@@ -41,7 +43,7 @@ export function FeuilleBoutique() {
 
   const maj = (x) => setB({ ...b, ...x });
   // Ce qu'on envoie au serveur (le lien privé des grossistes : activé ou non ; « regenererPro » : nouvelle clé)
-  const donnees = (plus = {}) => ({ actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison, localisation: s.d.commerce.localisation || null, ...(l1 && b.commande ? { fraisLivraison: b.commande.fraisLivraison, minimumCommande: b.commande.minimumCommande, livre: b.commande.livre, retrait: b.commande.retrait } : {}), ...plus });
+  const donnees = (plus = {}) => ({ actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison, localisation: s.d.commerce.localisation || null, ...(l1 && b.commande ? { fraisLivraison: b.commande.fraisLivraison, minimumCommande: b.commande.minimumCommande, livre: b.commande.livre, retrait: b.commande.retrait, ...(pay ? { paiementEnLigne: b.commande.paiementEnLigne, reversement: b.commande.reversement } : {}) } : {}), ...plus });
   const changerLienPro = async () => {
     if (!confirm(tr('Changer le lien des grossistes ? L’ancien lien ne marchera plus : il faudra envoyer le nouveau à vos grossistes.'))) return;
     setErreur(''); setOccupe(true);
@@ -126,6 +128,12 @@ export function FeuilleBoutique() {
                 <label className="case-accord"><input type="checkbox" checked={b.commande.livre} onChange={(e) => maj({ commande: { ...b.commande, livre: e.target.checked } })} /><span>{tr('Livraison à domicile')}</span></label>
                 <label className="case-accord"><input type="checkbox" checked={b.commande.retrait} onChange={(e) => maj({ commande: { ...b.commande, retrait: e.target.checked } })} /><span>{tr('Retrait en boutique')}</span></label>
                 <label className="champ"><span>{tr('Frais de livraison (vide = livraison offerte)')}</span><input inputMode="decimal" value={b.commande.fraisLivraison ?? ''} onChange={(e) => maj({ commande: { ...b.commande, fraisLivraison: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) || 0 } })} /></label>
+                {pay && (
+                  <>
+                    <label className="case-accord"><input type="checkbox" checked={!!b.commande.paiementEnLigne} onChange={(e) => maj({ commande: { ...b.commande, paiementEnLigne: e.target.checked } })} /><span>{tr('Accepter le paiement en ligne')}<br /><span className="tres-petit muet">{tr('Le client paie chez notre prestataire de paiement agréé, qui vous reverse l’argent. Kaislo ne touche pas l’argent de vos clients.')}</span></span></label>
+                    {b.commande.paiementEnLigne && <label className="champ"><span>{tr('Où recevez-vous l’argent ? (mobile money ou compte bancaire)')}</span><input value={b.commande.reversement || ''} onChange={(e) => maj({ commande: { ...b.commande, reversement: e.target.value } })} maxLength={200} /></label>}
+                  </>
+                )}
                 <label className="champ"><span>{tr('Commande minimum (facultatif)')}</span><input inputMode="decimal" value={b.commande.minimumCommande ?? ''} onChange={(e) => maj({ commande: { ...b.commande, minimumCommande: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) || 0 } })} /></label>
               </div>
             )}
@@ -172,6 +180,8 @@ export function FeuilleCommandesEnLigne() {
   const [edition, setEdition] = useState(null); // commande en cours de modification : { id, nom, telephone, adresse, note, quantites: [..] }
   const [modifiees, setModifiees] = useState([]); // commandes modifiées pendant cette ouverture : on propose de prévenir le client
   const [annulation, setAnnulation] = useState(null); // annulation d'une commande déjà encaissée : { id, pin } (le code du gérant annule aussi la vente)
+  const [paiementOuvert, setPaiementOuvert] = useState(false); // paiement en ligne disponible : résumé de ce qui sera reversé
+  useEffect(() => { paiementEnLigneActif().then(setPaiementOuvert); }, []);
   const [l2, setL2] = useState(false); // livraison par le commerçant (livreurs, statut « en route ») : seulement quand le chantier est activé
   useEffect(() => { livraisonActive().then(setL2); }, []);
 
@@ -278,6 +288,7 @@ export function FeuilleCommandesEnLigne() {
       <div className="pile">
         {demo && <p className="info-verte petit">{tr('Démo : les deux premières commandes sont des exemples. Passez-en une vous-même depuis la boutique de démo : elle apparaît ici.')}</p>}
         {erreur && <p className="alerte">{erreur}</p>}
+        {paiementOuvert && !demo && <ResumePaiements jeton={s.jetonServeur()} />}
         {message && <p className="info-verte">{message}</p>}
         {liste && !liste.length && <p className="astuce">{tr('Aucune commande pour le moment. Partagez le lien de votre boutique (Compte → Boutique en ligne).')}</p>}
         {(liste || []).map((c) => (
@@ -388,6 +399,7 @@ export function FeuilleCommandesEnLigne() {
                     <button className="btn danger" onClick={() => annuler(c)}>{tr('Annuler la commande')}</button>
                   </div>
                 )}
+                {c.paiement?.mode === 'en_ligne' && !demo && <BlocPaiement commande={c} jeton={s.jetonServeur()} surChange={(x) => setListe((l) => l.map((y) => (y.id === x.id ? x : y)))} surErreur={setErreur} />}
                 {l2 && !demo && <BlocLivraison commande={c} jeton={s.jetonServeur()} pays={s.d.commerce.pays} surChange={(x) => setListe((l) => l.map((y) => (y.id === x.id ? x : y)))} surErreur={setErreur} />}
                 <div className="puces enveloppe">
                   {STATUTS_COMMANDE.filter(([id]) => id !== 'en_route' || (l2 && !demo && c.mode === 'livraison')).map(([id]) => <button key={id} className={'puce' + (c.statut === id ? ' actif' : '')} onClick={() => c.statut !== id && changer(c, id)}>{libelleStatut(id)}</button>)}

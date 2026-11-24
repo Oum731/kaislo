@@ -19,7 +19,7 @@
 | L1 | **Codé, non activé.** Commande dans Kaislo (panier, retrait ou livraison, frais, minimum, numéro de commande, suivi par le client), toujours payée au commerçant | rien |
 | L2 | **Codé, non activé.** Livraison par le commerçant : livreurs (simple fiche), assignation d'une commande, statuts en route et livrée, code de livraison | L1 |
 | L3 | **Codé, non activé** (option `carte`). Suivi du client : écran de statut, notifications, position du livreur pendant la course seulement | L2 |
-| L4 | Paiement en ligne via un prestataire agréé (Kaislo ne garde pas l'argent) | L1 + contrat prestataire |
+| L4 | **Codé avec un prestataire de simulation, non activé** (option `paiement`). Paiement en ligne via un prestataire agréé (Kaislo ne garde pas l'argent) | L1 + contrat prestataire |
 | L5 | Livreurs indépendants, partage des courses, commission, gains | L2, L4, avis juridique |
 
 ## Données à ajouter (à valider avant de migrer)
@@ -74,3 +74,11 @@ Chaque lot ajoute sa part de migration (numéro de base suivant) ; rien n'est cr
 - **Client** : carte OpenStreetMap avec la position du livreur et son ancienneté (« mise à jour il y a N min » ; au-delà de dix minutes, « position indisponible »). **Commerçant** : lien « Voir le livreur sur la carte ».
 - **Vie privée** : une seule position par commande (table `positions_course`), effacée dès que la commande est livrée, annulée ou ramenée à un statut d'avant la route, jamais gardée plus de deux heures ; mention dans la page Confidentialité.
 - Pas de calcul d'itinéraire ni de durée d'arrivée : l'adresse du client est un texte, pas une position.
+
+## Lot L4 : ce qui est codé (base v39)
+- **Activation** : `LivraisonOptions=paiement`, `PaiementEnLigne=essai` et `PaiementSecret=…` (12 caractères ou plus) dans le `.env` ; `PaiementCommission=5` (en %, facultatif). Sans secret ou avec un prestataire inconnu, le paiement en ligne reste coupé.
+- **Prestataire « essai »** : simulation complète (page de paiement de test à deux boutons, notification signée en HMAC-SHA256) pour essayer tout le parcours en conditions réelles **sans argent**. **Ce n'est pas un vrai prestataire.**
+- **Parcours** : la boutique accepte le paiement en ligne et dit où elle reçoit l'argent ; le client choisit « À la réception » ou « En ligne maintenant » ; commande « en attente de paiement » (le commerçant n'est pas prévenu et ne peut pas l'accepter) ; la notification signée du prestataire la confirme, alors seulement le commerçant est prévenu ; paiement échoué : le client réessaie depuis son suivi ; annulation d'une commande payée : « à rembourser », puis remboursement par le commerçant ; une commande payée ne se modifie plus.
+- **Argent** : Kaislo ne le touche jamais ; le commerçant voit « À vous reverser par le prestataire » (net après commission) et la liste de ses paiements.
+- **Brancher un vrai prestataire** : écrire une classe qui implémente `InterfacePasserelle` (`creerSession`, `signatureValide`, `rembourser`) dans `api/lib/paiement-ligne.php` et l'ajouter dans `passerelle()`. Il faut d'abord un contrat (CMI via banque, Payzone, Pay10…) avec compte marchand, API de test, clé secrète, adresse de notification (`/api/paiement/notification`), et la réponse à ces questions : reversement automatique aux commerçants (sous-comptes) ou non, commission, délai, remboursement par l'API. Sans reversement par le prestataire, il faudra un avis juridique avant de garder l'argent des commerçants.
+- Pas encore fait : paiement en cash non tracé, litiges, facture de commission (L5), version anglaise de la page de simulation.

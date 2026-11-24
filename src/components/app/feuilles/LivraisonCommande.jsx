@@ -4,11 +4,12 @@
 // Le livreur est une simple fiche (nom, numéro) : pas de compte. Il reçoit sur WhatsApp un lien propre à cette course, où il voit l'adresse et
 // le montant, marque la commande récupérée, puis la livre avec le code que le client lui donne.
 // ------------------------------------------------------------
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { appelApi } from '@/lib/api';
 import { ChampTelephone } from '@/components/ui';
 import { cleNumero } from '@/lib/donnees/telephone';
 import { tr } from '@/lib/i18n';
+import { formatPrix } from '@/lib/utils/format';
 
 const STATUTS_LIVRABLES = ['confirmee', 'prete', 'en_route'];
 
@@ -84,6 +85,42 @@ export function BlocLivraison({ commande: c, jeton, pays, surChange, surErreur }
           <button className="lien petit" onClick={() => setOuvert(false)}>{tr('Fermer')}</button>
         </div>
       )}
+    </div>
+  );
+}
+
+const LIBELLE_PAIEMENT = () => ({ a_payer: tr('En attente de paiement'), echoue: tr('Paiement échoué'), paye: tr('Payée en ligne'), a_rembourser: tr('À rembourser'), rembourse: tr('Remboursée') });
+
+// Paiement en ligne (lot L4) : état du paiement d'une commande, et remboursement quand elle est annulée
+export function BlocPaiement({ commande: c, jeton, surChange, surErreur }) {
+  const [occupe, setOccupe] = useState(false);
+  const rembourser = async () => {
+    if (!confirm(tr('Rembourser cette commande au client ? Le prestataire de paiement lui rend son argent.'))) return;
+    setOccupe(true);
+    try { surChange((await appelApi('POST', '/commandes-en-ligne/rembourser', { id: c.id }, jeton)).commande); } catch (e) { surErreur(e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message); }
+    setOccupe(false);
+  };
+  const statut = c.paiement.statut;
+  return (
+    <div className={statut === 'paye' || statut === 'rembourse' ? 'info-verte' : 'carte pile'}>
+      <b>{LIBELLE_PAIEMENT()[statut] || statut}</b>
+      {['a_payer', 'echoue'].includes(statut) && <p className="petit muet">{tr('Vous pourrez accepter la commande dès que le paiement est confirmé.')}</p>}
+      {['paye', 'a_rembourser'].includes(statut) && c.statut === 'annulee' && <button className="btn secondaire" disabled={occupe} onClick={rembourser}>{tr('Rembourser le client')}</button>}
+      {statut === 'paye' && c.statut !== 'annulee' && <p className="tres-petit muet">{tr('Si vous annulez cette commande, vous pourrez rembourser le client ici.')}</p>}
+    </div>
+  );
+}
+
+// Ce que le prestataire doit reverser au commerçant (commissions déduites)
+export function ResumePaiements({ jeton }) {
+  const [r, setR] = useState(null);
+  useEffect(() => { appelApi('GET', '/paiements-en-ligne', null, jeton).then(setR).catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!r || !r.paiements.length) return null;
+  return (
+    <div className="carte pile">
+      <b>{tr('Paiements en ligne')}</b>
+      <p className="petit">{tr('À vous reverser par le prestataire : {0}', [formatPrix(r.aReverser, r.devise)])}</p>
+      <p className="tres-petit muet">{tr('Après commission. Le prestataire vous verse l’argent directement : Kaislo ne le touche pas.')}</p>
     </div>
   );
 }
