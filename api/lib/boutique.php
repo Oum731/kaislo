@@ -23,7 +23,7 @@
 // ------------------------------------------------------------
 
 const SLUGS_RESERVES = ['admin', 'app', 'api', 'commercial', 'boutique', 'kaislo', 'www', 'b', 'demo', 'en', 'pays', 'guides'];
-const STATUTS_COMMANDE = ['nouvelle', 'confirmee', 'prete', 'livree', 'annulee'];
+const STATUTS_COMMANDE = ['nouvelle', 'confirmee', 'prete', 'en_route', 'livree', 'annulee']; // « en_route » : lot L2 (livraison par le commerçant)
 const LIGNES_COMMANDE_MAX = 40;
 const BOUTIQUES_ANNUAIRE_MAX = 300; // boutiques affichées dans la liste d'un pays
 const COMMANDES_AFFICHEES = 100;
@@ -250,6 +250,9 @@ function versCommandeLigne(array $c): array
         'note' => $c['note'], 'lignes' => json_decode($c['lignes'], true) ?: [], 'total' => (float) $c['total'], 'devise' => $c['devise'],
         'gros' => !empty($c['gros']),
         'mode' => $c['mode'] ?: 'livraison', 'frais' => (float) ($c['frais'] ?? 0),
+        'livreur' => !empty($c['livreur_id']) ? ['id' => $c['livreur_id'], 'nom' => (string) $c['livreur_nom'], 'telephone' => (string) (requete('SELECT telephone FROM livreurs WHERE id = ?', [$c['livreur_id']])->fetch()['telephone'] ?? '')] : null,
+        'lienCourse' => !empty($c['course_cle']) ? lienCourse((string) $c['course_cle']) : null,
+        'position' => $c['statut'] === 'en_route' && optionLivraison('carte') ? positionCourse($c['id']) : null,
     ];
 }
 
@@ -331,9 +334,11 @@ function routeCommandesEnLigneStatut(): never
     }
     $statut = (string) ($e['statut'] ?? '');
     if (!in_array($statut, STATUTS_COMMANDE, true)) throw new ErreurApi('Statut inconnu');
+    if ($statut === 'en_route' && !livraisonActive()) throw new ErreurApi('Statut inconnu');
     // Abonnement non payé : on peut encore refuser (annuler) une commande, mais plus la valider
     if ($statut !== 'annulee' && $statut !== 'nouvelle') exigerAbonnementPaye($u['commerce_id'], 'Abonnement non payé : activez-le pour valider vos commandes.');
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$statut, maintenant(), $c['id']]);
+    if (in_array($statut, ['livree', 'annulee', 'confirmee', 'prete'], true)) effacerPositionCourse($c['id']);
     if ($statut !== $c['statut']) notifierClientCommande($c, $statut); // le client qui suit sa commande est prévenu (lot L1)
     $c['statut'] = $statut;
     repondre(['ok' => true, 'commande' => versCommandeLigne($c)]);
@@ -606,5 +611,9 @@ function routeCommandeSuivi(): never
     repondre(['ok' => true, 'commande' => [
         'numero' => (int) $l['numero'], 'statut' => $l['statut'], 'mode' => $l['mode'] ?: 'livraison', 'boutique' => $c['nom'] ?? '', 'whatsapp' => $b['whatsapp_cle'] ?? '',
         'adresse' => $l['adresse'], 'total' => (float) $l['total'], 'frais' => (float) ($l['frais'] ?? 0), 'devise' => $l['devise'], 'creeLe' => $l['cree_le'], 'modifieLe' => $l['modifie_le'], 'lignes' => $lignes,
+        // Livreur et code de remise : le client donne ce code au livreur à la livraison
+        'livreur' => !empty($l['livreur_nom']) ? mb_substr(nomPropre(explode(' ', (string) $l['livreur_nom'])[0]), 0, 30) : null,
+        'code' => $l['statut'] === 'en_route' && !empty($l['code_livraison']) ? (string) $l['code_livraison'] : null,
+        'position' => $l['statut'] === 'en_route' && optionLivraison('carte') ? positionCourse($l['id']) : null,
     ], 'clePublique' => (function () { try { return cleVapid()['publique']; } catch (Throwable) { return null; } })()]);
 }

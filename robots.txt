@@ -4,6 +4,7 @@ Allow: /api/public/boutique-image
 Disallow: /app/
 Disallow: /admin/
 Disallow: /commercial/
+Disallow: /livraison/
 Disallow: /api/
 Disallow: /purge-cache.txt
 

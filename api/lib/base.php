@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 36;
+const VERSION_BASE = 38;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -282,9 +282,20 @@ const STRUCTURE = [
             'adresse' => 'TEXTE', 'note' => 'LONG', 'lignes' => 'LONG', 'total' => 'MONTANT', 'devise' => 'VARCHAR(6)',
             'statut' => 'VARCHAR(12)', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
             'gros' => 'ENTIER', // 1 = commande passée par le lien des grossistes (prix de gros, au carton)
+            'livreur_id' => 'ID', 'livreur_nom' => 'TEXTE', 'course_cle' => 'VARCHAR(24)', 'code_livraison' => 'VARCHAR(8)', // lot L2 : livreur du commerçant, lien de sa course, code que le client donne à la remise
             'mode' => 'VARCHAR(10)', 'frais' => 'MONTANT', 'suivi_cle' => 'VARCHAR(24)', // commande dans Kaislo (lot L1) : retrait ou livraison, frais de livraison, clé de suivi du client
         ],
         'cle' => ['id'], 'uniques' => [['commerce_id', 'numero']], 'index' => [['commerce_id', 'cree_le']],
+    ],
+    // Livreurs d'un commerçant (lot L2) : une fiche, sans compte ; la course se suit par un lien propre à chaque commande
+    'livreurs' => [
+        'colonnes' => ['id' => 'ID', 'commerce_id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'cree_le' => 'DATE'],
+        'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id']],
+    ],
+    // Dernière position du livreur pendant une course (lot L3) : une ligne par commande, effacée dès que la course est finie
+    'positions_course' => [
+        'colonnes' => ['commande_id' => 'ID', 'lat' => 'DOUBLE', 'lng' => 'DOUBLE', 'precision_m' => 'ENTIER', 'maj_le' => 'DATE'],
+        'cle' => ['commande_id'], 'uniques' => [], 'index' => [],
     ],
     // Autorisations données par le gérant (code PIN saisi sur l'appareil d'un vendeur : annuler une vente)
     'autorisations' => [
@@ -406,6 +417,14 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 36 : livreur du commerçant (lot L2)
+    if ($version >= 1 && $version < 37) {
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN livreur_id VARCHAR(32) NULL');
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN livreur_nom VARCHAR(255) NULL');
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN course_cle VARCHAR(24) NULL');
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN code_livraison VARCHAR(8) NULL');
     }
 
     // Bases en version 1 à 35 : langue des clients qui suivent une commande

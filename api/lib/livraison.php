@@ -11,6 +11,18 @@ function livraisonActive(): bool
     return in_array(strtolower(trim((string) (lireFichierEnvCle('LivraisonActive') ?? ''))), ['oui', '1', 'true'], true);
 }
 
+/** Options du chantier, activées une à une : « LivraisonOptions=carte,paiement,independants » dans le .env (absente = aucune). */
+function optionLivraison(string $nom): bool
+{
+    if (!livraisonActive()) return false;
+    return in_array($nom, array_map('trim', explode(',', strtolower((string) (lireFichierEnvCle('LivraisonOptions') ?? '')))), true);
+}
+
+function exigerOptionLivraison(string $nom): void
+{
+    if (!optionLivraison($nom)) throw new ErreurApi('Introuvable', 404);
+}
+
 function exigerLivraison(): void
 {
     if (!livraisonActive()) throw new ErreurApi('Introuvable', 404);
@@ -27,9 +39,9 @@ function routeLivraisonEtat(): never
 function textesStatutClient(string $statut, string $mode, string $langue): ?array
 {
     $retrait = $mode === 'retrait';
-    $fr = ['confirmee' => 'Votre commande n° {n} est acceptée.', 'prete' => $retrait ? 'Votre commande n° {n} est prête à être retirée.' : 'Votre commande n° {n} est prête : la livraison se prépare.',
+    $fr = ['confirmee' => 'Votre commande n° {n} est acceptée.', 'en_route' => 'Votre commande n° {n} est en route : tenez votre code de livraison prêt.', 'prete' => $retrait ? 'Votre commande n° {n} est prête à être retirée.' : 'Votre commande n° {n} est prête : la livraison se prépare.',
         'livree' => $retrait ? 'Votre commande n° {n} est retirée. Merci !' : 'Votre commande n° {n} est livrée. Merci !', 'annulee' => 'Votre commande n° {n} a été annulée par la boutique.'];
-    $en = ['confirmee' => 'Your order no. {n} has been accepted.', 'prete' => $retrait ? 'Your order no. {n} is ready to pick up.' : 'Your order no. {n} is ready: delivery is being prepared.',
+    $en = ['confirmee' => 'Your order no. {n} has been accepted.', 'en_route' => 'Your order no. {n} is on its way: have your delivery code ready.', 'prete' => $retrait ? 'Your order no. {n} is ready to pick up.' : 'Your order no. {n} is ready: delivery is being prepared.',
         'livree' => $retrait ? 'Your order no. {n} has been picked up. Thank you!' : 'Your order no. {n} has been delivered. Thank you!', 'annulee' => 'Your order no. {n} was cancelled by the shop.'];
     $t = ($langue === 'en' ? $en : $fr)[$statut] ?? null;
     return $t === null ? null : [$t];
@@ -75,4 +87,173 @@ function routeSuiviNotifier(): never
         ]);
     }
     repondre(['ok' => true]);
+}
+
+// ---------- Lot L2 : livraison par le commerçant ----------
+// Le livreur est une simple fiche (nom, téléphone) : pas de compte, donc aucun accès aux données du commerce. Chaque course a son propre lien,
+// que le commerçant lui envoie ; le client donne un code à quatre chiffres à la remise, qui termine la course.
+
+function lienCourse(string $cle): string
+{
+    return 'https://' . (domaineSite() ?: 'kaislo.com') . '/livraison/?c=' . $cle;
+}
+
+function versLivreur(array $l): array
+{
+    return ['id' => $l['id'], 'nom' => $l['nom'], 'telephone' => $l['telephone'], 'actif' => (bool) $l['actif']];
+}
+
+// GET /api/livreurs
+function routeLivreursLire(): never
+{
+    exigerLivraison();
+    $u = utilisateurConnecte();
+    if ($u['role'] !== 'gerant') throw new ErreurApi('Réservé au gérant', 403);
+    repondre(['ok' => true, 'livreurs' => array_map('versLivreur', requete('SELECT * FROM livreurs WHERE commerce_id = ? ORDER BY nom', [$u['commerce_id']])->fetchAll())]);
+}
+
+// POST /api/livreurs { id?, nom, telephone, actif? } : crée ou modifie un livreur (actif = false : il n'apparaît plus dans les choix)
+function routeLivreursEcrire(): never
+{
+    exigerLivraison();
+    $u = utilisateurConnecte();
+    if ($u['role'] !== 'gerant') throw new ErreurApi('Réservé au gérant', 403);
+    $e = entree();
+    $c = requete('SELECT pays FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
+    $nom = texte($e, 'nom', 'le nom du livreur', true, 60, 'personne');
+    $tel = telephoneValide(texte($e, 'telephone', 'le numéro du livreur', true, 40), $c['pays'], 'numéro du livreur');
+    $actif = array_key_exists('actif', $e) ? (!empty($e['actif']) ? 1 : 0) : 1;
+    $id = (string) ($e['id'] ?? '');
+    if ($id !== '') {
+        if (!requete('SELECT 1 FROM livreurs WHERE id = ? AND commerce_id = ?', [$id, $u['commerce_id']])->fetch()) throw new ErreurApi('Livreur introuvable', 404);
+        requete('UPDATE livreurs SET nom = ?, telephone = ?, actif = ? WHERE id = ?', [$nom, $tel['affichage'], $actif, $id]);
+    } else {
+        if ((int) requete('SELECT COUNT(*) AS n FROM livreurs WHERE commerce_id = ?', [$u['commerce_id']])->fetch()['n'] >= 30) throw new ErreurApi('Trente livreurs au plus : désactivez ceux qui ne livrent plus');
+        $id = nouvelId('lv');
+        requete('INSERT INTO livreurs (id, commerce_id, nom, telephone, actif, cree_le) VALUES (?, ?, ?, ?, ?, ?)', [$id, $u['commerce_id'], $nom, $tel['affichage'], $actif, maintenant()]);
+    }
+    journaliser($u['commerce_id'], $u['id'], 'livreur-enregistre', ['livreur' => $id, 'actif' => (bool) $actif]);
+    repondre(['ok' => true, 'livreur' => versLivreur(requete('SELECT * FROM livreurs WHERE id = ?', [$id])->fetch())]);
+}
+
+// POST /api/commandes-en-ligne/assigner { id, livreurId } : donne la course à un livreur ; renvoie le lien à lui envoyer
+function routeCommandeAssigner(): never
+{
+    exigerLivraison();
+    $u = utilisateurConnecte();
+    $e = entree();
+    $c = requete('SELECT * FROM commandes_en_ligne WHERE id = ? AND commerce_id = ?', [(string) ($e['id'] ?? ''), $u['commerce_id']])->fetch();
+    if (!$c) throw new ErreurApi('Commande introuvable', 404);
+    if (($c['mode'] ?: 'livraison') !== 'livraison') throw new ErreurApi('Cette commande est à retirer en boutique : pas de livreur');
+    if (!in_array($c['statut'], ['confirmee', 'prete', 'en_route'], true)) throw new ErreurApi('Acceptez d’abord la commande, avant de la confier à un livreur');
+    $l = requete('SELECT * FROM livreurs WHERE id = ? AND commerce_id = ? AND actif = 1', [(string) ($e['livreurId'] ?? ''), $u['commerce_id']])->fetch();
+    if (!$l) throw new ErreurApi('Livreur introuvable', 404);
+    // Nouveau lien à chaque attribution : l'ancien livreur ne peut plus rien faire. Le code de remise, lui, reste celui que le client connaît.
+    $cle = bin2hex(random_bytes(10));
+    $code = $c['code_livraison'] ?: (string) random_int(1000, 9999);
+    requete('UPDATE commandes_en_ligne SET livreur_id = ?, livreur_nom = ?, course_cle = ?, code_livraison = ?, modifie_le = ? WHERE id = ?', [$l['id'], $l['nom'], $cle, $code, maintenant(), $c['id']]);
+    journaliser($u['commerce_id'], $u['id'], 'commande-assignee', ['numero' => (int) $c['numero'], 'livreur' => $l['id']]);
+    $c = requete('SELECT * FROM commandes_en_ligne WHERE id = ?', [$c['id']])->fetch();
+    repondre(['ok' => true, 'commande' => versCommandeLigne($c), 'livreur' => versLivreur($l)]);
+}
+
+function courseParCle(string $cle): array
+{
+    $cleIp = 'course:' . adresseIp();
+    verifierBlocage($cleIp);
+    $c = preg_match('/^[a-f0-9]{20}$/', $cle) ? requete('SELECT * FROM commandes_en_ligne WHERE course_cle = ?', [$cle])->fetch() : false;
+    if (!$c) { noterEchec($cleIp, 60); throw new ErreurApi('Course introuvable', 404); }
+    return $c;
+}
+
+// GET /api/public/course?cle=… : ce que voit le livreur (seulement cette commande)
+function routeCourseLire(): never
+{
+    exigerLivraison();
+    $c = courseParCle((string) ($_GET['cle'] ?? ''));
+    $commerce = requete('SELECT nom, quartier, ville FROM commerces WHERE id = ?', [$c['commerce_id']])->fetch();
+    $b = requete('SELECT whatsapp_cle FROM boutiques WHERE commerce_id = ?', [$c['commerce_id']])->fetch();
+    $lignes = array_map(fn ($x) => ['nom' => (string) ($x['nom'] ?? ''), 'quantite' => (int) ($x['quantite'] ?? 0)], json_decode($c['lignes'], true) ?: []);
+    header('Cache-Control: private, no-store');
+    repondre(['ok' => true, 'course' => [
+        'numero' => (int) $c['numero'], 'statut' => $c['statut'], 'boutique' => $commerce['nom'], 'lieuBoutique' => trim(($commerce['quartier'] ?? '') . ', ' . ($commerce['ville'] ?? ''), ', '), 'whatsappBoutique' => $b['whatsapp_cle'] ?? '',
+        'client' => ['nom' => $c['client_nom'], 'telephone' => $c['client_telephone'], 'adresse' => $c['adresse']], 'note' => $c['note'], 'lignes' => $lignes,
+        'total' => (float) $c['total'], 'devise' => $c['devise'], 'livreur' => $c['livreur_nom'], 'carte' => optionLivraison('carte'),
+    ]]);
+}
+
+// POST /api/public/course/statut { cle, action: 'recupere' | 'livre', code? }
+//   recupere : le livreur a pris la commande, elle passe « en route » (le client est prévenu et voit son code)
+//   livre    : le client a donné son code, la commande passe « livrée »
+function routeCourseStatut(): never
+{
+    exigerLivraison();
+    $e = entree();
+    $c = courseParCle((string) ($e['cle'] ?? ''));
+    $action = (string) ($e['action'] ?? '');
+    if ($action === 'recupere') {
+        if (!in_array($c['statut'], ['confirmee', 'prete'], true)) throw new ErreurApi($c['statut'] === 'en_route' ? 'La course est déjà en route' : 'Cette commande ne peut plus être récupérée', 400);
+        $nouveau = 'en_route';
+    } elseif ($action === 'livre') {
+        if ($c['statut'] !== 'en_route') throw new ErreurApi('Récupérez d’abord la commande', 400);
+        $cleIp = 'course-code:' . $c['id'];
+        verifierBlocage($cleIp);
+        if (!hash_equals((string) $c['code_livraison'], trim((string) ($e['code'] ?? '')))) {
+            if (noterEchec($cleIp, 5)) throw new ErreurApi('Trop d’essais : appelez la boutique', 429); // cinq codes faux au plus
+            throw new ErreurApi('Ce code n’est pas le bon : demandez-le au client', 400);
+        }
+        $nouveau = 'livree';
+    } else {
+        throw new ErreurApi('Action inconnue');
+    }
+    requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$nouveau, maintenant(), $c['id']]);
+    if ($nouveau === 'livree') effacerPositionCourse($c['id']);
+    journaliser($c['commerce_id'], null, 'course-' . $action, ['numero' => (int) $c['numero']]);
+    $c['statut'] = $nouveau;
+    notifierClientCommande($c, $nouveau);
+    // Le gérant est prévenu sur ses appareils
+    $texte = $nouveau === 'livree' ? 'La commande n° ' . $c['numero'] . ' est livrée à ' . $c['client_nom'] . '.' : $c['livreur_nom'] . ' a récupéré la commande n° ' . $c['numero'] . ' : elle est en route.';
+    try { envoyerPush($c['commerce_id'], 'commande', 'Livraison', $texte, '/app/'); } catch (Throwable) { /* le gérant verra le statut dans l'application */ }
+    repondre(['ok' => true, 'etat' => $nouveau]);
+}
+
+// ---------- Lot L3 : position du livreur pendant la course ----------
+// La position n'est envoyée que pendant que la commande est « en route », seulement le temps de la course : une seule ligne par commande,
+// effacée dès que la commande est livrée ou annulée (et jamais gardée plus de deux heures). Le client la voit sur une carte.
+
+const POSITION_VALIDE_SECONDES = 600; // au-delà, le client voit « position indisponible » plutôt qu'une position périmée
+
+/** Dernière position connue de la commande : ['lat', 'lng', 'ageSec'], ou null. */
+function positionCourse(string $commandeId): ?array
+{
+    $p = requete('SELECT * FROM positions_course WHERE commande_id = ?', [$commandeId])->fetch();
+    if (!$p) return null;
+    $age = time() - strtotime((string) $p['maj_le']);
+    if ($age > 7200) { effacerPositionCourse($commandeId); return null; }
+    if ($age > POSITION_VALIDE_SECONDES) return null;
+    return ['lat' => (float) $p['lat'], 'lng' => (float) $p['lng'], 'ageSec' => max(0, $age)];
+}
+
+function effacerPositionCourse(string $commandeId): void
+{
+    requete('DELETE FROM positions_course WHERE commande_id = ?', [$commandeId]);
+}
+
+// POST /api/public/course/position { cle, lat, lng, precision? } : envoyé par la page du livreur toutes les dix secondes environ
+function routeCoursePosition(): never
+{
+    exigerOptionLivraison('carte');
+    $e = entree();
+    $c = courseParCle((string) ($e['cle'] ?? ''));
+    if ($c['statut'] !== 'en_route') { effacerPositionCourse($c['id']); repondre(['ok' => true, 'partage' => false]); }
+    if (!is_numeric($e['lat'] ?? null) || !is_numeric($e['lng'] ?? null)) throw new ErreurApi('Position invalide');
+    $lat = (float) $e['lat'];
+    $lng = (float) $e['lng'];
+    if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 || ($lat == 0.0 && $lng == 0.0)) throw new ErreurApi('Position invalide');
+    $precision = is_numeric($e['precision'] ?? null) ? max(0, min(100000, (int) $e['precision'])) : null;
+    $existe = requete('SELECT maj_le FROM positions_course WHERE commande_id = ?', [$c['id']])->fetch();
+    if ($existe && time() - strtotime((string) $existe['maj_le']) < 3) repondre(['ok' => true, 'partage' => true]); // pas plus d'une position toutes les trois secondes
+    if ($existe) requete('UPDATE positions_course SET lat = ?, lng = ?, precision_m = ?, maj_le = ? WHERE commande_id = ?', [round($lat, 5), round($lng, 5), $precision, maintenant(), $c['id']]);
+    else requete('INSERT INTO positions_course (commande_id, lat, lng, precision_m, maj_le) VALUES (?, ?, ?, ?, ?)', [$c['id'], round($lat, 5), round($lng, 5), $precision, maintenant()]);
+    repondre(['ok' => true, 'partage' => true]);
 }
