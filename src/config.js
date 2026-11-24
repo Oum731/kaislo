@@ -52,7 +52,7 @@ export const SOCIETE = {
   nom: 'Amorac',
   formeJuridique: 'SARL AU (société à responsabilité limitée d’associé unique)',
   capital: '10 000 MAD', // « SARL au capital de 10 000 MAD » (comme sur le modèle de facture d'Amorac)
-  adresse: '5 Rue Annoussour, RDC, 20250 Casablanca, Maroc', // siège
+  adresse: '5 Rue Ennoussour, RDC, 20250 Casablanca, Maroc', // siège
   immatriculation: 'RC 690767 · ICE 003786356000083 · IF 68391830 · TP 34215251',
   directeurPublication: 'Oumar Sourougé Traoré, gérant d’Amorac SARL AU', // responsable de la publication : le gérant (associé unique), d'après les statuts
   recepisseCndp: '', // numéro du récépissé de déclaration à la CNDP (loi 09-08) : à remplir quand la déclaration est faite ; s'affiche alors sur la page Confidentialité
