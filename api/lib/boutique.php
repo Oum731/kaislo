@@ -93,6 +93,7 @@ function versBoutique(?array $b, array $commerce): array
         'articlesGros' => count(array_filter(articlesPublies($commerce['id']), fn ($p) => prixGrosValide($p) !== null)),
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
+        'commande' => ['fraisLivraison' => isset($b['frais_livraison']) ? (float) $b['frais_livraison'] : null, 'minimumCommande' => isset($b['minimum_commande']) ? (float) $b['minimum_commande'] : null, 'livre' => empty($b['livraison_off']), 'retrait' => empty($b['retrait_off'])],
         'localisation' => isset($b['lat'], $b['lng']) ? ['lat' => (float) $b['lat'], 'lng' => (float) $b['lng']] : null,
         'lien' => $b ? lienBoutique($b['slug']) : '',
         'articlesPublies' => $nbPublies,
@@ -227,6 +228,15 @@ function routeBoutiqueEnregistrer(): never
         requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, chat_off, pro_cle, whatsapp, whatsapp_cle, description, livraison, lat, lng, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [$c['id'], $slug, $actif, $publique, $accepteLe, $chatOff, $proCle, $num['affichage'], $num['cle'], $description, $livraison, $lat, $lng, maintenant(), maintenant()]);
     }
+    // Commande dans Kaislo (lot L1) : retrait, livraison, frais et minimum ; enregistrés seulement quand le chantier est activé
+    if (livraisonActive() && (array_key_exists('fraisLivraison', $e) || array_key_exists('minimumCommande', $e) || array_key_exists('livre', $e) || array_key_exists('retrait', $e))) {
+        $montantOuNul = fn ($v) => $v === null || $v === '' ? null : (is_numeric($v) && (float) $v >= 0 && (float) $v <= 1000000 ? round((float) $v, 2) : throw new ErreurApi('Montant invalide'));
+        $livre = array_key_exists('livre', $e) ? (!empty($e['livre']) ? 0 : 1) : (int) ($avant['livraison_off'] ?? 0);
+        $retrait = array_key_exists('retrait', $e) ? (!empty($e['retrait']) ? 0 : 1) : (int) ($avant['retrait_off'] ?? 0);
+        if ($livre && $retrait) throw new ErreurApi('Proposez au moins la livraison ou le retrait');
+        requete('UPDATE boutiques SET frais_livraison = ?, minimum_commande = ?, livraison_off = ?, retrait_off = ? WHERE commerce_id = ?',
+            [$montantOuNul($e['fraisLivraison'] ?? ($avant['frais_livraison'] ?? null)), $montantOuNul($e['minimumCommande'] ?? ($avant['minimum_commande'] ?? null)), $livre, $retrait, $c['id']]);
+    }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();
     repondre(['ok' => true, 'boutique' => versBoutique($b, $c)]);
@@ -239,6 +249,7 @@ function versCommandeLigne(array $c): array
         'client' => ['nom' => $c['client_nom'], 'telephone' => $c['client_telephone'], 'adresse' => $c['adresse']],
         'note' => $c['note'], 'lignes' => json_decode($c['lignes'], true) ?: [], 'total' => (float) $c['total'], 'devise' => $c['devise'],
         'gros' => !empty($c['gros']),
+        'mode' => $c['mode'] ?: 'livraison', 'frais' => (float) ($c['frais'] ?? 0),
     ];
 }
 
@@ -357,6 +368,12 @@ function routeBoutiquePublique(): never
     repondre(['ok' => true, 'boutique' => donneesBoutiquePublique($b, $c)]);
 }
 
+// Ce que le client peut choisir à la commande dans Kaislo (lot L1)
+function reglagesCommande(array $b): array
+{
+    return ['livre' => empty($b['livraison_off']), 'retrait' => empty($b['retrait_off']), 'frais' => (float) ($b['frais_livraison'] ?? 0), 'minimum' => (float) ($b['minimum_commande'] ?? 0)];
+}
+
 // Ce que le public voit d'une boutique : réglages, catégories utilisées et articles publiés (API et page pour Google)
 function donneesBoutiquePublique(array $b, array $c, bool $gros = false): array
 {
@@ -386,7 +403,7 @@ function donneesBoutiquePublique(array $b, array $c, bool $gros = false): array
         'slug' => $b['slug'], 'nom' => $c['nom'], 'type' => $c['type'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '', 'devise' => $c['devise'], 'pays' => $c['pays'],
         'description' => $b['description'], 'livraison' => $b['livraison'], 'whatsapp' => $b['whatsapp_cle'], 'chat' => empty($b['chat_off']), 'logo' => logoBoutique($c['id']),
         'categories' => array_values(array_filter($categories, fn ($x) => isset($utilisees[$x['id']]))), 'produits' => $produits,
-    ] + ($gros ? ['gros' => true] : []);
+    ] + ($gros ? ['gros' => true] : []) + (livraisonActive() && !$gros ? ['commande' => reglagesCommande($b)] : []);
 }
 
 // GET /api/public/boutiques : annuaire pour les clients (sans numéro WhatsApp : il n'apparaît que sur la page de la boutique)
@@ -494,8 +511,16 @@ function routeCommandePublique(): never
     $client = is_array($e['client'] ?? null) ? $e['client'] : [];
     $nom = texte($client, 'nom', 'votre nom', true, 60);
     $tel = telephoneValide(texte($client, 'telephone', 'votre numéro de téléphone', true, 40), $c['pays'], 'votre numéro');
-    $adresse = texte($client, 'adresse', 'l’adresse de livraison', true, 200);
-    if (mb_strlen($adresse) < 3) throw new ErreurApi('Indiquez votre adresse de livraison (quartier, rue ou repère)');
+    // Commande dans Kaislo (lot L1) : retrait en boutique ou livraison ; sans le chantier, tout reste une livraison à une adresse
+    $l1 = livraisonActive() && !$gros;
+    $mode = $l1 && ($e['mode'] ?? '') === 'retrait' ? 'retrait' : 'livraison';
+    if ($l1) {
+        if ($mode === 'livraison' && !empty($b['livraison_off'])) throw new ErreurApi('Cette boutique ne livre pas : choisissez le retrait');
+        if ($mode === 'retrait' && !empty($b['retrait_off'])) throw new ErreurApi('Cette boutique ne propose pas le retrait : choisissez la livraison');
+    }
+    $adresse = texte($client, 'adresse', 'l’adresse de livraison', $mode === 'livraison', 200);
+    if ($mode === 'livraison' && mb_strlen($adresse) < 3) throw new ErreurApi('Indiquez votre adresse de livraison (quartier, rue ou repère)');
+    if ($mode === 'retrait' && $adresse === '') $adresse = 'Retrait en boutique';
     if (mb_strlen($nom) < 2) throw new ErreurApi('Indiquez votre nom');
     $note = texte($e, 'note', 'la note', false, 300);
     $demandes = is_array($e['lignes'] ?? null) ? array_values($e['lignes']) : [];
@@ -528,6 +553,15 @@ function routeCommandePublique(): never
         $lignes[] = ['produitId' => (string) $p['id'], 'nom' => (string) $p['nom'], 'photo' => $photo, 'options' => $details, 'optionIds' => $idsOptions, 'quantite' => $quantite, 'prixUnitaire' => $prix, 'total' => $ligneTotal];
     }
     $total = arrondirMontant($total, $c['devise']);
+    $frais = 0.0;
+    $suivi = null;
+    if ($l1) {
+        $minimum = (float) ($b['minimum_commande'] ?? 0);
+        if ($minimum > 0 && $total < $minimum) throw new ErreurApi('Commande minimum : ' . rtrim(rtrim(number_format($minimum, 2, ',', ' '), '0'), ',') . ' ' . $c['devise']);
+        $frais = $mode === 'livraison' ? arrondirMontant((float) ($b['frais_livraison'] ?? 0), $c['devise']) : 0.0;
+        $total = arrondirMontant($total + $frais, $c['devise']);
+        $suivi = bin2hex(random_bytes(10));
+    }
     if (noterEchec($cleIp, 30)) throw new ErreurApi('Trop de commandes depuis cet appareil : réessayez plus tard.', 429);
     $pdo = base();
     $pdo->beginTransaction();
@@ -542,13 +576,34 @@ function routeCommandePublique(): never
         $pdo->rollBack();
         throw $err;
     }
+    if ($l1) requete('UPDATE commandes_en_ligne SET mode = ?, frais = ?, suivi_cle = ? WHERE id = ?', [$mode, $frais, $suivi, $id]);
     journaliser($c['id'], null, 'commande-en-ligne', ['numero' => $numero, 'total' => $total]);
     ajouterClientDeCommande($c['id'], $nom, $tel['affichage'], $adresse);
     $commande = [
         'numero' => $numero, 'total' => $total, 'devise' => $c['devise'], 'lignes' => $lignes,
         'client' => ['nom' => $nom, 'telephone' => $tel['affichage'], 'adresse' => $adresse], 'note' => $note,
         'whatsapp' => $b['whatsapp_cle'], 'boutique' => $c['nom'], 'gros' => $gros,
-    ];
+    ] + ($l1 ? ['mode' => $mode, 'frais' => $frais, 'suivi' => $suivi] : []);
     notifierNouvelleCommande($c['id'], $commande); // e-mail et/ou WhatsApp au commerçant, après la réponse
     repondre(['ok' => true, 'commande' => $commande], 201);
+}
+
+
+// GET /api/public/commande-suivi?cle=… : le client suit sa commande (lot L1). La clé, au hasard, n'est connue que de son appareil.
+function routeCommandeSuivi(): never
+{
+    exigerLivraison();
+    $cle = (string) ($_GET['cle'] ?? '');
+    $cleIp = 'suivi-commande:' . adresseIp();
+    verifierBlocage($cleIp);
+    $l = preg_match('/^[a-f0-9]{20}$/', $cle) ? requete('SELECT * FROM commandes_en_ligne WHERE suivi_cle = ?', [$cle])->fetch() : false;
+    if (!$l) { noterEchec($cleIp, 60); throw new ErreurApi('Commande introuvable', 404); }
+    $c = requete('SELECT nom FROM commerces WHERE id = ?', [$l['commerce_id']])->fetch();
+    $b = requete('SELECT whatsapp_cle FROM boutiques WHERE commerce_id = ?', [$l['commerce_id']])->fetch();
+    $lignes = array_map(fn ($x) => ['nom' => (string) ($x['nom'] ?? ''), 'quantite' => (int) ($x['quantite'] ?? 0)], json_decode($l['lignes'], true) ?: []);
+    header('Cache-Control: private, no-store');
+    repondre(['ok' => true, 'commande' => [
+        'numero' => (int) $l['numero'], 'statut' => $l['statut'], 'mode' => $l['mode'] ?: 'livraison', 'boutique' => $c['nom'] ?? '', 'whatsapp' => $b['whatsapp_cle'] ?? '',
+        'adresse' => $l['adresse'], 'total' => (float) $l['total'], 'frais' => (float) ($l['frais'] ?? 0), 'devise' => $l['devise'], 'creeLe' => $l['cree_le'], 'modifieLe' => $l['modifie_le'], 'lignes' => $lignes,
+    ]]);
 }

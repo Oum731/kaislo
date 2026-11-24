@@ -1,6 +1,6 @@
 # Chantier « commande et livraison » : préparation
 
-État : **préparé, non activé.** Rien de ce document n'est visible des utilisateurs tant que l'interrupteur `LivraisonActive` n'est pas à `oui`. Les écrans de référence sont dans `docs/conception-kaislo-livraison.md` (client, commerçant, livreur) et dans la maquette Figma (écrans client C01 à C16).
+État : **préparé ; le lot L1 est codé, derrière l'interrupteur, non activé.** Rien de ce document n'est visible des utilisateurs tant que l'interrupteur `LivraisonActive` n'est pas à `oui`. Les écrans de référence sont dans `docs/conception-kaislo-livraison.md` (client, commerçant, livreur) et dans la maquette Figma (écrans client C01 à C16).
 
 ## Ce qui existe déjà (point de départ)
 - Accueil par proximité : boutiques classées par distance, une boutique s'ouvre dans la page (`Decouverte.jsx`).
@@ -16,7 +16,7 @@
 ## Les lots (dans l'ordre, chacun activable seul)
 | Lot | Contenu | Dépend de |
 |---|---|---|
-| L1 | Commande dans Kaislo (panier, validation, numéro de commande, statuts visibles du client), toujours payée au commerçant | rien |
+| L1 | **Codé, non activé.** Commande dans Kaislo (panier, retrait ou livraison, frais, minimum, numéro de commande, suivi par le client), toujours payée au commerçant | rien |
 | L2 | Livraison par le commerçant : rôle « livreur » dans l'équipe, assignation d'une commande, statuts en route et livrée, code de livraison | L1 |
 | L3 | Suivi du client : écran de statut, notifications, position du livreur pendant la course seulement | L2 |
 | L4 | Paiement en ligne via un prestataire agréé (Kaislo ne garde pas l'argent) | L1 + contrat prestataire |
@@ -48,3 +48,11 @@ Chaque lot ajoute sa part de migration (numéro de base suivant) ; rien n'est cr
 4. Un ou deux commerçants pilotes dans un seul quartier.
 5. Ajouter `LivraisonActive=oui`, vider le cache, surveiller les premières commandes.
 6. Retour arrière possible à tout moment : retirer la ligne.
+
+## Lot L1 : ce qui est codé (base v35)
+- Réglages de la boutique (Compte → Boutique en ligne, visibles seulement quand l'interrupteur est ouvert) : livraison à domicile, retrait en boutique, frais de livraison, commande minimum.
+- Commande du client : choix retrait ou livraison, frais ajoutés au total par le serveur (jamais par le navigateur), minimum contrôlé, adresse inutile pour un retrait.
+- Suivi : une clé au hasard par commande, gardée dans l'appareil du client (jamais dans une adresse de page) ; `GET /api/public/commande-suivi` ; l'accueil affiche « Mes commandes » ; statuts (envoyée, acceptée, prête, livrée) mis à jour toutes les 20 s.
+- Commerçant : la liste Commandes en ligne indique retrait et frais de livraison ; les statuts existants alimentent le suivi du client.
+- Sans l'interrupteur : la commande reste celle d'avant (WhatsApp, pas de frais, pas de suivi).
+- Pas encore fait dans L1 : notification au client quand le statut change (push), vérification sur un vrai téléphone, textes anglais de la boutique ouverte.
