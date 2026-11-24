@@ -55,13 +55,6 @@ export default function Accueil() {
         <BandeauFacture />
         <PremiersPas />
         <InvitationAvis />
-        {gerant && (
-          <button className="carte partage-boutique" style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', maxWidth: 720, marginBottom: 16, textAlign: 'left' }} onClick={() => s.ouvrir('partagerBoutique')}>
-            <span className="tuile-icone teinte-vert"><Icone nom="whatsapp" /></span>
-            <span className="grandit"><b className="bloc-texte">{tr('Partager ma boutique')}</b><span className="tres-petit muet bloc-texte">{tr('Votre lien à envoyer à votre famille, vos amis et vos clients')}</span></span>
-            <Icone nom="droite" taille="sm" className="muet" />
-          </button>
-        )}
         <div className="ligne" style={{ maxWidth: 620, gap: 8 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
           <Segment options={[['jour', tr('Jour')], ['semaine', tr('Semaine')], ['mois', tr('Mois')], ['annee', tr('Année')]]} valeur={periode} surChanger={(p) => { setPeriode(p); setBarre(null); }} />
