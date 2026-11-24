@@ -124,6 +124,7 @@ try {
         'POST /chats/messages' => routeChatsEcrire(),
         'POST /chats/bloquer' => routeChatsBloquer(),
         'GET /public/boutiques' => routeBoutiquesAnnuaire(),
+        'POST /public/boutiques' => routeBoutiquesAnnuaire(), // même liste ; la position du visiteur voyage dans le corps (pas dans l'adresse, donc pas dans les journaux du serveur)
         'GET /public/boutique-image' => routeBoutiqueImage(),
         'POST /public/commande' => routeCommandePublique(),
         'GET /notifications' => routeNotificationsEtat(),

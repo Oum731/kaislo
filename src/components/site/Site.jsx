@@ -36,12 +36,11 @@ const LIENS_SITE = () => ([
   [lien('/gestion-restaurant/'), tr('Restaurants')],
   [lien('/gestion-epicerie/'), tr('Épiceries')],
   [lien('/gestion-stock/'), tr('Stock')],
-  [lien('/#fonctions'), tr('Fonctions')],
+  [lien('/vendeurs/#fonctions'), tr('Fonctions')],
   [lien('/tarifs/'), tr('Tarifs')],
-  ...(langueActive() === 'fr' ? [['/boutiques/', tr('Boutiques')]] : []),
   [lien('/tutoriels/'), tr('Tutoriels')],
   [lien('/guides/'), tr('Guides')],
-  [lien('/#questions'), tr('Questions')],
+  [lien('/vendeurs/#questions'), tr('Questions')],
 ]);
 
 // Première pièce de chaque page : fixe la langue (français par défaut) pour tout ce qui suit
@@ -66,6 +65,24 @@ export function EnTeteSite({ lang = 'fr' }) {
   );
 }
 
+// En-tête de l'accueil (côté client) : seulement le logo, la langue et deux boutons pour les vendeurs et les livreurs
+export function EnTeteDecouverte({ lang = 'fr' }) {
+  choisirLangue(lang);
+  return (
+    <header className="site-entete">
+      <LangueSite lang={lang} />
+      <div className="site-largeur">
+        <Logo />
+        <div className="actions">
+          <SelecteurLangueSite lang={lang} />
+          <Link className="btn secondaire petit toujours" href={lien('/livreurs/')} aria-label={tr('Je suis livreur')}>{tr('Livreur')}</Link>
+          <Link className="btn petit" href={lien('/vendeurs/')} aria-label={tr('Je suis vendeur')}>{tr('Vendeur')}</Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 // Liste des pages légales (reprise dans le pied de page et le sitemap)
 export const PAGES_LEGALES = () => ([
   ['/conditions-utilisation/', tr('Conditions d’utilisation')],
@@ -78,7 +95,9 @@ export const PAGES_LEGALES = () => ([
   ['/mentions-legales/', tr('Mentions légales')],
 ]);
 
-export function PiedSite() {
+// cote = 'client' (accueil) : ni guides, ni tutoriels, ni pages métiers : seulement l'essentiel et les informations légales
+export function PiedSite({ cote = 'vendeur' }) {
+  const vendeur = cote !== 'client';
   return (
     <>
     <footer className="site-pied">
@@ -86,15 +105,16 @@ export function PiedSite() {
         <div className="colonnes">
           <div>
             <span className="logo"><Marque /> {tr('Kaislo')}</span>
-            <p style={{ marginTop: 12, maxWidth: 360 }}>{tr('Gestion des ventes et du stock pour tous les commerces. Développé par Kaislo.')}</p>
+            <p style={{ marginTop: 12, maxWidth: 360 }}>{vendeur ? tr('Gestion des ventes et du stock pour tous les commerces. Développé par Kaislo.') : tr('Les produits et les boutiques de votre quartier. Développé par Kaislo.')}</p>
           </div>
+          {vendeur ? (
+            <>
           <div>
             <h4>{tr('Kaislo')}</h4>
             <Link href={lien('/gestion-restaurant/')}>{tr('Gestion pour restaurant')}</Link>
             <Link href={lien('/gestion-epicerie/')}>{tr('Gestion pour épicerie')}</Link>
             <Link href={lien('/gestion-stock/')}>{tr('Gestion de stock et inventaire')}</Link>
             <Link href={lien('/tarifs/')}>{tr('Tarifs')}</Link>
-            {langueActive() === 'fr' && <Link href="/boutiques/">{tr('Boutiques en ligne')}</Link>}
             {langueActive() === 'fr' && <Link href="/pays/belgique/">{tr('Logiciel de caisse en Belgique')}</Link>}
             <Link href={lien('/guides/')}>{tr('Guides pratiques')}</Link>
             <Link href={lien('/guides/#modeles')}>{tr('Modèles Excel gratuits')}</Link>
@@ -106,6 +126,14 @@ export function PiedSite() {
             <h4>{tr('Par activité')}</h4>
             {Object.values(ACTIVITES()).map((a) => <Link key={a.lien} href={lien(a.lien)}>{a.nom}</Link>)}
           </div>
+            </>
+          ) : (
+            <div>
+              <h4>{tr('Kaislo')}</h4>
+              <Link href={lien('/vendeurs/')}>{tr('Je suis vendeur')}</Link>
+              <Link href={lien('/livreurs/')}>{tr('Je suis livreur')}</Link>
+            </div>
+          )}
           <div>
             <h4>{tr('Informations légales')}</h4>
             {PAGES_LEGALES().map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
