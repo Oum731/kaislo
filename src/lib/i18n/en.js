@@ -1737,7 +1737,7 @@ export const EN = {
   "Lien copié.": "Link copied.",
   "Boutique en ligne": "Online shop",
   "La boutique en ligne n’est pas disponible dans la démo : créez votre commerce pour l’essayer.": "The online shop is not available in the demo: create your business to try it.",
-  "Vos clients choisissent leurs articles sur une page à votre nom, puis la commande s’ouvre sur WhatsApp : ils vous l’envoient, vous la recevez aussi dans Compte → Commandes en ligne. Vous êtes payé comme d’habitude, Kaislo n’encaisse rien.": "Your customers pick their items on a page in your name, then the order opens in WhatsApp: they send it to you, and you also get it in Account → Online orders. You get paid as usual, Kaislo collects nothing.",
+  "Vos clients proches de vous voient vos articles sur l’accueil de kaislo.com, puis la commande s’ouvre sur WhatsApp : ils vous l’envoient, vous la recevez aussi dans Compte → Commandes en ligne. Vous êtes payé comme d’habitude, Kaislo n’encaisse rien.": "Customers near you see your items on the kaislo.com home page, then the order opens in WhatsApp: they send it to you, and you also get it in Account → Online orders. You get paid as usual, Kaislo collects nothing.",
   "Boutique en ligne activée": "Online shop switched on",
   "Adresse de la boutique": "Shop address",
   "Numéro WhatsApp qui reçoit les commandes": "WhatsApp number that receives orders",
