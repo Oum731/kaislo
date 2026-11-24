@@ -2434,4 +2434,13 @@ export const EN = {
   "← Retour aux boutiques": "← Back to the shops",
   "Les clients voient d’abord les boutiques les plus proches d’eux, avec quelques articles. Placez votre commerce sur la carte pour être classé par distance.": "Customers see the shops closest to them first, with a few items. Place your business on the map to be ranked by distance.",
   "Livreur": "Courier",
+  "Mes commandes": "My orders",
+  "Suivre ma commande": "Track my order",
+  "Commande dans Kaislo": "Ordering in Kaislo",
+  "Vos clients commandent dans Kaislo et suivent leur commande. Vous restez payé directement : Kaislo n’encaisse rien.": "Your customers order in Kaislo and track their order. You are still paid directly: Kaislo collects nothing.",
+  "Livraison à domicile": "Home delivery",
+  "Retrait en boutique": "Pick-up in store",
+  "Frais de livraison (vide = livraison offerte)": "Delivery fee (empty = free delivery)",
+  "Commande minimum (facultatif)": "Minimum order (optional)",
+  "Livraison : {0}": "Delivery: {0}",
 };

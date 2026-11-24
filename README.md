@@ -625,3 +625,6 @@ L'accueil (`/`, `/en/`) montre les produits et boutiques autour du client (`src/
 
 ### Commande et livraison (préparé, non activé)
 Le plan par lots, les données à ajouter, les règles à cadrer et la check-list d'activation sont dans `docs/chantier-livraison.md`. Interrupteur : ligne `LivraisonActive=oui` dans le `.env` du serveur (absente = coupé) ; `GET /api/livraison/etat` renvoie `{ actif }`, `src/lib/livraison.js` le lit côté application et site, et les routes du chantier appellent `exigerLivraison()` (404 tant que coupé). Rien de visible tant qu'il est coupé.
+
+### Commande dans Kaislo, lot L1 (base v35, derrière `LivraisonActive`)
+Retrait ou livraison, frais et minimum réglés par la boutique, total calculé par le serveur, suivi par clé au hasard gardée dans l'appareil du client (`GET /api/public/commande-suivi`). Détail dans `docs/chantier-livraison.md`.

@@ -9,6 +9,9 @@ import { useEffect, useMemo, useState } from 'react';
 import Marque from '@/components/Marque';
 import ChatBoutique from '@/components/site/ChatBoutique';
 import { ChampTelephone } from '@/components/ui';
+import { livraisonActive } from '@/lib/livraison';
+import { suivreCommande } from '@/lib/commandes-client';
+import SuiviCommande from '@/components/site/SuiviCommande';
 import { appelApi } from '@/lib/api';
 import { chemin } from '@/config';
 import { formatPrix } from '@/lib/utils/format';
@@ -45,6 +48,10 @@ export default function Boutique({ slugFixe = '' }) {
   const [accepte, setAccepte] = useState(false); // conditions de vente cochées (obligatoire avant de confirmer la commande)
   const [form, setForm] = useState({ nom: '', telephone: '', adresse: '', note: '', site: '' });
   const [message, setMessage] = useState('');
+  const [l1, setL1] = useState(false); // commande dans Kaislo (retrait ou livraison, suivi) : seulement quand le chantier est activé
+  const [mode, setMode] = useState('livraison');
+  const [suiviCle, setSuiviCle] = useState('');
+  useEffect(() => { livraisonActive().then(setL1); }, []);
   const [anciens, setAnciens] = useState([]); // clients déjà venus depuis cet appareil
   const [choisi, setChoisi] = useState(null); // numéro du client choisi dans la liste, '' = un autre numéro
 
@@ -130,11 +137,16 @@ export default function Boutique({ slugFixe = '' }) {
     setChoix(null);
   };
 
+  const cmd = l1 && !pro && !demo ? boutique?.commande || null : null;
+  const modeEff = cmd ? (mode === 'retrait' ? (cmd.retrait ? 'retrait' : 'livraison') : (cmd.livre ? 'livraison' : 'retrait')) : 'livraison';
+  const frais = cmd && modeEff === 'livraison' ? cmd.frais : 0;
+
   const commander = async (e) => {
     e.preventDefault();
     setMessage('');
     if (form.nom.trim().length < 2) return setMessage('Indiquez votre nom.');
-    if (form.adresse.trim().length < 3) return setMessage('Indiquez votre adresse de livraison (quartier, rue ou repère).');
+    if (modeEff === 'livraison' && form.adresse.trim().length < 3) return setMessage('Indiquez votre adresse de livraison (quartier, rue ou repère).');
+    if (cmd && cmd.minimum > 0 && totalPanier(panier) < cmd.minimum) return setMessage('Commande minimum : ' + formatPrix(cmd.minimum, devise) + '.');
     if (!accepte) return setMessage('Cochez la case pour accepter les conditions de vente avant de confirmer.');
     const n = normaliserTelephone(form.telephone, boutique.pays);
     if (!n.ok && !demo) return setMessage(n.erreur);
@@ -151,7 +163,7 @@ export default function Boutique({ slugFixe = '' }) {
         return;
       }
       const r = await appelApi('POST', '/public/commande', {
-        b: slug, ...(pro ? { pro } : {}), site: form.site, note: form.note, client: { nom: form.nom.trim(), telephone: form.telephone, adresse: form.adresse.trim() },
+        b: slug, ...(pro ? { pro } : {}), ...(cmd ? { mode: modeEff } : {}), site: form.site, note: form.note, client: { nom: form.nom.trim(), telephone: form.telephone, adresse: form.adresse.trim() },
         lignes: panier.map((l) => ({ produitId: l.produitId, quantite: l.quantite, options: l.optionIds })),
       });
       if (!r.commande) { setOccupe(false); return; }
@@ -160,7 +172,9 @@ export default function Boutique({ slugFixe = '' }) {
       majPanier([]);
       setPanierOuvert(false);
       setEnvoi({ commande: r.commande, lien });
-      window.location.href = lien; // WhatsApp s'ouvre avec le message déjà écrit
+      // Commande dans Kaislo : le client la suit ici ; WhatsApp reste un bouton pour prévenir la boutique. Sinon, WhatsApp s'ouvre avec le message déjà écrit
+      if (r.commande.suivi) suivreCommande({ cle: r.commande.suivi, numero: r.commande.numero, boutique: boutique.nom, le: new Date().toISOString() });
+      else window.location.href = lien;
     } catch (err) {
       setMessage(err.horsLigne ? 'Pas de connexion internet : réessayez dans un instant.' : err.message);
     }
@@ -169,6 +183,23 @@ export default function Boutique({ slugFixe = '' }) {
 
   if (erreur) return <div className="vitrine"><div className="vitrine-centre"><h1>Boutique indisponible</h1><p className="muet">{erreur}</p></div></div>;
   if (!boutique) return <div className="vitrine"><div className="vitrine-centre"><p className="muet">Chargement…</p></div></div>;
+
+  if (suiviCle) return <SuiviCommande cle={suiviCle} surFermer={() => setSuiviCle('')} />;
+
+  if (envoi && envoi.commande.suivi) {
+    return (
+      <div className="vitrine">
+        <div className="vitrine-centre">
+          <h1>Commande n° {envoi.commande.numero} envoyée</h1>
+          <p>{boutique.nom} a reçu votre commande. Suivez-la ici : vous voyez quand elle est acceptée, prête et {envoi.commande.mode === 'retrait' ? 'retirée' : 'livrée'}.</p>
+          <button className="btn grand" onClick={() => setSuiviCle(envoi.commande.suivi)}>Suivre ma commande</button>
+          <a className="btn secondaire" href={envoi.lien}>Prévenir la boutique sur WhatsApp</a>
+          <p className="petit muet">Total : {formatPrix(envoi.commande.total, devise)}{envoi.commande.frais > 0 ? ' (livraison comprise)' : ''}. Vous payez {boutique.nom} directement, à la {envoi.commande.mode === 'retrait' ? 'remise' : 'livraison'} ou comme convenu avec le vendeur. Kaislo n’est pas le vendeur.</p>
+          <button className="btn fantome" onClick={() => setEnvoi(null)}>Retour à la boutique</button>
+        </div>
+      </div>
+    );
+  }
 
   if (envoi) {
     return (
@@ -243,7 +274,7 @@ export default function Boutique({ slugFixe = '' }) {
 
       {panier.length > 0 && !panierOuvert && (
         <button className="vitrine-barre btn grand bloc" onClick={() => setPanierOuvert(true)}>
-          Voir mon panier ({nombreArticles(panier)}) · {formatPrix(total, devise)}
+          Voir mon panier ({nombreArticles(panier)}) · {formatPrix(total + (modeEff === 'livraison' ? (cmd?.frais || 0) : 0), devise)}
         </button>
       )}
 
@@ -282,7 +313,18 @@ export default function Boutique({ slugFixe = '' }) {
                 </div>
               </div>
             ))}
-            <p className="vitrine-total">Total : <b>{formatPrix(total, devise)}</b></p>
+            {cmd && (cmd.livre && cmd.retrait) && (
+              <div className="pile" role="group" aria-label="Livraison ou retrait">
+                <span className="petit"><b>Comment recevoir votre commande ?</b></span>
+                <div className="ligne" style={{ gap: 8 }}>
+                  <button type="button" className={'btn petit ' + (modeEff === 'livraison' ? '' : 'secondaire')} aria-pressed={modeEff === 'livraison'} onClick={() => setMode('livraison')}>Livraison{cmd.frais > 0 ? ' · ' + formatPrix(cmd.frais, devise) : ' offerte'}</button>
+                  <button type="button" className={'btn petit ' + (modeEff === 'retrait' ? '' : 'secondaire')} aria-pressed={modeEff === 'retrait'} onClick={() => setMode('retrait')}>Retrait en boutique</button>
+                </div>
+              </div>
+            )}
+            {cmd && cmd.minimum > 0 && <p className="petit muet">Commande minimum : {formatPrix(cmd.minimum, devise)}.</p>}
+            {frais > 0 && <p className="petit">Livraison : <b>{formatPrix(frais, devise)}</b></p>}
+            <p className="vitrine-total">Total : <b>{formatPrix(total + frais, devise)}</b></p>
             {anciens.length > 0 && (
               <div className="pile" role="group" aria-label="Qui commande ?">
                 <span className="petit"><b>Qui commande ?</b></span>
@@ -296,12 +338,12 @@ export default function Boutique({ slugFixe = '' }) {
             )}
             <label className="champ"><span>Votre nom</span><input value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} autoComplete="name" /></label>
             <ChampTelephone libelle="Votre numéro (WhatsApp)" pays={boutique.pays} valeur={form.telephone} surChanger={(v) => setForm({ ...form, telephone: v })} verifier={!demo} />
-            <label className="champ"><span>Adresse de livraison</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>
+            {modeEff === 'livraison' && <label className="champ"><span>Adresse de livraison</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>}
             <label className="champ"><span>Note pour le vendeur (facultatif)</span><input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} maxLength={300} /></label>
             <label className="case-accord"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /><span>J’ai lu et j’accepte les <a href="/conditions-vente-boutiques/" target="_blank" rel="noreferrer">conditions de vente</a> de la boutique.</span></label>
             <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} />
             {message && <p className="alerte">{message}</p>}
-            <p className="tres-petit muet">Après avoir confirmé, WhatsApp s’ouvre avec votre commande déjà écrite : il suffit de l’envoyer à {boutique.nom} pour qu’elle soit prise en compte.</p>
+            {cmd ? <p className="tres-petit muet">Après avoir confirmé, {boutique.nom} reçoit votre commande tout de suite et vous pouvez la suivre ici.</p> : <p className="tres-petit muet">Après avoir confirmé, WhatsApp s’ouvre avec votre commande déjà écrite : il suffit de l’envoyer à {boutique.nom} pour qu’elle soit prise en compte.</p>}
             <button className="btn grand bloc" type="submit" disabled={occupe}>{occupe ? 'Confirmation…' : 'Confirmer la commande'}</button>
             <button type="button" className="btn fantome bloc" onClick={() => setPanierOuvert(false)}>Continuer mes achats</button>
           </form>

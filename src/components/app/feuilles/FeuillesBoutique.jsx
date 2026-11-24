@@ -15,6 +15,7 @@ import { formatDate, formatHeure, formatPrix } from '@/lib/utils/format';
 import { lienWhatsApp } from '@/lib/donnees/whatsapp';
 import { choixDepuisCommande, STATUTS_COMMANDE, articlesAPublier, messageAnnuaire, venteDeCommande } from '@/lib/donnees/boutique';
 import { chemin } from '@/config';
+import { livraisonActive } from '@/lib/livraison';
 
 const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
 
@@ -27,6 +28,8 @@ export function FeuilleBoutique() {
   const [erreur, setErreur] = useState('');
   const [message, setMessage] = useState('');
   const [occupe, setOccupe] = useState(false);
+  const [l1, setL1] = useState(false); // commande dans Kaislo : réglages de livraison visibles seulement quand le chantier est activé
+  useEffect(() => { livraisonActive().then(setL1); }, []);
 
   useEffect(() => {
     if (demo) return;
@@ -37,7 +40,7 @@ export function FeuilleBoutique() {
 
   const maj = (x) => setB({ ...b, ...x });
   // Ce qu'on envoie au serveur (le lien privé des grossistes : activé ou non ; « regenererPro » : nouvelle clé)
-  const donnees = (plus = {}) => ({ actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison, localisation: s.d.commerce.localisation || null, ...plus });
+  const donnees = (plus = {}) => ({ actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison, localisation: s.d.commerce.localisation || null, ...(l1 && b.commande ? { fraisLivraison: b.commande.fraisLivraison, minimumCommande: b.commande.minimumCommande, livre: b.commande.livre, retrait: b.commande.retrait } : {}), ...plus });
   const changerLienPro = async () => {
     if (!confirm(tr('Changer le lien des grossistes ? L’ancien lien ne marchera plus : il faudra envoyer le nouveau à vos grossistes.'))) return;
     setErreur(''); setOccupe(true);
@@ -115,6 +118,16 @@ export function FeuilleBoutique() {
             <ChampTelephone libelle={tr('Numéro WhatsApp qui reçoit les commandes')} pays={s.d.commerce.pays} valeur={b.whatsapp} surChanger={(v) => maj({ whatsapp: v })} />
             <label className="champ"><span>{tr('Présentation (facultatif)')}</span><textarea value={b.description} onChange={(e) => maj({ description: e.target.value })} maxLength={300} placeholder={tr('Ex : Boissons fraîches et jus naturels à Cocody')} /></label>
             <label className="champ"><span>{tr('Livraison (facultatif)')}</span><textarea value={b.livraison} onChange={(e) => maj({ livraison: e.target.value })} maxLength={300} placeholder={tr('Ex : Livraison à Cocody et Marcory, 1 000 FCFA')} /></label>
+            {l1 && b.commande && (
+              <div className="carte pile">
+                <b>{tr('Commande dans Kaislo')}</b>
+                <p className="tres-petit muet">{tr('Vos clients commandent dans Kaislo et suivent leur commande. Vous restez payé directement : Kaislo n’encaisse rien.')}</p>
+                <label className="case-accord"><input type="checkbox" checked={b.commande.livre} onChange={(e) => maj({ commande: { ...b.commande, livre: e.target.checked } })} /><span>{tr('Livraison à domicile')}</span></label>
+                <label className="case-accord"><input type="checkbox" checked={b.commande.retrait} onChange={(e) => maj({ commande: { ...b.commande, retrait: e.target.checked } })} /><span>{tr('Retrait en boutique')}</span></label>
+                <label className="champ"><span>{tr('Frais de livraison (vide = livraison offerte)')}</span><input inputMode="decimal" value={b.commande.fraisLivraison ?? ''} onChange={(e) => maj({ commande: { ...b.commande, fraisLivraison: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) || 0 } })} /></label>
+                <label className="champ"><span>{tr('Commande minimum (facultatif)')}</span><input inputMode="decimal" value={b.commande.minimumCommande ?? ''} onChange={(e) => maj({ commande: { ...b.commande, minimumCommande: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) || 0 } })} /></label>
+              </div>
+            )}
             <p className="petit">{tr('{0} article(s) publié(s) en ligne. Pour en publier d’autres : ouvrez la fiche de l’article et cochez « Vendre en ligne ».', [b.articlesPublies])}</p>
             {messageAnnuaire(b) && <p className={messageAnnuaire(b).ok ? 'info-verte petit' : 'alerte petit'}>{messageAnnuaire(b).texte}</p>}
             {aPublier > 0 && <button type="button" className="btn secondaire bloc" disabled={occupe} onClick={publierTout}>{tr('Publier mes {0} article(s) en ligne', [aPublier])}</button>}
@@ -325,6 +338,8 @@ export function FeuilleCommandesEnLigne() {
             ) : (
               <>
                 <p className="petit"><b>{c.client.nom}</b> · {c.client.telephone}{c.client.adresse ? ' · ' + c.client.adresse : ''}</p>
+                {c.mode === 'retrait' && <p className="petit"><b>{tr('Retrait en boutique')}</b></p>}
+                {c.frais > 0 && <p className="petit muet">{tr('Livraison : {0}', [formatPrix(c.frais, c.devise)])}</p>}
                 <ul className="petit" style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
                   {c.lignes.map((l, i) => {
                     const produit = s.d.produits.find((p) => p.id === String(l.produitId).replace(/:demi$/, ''));

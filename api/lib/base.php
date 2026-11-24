@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 34;
+const VERSION_BASE = 35;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -269,6 +269,7 @@ const STRUCTURE = [
             'chat_off' => 'ENTIER', // 1 = le commerçant a désactivé la discussion en direct de sa boutique
             'pro_cle' => 'VARCHAR(40)', // clé du lien privé des grossistes (…/?pro=clé) ; vide = pas de lien de gros
             'publique' => 'ENTIER', // 1 = affichée sur l'accueil de kaislo.com (boutiques proches du client)
+            'frais_livraison' => 'MONTANT', 'minimum_commande' => 'MONTANT', 'livraison_off' => 'ENTIER', 'retrait_off' => 'ENTIER', // commande dans Kaislo (lot L1)
             'lat' => 'DOUBLE', 'lng' => 'DOUBLE', // position de la boutique (sert seulement à classer par distance ; jamais montrée telle quelle)
             'description' => 'LONG', 'livraison' => 'LONG', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
         ],
@@ -280,6 +281,7 @@ const STRUCTURE = [
             'adresse' => 'TEXTE', 'note' => 'LONG', 'lignes' => 'LONG', 'total' => 'MONTANT', 'devise' => 'VARCHAR(6)',
             'statut' => 'VARCHAR(12)', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
             'gros' => 'ENTIER', // 1 = commande passée par le lien des grossistes (prix de gros, au carton)
+            'mode' => 'VARCHAR(10)', 'frais' => 'MONTANT', 'suivi_cle' => 'VARCHAR(24)', // commande dans Kaislo (lot L1) : retrait ou livraison, frais de livraison, clé de suivi du client
         ],
         'cle' => ['id'], 'uniques' => [['commerce_id', 'numero']], 'index' => [['commerce_id', 'cree_le']],
     ],
@@ -403,6 +405,18 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 34 : commande dans Kaislo (lot L1)
+    if ($version >= 1 && $version < 35) {
+        $montant = $driver !== 'sqlite' ? 'DECIMAL(14,2)' : 'REAL';
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN mode VARCHAR(10) NULL');
+        $essayer("ALTER TABLE commandes_en_ligne ADD COLUMN frais $montant NULL");
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN suivi_cle VARCHAR(24) NULL');
+        $essayer("ALTER TABLE boutiques ADD COLUMN frais_livraison $montant NULL");
+        $essayer("ALTER TABLE boutiques ADD COLUMN minimum_commande $montant NULL");
+        $essayer('ALTER TABLE boutiques ADD COLUMN livraison_off INTEGER NULL');
+        $essayer('ALTER TABLE boutiques ADD COLUMN retrait_off INTEGER NULL');
     }
 
     // Bases en version 1 à 33 : position de la boutique (proximité)

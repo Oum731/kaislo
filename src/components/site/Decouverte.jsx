@@ -15,6 +15,9 @@ import { trouverPays, choisirPays } from '@/lib/pays-visiteur';
 import { CATEGORIES_ANNUAIRE, categorieAnnuaire } from '@/lib/donnees/boutique';
 import { tr, tt, localeIntl } from '@/lib/i18n';
 import Boutique from '@/components/site/Boutique';
+import SuiviCommande from '@/components/site/SuiviCommande';
+import { livraisonActive } from '@/lib/livraison';
+import { lireCommandesSuivies, oublierCommande } from '@/lib/commandes-client';
 
 const CLE_POSITION = 'kaislo-position';
 const arrondi = (n) => Math.round(n * 1000) / 1000;
@@ -73,6 +76,9 @@ export default function Decouverte() {
   const [texte, setTexte] = useState('');
   const [rayon, setRayon] = useState('');
   const [ouverte, setOuverte] = useState('');
+  const [commandes, setCommandes] = useState([]); // commandes passées depuis cet appareil (commande dans Kaislo, quand le chantier est activé)
+  const [suivie, setSuivie] = useState('');
+  useEffect(() => { livraisonActive().then((a) => { if (a) setCommandes(lireCommandesSuivies()); }); }, []);
 
   useEffect(() => { trouverPays(setPays); setPosition(lirePosition()); }, []);
 
@@ -132,6 +138,8 @@ export default function Decouverte() {
 
   const barre = message ? <p className="petit muet" role="status">{message}</p> : null;
 
+  if (suivie) return <SuiviCommande cle={suivie} surFermer={() => { setSuivie(''); livraisonActive().then((a) => a && setCommandes(lireCommandesSuivies())); }} />;
+
   if (ouverte) {
     return (
       <div className="decouverte-boutique" role="dialog" aria-modal="true">
@@ -140,6 +148,18 @@ export default function Decouverte() {
       </div>
     );
   }
+
+  const mesCommandes = commandes.length > 0 && (
+    <section className="annuaire-rayon">
+      <h2>{tr('Mes commandes')}</h2>
+      {commandes.slice(0, 3).map((c) => (
+        <button key={c.cle} type="button" className="annuaire-carte decouverte-carte" onClick={() => setSuivie(c.cle)}>
+          <b>{tr('Commande n° {0}', [c.numero])} · {c.boutique}</b>
+          <span className="guide-lire">{tr('Suivre ma commande')} →</span>
+        </button>
+      ))}
+    </section>
+  );
 
   if (erreur) return <>{barre}<p className="alerte">{erreur}</p></>;
   if (!pays || !donnees) return <>{barre}<p className="muet">{tr('Chargement des boutiques…')}</p></>;
@@ -166,6 +186,7 @@ export default function Decouverte() {
   return (
     <div className="annuaire">
       {barre}
+      {mesCommandes}
       <div className="annuaire-filtres">
         <input type="search" className="saisie" value={texte} onChange={(e) => setTexte(e.target.value)} placeholder={tr('Chercher un produit, une boutique, une ville…')} aria-label={tr('Chercher un produit, une boutique, une ville…')} />
       </div>
