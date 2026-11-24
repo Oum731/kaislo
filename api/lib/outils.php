@@ -82,6 +82,8 @@ function texte(array $source, string $cle, string $libelle, bool $obligatoire = 
         $valeur = nomPropre($valeur);
     } elseif ($casse === 'lieu' || $casse === 'commerce') {
         $valeur = nomPropreSiUniforme($valeur);
+    } elseif ($casse === 'phrases') {
+        $valeur = majusculesPhrases($valeur); // texte libre : retours à la ligne gardés, majuscule après le point
     }
     if (mb_strlen($valeur) > $max) throw new ErreurApi("$libelle : $max caractères au maximum");
     return $valeur;

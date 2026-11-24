@@ -7,7 +7,7 @@
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
-import { Feuille, Icone, ChampTelephone, ImageStockee } from '@/components/ui';
+import { Feuille, Icone, ChampTelephone, ImageStockee, ZoneMessage } from '@/components/ui';
 import { appelApi } from '@/lib/api';
 import { grosDisponible } from '@/lib/donnees/gros';
 import { tr } from '@/lib/i18n';
@@ -119,8 +119,8 @@ export function FeuilleBoutique() {
             <label className="case-accord"><input type="checkbox" checked={b.publique !== false} onChange={(e) => maj({ publique: e.target.checked })} /><span>{tr('Apparaître près de mes clients sur kaislo.com')}<br /><span className="tres-petit muet">{tr('Les clients voient d’abord les boutiques les plus proches d’eux, avec quelques articles. Placez votre commerce sur la carte pour être classé par distance.')}</span></span></label>
             <label className="case-accord"><input type="checkbox" checked={b.chat !== false} onChange={(e) => maj({ chat: e.target.checked })} /><span>{tr('Discussion en direct avec les clients')}<br /><span className="tres-petit muet">{tr('Une bulle « Discuter » sur votre boutique : les clients vous écrivent, vous répondez depuis l’écran Discussions et recevez une notification. Vous restez seul responsable de vos réponses.')}</span></span></label>
             <ChampTelephone libelle={tr('Numéro WhatsApp qui reçoit les commandes')} pays={s.d.commerce.pays} valeur={b.whatsapp} surChanger={(v) => maj({ whatsapp: v })} />
-            <label className="champ"><span>{tr('Présentation (facultatif)')}</span><textarea value={b.description} onChange={(e) => maj({ description: e.target.value })} maxLength={300} placeholder={tr('Ex : Boissons fraîches et jus naturels à Cocody')} /></label>
-            <label className="champ"><span>{tr('Livraison (facultatif)')}</span><textarea value={b.livraison} onChange={(e) => maj({ livraison: e.target.value })} maxLength={300} placeholder={tr('Ex : Livraison à Cocody et Marcory, 1 000 FCFA')} /></label>
+            <label className="champ"><span>{tr('Présentation (facultatif)')}</span><ZoneMessage lignes={3} valeur={b.description} surChanger={(v) => maj({ description: v })} maxLength={600} placeholder={tr('Ex : Boissons fraîches et jus naturels à Cocody')} /></label>
+            <label className="champ"><span>{tr('Livraison (facultatif)')}</span><ZoneMessage lignes={3} valeur={b.livraison} surChanger={(v) => maj({ livraison: v })} maxLength={600} placeholder={tr('Ex : Livraison à Cocody et Marcory, 1 000 FCFA')} /></label>
             {l1 && b.commande && (
               <div className="carte pile">
                 <b>{tr('Commande dans Kaislo')}</b>
@@ -303,7 +303,7 @@ export function FeuilleCommandesEnLigne() {
                 <label className="champ"><span>{tr('Nom du client')}</span><input value={edition.nom} onChange={(e) => setEdition({ ...edition, nom: e.target.value })} /></label>
                 <ChampTelephone libelle={tr('Téléphone du client')} pays={pays} valeur={edition.telephone} surChanger={(v) => setEdition({ ...edition, telephone: v })} verifier={!demo} />
                 <label className="champ"><span>{tr('Adresse de livraison')}</span><input value={edition.adresse} onChange={(e) => setEdition({ ...edition, adresse: e.target.value })} /></label>
-                <label className="champ"><span>{tr('Note')}</span><input value={edition.note} maxLength={300} onChange={(e) => setEdition({ ...edition, note: e.target.value })} /></label>
+                <label className="champ"><span>{tr('Note')}</span><input value={edition.note} maxLength={500} onChange={(e) => setEdition({ ...edition, note: e.target.value })} /></label>
                 {c.lignes.map((l, i) => (
                   <div key={i} className="ligne espace" style={{ opacity: edition.quantites[i] === 0 ? 0.5 : 1 }}>
                     <span className="petit grandit">{l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} · {formatPrix(l.prixUnitaire, c.devise)}</span>
@@ -366,7 +366,7 @@ export function FeuilleCommandesEnLigne() {
                     );
                   })}
                 </ul>
-                {c.note && <p className="petit muet">{tr('Note : {0}', [c.note])}</p>}
+                {c.note && <p className="petit muet" style={{ whiteSpace: 'pre-line' }}>{tr('Note : {0}', [c.note])}</p>}
                 <p><b>{tr('Total : {0}', [formatPrix(c.total, c.devise)])}</b></p>
                 {venteDe(c) && (
                   <div className="info-verte petit pile">

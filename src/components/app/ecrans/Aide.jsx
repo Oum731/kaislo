@@ -10,7 +10,7 @@ import { appelApi } from '@/lib/api';
 import { estServeur } from '@/lib/donnees/synchro';
 import { formatDate, formatHeure } from '@/lib/utils/format';
 import { CONTACT_EMAIL, CONTACT_WHATSAPP, CONTACT_WHATSAPP_AFFICHE, chemin } from '@/config';
-import { Icone } from '@/components/ui';
+import { Icone, ZoneMessage } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { tr } from '@/lib/i18n';
 
@@ -107,8 +107,7 @@ export function Messagerie() {
       </div>
       {erreur && <p className="alerte" style={{ margin: '0 14px 10px' }}>{erreur}</p>}
       <div className="saisie-message">
-        <textarea value={texte} onChange={(e) => setTexte(e.target.value)} placeholder={tr('Votre message à l’équipe Kaislo…')} rows={2} maxLength={2000}
-          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) envoyer(); }} />
+        <ZoneMessage valeur={texte} surChanger={setTexte} surEnvoyer={envoyer} placeholder={tr('Votre message à l’équipe Kaislo…')} lignes={2} />
         <button className="btn" onClick={envoyer} disabled={envoi || !texte.trim()}>{envoi ? tr('Envoi…') : tr('Envoyer')}</button>
       </div>
     </div>

@@ -91,7 +91,7 @@ function routeAvisEnvoyer(): never
     $e = entree();
     $note = (int) ($e['note'] ?? 0);
     if ($note < 1 || $note > 5) throw new ErreurApi('Choisissez une note de 1 à 5 étoiles');
-    $texte = trim((string) ($e['texte'] ?? ''));
+    $texte = majusculesPhrases((string) ($e['texte'] ?? ''));
     if (mb_strlen($texte) < AVIS_TEXTE_MIN) throw new ErreurApi('Racontez-nous un peu plus : ' . AVIS_TEXTE_MIN . ' caractères au minimum');
     if (mb_strlen($texte) > AVIS_TEXTE_MAX) throw new ErreurApi('Votre avis est trop long : ' . AVIS_TEXTE_MAX . ' caractères au maximum');
     if (empty($e['autorisation'])) throw new ErreurApi('Il faut accepter l’affichage de votre avis sur le site pour l’envoyer');

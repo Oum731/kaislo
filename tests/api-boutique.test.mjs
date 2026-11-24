@@ -225,3 +225,12 @@ test('une boutique désactivée ou une adresse déjà prise sont refusées', asy
   assert.equal((await api('GET', '/public/boutiques?pays=CI')).boutiques.length, 0);
   assert.equal((await api('POST', '/public/commande', { b: 'chez-awa', client: { nom: 'K', telephone: '0701020304' }, lignes: [{ produitId: 'p2', quantite: 1 }] })).statut, 404);
 });
+
+test('présentation et livraison : retours à la ligne gardés, majuscule après le point, texte long accepté', async () => {
+  const longue = 'boissons fraîches. jus naturels\nlivraison le soir. ' + 'x'.repeat(400);
+  assert.equal((await api('POST', '/boutique', { ...reglages, description: longue, livraison: 'cocody. marcory' }, gerant.jeton)).ok, true);
+  const b = (await api('GET', '/public/boutique?b=chez-awa')).boutique;
+  assert.ok(b.description.startsWith('Boissons fraîches. Jus naturels\nLivraison le soir. '));
+  assert.equal(b.livraison, 'Cocody. Marcory');
+  assert.equal((await api('POST', '/boutique', { ...reglages, description: 'y'.repeat(601) }, gerant.jeton)).statut, 400);
+});

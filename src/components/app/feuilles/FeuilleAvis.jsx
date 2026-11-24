@@ -5,7 +5,7 @@
 // ------------------------------------------------------------
 import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
-import { Feuille, Icone } from '@/components/ui';
+import { Feuille, Icone, ZoneMessage } from '@/components/ui';
 import { appelApi } from '@/lib/api';
 import { tr } from '@/lib/i18n';
 
@@ -87,7 +87,7 @@ export function FeuilleAvis() {
               <EtoilesNote valeur={f.note} surChanger={(note) => setF({ ...f, note })} />
             </div>
             <label className="champ"><span>{tr('Votre avis')}</span>
-              <textarea rows={5} maxLength={MAX} value={f.texte} onChange={(e) => setF({ ...f, texte: e.target.value })} placeholder={tr('Ex : ce que vous faites avec Kaislo, ce qui a changé dans votre commerce, ce que vous aimeriez en plus…')} />
+              <ZoneMessage lignes={5} maxLength={MAX} valeur={f.texte} surChanger={(v) => setF((x) => ({ ...x, texte: v }))} placeholder={tr('Ex : ce que vous faites avec Kaislo, ce qui a changé dans votre commerce, ce que vous aimeriez en plus…')} />
               <span className="tres-petit muet" style={{ margin: '4px 0 0' }}>{restant > 0 ? tr('Encore {0} caractères au minimum', [restant]) : `${f.texte.trim().length} / ${MAX}`}</span>
             </label>
             <label className="case-accord">

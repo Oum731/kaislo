@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { API_ACTIVE, appelApi } from '@/lib/api';
 import { CONTACT_EMAIL, CONTACT_WHATSAPP } from '@/config';
-import { Icone } from '@/components/ui';
+import { Icone, ZoneMessage } from '@/components/ui';
 import { tr } from '@/lib/i18n';
 
 /**
@@ -96,7 +96,7 @@ function FormulaireContact() {
       </p>
       <label className="champ"><span>{tr('Votre nom')}</span><input value={f.nom} onChange={maj('nom')} maxLength={80} autoComplete="name" /></label>
       <label className="champ"><span>{tr('Votre WhatsApp ou e-mail')}</span><input value={f.contact} onChange={maj('contact')} maxLength={120} placeholder={tr('+225 07 12 34 56 78 ou vous@exemple.com')} /></label>
-      <label className="champ"><span>{tr('Votre message')}</span><textarea value={f.texte} onChange={maj('texte')} rows={3} maxLength={2000} /></label>
+      <label className="champ"><span>{tr('Votre message')}</span><ZoneMessage valeur={f.texte} surChanger={(v) => setF((x) => ({ ...x, texte: v }))} /></label>
       {/* Piège à robots : invisible pour les humains */}
       <input className="piege" tabIndex={-1} autoComplete="off" value={f.siteWeb} onChange={maj('siteWeb')} aria-hidden="true" />
       {etat.erreur && <p className="alerte">{etat.erreur}</p>}

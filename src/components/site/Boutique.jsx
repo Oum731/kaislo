@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Marque from '@/components/Marque';
 import ChatBoutique from '@/components/site/ChatBoutique';
-import { ChampTelephone } from '@/components/ui';
+import { ChampTelephone, ZoneMessage } from '@/components/ui';
 import { livraisonActive } from '@/lib/livraison';
 import { tr } from '@/lib/i18n';
 import { suivreCommande } from '@/lib/commandes-client';
@@ -243,8 +243,8 @@ export default function Boutique({ slugFixe = '' }) {
               <p className="muet">{[boutique.quartier, boutique.ville].filter(Boolean).join(', ')}</p>
             </div>
           </div>
-          {boutique.description && <p>{boutique.description}</p>}
-          {boutique.livraison && <p className="petit"><b>{tr('Livraison :')}</b> {boutique.livraison}</p>}
+          {boutique.description && <p style={{ whiteSpace: 'pre-line' }}>{boutique.description}</p>}
+          {boutique.livraison && <p className="petit" style={{ whiteSpace: 'pre-line' }}><b>{tr('Livraison :')}</b> {boutique.livraison}</p>}
         </div>
       </header>
       <main className="vitrine-largeur">
@@ -351,7 +351,7 @@ export default function Boutique({ slugFixe = '' }) {
             <label className="champ"><span>{tr('Votre nom')}</span><input value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} autoComplete="name" /></label>
             <ChampTelephone libelle={tr('Votre numéro (WhatsApp)')} pays={boutique.pays} valeur={form.telephone} surChanger={(v) => setForm({ ...form, telephone: v })} verifier={!demo} />
             {modeEff === 'livraison' && <label className="champ"><span>{tr('Adresse de livraison')}</span><input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} autoComplete="street-address" /></label>}
-            <label className="champ"><span>{tr('Note pour le vendeur (facultatif)')}</span><input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} maxLength={300} /></label>
+            <label className="champ"><span>{tr('Note pour le vendeur (facultatif)')}</span><ZoneMessage lignes={2} valeur={form.note} surChanger={(v) => setForm((x) => ({ ...x, note: v }))} maxLength={500} /></label>
             <label className="case-accord"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /><span>{tr('J’ai lu et j’accepte les')} <a href="/conditions-vente-boutiques/" target="_blank" rel="noreferrer">{tr('conditions de vente')}</a> {tr('de la boutique.')}</span></label>
             <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} />
             {message && <p className="alerte">{message}</p>}
