@@ -617,3 +617,6 @@ Ce motif est normal pour une ancienne adresse : Google n'indexe pas une page qui
 
 ### Avis traduits
 Chaque avis publié est traduit automatiquement en anglais par DeepL (ligne `CleDeepL=` dans le `.env` du serveur ; clé gratuite finissant par `:fx`), colonne `avis.texte_en` (base v33). L'équipe peut corriger la traduction dans Espace Kaislo → Avis. Le site l'affiche aux visiteurs en anglais ; sans traduction, le texte d'origine reste affiché. Un avis modifié par le gérant perd sa traduction (il repart en relecture).
+
+### Boutiques par proximité (base v34)
+Chaque boutique garde sa position (`boutiques.lat/lng`, envoyée par l'application avec le réglage de la boutique, issue de Compte → Informations → Localisation). `GET /api/public/boutiques?pays=XX&lat=..&lng=..` classe les boutiques de la plus proche à la plus lointaine et renvoie `distanceKm` (arrondi à 0,1 km) ; la position du visiteur sert au classement et n'est pas gardée ; la position exacte d'une boutique n'est jamais envoyée. Les boutiques sans position viennent après. Le lien public propre à chaque boutique n'est plus proposé dans l'application.
