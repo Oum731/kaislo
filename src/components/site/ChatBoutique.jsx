@@ -5,6 +5,7 @@
 // Fermée, la bulle ne fait que compter les réponses nouvelles (toutes les 30 s) ; ouverte, elle relève toutes les 4 s.
 // ------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
+import { tr } from '@/lib/i18n';
 import { appelApi } from '@/lib/api';
 import { useSondage, fusionnerMessages } from '@/lib/sondage';
 import { Icone } from '@/components/ui';
@@ -77,7 +78,7 @@ export default function ChatBoutique({ slug, nomBoutique, releve = false }) {
       setTexte('');
       setErreur('');
     } catch (err) {
-      setErreur(err.horsLigne ? 'Pas de connexion internet : réessayez quand le réseau revient.' : err.message);
+      setErreur(err.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau revient.') : err.message);
     } finally {
       setEnvoi(false);
     }
@@ -85,40 +86,40 @@ export default function ChatBoutique({ slug, nomBoutique, releve = false }) {
 
   if (!ouvert) {
     return (
-      <button className={"chat-bulle-boutique" + (releve ? " releve" : "")} onClick={() => setOuvert(true)} aria-label={'Discuter avec ' + nomBoutique}>
+      <button className={"chat-bulle-boutique" + (releve ? " releve" : "")} onClick={() => setOuvert(true)} aria-label={tr('Discuter avec {0}', [nomBoutique])}>
         <Icone nom="bulles" />
-        <span>Discuter</span>
-        {nouveautes > 0 && <b className="chat-pastille" aria-label={nouveautes + ' nouveau(x) message(s)'}>{nouveautes}</b>}
+        <span>{tr('Discuter')}</span>
+        {nouveautes > 0 && <b className="chat-pastille" aria-label={tr('{0} nouveau(x) message(s)', [nouveautes])}>{nouveautes}</b>}
       </button>
     );
   }
 
   return (
-    <div className="chat-fenetre" role="dialog" aria-label={'Discussion avec ' + nomBoutique}>
+    <div className="chat-fenetre" role="dialog" aria-label={tr('Discussion avec {0}', [nomBoutique])}>
       <div className="chat-entete">
-        <div><b>{nomBoutique}</b><span className="tres-petit">Répond généralement dans la journée</span></div>
-        <button className="icone-btn" onClick={() => setOuvert(false)} aria-label="Fermer">×</button>
+        <div><b>{nomBoutique}</b><span className="tres-petit">{tr('Répond généralement dans la journée')}</span></div>
+        <button className="icone-btn" onClick={() => setOuvert(false)} aria-label={tr('Fermer')}>×</button>
       </div>
       <div className="fil-messages chat-fil">
-        {messages.length === 0 && <p className="muet petit centre">Une question sur un article, la livraison, la disponibilité ? Écrivez à {nomBoutique} : sa réponse apparaît ici.</p>}
+        {messages.length === 0 && <p className="muet petit centre">{tr('Une question sur un article, la livraison, la disponibilité ? Écrivez à {0} : sa réponse apparaît ici.', [nomBoutique])}</p>}
         {messages.map((m) => (
           <div key={m.id} className={'bulle ' + (m.auteur === 'client' ? 'moi' : 'equipe')}>
             <p>{m.texte}</p>
-            <span className="tres-petit">{m.auteur === 'client' ? 'Vous' : nomBoutique} · {formatHeure(m.le)}</span>
+            <span className="tres-petit">{m.auteur === 'client' ? tr('Vous') : nomBoutique} · {formatHeure(m.le)}</span>
           </div>
         ))}
         <span ref={bas} />
       </div>
       {erreur && <p className="alerte" style={{ margin: '0 12px 8px' }}>{erreur}</p>}
       <form className="chat-saisie" onSubmit={envoyer}>
-        {messages.length === 0 && <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Votre prénom (facultatif)" maxLength={40} autoComplete="given-name" />}
+        {messages.length === 0 && <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={tr('Votre prénom (facultatif)')} maxLength={40} autoComplete="given-name" />}
         <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={piege} onChange={(e) => setPiege(e.target.value)} />
         <div className="chat-ligne">
-          <textarea value={texte} onChange={(e) => setTexte(e.target.value)} placeholder="Votre message…" rows={1} maxLength={1000}
+          <textarea value={texte} onChange={(e) => setTexte(e.target.value)} placeholder={tr('Votre message…')} rows={1} maxLength={1000}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer(e); } }} />
-          <button className="btn" type="submit" disabled={envoi || !texte.trim()}>{envoi ? '…' : 'Envoyer'}</button>
+          <button className="btn" type="submit" disabled={envoi || !texte.trim()}>{envoi ? '…' : tr('Envoyer')}</button>
         </div>
-        <p className="tres-petit muet">N’écrivez pas d’informations bancaires. Cette discussion est tenue par le commerçant : Kaislo n’est pas partie à l’échange et n’en est en aucun cas responsable.</p>
+        <p className="tres-petit muet">{tr('N’écrivez pas d’informations bancaires. Cette discussion est tenue par le commerçant : Kaislo n’est pas partie à l’échange et n’en est en aucun cas responsable.')}</p>
       </form>
     </div>
   );
