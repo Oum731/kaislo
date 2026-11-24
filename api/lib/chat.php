@@ -19,7 +19,7 @@
 //   Kaislo ne modère pas ces échanges : le commerçant est seul responsable de ses réponses (voir les conditions d'utilisation).
 // ------------------------------------------------------------
 
-const CHAT_LONGUEUR_MAX = 1000;
+const CHAT_LONGUEUR_MAX = 3000; // un long message passe : questions détaillées, listes d'articles
 const CHAT_MESSAGES_PAR_10_MIN = 20;
 const CHAT_NOUVELLES_PAR_IP = 15;
 const CHAT_DELAI_PUSH_SECONDES = 300;
@@ -47,7 +47,7 @@ function idMessageChat(): string
 
 function texteChat(array $e): string
 {
-    $texte = trim((string) ($e['texte'] ?? ''));
+    $texte = majusculesPhrases((string) ($e['texte'] ?? ''));
     if ($texte === '') throw new ErreurApi('Écrivez votre message');
     if (mb_strlen($texte) > CHAT_LONGUEUR_MAX) throw new ErreurApi('Message trop long (' . CHAT_LONGUEUR_MAX . ' caractères au maximum)');
     return $texte;
