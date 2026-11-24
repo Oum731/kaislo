@@ -17,7 +17,7 @@
 | Lot | Contenu | Dépend de |
 |---|---|---|
 | L1 | **Codé, non activé.** Commande dans Kaislo (panier, retrait ou livraison, frais, minimum, numéro de commande, suivi par le client), toujours payée au commerçant | rien |
-| L2 | Livraison par le commerçant : rôle « livreur » dans l'équipe, assignation d'une commande, statuts en route et livrée, code de livraison | L1 |
+| L2 | **Codé, non activé.** Livraison par le commerçant : livreurs (simple fiche), assignation d'une commande, statuts en route et livrée, code de livraison | L1 |
 | L3 | Suivi du client : écran de statut, notifications, position du livreur pendant la course seulement | L2 |
 | L4 | Paiement en ligne via un prestataire agréé (Kaislo ne garde pas l'argent) | L1 + contrat prestataire |
 | L5 | Livreurs indépendants, partage des courses, commission, gains | L2, L4, avis juridique |
@@ -58,3 +58,12 @@ Chaque lot ajoute sa part de migration (numéro de base suivant) ; rien n'est cr
 - Notification : le client peut s'abonner depuis le suivi (« Me prévenir quand le statut change ») ; à chaque changement de statut il reçoit une notification, en français ou en anglais selon sa langue (même mécanisme que celles du gérant, abonnement lié à la clé de suivi, 3 appareils au plus ; base v36). Sur iPhone, seulement après ajout de Kaislo à l'écran d'accueil.
 - Anglais : la boutique ouverte, le panier, le suivi, la discussion et les notifications sont traduits. Les messages d'erreur renvoyés par le serveur et le message WhatsApp envoyé à la boutique restent en français.
 - Pas encore fait dans L1 : essai sur de vrais téléphones (Android et iPhone), y compris la réception réelle des notifications.
+
+## Lot L2 : ce qui est codé (base v37)
+- **Livreur = une fiche** (nom, numéro vérifié), pas un compte : il n'a donc accès à aucune donnée du commerce (ni ventes, ni stock, ni autres commandes). Le commerçant les gère dans Compte → Commandes en ligne (ajouter, assigner, retirer). Trente livreurs au plus.
+- **Assigner** (commande en livraison acceptée) : chaque attribution crée un lien propre à la course, `kaislo.com/livraison/?c=…` (non référencé), à envoyer au livreur par WhatsApp (bouton prêt, message écrit). Changer de livreur invalide l'ancien lien.
+- **Page du livreur** : adresse et téléphone du client, articles, montant à encaisser comme convenu avec la boutique, appel du client et de la boutique ; « J'ai récupéré la commande » puis saisie du code du client pour « Livraison terminée ».
+- **Code de remise** : quatre chiffres, donnés au client seulement (visible dans son suivi quand la commande est en route), jamais au livreur ni au commerçant ; cinq codes faux au plus, puis blocage de quinze minutes.
+- **Client** : statut « En route » dans son suivi et notification (français ou anglais), prénom du livreur, code de livraison ; le commerçant est prévenu sur ses appareils quand la commande est récupérée puis livrée.
+- **Statuts** : `en_route` s'ajoute (nouvelle, confirmée, prête, en route, livrée, annulée) et n'existe qu'avec l'interrupteur ouvert.
+- Pas encore fait dans L2 : essai sur de vrais téléphones, suivi du livreur sur carte (L3), encaissement tracé (L4).

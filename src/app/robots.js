@@ -5,7 +5,7 @@ export const dynamic = 'force-static';
 
 export default function robots() {
   return {
-    rules: [{ userAgent: '*', allow: ['/', '/api/public/boutique-image'], disallow: ['/app/', '/admin/', '/commercial/', '/api/', '/purge-cache.txt'] }],
+    rules: [{ userAgent: '*', allow: ['/', '/api/public/boutique-image'], disallow: ['/app/', '/admin/', '/commercial/', '/livraison/', '/api/', '/purge-cache.txt'] }],
     sitemap: SITE_URL + '/sitemap.xml',
   };
 }

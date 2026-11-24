@@ -83,7 +83,7 @@ export function choixDepuisCommande(produit, optionIds = []) {
 export const venteDeCommande = (ventes, commandeId) => (ventes || []).find((v) => v.commandeEnLigne?.id === commandeId && !v.annulee) || null;
 
 export const STATUTS_COMMANDE = [
-  ['nouvelle', 'Nouvelle'], ['confirmee', 'Confirmée'], ['prete', 'Prête'], ['livree', 'Livrée'], ['annulee', 'Annulée'],
+  ['nouvelle', 'Nouvelle'], ['confirmee', 'Confirmée'], ['prete', 'Prête'], ['en_route', 'En route'], ['livree', 'Livrée'], ['annulee', 'Annulée'],
 ];
 
 // ---------- Boutiques de l’accueil de kaislo.com ----------
