@@ -37,7 +37,7 @@ export function FeuilleBoutique() {
 
   const maj = (x) => setB({ ...b, ...x });
   // Ce qu'on envoie au serveur (le lien privé des grossistes : activé ou non ; « regenererPro » : nouvelle clé)
-  const donnees = (plus = {}) => ({ actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison, ...plus });
+  const donnees = (plus = {}) => ({ actif: b.actif, conditionsAcceptees: !!b.accord, publique: b.publique !== false, chat: b.chat !== false, pro: !!b.proActif, slug: b.slug, whatsapp: b.whatsapp, description: b.description, livraison: b.livraison, localisation: s.d.commerce.localisation || null, ...plus });
   const changerLienPro = async () => {
     if (!confirm(tr('Changer le lien des grossistes ? L’ancien lien ne marchera plus : il faudra envoyer le nouveau à vos grossistes.'))) return;
     setErreur(''); setOccupe(true);
@@ -113,28 +113,15 @@ export function FeuilleBoutique() {
             {!b.conditionsAcceptees && (
               <label className="case-accord"><input type="checkbox" checked={!!b.accord} onChange={(e) => maj({ accord: e.target.checked })} /><span>{tr('Je comprends que Kaislo est un outil, un pont entre les boutiques et leurs clients : je suis seul responsable de mes articles, de mes prix, de la livraison et de mes ventes. J’accepte les conditions de la boutique en ligne.')} <a href={chemin('/conditions-utilisation/#boutiques-en-ligne')} target="_blank" rel="noreferrer">{tr('Lire')}</a></span></label>
             )}
-            <label className="case-accord"><input type="checkbox" checked={b.publique !== false} onChange={(e) => maj({ publique: e.target.checked })} /><span>{tr('Afficher ma boutique sur kaislo.com/boutiques')}<br /><span className="tres-petit muet">{tr('Les clients du site la trouvent par rayon, avec quelques articles en exemple. Sans cette case, seuls ceux qui ont votre lien la voient.')}</span></span></label>
+            <label className="case-accord"><input type="checkbox" checked={b.publique !== false} onChange={(e) => maj({ publique: e.target.checked })} /><span>{tr('Apparaître près de mes clients sur kaislo.com')}<br /><span className="tres-petit muet">{tr('Les clients voient d’abord les boutiques les plus proches d’eux, avec quelques articles. Placez votre commerce sur la carte pour être classé par distance.')}</span></span></label>
             <label className="case-accord"><input type="checkbox" checked={b.chat !== false} onChange={(e) => maj({ chat: e.target.checked })} /><span>{tr('Discussion en direct avec les clients')}<br /><span className="tres-petit muet">{tr('Une bulle « Discuter » sur votre boutique : les clients vous écrivent, vous répondez depuis l’écran Discussions et recevez une notification. Vous restez seul responsable de vos réponses.')}</span></span></label>
-            <label className="champ"><span>{tr('Adresse de la boutique')}</span>
-              <input value={b.slug} onChange={(e) => maj({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })} placeholder="chez-awa" />
-              <p className="aide">kaislo.com/boutique/{b.slug || '…'}/</p>
-            </label>
             <ChampTelephone libelle={tr('Numéro WhatsApp qui reçoit les commandes')} pays={s.d.commerce.pays} valeur={b.whatsapp} surChanger={(v) => maj({ whatsapp: v })} />
             <label className="champ"><span>{tr('Présentation (facultatif)')}</span><textarea value={b.description} onChange={(e) => maj({ description: e.target.value })} maxLength={300} placeholder={tr('Ex : Boissons fraîches et jus naturels à Cocody')} /></label>
             <label className="champ"><span>{tr('Livraison (facultatif)')}</span><textarea value={b.livraison} onChange={(e) => maj({ livraison: e.target.value })} maxLength={300} placeholder={tr('Ex : Livraison à Cocody et Marcory, 1 000 FCFA')} /></label>
             <p className="petit">{tr('{0} article(s) publié(s) en ligne. Pour en publier d’autres : ouvrez la fiche de l’article et cochez « Vendre en ligne ».', [b.articlesPublies])}</p>
             {messageAnnuaire(b) && <p className={messageAnnuaire(b).ok ? 'info-verte petit' : 'alerte petit'}>{messageAnnuaire(b).texte}</p>}
             {aPublier > 0 && <button type="button" className="btn secondaire bloc" disabled={occupe} onClick={publierTout}>{tr('Publier mes {0} article(s) en ligne', [aPublier])}</button>}
-            {b.lien && (
-              <div className="carte pile">
-                <b>{tr('Lien public (prix de détail)')}</b>
-                <p className="petit" style={{ wordBreak: 'break-all' }}>{b.lien}</p>
-                <div className="grille-2">
-                  <button className="btn secondaire" onClick={copier}><Icone nom="ok" /> {tr('Copier le lien')}</button>
-                  <a className="btn" target="_blank" rel="noreferrer" href={'https://wa.me/?text=' + encodeURIComponent(tr('Commandez chez {0} : {1}', [s.d.commerce.nom, b.lien]))}><Icone nom="whatsapp" /> {tr('Partager')}</a>
-                </div>
-              </div>
-            )}
+            {!s.d.commerce.localisation && <p className="alerte petit">{tr('Votre commerce n’est pas placé sur la carte : les clients ne peuvent pas vous trouver par proximité. Ouvrez Compte → Informations du commerce → Localisation.')}</p>}
             {grosDisponible(s.d.commerce) && <label className="case-accord"><input type="checkbox" checked={!!b.proActif} onChange={(e) => maj({ proActif: e.target.checked })} /><span>{tr('Lien privé pour les grossistes')}<br /><span className="tres-petit muet">{tr('Un second lien, que vous envoyez vous-même à vos grossistes : ils y voient seulement les prix de gros (au carton). Vos clients au détail ne le voient jamais, et les grossistes ne voient pas vos prix de détail. Enregistrez pour le créer.')}</span></span></label>}
             {grosDisponible(s.d.commerce) && b.proActif && b.lienPro && (
               <div className="carte pile">

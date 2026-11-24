@@ -95,3 +95,35 @@ test('un article sans prix ou sans nom ne rend pas la boutique visible', async (
   assert.ok(!(await slugs('CI')).includes('boutique-vide'));
   assert.equal((await ci.etat()).raisonAnnuaire, 'aucunArticle');
 });
+
+test('proximité : les boutiques sont classées de la plus proche à la plus lointaine, sans jamais montrer leur position', async () => {
+  const proche = await creer('Épicerie Proche', '0712346001', 'CI', 'epicerie-proche');
+  const loin = await creer('Épicerie Loin', '0712346002', 'CI', 'epicerie-loin');
+  const sans = await creer('Épicerie Sans Position', '0712346003', 'CI', 'epicerie-sans-position');
+  for (const b of [proche, loin, sans]) await b.ecrire([produit('p1', { enLigne: true })]);
+  assert.equal((await proche.publier({ localisation: { lat: 5.3600, lng: -4.0083 } })).ok, true);
+  assert.equal((await loin.publier({ localisation: { lat: 5.4500, lng: -4.0500 } })).ok, true);
+  assert.equal((await sans.publier()).ok, true);
+  // Le gérant retrouve sa position ; une position absente la conserve, null l'efface, une position folle est refusée
+  assert.deepEqual((await proche.etat()).localisation, { lat: 5.36, lng: -4.0083 });
+  assert.equal((await proche.publier()).ok, true);
+  assert.notEqual((await proche.etat()).localisation, null);
+  assert.equal((await proche.publier({ localisation: { lat: 120, lng: 0 } })).statut, 400);
+  assert.equal((await proche.publier({ localisation: { lat: 0, lng: 0 } })).statut, 400);
+  // Un visiteur à Cocody voit d'abord la boutique la plus proche
+  const r = await api('GET', '/public/boutiques?pays=CI&lat=5.3601&lng=-4.0084');
+  const ordre = r.boutiques.map((b) => b.slug).filter((s) => ['epicerie-proche', 'epicerie-loin', 'epicerie-sans-position'].includes(s));
+  assert.deepEqual(ordre, ['epicerie-proche', 'epicerie-loin', 'epicerie-sans-position']);
+  const p = r.boutiques.find((b) => b.slug === 'epicerie-proche');
+  const l = r.boutiques.find((b) => b.slug === 'epicerie-loin');
+  assert.ok(p.distanceKm < 0.5, String(p.distanceKm));
+  assert.ok(l.distanceKm > 9 && l.distanceKm < 13, String(l.distanceKm));
+  assert.equal(r.boutiques.find((b) => b.slug === 'epicerie-sans-position').distanceKm, null);
+  // Sans position du visiteur : pas de distance, et jamais de coordonnées de boutique dans la réponse
+  const sansGps = await api('GET', '/public/boutiques?pays=CI');
+  assert.equal(sansGps.boutiques.every((b) => b.distanceKm === null), true);
+  assert.equal(JSON.stringify(r).includes('5.36'), false);
+  assert.equal(JSON.stringify(r).includes('-4.0083'), false);
+  // Position du visiteur invalide : ignorée
+  assert.equal((await api('GET', '/public/boutiques?pays=CI&lat=999&lng=0')).boutiques.every((b) => b.distanceKm === null), true);
+});

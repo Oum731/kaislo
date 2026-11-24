@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 33;
+const VERSION_BASE = 34;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -268,7 +268,8 @@ const STRUCTURE = [
             'commerce_id' => 'ID', 'slug' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'whatsapp' => 'VARCHAR(40)', 'whatsapp_cle' => 'VARCHAR(20)', 'conditions_le' => 'DATE', // date d'acceptation du rôle de Kaislo (pont, pas vendeur) par le gérant
             'chat_off' => 'ENTIER', // 1 = le commerçant a désactivé la discussion en direct de sa boutique
             'pro_cle' => 'VARCHAR(40)', // clé du lien privé des grossistes (…/?pro=clé) ; vide = pas de lien de gros
-            'publique' => 'ENTIER', // 1 = affichée sur kaislo.com/boutiques/ (annuaire pour les clients)
+            'publique' => 'ENTIER', // 1 = affichée sur l'accueil de kaislo.com (boutiques proches du client)
+            'lat' => 'DOUBLE', 'lng' => 'DOUBLE', // position de la boutique (sert seulement à classer par distance ; jamais montrée telle quelle)
             'description' => 'LONG', 'livraison' => 'LONG', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
         ],
         'cle' => ['commerce_id'], 'uniques' => [['slug']], 'index' => [],
@@ -402,6 +403,12 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 33 : position de la boutique (proximité)
+    if ($version >= 1 && $version < 34) {
+        $essayer('ALTER TABLE boutiques ADD COLUMN lat DOUBLE NULL');
+        $essayer('ALTER TABLE boutiques ADD COLUMN lng DOUBLE NULL');
     }
 
     // Bases en version 1 à 32 : traduction anglaise des avis

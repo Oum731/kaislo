@@ -56,6 +56,25 @@ function raisonAbsenceAnnuaire(?array $b, array $commerce, int $nbPublies): stri
     return '';
 }
 
+/** Position reçue de l'application : [lat, lng] arrondis à 5 décimales (environ 1 m), ou [null, null] pour l'effacer. */
+function positionValide(mixed $p): array
+{
+    if ($p === null || $p === false || $p === []) return [null, null];
+    if (!is_array($p) || !is_numeric($p['lat'] ?? null) || !is_numeric($p['lng'] ?? null)) throw new ErreurApi('Position de la boutique invalide');
+    $lat = (float) $p['lat'];
+    $lng = (float) $p['lng'];
+    if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 || ($lat == 0.0 && $lng == 0.0)) throw new ErreurApi('Position de la boutique invalide');
+    return [round($lat, 5), round($lng, 5)];
+}
+
+/** Distance à vol d'oiseau en kilomètres entre deux points (formule de haversine). */
+function distanceKm(float $lat1, float $lng1, float $lat2, float $lng2): float
+{
+    $r = 6371.0;
+    $a = sin(deg2rad($lat2 - $lat1) / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin(deg2rad($lng2 - $lng1) / 2) ** 2;
+    return 2 * $r * asin(min(1.0, sqrt($a)));
+}
+
 function versBoutique(?array $b, array $commerce): array
 {
     $nbPublies = count(articlesPublies($commerce['id']));
@@ -74,6 +93,7 @@ function versBoutique(?array $b, array $commerce): array
         'articlesGros' => count(array_filter(articlesPublies($commerce['id']), fn ($p) => prixGrosValide($p) !== null)),
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
+        'localisation' => isset($b['lat'], $b['lng']) ? ['lat' => (float) $b['lat'], 'lng' => (float) $b['lng']] : null,
         'lien' => $b ? lienBoutique($b['slug']) : '',
         'articlesPublies' => $nbPublies,
         'dansAnnuaire' => $raison === '',
@@ -196,12 +216,16 @@ function routeBoutiqueEnregistrer(): never
     $chatOff = array_key_exists('chat', $e) ? (!empty($e['chat']) ? 0 : 1) : (int) ($avant['chat_off'] ?? 0);
     $description = texte($e, 'description', 'la description', false, 300);
     $livraison = texte($e, 'livraison', 'la livraison', false, 300);
+    // Position : { lat, lng } pour la placer, null pour l'effacer ; absente = on garde l'ancienne
+    $lat = $avant['lat'] ?? null;
+    $lng = $avant['lng'] ?? null;
+    if (array_key_exists('localisation', $e)) [$lat, $lng] = positionValide($e['localisation']);
     if ($avant) {
-        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, chat_off = ?, pro_cle = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, modifie_le = ? WHERE commerce_id = ?',
-            [$slug, $actif, $publique, $accepteLe, $chatOff, $proCle, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), $c['id']]);
+        requete('UPDATE boutiques SET slug = ?, actif = ?, publique = ?, conditions_le = ?, chat_off = ?, pro_cle = ?, whatsapp = ?, whatsapp_cle = ?, description = ?, livraison = ?, lat = ?, lng = ?, modifie_le = ? WHERE commerce_id = ?',
+            [$slug, $actif, $publique, $accepteLe, $chatOff, $proCle, $num['affichage'], $num['cle'], $description, $livraison, $lat, $lng, maintenant(), $c['id']]);
     } else {
-        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, chat_off, pro_cle, whatsapp, whatsapp_cle, description, livraison, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [$c['id'], $slug, $actif, $publique, $accepteLe, $chatOff, $proCle, $num['affichage'], $num['cle'], $description, $livraison, maintenant(), maintenant()]);
+        requete('INSERT INTO boutiques (commerce_id, slug, actif, publique, conditions_le, chat_off, pro_cle, whatsapp, whatsapp_cle, description, livraison, lat, lng, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$c['id'], $slug, $actif, $publique, $accepteLe, $chatOff, $proCle, $num['affichage'], $num['cle'], $description, $livraison, $lat, $lng, maintenant(), maintenant()]);
     }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();
@@ -372,10 +396,14 @@ function routeBoutiquesAnnuaire(): never
     $pays = $demande ?? paysDeLAdresse(adresseIp());
     $liste = [];
     $disponibles = [];
+    // Position du visiteur (facultative) : sert seulement à classer les boutiques de la plus proche à la plus lointaine, elle n'est pas gardée
+    $vLat = is_numeric($_GET['lat'] ?? null) ? (float) $_GET['lat'] : null;
+    $vLng = is_numeric($_GET['lng'] ?? null) ? (float) $_GET['lng'] : null;
+    if ($vLat !== null && ($vLat < -90 || $vLat > 90 || $vLng === null || $vLng < -180 || $vLng > 180)) $vLat = $vLng = null;
     // Pré-filtre SQL : boutiques actives et publiques qui ont au moins un article marqué « en ligne » (le détail est revérifié ci-dessous).
     // Toutes les boutiques sont parcourues (pas de plafond partagé entre pays : un pays très actif ne doit pas cacher les autres) ;
     // seul le pays du visiteur est détaillé, et la liste de ce pays est plafonnée.
-    $lignes = requete("SELECT b.slug, b.description, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id
+    $lignes = requete("SELECT b.slug, b.description, b.lat, b.lng, c.* FROM boutiques b JOIN commerces c ON c.id = b.commerce_id
         WHERE b.actif = 1 AND (b.publique IS NULL OR b.publique = 1) AND c.statut <> 'suspendu'
         AND EXISTS (SELECT 1 FROM elements e WHERE e.commerce_id = c.id AND e.type = 'produits' AND e.supprime = 0 AND (e.contenu LIKE '%\"enLigne\":true%' OR e.contenu LIKE '%\"enLigne\":1%'))
         ORDER BY b.modifie_le DESC LIMIT 5000")->fetchAll();
@@ -385,7 +413,8 @@ function routeBoutiquesAnnuaire(): never
         $articles = array_values(articlesPublies($c['id']));
         if (!$articles) continue;
         $disponibles[$c['pays']] = ($disponibles[$c['pays']] ?? 0) + 1;
-        if (count($liste) >= BOUTIQUES_ANNUAIRE_MAX) continue;
+        if (count($liste) >= BOUTIQUES_ANNUAIRE_MAX && $vLat === null) continue;
+        $km = $vLat !== null && $c['lat'] !== null && $c['lng'] !== null ? distanceKm($vLat, $vLng, (float) $c['lat'], (float) $c['lng']) : null;
         // Exemples : les articles avec photo d'abord, quatre au plus
         usort($articles, fn ($x, $y) => (int) !empty($y['image']) <=> (int) !empty($x['image']));
         $exemples = array_map(fn ($p) => [
@@ -395,7 +424,13 @@ function routeBoutiquesAnnuaire(): never
         $liste[] = [
             'slug' => $c['slug'], 'nom' => $c['nom'], 'type' => $c['type'], 'pays' => $c['pays'], 'ville' => $c['ville'], 'quartier' => $c['quartier'] ?? '',
             'devise' => $c['devise'], 'description' => (string) $c['description'], 'nbArticles' => count($articles), 'exemples' => $exemples, 'logo' => logoBoutique($c['id']),
+            'distanceKm' => $km === null ? null : round($km, 1), // distance arrondie : la position exacte de la boutique n'est jamais envoyée
         ];
+    }
+    // Les plus proches d'abord ; les boutiques sans position (ou sans position du visiteur) restent dans l'ordre habituel, après
+    if ($vLat !== null) {
+        usort($liste, fn ($x, $y) => ($x['distanceKm'] ?? INF) <=> ($y['distanceKm'] ?? INF));
+        $liste = array_slice($liste, 0, BOUTIQUES_ANNUAIRE_MAX);
     }
     header('Cache-Control: private, max-age=60');
     repondre(['ok' => true, 'pays' => $pays, 'paysDisponibles' => $disponibles, 'boutiques' => $liste]);
