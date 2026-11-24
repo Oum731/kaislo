@@ -642,3 +642,6 @@ Position du livreur envoyée pendant la course seulement, vue par le client sur 
 
 ### Paiement en ligne, lot L4 (base v39, option `paiement`)
 Prestataire de simulation « essai » pour tester sans argent ; interface `InterfacePasserelle` pour un vrai prestataire ; Kaislo ne touche jamais l'argent : voir `docs/chantier-livraison.md`.
+
+### Livreurs indépendants, lot L5 (base v40, option `independants`)
+Inscription sur `/livreurs/`, validation par l'équipe (espace Kaislo → Livreurs), espace personnel `/espace-livreur/?k=…`, offre de course du commerçant, acceptation par le premier livreur, commission fixée à la livraison (`CommissionLivreur`) : voir `docs/chantier-livraison.md`.

@@ -10,6 +10,7 @@ import { ChampTelephone } from '@/components/ui';
 import { cleNumero } from '@/lib/donnees/telephone';
 import { tr } from '@/lib/i18n';
 import { formatPrix } from '@/lib/utils/format';
+import { optionLivraison } from '@/lib/livraison';
 
 const STATUTS_LIVRABLES = ['confirmee', 'prete', 'en_route'];
 
@@ -18,6 +19,9 @@ export function BlocLivraison({ commande: c, jeton, pays, surChange, surErreur }
   const [livreurs, setLivreurs] = useState(null);
   const [ajout, setAjout] = useState(null); // { nom, telephone } pendant la création d'un livreur
   const [occupe, setOccupe] = useState(false);
+  const [independants, setIndependants] = useState(false); // lot L5 : option ouverte sur le serveur
+  const [prix, setPrix] = useState('');
+  useEffect(() => { optionLivraison('independants').then(setIndependants); }, []);
   if (c.mode !== 'livraison' || !STATUTS_LIVRABLES.includes(c.statut)) return null;
 
   const erreur = (e) => surErreur(e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message);
@@ -50,7 +54,12 @@ export function BlocLivraison({ commande: c, jeton, pays, surChange, surErreur }
     } catch (e) { erreur(e); }
   };
 
-  const envoi = c.livreur && c.lienCourse
+  const offrir = async (annuler) => {
+    setOccupe(true);
+    try { surChange((await appelApi('POST', '/commandes-en-ligne/offrir', annuler ? { id: c.id, annuler: true } : { id: c.id, prix: Number(String(prix).replace(',', '.')) }, jeton)).commande); } catch (e) { erreur(e); }
+    setOccupe(false);
+  };
+  const envoi = c.livreur && c.lienCourse && !c.independant
     ? 'https://wa.me/' + cleNumero(c.livreur.telephone, pays) + '?text=' + encodeURIComponent(tr('Course n° {0} : {1}. Ouvrez ce lien pour voir l’adresse et le montant, puis validez la remise avec le code du client : {2}', [c.numero, c.client.nom, c.lienCourse]))
     : null;
 
@@ -60,6 +69,19 @@ export function BlocLivraison({ commande: c, jeton, pays, surChange, surErreur }
       {c.livreur ? <p className="petit">{tr('Livreur : {0}', [c.livreur.nom])}{c.statut === 'en_route' ? ' · ' + tr('en route') : ''}</p> : <p className="petit muet">{tr('Aucun livreur pour cette commande.')}</p>}
       {c.position && <a className="btn secondaire" href={`https://www.openstreetmap.org/?mlat=${c.position.lat}&mlon=${c.position.lng}#map=16/${c.position.lat}/${c.position.lng}`} target="_blank" rel="noreferrer">{tr('Voir le livreur sur la carte')}</a>}
       {envoi && <a className="btn secondaire" style={{ height: 'auto', minHeight: 44, whiteSpace: 'normal', textAlign: 'center' }} href={envoi} target="_blank" rel="noreferrer">{tr('Envoyer la course à {0} sur WhatsApp', [c.livreur.nom])}</a>}
+      {independants && c.livreur?.id && c.independant && <p className="tres-petit muet">{tr('Livreur Kaislo : payez-le le prix de la course convenu, comme annoncé.')}{c.livreur.telephone ? ' ' + c.livreur.telephone : ''}</p>}
+      {independants && !c.livreur && (c.offre ? (
+        <div className="info-verte pile">
+          <b>{tr('Course proposée aux livreurs Kaislo : {0}', [formatPrix(c.offre.prix, c.devise)])}</b>
+          <p className="tres-petit muet">{tr('Le premier livreur qui accepte prend la course. Sans réponse en 30 minutes, l’offre expire.')}</p>
+          <button className="btn secondaire" disabled={occupe} onClick={() => offrir(true)}>{tr('Annuler la recherche')}</button>
+        </div>
+      ) : (
+        <div className="pile">
+          <label className="champ"><span>{tr('Prix de la course pour un livreur Kaislo ({0})', [c.devise])}</span><input inputMode="decimal" value={prix} onChange={(e) => setPrix(e.target.value)} /></label>
+          <button className="btn secondaire" disabled={occupe || !prix} onClick={() => offrir(false)}>{tr('Demander un livreur Kaislo')}</button>
+        </div>
+      ))}
       {!ouvert && <button className="btn secondaire" onClick={ouvrir}>{c.livreur ? tr('Changer de livreur') : tr('Assigner un livreur')}</button>}
       {ouvert && (
         <div className="pile">

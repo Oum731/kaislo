@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 39;
+const VERSION_BASE = 40;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -285,6 +285,7 @@ const STRUCTURE = [
             'gros' => 'ENTIER', // 1 = commande passée par le lien des grossistes (prix de gros, au carton)
             'paiement' => 'VARCHAR(12)', 'paiement_statut' => 'VARCHAR(14)', 'paiement_ref' => 'VARCHAR(40)', 'commission' => 'MONTANT', // lot L4 : paiement en ligne (livraison | en_ligne), son état, la référence chez le prestataire, la commission
             'livreur_id' => 'ID', 'livreur_nom' => 'TEXTE', 'course_cle' => 'VARCHAR(24)', 'code_livraison' => 'VARCHAR(8)', // lot L2 : livreur du commerçant, lien de sa course, code que le client donne à la remise
+            'offre_le' => 'DATE', 'offre_prix' => 'MONTANT', 'gain_livreur' => 'MONTANT', 'commission_livraison' => 'MONTANT', 'commission_reglee_le' => 'DATE', // lot L5 : course proposée aux livreurs Kaislo (prix), gain net du livreur et commission Kaislo à la livraison
             'mode' => 'VARCHAR(10)', 'frais' => 'MONTANT', 'suivi_cle' => 'VARCHAR(24)', // commande dans Kaislo (lot L1) : retrait ou livraison, frais de livraison, clé de suivi du client
         ],
         'cle' => ['id'], 'uniques' => [['commerce_id', 'numero']], 'index' => [['commerce_id', 'cree_le']],
@@ -298,6 +299,12 @@ const STRUCTURE = [
     'positions_course' => [
         'colonnes' => ['commande_id' => 'ID', 'lat' => 'DOUBLE', 'lng' => 'DOUBLE', 'precision_m' => 'ENTIER', 'maj_le' => 'DATE'],
         'cle' => ['commande_id'], 'uniques' => [], 'index' => [],
+    ],
+    // Livreurs indépendants Kaislo (lot L5) : inscrits publiquement, validés par l'équipe, accès par lien secret
+    'livreurs_pool' => [
+        'colonnes' => ['id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)', 'cle_telephone' => 'VARCHAR(40)', 'pays' => 'VARCHAR(4)', 'ville' => 'TEXTE', 'vehicule' => 'VARCHAR(10)',
+            'statut' => 'VARCHAR(10)', 'disponible' => 'ENTIER', 'lat' => 'DOUBLE', 'lng' => 'DOUBLE', 'position_le' => 'DATE', 'acces_cle' => 'VARCHAR(24)', 'valide_le' => 'DATE', 'valide_par' => 'TEXTE', 'cree_le' => 'DATE'],
+        'cle' => ['id'], 'uniques' => [['cle_telephone']], 'index' => [['statut'], ['acces_cle']],
     ],
     // Autorisations données par le gérant (code PIN saisi sur l'appareil d'un vendeur : annuler une vente)
     'autorisations' => [
@@ -419,6 +426,17 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 39 : livreurs indépendants (lot L5)
+    if ($version >= 1 && $version < 40) {
+        $montant = $driver !== 'sqlite' ? 'DECIMAL(14,2)' : 'REAL';
+        $date = 'VARCHAR(30)';
+        $essayer("ALTER TABLE commandes_en_ligne ADD COLUMN offre_le $date NULL");
+        $essayer("ALTER TABLE commandes_en_ligne ADD COLUMN offre_prix $montant NULL");
+        $essayer("ALTER TABLE commandes_en_ligne ADD COLUMN gain_livreur $montant NULL");
+        $essayer("ALTER TABLE commandes_en_ligne ADD COLUMN commission_livraison $montant NULL");
+        $essayer("ALTER TABLE commandes_en_ligne ADD COLUMN commission_reglee_le $date NULL");
     }
 
     // Bases en version 1 à 38 : paiement en ligne (lot L4)

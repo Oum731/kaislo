@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const SITE = 'https://kaislo.com';
-const PRIVEES = [/^app\//, /^admin\//, /^commercial\//, /^boutique\//, /^livraison\//, /^404/, /^videos\//, /^caisse-/];
+const PRIVEES = [/^app\//, /^admin\//, /^commercial\//, /^boutique\//, /^livraison\//, /^espace-livreur\//, /^404/, /^videos\//, /^caisse-/];
 const erreurs = [];
 const pages = [];
 (function parcourir(d) {

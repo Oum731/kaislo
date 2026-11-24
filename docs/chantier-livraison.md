@@ -20,7 +20,7 @@
 | L2 | **Codé, non activé.** Livraison par le commerçant : livreurs (simple fiche), assignation d'une commande, statuts en route et livrée, code de livraison | L1 |
 | L3 | **Codé, non activé** (option `carte`). Suivi du client : écran de statut, notifications, position du livreur pendant la course seulement | L2 |
 | L4 | **Codé avec un prestataire de simulation, non activé** (option `paiement`). Paiement en ligne via un prestataire agréé (Kaislo ne garde pas l'argent) | L1 + contrat prestataire |
-| L5 | Livreurs indépendants, partage des courses, commission, gains | L2, L4, avis juridique |
+| L5 | **Codé, non activé** (option `independants`). Livreurs indépendants, offres de course, commission, gains | L2, L4, avis juridique |
 
 ## Données à ajouter (à valider avant de migrer)
 - `commandes_en_ligne` : ajouter `mode` (retrait ou livraison), `adresse_lat/lng`, `frais_livraison`, `livreur_id`, `code_livraison`, `paiement` (a_la_livraison, en_ligne), `paiement_statut`.
@@ -82,3 +82,14 @@ Chaque lot ajoute sa part de migration (numéro de base suivant) ; rien n'est cr
 - **Argent** : Kaislo ne le touche jamais ; le commerçant voit « À vous reverser par le prestataire » (net après commission) et la liste de ses paiements.
 - **Brancher un vrai prestataire** : écrire une classe qui implémente `InterfacePasserelle` (`creerSession`, `signatureValide`, `rembourser`) dans `api/lib/paiement-ligne.php` et l'ajouter dans `passerelle()`. Il faut d'abord un contrat (CMI via banque, Payzone, Pay10…) avec compte marchand, API de test, clé secrète, adresse de notification (`/api/paiement/notification`), et la réponse à ces questions : reversement automatique aux commerçants (sous-comptes) ou non, commission, délai, remboursement par l'API. Sans reversement par le prestataire, il faudra un avis juridique avant de garder l'argent des commerçants.
 - Pas encore fait : paiement en cash non tracé, litiges, facture de commission (L5), version anglaise de la page de simulation.
+
+## Lot L5 : ce qui est codé (base v40)
+- **Activation** : `LivraisonOptions=independants` dans le `.env` ; réglages facultatifs `CommissionLivreur=20` (en % du prix de la course) et `LivreursRayonKm=8`.
+- **Inscription** : sur `/livreurs/` (formulaire affiché seulement quand l'option est ouverte ; sinon le contact WhatsApp reste). Numéro réel exigé, défi anti-robot, un numéro = une inscription. L'équipe est alertée.
+- **Validation** : espace Kaislo → **Livreurs** : valider (crée un lien personnel secret `/espace-livreur/?k=…`, à envoyer par WhatsApp), refuser, suspendre, « nouveau lien » (l'ancien cesse de marcher).
+- **Espace du livreur** (sans mot de passe) : disponible / indisponible (la position, si autorisée, sert seulement à proposer des courses proches ; effacée à l'indisponibilité), courses proposées (prix, commission annoncée, distance), course en cours, gains.
+- **Commerçant** : sur une commande en livraison acceptée, « Demander un livreur Kaislo » avec le prix de la course ; l'offre expire au bout de 30 minutes ou s'annule. Le commerçant paie le livreur lui-même.
+- **Acceptation** : le premier livreur qui accepte prend la course (mise à jour unique côté base, le second reçoit 409). La course se déroule ensuite comme au lot L2 (lien de course, code client, position L3).
+- **Commission** : fixée à la livraison (`commission_livraison`, `gain_livreur`) ; l'équipe voit « commission due » par livreur et la marque réglée. Kaislo ne touche pas l'argent des courses.
+- **Pas encore fait** : paiement automatique de la commission, notes des livreurs, documents (pièce d'identité) téléchargés, assurance, notifications push aux livreurs (la page se rafraîchit toute seule toutes les 20 s).
+- **À valider avant ouverture** : statut du livreur indépendant, assurance, conditions propres aux livreurs, CNDP pour la position.

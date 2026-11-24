@@ -181,7 +181,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
   useEffect(() => { recharger(); const m = setInterval(recharger, 60000); return () => clearInterval(m); }, [recharger]);
 
   const estAdmin = admin.role === 'admin';
-  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes', paiementsAttente || null], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'],
+  const liens = [['tableau', 'Accueil', 'accueil'], ['commerces', 'Commerces', 'produits'], ['messages', 'Messages', 'whatsapp', nonLus || null], ['paiements', 'Paiements', 'ventes', paiementsAttente || null], ['avis', 'Avis', 'etoile', avisAttente || null], ['retours', 'Retours', 'whatsapp'], ['livreurs', 'Livreurs', 'clients'],
     ...(estAdmin ? [['commerciaux', 'Commerciaux', 'hausse', commerciauxAttente || null], ['tarifs', 'Tarifs', 'remise'], ['equipe', 'Équipe', 'clients']] : [])];
   const fiche = donnees?.commerces.find((c) => c.id === ouvert);
   useRetourTelephone(!!fiche, () => setOuvert(null), annoncer);
@@ -232,6 +232,7 @@ function TableauAdmin({ admin, jeton, surDeconnexion }) {
             {ecran === 'messages' && <VueMessages ctx={ctx} />}
             {ecran === 'paiements' && <VuePaiements commerces={donnees.commerces} ctx={ctx} />}
             {ecran === 'avis' && <VueAvis ctx={ctx} />}
+            {ecran === 'livreurs' && <VueLivreurs ctx={ctx} />}
             {ecran === 'retours' && <VueRetours ctx={ctx} commerces={donnees.commerces} EnTeteAdmin={EnTeteAdmin} />}
             {ecran === 'tarifs' && <VueTarifs ctx={ctx} />}
             {ecran === 'commerciaux' && <VueCommerciaux ctx={ctx} EnTeteAdmin={EnTeteAdmin} />}
@@ -664,6 +665,56 @@ function VueAvis({ ctx }) {
         <Puces enveloppe options={[['attente', `À relire (${nb('attente')})`], ['publie', `Publiés (${nb('publie')})`], ['refuse', `Refusés (${nb('refuse')})`], ['tous', 'Tous']]} valeur={filtre} surChanger={setFiltre} />
         {message && <p className="alerte">{message}</p>}
         {!liste ? <p className="muet petit">Chargement…</p> : !vus.length ? <p className="muet petit">Aucun avis ici pour le moment.</p> : vus.map((a) => <CarteAvis key={a.id} a={a} agir={agir} LIBELLE={LIBELLE} />)}
+      </div>
+    </>
+  );
+}
+
+function VueLivreurs({ ctx }) {
+  const [liste, setListe] = useState(null);
+  const [filtre, setFiltre] = useState('attente');
+  const [message, setMessage] = useState(null);
+  const charger = useCallback(async () => setListe((await ctx.api('GET', '/admin/livreurs')).livreurs), [ctx]);
+  useEffect(() => { charger().catch((e) => setMessage(e.message)); }, [charger]);
+  const agir = async (id, action) => {
+    if (action === 'regler' && !confirm('Marquer toutes les commissions de ce livreur comme réglées ?')) return;
+    try { await ctx.api('POST', '/admin/livreurs', { id, action }); await charger(); setMessage(null); } catch (e) { setMessage(e.message); }
+  };
+  const nb = (st) => (liste || []).filter((l) => l.statut === st).length;
+  const vus = (liste || []).filter((l) => filtre === 'tous' || l.statut === filtre);
+  const LIBELLE = { attente: 'À valider', valide: 'Validé', refuse: 'Refusé', suspendu: 'Suspendu' };
+  const VEHICULE = { moto: 'Moto', velo: 'Vélo', voiture: 'Voiture', autre: 'Autre' };
+  const prix = (x, d) => `${String(Math.round(x * 100) / 100).replace('.', ',')} ${d}`;
+  return (
+    <>
+      <EnTeteAdmin surTitre="Livraison Kaislo" titre="Livreurs" />
+      <div className="contenu pile" style={{ maxWidth: 760 }}>
+        <p className="petit muet">Les livreurs s’inscrivent sur kaislo.com/livreurs/ (quand l’option « independants » est ouverte). Appelez-les avant de valider : pièce d’identité, véhicule, conditions. Un livreur validé reçoit un lien personnel secret à lui envoyer par WhatsApp ; « Nouveau lien » annule l’ancien.</p>
+        <Puces enveloppe options={[['attente', `À valider (${nb('attente')})`], ['valide', `Validés (${nb('valide')})`], ['suspendu', `Suspendus (${nb('suspendu')})`], ['tous', 'Tous']]} valeur={filtre} surChanger={setFiltre} />
+        {message && <p className="alerte">{message}</p>}
+        {!liste ? <p className="muet petit">Chargement…</p> : !vus.length ? <p className="muet petit">Aucun livreur ici pour le moment.</p> : vus.map((l) => (
+          <div key={l.id} className="carte pile">
+            <div className="ligne espace" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <b>{l.nom}</b>
+              <span className={`badge ${l.statut === 'valide' ? '' : l.statut === 'attente' ? 'safran' : 'rouge'}`}>{LIBELLE[l.statut]}</span>
+            </div>
+            <p className="petit">{l.telephone} · {VEHICULE[l.vehicule] || l.vehicule} · {l.ville} ({l.pays}){l.disponible ? ' · disponible maintenant' : ''}</p>
+            {l.statut === 'valide' && (
+              <>
+                <p className="petit">{l.gains.courses} course{l.gains.courses > 1 ? 's' : ''} livrée{l.gains.courses > 1 ? 's' : ''} · prix des courses {prix(l.gains.brut, l.gains.devise)} · <b>commission due à Kaislo : {prix(l.gains.commissionDue, l.gains.devise)}</b></p>
+                {l.lien && <p className="tres-petit muet" style={{ overflowWrap: 'anywhere' }}>Lien personnel : {l.lien}</p>}
+              </>
+            )}
+            <div className="grille-2">
+              {l.statut !== 'valide' && <button className="btn petit" onClick={() => agir(l.id, 'valider')}>Valider</button>}
+              {l.statut === 'valide' && l.lien && <a className="btn secondaire petit" target="_blank" rel="noreferrer" href={'https://wa.me/' + String(l.telephone).replace(/\D/g, '') + '?text=' + encodeURIComponent('Bienvenue chez Kaislo ! Votre espace livreur : ' + l.lien)}>Envoyer le lien (WhatsApp)</a>}
+              {l.statut === 'valide' && <button className="btn secondaire petit" onClick={() => agir(l.id, 'nouveau-lien')}>Nouveau lien</button>}
+              {l.statut === 'valide' && l.gains.commissionDue > 0 && <button className="btn secondaire petit" onClick={() => agir(l.id, 'regler')}>Commissions réglées</button>}
+              {l.statut === 'valide' && <button className="btn secondaire petit" onClick={() => agir(l.id, 'suspendre')}>Suspendre</button>}
+              {l.statut === 'attente' && <button className="btn secondaire petit" onClick={() => agir(l.id, 'refuser')}>Refuser</button>}
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );

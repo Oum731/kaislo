@@ -17,6 +17,7 @@ const DEFI_VALIDITE_SECONDES = 600;
 const DEFI_ROUTES = [
     'POST /inscription', 'POST /connexion', 'POST /contact', 'POST /public/chat', 'POST /public/commande', 'POST /avis',
     'POST /commercial/inscription', 'POST /commercial/connexion', 'POST /admin/connexion',
+    'POST /public/livreur/inscription',
 ];
 
 function defiActif(): bool
