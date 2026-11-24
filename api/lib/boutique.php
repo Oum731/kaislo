@@ -277,7 +277,7 @@ function routeCommandesEnLigneStatut(): never
         if (in_array($c['statut'], ['livree', 'annulee'], true)) throw new ErreurApi('Une commande livrée ou annulée ne se modifie plus : changez d’abord son statut');
         $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
         $client = is_array($e['client'] ?? null) ? $e['client'] : [];
-        $nom = texte($client, 'nom', 'le nom du client', true, 60);
+        $nom = texte($client, 'nom', 'le nom du client', true, 60, 'personne');
         if (mb_strlen($nom) < 2) throw new ErreurApi('Indiquez le nom du client');
         $tel = telephoneValide(texte($client, 'telephone', 'le numéro du client', true, 40), $commerce['pays'], 'numéro du client');
         $adresse = texte($client, 'adresse', 'l’adresse de livraison', false, 200);
@@ -510,7 +510,7 @@ function routeCommandePublique(): never
     $gros = $cleGros !== '';
     if ($gros && !cleGrosValide($b, $cleGros)) throw new ErreurApi('Boutique introuvable', 404);
     $client = is_array($e['client'] ?? null) ? $e['client'] : [];
-    $nom = texte($client, 'nom', 'votre nom', true, 60);
+    $nom = texte($client, 'nom', 'votre nom', true, 60, 'personne');
     $tel = telephoneValide(texte($client, 'telephone', 'votre numéro de téléphone', true, 40), $c['pays'], 'votre numéro');
     // Commande dans Kaislo (lot L1) : retrait en boutique ou livraison ; sans le chantier, tout reste une livraison à une adresse
     $l1 = livraisonActive() && !$gros;

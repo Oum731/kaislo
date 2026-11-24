@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { paysParId, PAYS, typeCommerce } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, initiales, NOMS_DEVISES } from '@/lib/utils/format';
-import { Icone, Feuille, ChampMontant, ChampTelephone } from '@/components/ui';
+import { Icone, Feuille, ChampMontant, ChampTelephone, ChampVille } from '@/components/ui';
 import { SITE_URL, SOCIETE } from '@/config';
 import { livrerFichier, MIME_PDF } from '@/lib/export/livrer';
 
@@ -117,7 +117,7 @@ function EditionCommercial({ b, setB, ctx, surFin }) {
           <label className="champ"><span>Commission (%)</span><input type="number" min="0" max="60" value={b.taux} onChange={maj('taux')} /></label>
         </div>
         <div className="grille-2">
-          <label className="champ"><span>Ville</span><input value={b.ville || ''} onChange={maj('ville')} /></label>
+          <ChampVille libelle="Ville" pays={b.pays} valeur={b.ville || ''} surChanger={(v) => setB({ ...b, ville: v })} />
           <label className="champ"><span>Quartier</span><input value={b.quartier || ''} onChange={maj('quartier')} /></label>
         </div>
         <label className="champ"><span>E-mail (facultatif)</span><input type="email" value={b.email || ''} onChange={maj('email')} /></label>

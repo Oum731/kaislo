@@ -25,7 +25,7 @@ function routeContact(): never
     $ip = hash('sha256', adresseIp());
     $recents = (int) requete('SELECT COUNT(*) AS n FROM contacts WHERE ip_hash = ? AND cree_le > ?', [$ip, maintenant(-3600)])->fetch()['n'];
     if ($recents >= CONTACTS_PAR_HEURE_MAX) throw new ErreurApi('Beaucoup de messages en peu de temps : réessayez dans un moment, ou écrivez-nous sur WhatsApp', 429);
-    $nom = texte($e, 'nom', 'votre nom', true, 80);
+    $nom = texte($e, 'nom', 'votre nom', true, 80, 'personne');
     $contact = texte($e, 'contact', 'votre numéro WhatsApp ou votre e-mail', true, 120);
     if (!filter_var($contact, FILTER_VALIDATE_EMAIL) && strlen(preg_replace('/\D/', '', $contact)) < 8) {
         throw new ErreurApi('Indiquez un numéro WhatsApp (avec l’indicatif du pays) ou une adresse e-mail valide');

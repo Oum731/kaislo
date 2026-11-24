@@ -5,13 +5,15 @@
 // Le numéro identifie chaque personne et chaque commerce : unique dans tout Kaislo.
 // ------------------------------------------------------------
 
+require_once __DIR__ . '/saisie.php';
+
 // Règles de chaque pays : api/lib/pays.json (même fichier que le site). « zero » = zeroNational.
 define('REGLES_TELEPHONE', (function () {
     $regles = [];
     foreach (json_decode((string) file_get_contents(__DIR__ . '/pays.json'), true) ?: [] as $p) {
         if (empty($p['telephone'])) continue;
         $t = $p['telephone'];
-        $regles[$p['id']] = ['indicatif' => $p['indicatif'], 'longueurs' => $t['longueurs'], 'zero' => $t['zeroNational'], 'groupes' => $t['groupes'], 'exemple' => $t['exemple']];
+        $regles[$p['id']] = ['indicatif' => $p['indicatif'], 'longueurs' => $t['longueurs'], 'zero' => $t['zeroNational'], 'groupes' => $t['groupes'], 'exemple' => $t['exemple'], 'debuts' => $t['debuts'] ?? null];
     }
     return $regles;
 })());
@@ -48,6 +50,7 @@ function normaliserTelephone(string $saisie, string $paysId): array
         uksort($trouves, fn ($a, $b) => (($b === $paysId) <=> ($a === $paysId)) ?: (strlen(REGLES_TELEPHONE[$b]['indicatif']) <=> strlen(REGLES_TELEPHONE[$a]['indicatif'])));
         if (!$trouves) {
             if (strlen($chiffres) < 8 || strlen($chiffres) > 15) return ['ok' => false, 'erreur' => 'Numéro international incomplet (ex : +225 07 07 12 34 56)'];
+            if (numeroFactice($chiffres)) return ['ok' => false, 'erreur' => 'Ce numéro ne semble pas réel : vérifiez-le'];
             return ['ok' => true, 'e164' => '+' . $chiffres, 'affichage' => '+' . $chiffres, 'cle' => $chiffres];
         }
         $pays = array_key_first($trouves);
@@ -63,6 +66,8 @@ function normaliserTelephone(string $saisie, string $paysId): array
     $r = REGLES_TELEPHONE[$pays];
     if ($r['zero'] && str_starts_with($national, '0')) $national = substr($national, 1);
     if (!in_array(strlen($national), $r['longueurs'], true)) return ['ok' => false, 'erreur' => 'Numéro incomplet ou trop long. Exemple : ' . $r['exemple']];
+    if (numeroFactice($national)) return ['ok' => false, 'erreur' => 'Ce numéro ne semble pas réel : vérifiez-le'];
+    if ($r['debuts'] && !in_array((int) $national[0], $r['debuts'], true)) return ['ok' => false, 'erreur' => 'Ce numéro ne correspond à aucun opérateur de ce pays : vérifiez le début du numéro. Exemple : ' . $r['exemple']];
     return ['ok' => true, 'e164' => '+' . $r['indicatif'] . $national, 'affichage' => '+' . $r['indicatif'] . ' ' . grouperNumero($national, $r['groupes']), 'cle' => $r['indicatif'] . $national];
 }
 

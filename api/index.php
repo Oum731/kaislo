@@ -250,16 +250,16 @@ function routeInscription(): never
     $cleIp = 'inscription:' . adresseIp();
     verifierBlocage($cleIp);
 
-    $nom = texte($commerce, 'nom', 'le nom du commerce');
+    $nom = texte($commerce, 'nom', 'le nom du commerce', true, 120, 'commerce');
     $type = (string) ($commerce['type'] ?? '');
     if (!in_array($type, TYPES_COMMERCE_OFFERTS, true)) throw new ErreurApi('Type de commerce inconnu');
     $pays = strtoupper((string) ($commerce['pays'] ?? ''));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Pays non pris en charge');
-    $ville = texte($commerce, 'ville', 'la ville');
-    $quartier = texte($commerce, 'quartier', 'le quartier');
+    $ville = texte($commerce, 'ville', 'la ville', true, 120, 'lieu');
+    $quartier = texte($commerce, 'quartier', 'le quartier', true, 120, 'lieu');
     // Numéros obligatoires, au format international du pays, uniques dans tout Kaislo
     $numCommerce = telephoneValide(texte($commerce, 'telephone', 'le téléphone du commerce', true, 40), $pays, 'téléphone du commerce');
-    $nomGerant = texte($gerant, 'nom', 'votre nom');
+    $nomGerant = texte($gerant, 'nom', 'votre nom', true, 120, 'personne');
     $numGerant = telephoneValide(texte($gerant, 'telephone', 'votre numéro de téléphone', true, 40), $pays, 'votre numéro');
     $cle = $numGerant['cle'];
     $telGerant = $numGerant['affichage'];

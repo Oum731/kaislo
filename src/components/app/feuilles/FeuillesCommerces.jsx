@@ -8,7 +8,7 @@ import { reglementRestauration } from '@/lib/donnees/restauration';
 import { ConfirmationRestauration } from '../AvisRestauration';
 import { useEffect, useState } from 'react';
 import { useKaislo } from '@/store/kaislo';
-import { Feuille, Icone } from '@/components/ui';
+import { Feuille, Icone, ChampVille } from '@/components/ui';
 import { TYPES_COMMERCE } from '@/lib/donnees/modeles';
 import { etatAbonnement, LIBELLES_STATUT } from '@/lib/donnees/abonnement';
 import { formuleDuType, prixAbonnement, catalogueEnVigueur, REGLES_TARIFS } from '@/lib/donnees/tarifs';
@@ -108,7 +108,7 @@ export function FeuilleAjoutCommerce() {
               {TYPES_COMMERCE.filter((t) => reglementRestauration(s.d.commerce.pays, t.id) !== 'desactive').map((t) => <option key={t.id} value={t.id}>{tt(t.nom)}</option>)}
             </select>
           </label>
-          <label className="champ"><span>{tr('Ville')}</span><input value={f.ville} onChange={(e) => setF({ ...f, ville: e.target.value })} /></label>
+          <ChampVille libelle={tr('Ville')} pays={s.d.commerce.pays} valeur={f.ville} surChanger={(v) => setF({ ...f, ville: v })} />
         </div>
         <label className="champ"><span>{tr('Quartier')}</span><input value={f.quartier} onChange={(e) => setF({ ...f, quartier: e.target.value })} placeholder={tr('Ex : Yopougon, Adjamé, Cocody')} /></label>
         <div className="prix-commerce">

@@ -184,10 +184,10 @@ test('abonnement : prix de base, postes en plus, 12 mois = 2 offerts, tarif fond
 
 // ---------- Téléphone ----------
 test('téléphone : format international, refus des numéros vides ou invalides', () => {
-  const ok = normaliserTelephone('07 12 34 56 78', 'CI');
+  const ok = normaliserTelephone('07 48 15 62 39', 'CI');
   assert.equal(ok.ok, true);
   assert.ok(ok.e164.startsWith('+225'));
-  assert.equal(normaliserTelephone('+225 07 12 34 56 78', 'CI').e164, ok.e164); // même numéro, écrit autrement
+  assert.equal(normaliserTelephone('+225 07 48 15 62 39', 'CI').e164, ok.e164); // même numéro, écrit autrement
   assert.equal(normaliserTelephone('', 'CI').ok, false);
   assert.equal(normaliserTelephone('12', 'CI').ok, false);
 });

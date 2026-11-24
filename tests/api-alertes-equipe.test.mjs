@@ -90,7 +90,7 @@ test('« J’ai payé » : alerte dédiée « Paiement à vérifier »', async (
 test('après désabonnement, plus aucune alerte sur cet appareil', async () => {
   assert.equal((await api('POST', '/admin/push/desabonner', { endpoint: ENDPOINT }, admin)).ok, true);
   assert.equal((await api('GET', '/admin/push', null, admin)).appareils, 0);
-  assert.equal((await inscrire('Chez Bako Alertes', '0712345671')).statut, 201);
+  assert.equal((await inscrire('Chez Bako Alertes', '0712385671')).statut, 201);
   await attendre(600);
   assert.equal(sql("SELECT COUNT(*) AS n FROM notifications WHERE commerce_id = 'amorac' AND type = 'inscription'")[0].n, 1);
 });

@@ -2534,4 +2534,10 @@ export const EN = {
   "Retirée": "Picked up",
   "Choisissez : {0}": "Choose: {0}",
   "Une seule option : {0}": "Only one option: {0}",
+  "Écrivez le nom de votre ville": "Write the name of your city",
+  "Choisir la ville": "Choose the city",
+  "Autre ville…": "Other city…",
+  "Indiquez un nom valide": "Enter a valid name",
+  "Ce numéro ne semble pas réel : vérifiez-le": "This number does not look real: please check it",
+  "Ce numéro ne correspond à aucun opérateur de ce pays : vérifiez le début du numéro. Exemple : {0}": "This number does not match any operator in this country: check the start of the number. Example: {0}",
 };

@@ -17,7 +17,8 @@ import { reglementRestauration } from '@/lib/donnees/restauration';
 import { ConfirmationRestauration } from './AvisRestauration';
 import { symbole, NOMS_DEVISES } from '@/lib/utils/format';
 import { CONTACT_WHATSAPP, chemin } from '@/config';
-import { Icone, Avatar, ImageStockee, ChampTelephone, SelecteurLangueDiscret } from '@/components/ui';
+import { nomPropre, nomPropreSiUniforme } from '@/lib/donnees/saisie';
+import { Icone, Avatar, ImageStockee, ChampTelephone, ChampVille, SelecteurLangueDiscret } from '@/components/ui';
 import { normaliserTelephone } from '@/lib/donnees/telephone';
 import { nomBiometrie } from '@/lib/biometrie';
 import InstallerApp from './InstallerApp';
@@ -311,16 +312,16 @@ function Inscription() {
       {etape === 2 && (
         <form className="pile" onSubmit={(e) => { e.preventDefault(); continuer(); }}>
           <div className="intro"><p className="petit muet">{tr('Étape 2 sur 3')}</p><h1 style={{ marginTop: 4 }}>{tr('Votre commerce')}</h1></div>
-          <label className="champ"><span>{tr('Nom du commerce')}</span><input value={f.nom} onChange={maj('nom')} placeholder={tr('Ex : Kaislo')} autoFocus /></label>
+          <label className="champ"><span>{tr('Nom du commerce')}</span><input value={f.nom} onChange={maj('nom')} onBlur={() => setF((c) => ({ ...c, nom: nomPropreSiUniforme(c.nom) }))} placeholder={tr('Ex : Kaislo')} autoFocus /></label>
           <div className="grille-2">
             <label className="champ"><span>{tr('Pays')}</span>
               <select value={f.pays} onChange={maj('pays')}>
                 {PAYS.map((p) => <option key={p.id} value={p.id}>{tt(p.nom)}</option>)}
               </select>
             </label>
-            <label className="champ"><span>{tr('Ville')}</span><input value={f.ville} onChange={maj('ville')} placeholder={pays.ville ? tr('Ex : {0}', [pays.ville]) : tr('Votre ville')} /></label>
+            <ChampVille libelle={tr('Ville')} pays={f.pays} valeur={f.ville} surChanger={(v) => setF({ ...f, ville: v })} />
           </div>
-          <label className="champ"><span>{tr('Quartier')}</span><input value={f.quartier} onChange={maj('quartier')} placeholder={tr('Ex : Yopougon, Adjamé, Cocody')} /></label>
+          <label className="champ"><span>{tr('Quartier')}</span><input value={f.quartier} onChange={maj('quartier')} onBlur={() => setF((c) => ({ ...c, quartier: nomPropreSiUniforme(c.quartier) }))} placeholder={tr('Ex : Yopougon, Adjamé, Cocody')} /></label>
           <ChampTelephone libelle={tr('Téléphone du commerce')} pays={f.pays} valeur={f.telephone} surChanger={(v) => setF({ ...f, telephone: v })}
             aide={tr('Il identifie votre commerce chez Kaislo et s’imprime sur le ticket. Ce peut être votre numéro personnel.')} />
           <p className="astuce">{tr('Devise :')} <b>{tr(NOMS_DEVISES[pays.devise] || pays.devise)}</b>{tr('. Paiements proposés : {0} et crédit client.', [pays.paiements.join(', ')])}</p>
@@ -335,7 +336,7 @@ function Inscription() {
             <h1 style={{ marginTop: 4 }}>{tr('Votre compte gérant')}</h1>
             <p>{tr('Vous vous connecterez avec votre numéro de téléphone et votre code PIN.')}</p>
           </div>
-          <label className="champ"><span>{tr('Votre nom et prénom')}</span><input value={f.gerantNom} onChange={maj('gerantNom')} placeholder={tr('Ex : Kaislo')} autoFocus /></label>
+          <label className="champ"><span>{tr('Votre nom et prénom')}</span><input value={f.gerantNom} onChange={maj('gerantNom')} onBlur={() => setF((c) => ({ ...c, gerantNom: nomPropre(c.gerantNom) }))} placeholder={tr('Ex : Kaislo')} autoFocus /></label>
           <ChampTelephone libelle={tr('Votre numéro de téléphone (pour vous connecter)')} pays={f.pays} valeur={f.gerantTelephone} surChanger={(v) => setF({ ...f, gerantTelephone: v })} />
           {!f.gerantTelephone && f.telephone && (
             <button type="button" className="lien tres-petit" style={{ textAlign: 'left' }} onClick={() => setF({ ...f, gerantTelephone: f.telephone })}>{tr('Utiliser le numéro du commerce')}</button>

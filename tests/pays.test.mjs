@@ -29,7 +29,7 @@ test('le serveur PHP lit la même liste de pays que le site', () => {
   const php = JSON.parse(execFileSync('php', ['-r', 'require "api/lib/outils.php"; require "api/lib/telephone.php"; echo json_encode(["pays" => PAYS, "tel" => REGLES_TELEPHONE]);']).toString());
   assert.deepEqual(php.pays, Object.fromEntries(DONNEES_PAYS.map((p) => [p.id, p.devise])));
   for (const [id, r] of Object.entries(REGLES_TELEPHONE)) {
-    assert.deepEqual({ ...php.tel[id], zero: undefined }, { indicatif: r.indicatif, longueurs: r.longueurs, zero: undefined, groupes: r.groupes, exemple: r.exemple }, id);
+    assert.deepEqual({ ...php.tel[id], zero: undefined }, { indicatif: r.indicatif, longueurs: r.longueurs, zero: undefined, groupes: r.groupes, exemple: r.exemple, debuts: r.debuts ?? null }, id);
     assert.equal(php.tel[id].zero, r.zeroNational, id);
   }
 });

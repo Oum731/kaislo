@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/saisie.php';
 // ------------------------------------------------------------
 // OUTILS COMMUNS : réponses JSON, lecture de la demande, dates,
 // identifiants, numéros de téléphone, anti-force brute, jetons.
@@ -71,10 +72,17 @@ function entree(): array
 }
 
 // Texte nettoyé, obligatoire ou non, longueur limitée
-function texte(array $source, string $cle, string $libelle, bool $obligatoire = true, int $max = 120): string
+// $casse : 'personne' (Prénom Nom, deux lettres au moins), 'lieu' ou 'commerce' (majuscules corrigées seulement si le texte est tout en minuscules ou tout en majuscules)
+function texte(array $source, string $cle, string $libelle, bool $obligatoire = true, int $max = 120, string $casse = ''): string
 {
     $valeur = trim((string) ($source[$cle] ?? ''));
     if ($obligatoire && $valeur === '') throw new ErreurApi("Indiquez : $libelle");
+    if ($casse === 'personne' && $valeur !== '') {
+        if (!preg_match('/\p{L}.*\p{L}/u', $valeur)) throw new ErreurApi("Indiquez un nom valide : $libelle");
+        $valeur = nomPropre($valeur);
+    } elseif ($casse === 'lieu' || $casse === 'commerce') {
+        $valeur = nomPropreSiUniforme($valeur);
+    }
     if (mb_strlen($valeur) > $max) throw new ErreurApi("$libelle : $max caractères au maximum");
     return $valeur;
 }

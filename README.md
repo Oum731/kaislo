@@ -628,3 +628,8 @@ Le plan par lots, les données à ajouter, les règles à cadrer et la check-lis
 
 ### Commande dans Kaislo, lot L1 (base v35, derrière `LivraisonActive`)
 Retrait ou livraison, frais et minimum réglés par la boutique, total calculé par le serveur, suivi par clé au hasard gardée dans l'appareil du client (`GET /api/public/commande-suivi`). Détail dans `docs/chantier-livraison.md`.
+
+### Saisie sécurisée
+- **Majuscules et minuscules** (`api/lib/saisie.php`, `src/lib/donnees/saisie.js`, mêmes règles vérifiées ensemble par `tests/saisie.test.mjs`) : les noms de personnes deviennent « Prénom Nom » (particules en minuscules), les noms de commerce, de ville et de quartier ne sont corrigés que s'ils sont tout en minuscules, tout en majuscules ou mêlent un mot criard de 4 lettres ou plus (« épicerie AL BARAKA ») ; « iPhone Store » ou « SOS Dépannage » restent tels quels. Appliqué par le serveur à chaque enregistrement et dans l'application (clients, fournisseurs, formulaire d'inscription).
+- **Numéros** : en plus du pays et de la longueur, refus des numéros visiblement faux (deux chiffres différents au plus, cinq fois le même chiffre de suite, suite de sept chiffres croissants ou décroissants, petit groupe répété) et, pour le Maroc, le Sénégal et la Côte d'Ivoire, des débuts de numéro qui n'existent pas (`debuts` dans `api/lib/pays.json`). Les autres pays ne contrôlent pas encore le début du numéro. Numéros de clients et de fournisseurs de l'application contrôlés aussi.
+- **Villes** : liste déroulante des villes du pays (`villes` dans `pays.json`) et option « Autre ville… » avec saisie libre, partout où la ville se saisit.

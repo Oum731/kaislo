@@ -114,14 +114,14 @@ function routeAjouterCommerce(): never
     $actuel = requete('SELECT * FROM commerces WHERE id = ?', [$moi['commerce_id']])->fetch();
 
     $c = is_array($e['commerce'] ?? null) ? $e['commerce'] : [];
-    $nom = texte($c, 'nom', 'le nom du commerce');
+    $nom = texte($c, 'nom', 'le nom du commerce', true, 120, 'commerce');
     $type = (string) ($c['type'] ?? '');
     if (!in_array($type, TYPES_COMMERCE_OFFERTS, true)) throw new ErreurApi('Type de commerce inconnu');
     $pays = strtoupper((string) ($c['pays'] ?? $actuel['pays']));
     if (!isset(PAYS[$pays])) throw new ErreurApi('Pays non pris en charge');
     $avisRestaurationLe = controlerRestauration($pays, $type, $e); // pays aux règles particulières pour les restaurants : confirmation obligatoire
-    $ville = texte($c, 'ville', 'la ville');
-    $quartier = texte($c, 'quartier', 'le quartier');
+    $ville = texte($c, 'ville', 'la ville', true, 120, 'lieu');
+    $quartier = texte($c, 'quartier', 'le quartier', true, 120, 'lieu');
     // Numéro du commerce : le sien par défaut, ou un autre numéro qui n'appartient à personne d'autre
     $telSaisi = trim((string) ($c['telephone'] ?? ''));
     if ($telSaisi === '') {
