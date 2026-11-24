@@ -215,8 +215,8 @@ function routeBoutiqueEnregistrer(): never
     if (in_array($c['type'], TYPES_RESTAURATION, true)) $proCle = null; // pas de vente en gros pour la restauration
     if (!empty($e['regenererPro']) && $proCle) $proCle = bin2hex(random_bytes(8));
     $chatOff = array_key_exists('chat', $e) ? (!empty($e['chat']) ? 0 : 1) : (int) ($avant['chat_off'] ?? 0);
-    $description = texte($e, 'description', 'la description', false, 300);
-    $livraison = texte($e, 'livraison', 'la livraison', false, 300);
+    $description = texte($e, 'description', 'la description', false, 600, 'phrases');
+    $livraison = texte($e, 'livraison', 'la livraison', false, 600, 'phrases');
     // Position : { lat, lng } pour la placer, null pour l'effacer ; absente = on garde l'ancienne
     $lat = $avant['lat'] ?? null;
     $lng = $avant['lng'] ?? null;
@@ -296,7 +296,7 @@ function routeCommandesEnLigneStatut(): never
         if (mb_strlen($nom) < 2) throw new ErreurApi('Indiquez le nom du client');
         $tel = telephoneValide(texte($client, 'telephone', 'le numéro du client', true, 40), $commerce['pays'], 'numéro du client');
         $adresse = texte($client, 'adresse', 'l’adresse de livraison', false, 200);
-        $note = texte($e, 'note', 'la note', false, 300);
+        $note = texte($e, 'note', 'la note', false, 500, 'phrases');
         $lignes = json_decode($c['lignes'], true) ?: [];
         $quantites = [];
         foreach ((array) ($e['lignes'] ?? []) as $d) $quantites[(int) ($d['index'] ?? -1)] = (int) ($d['quantite'] ?? 0);
@@ -546,7 +546,7 @@ function routeCommandePublique(): never
     if ($mode === 'livraison' && mb_strlen($adresse) < 3) throw new ErreurApi('Indiquez votre adresse de livraison (quartier, rue ou repère)');
     if ($mode === 'retrait' && $adresse === '') $adresse = 'Retrait en boutique';
     if (mb_strlen($nom) < 2) throw new ErreurApi('Indiquez votre nom');
-    $note = texte($e, 'note', 'la note', false, 300);
+    $note = texte($e, 'note', 'la note', false, 500, 'phrases');
     $demandes = is_array($e['lignes'] ?? null) ? array_values($e['lignes']) : [];
     if (!$demandes) throw new ErreurApi('Votre panier est vide');
     if (count($demandes) > LIGNES_COMMANDE_MAX) throw new ErreurApi('Trop d’articles dans une seule commande');

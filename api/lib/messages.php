@@ -11,7 +11,7 @@
 //   POST /api/admin/messages             { commerceId, texte } : réponse de l'équipe
 // ------------------------------------------------------------
 
-const LONGUEUR_MESSAGE_MAX = 2000;
+const LONGUEUR_MESSAGE_MAX = 3000;
 const MESSAGES_PAR_ENVOI_MAX = 30; // par heure et par commerce (évite les abus)
 
 function versMessage(array $m): array
@@ -27,7 +27,7 @@ function conversation(string $commerceId): array
 
 function texteMessage(array $e): string
 {
-    $texte = trim((string) ($e['texte'] ?? ''));
+    $texte = majusculesPhrases((string) ($e['texte'] ?? ''));
     if ($texte === '') throw new ErreurApi('Écrivez votre message');
     if (mb_strlen($texte) > LONGUEUR_MESSAGE_MAX) throw new ErreurApi('Message trop long (' . LONGUEUR_MESSAGE_MAX . ' caractères au maximum)');
     return $texte;
