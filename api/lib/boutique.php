@@ -398,8 +398,8 @@ function routeBoutiquesAnnuaire(): never
     $liste = [];
     $disponibles = [];
     // Position du visiteur (facultative) : sert seulement à classer les boutiques de la plus proche à la plus lointaine, elle n'est pas gardée
-    $vLat = is_numeric($_GET['lat'] ?? null) ? (float) $_GET['lat'] : null;
-    $vLng = is_numeric($_GET['lng'] ?? null) ? (float) $_GET['lng'] : null;
+    $vLat = is_numeric($src['lat'] ?? null) ? (float) $src['lat'] : null;
+    $vLng = is_numeric($src['lng'] ?? null) ? (float) $src['lng'] : null;
     if ($vLat !== null && ($vLat < -90 || $vLat > 90 || $vLng === null || $vLng < -180 || $vLng > 180)) $vLat = $vLng = null;
     // Pré-filtre SQL : boutiques actives et publiques qui ont au moins un article marqué « en ligne » (le détail est revérifié ci-dessous).
     // Toutes les boutiques sont parcourues (pas de plafond partagé entre pays : un pays très actif ne doit pas cacher les autres) ;

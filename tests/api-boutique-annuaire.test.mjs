@@ -124,6 +124,10 @@ test('proximité : les boutiques sont classées de la plus proche à la plus loi
   assert.equal(sansGps.boutiques.every((b) => b.distanceKm === null), true);
   assert.equal(JSON.stringify(r).includes('5.36'), false);
   assert.equal(JSON.stringify(r).includes('-4.0083'), false);
+  // Même liste en POST (position dans le corps de la demande, hors de l'adresse)
+  const post = await api('POST', '/public/boutiques', { pays: 'CI', lat: 5.3601, lng: -4.0084 });
+  assert.equal(post.boutiques[0].slug, 'epicerie-proche');
+  assert.ok(post.boutiques[0].distanceKm < 0.5);
   // Position du visiteur invalide : ignorée
   assert.equal((await api('GET', '/public/boutiques?pays=CI&lat=999&lng=0')).boutiques.every((b) => b.distanceKm === null), true);
 });
