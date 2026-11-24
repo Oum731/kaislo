@@ -6,6 +6,7 @@
 export const ROUTES_DEFI = new Set([
   '/inscription', '/connexion', '/contact', '/public/chat', '/public/commande', '/avis',
   '/commercial/inscription', '/commercial/connexion', '/admin/connexion',
+  '/public/livreur/inscription',
 ]);
 
 // Nombre de zéros binaires au début d'un condensé

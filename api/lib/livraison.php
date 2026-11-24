@@ -152,7 +152,7 @@ function routeCommandeAssigner(): never
     // Nouveau lien à chaque attribution : l'ancien livreur ne peut plus rien faire. Le code de remise, lui, reste celui que le client connaît.
     $cle = bin2hex(random_bytes(10));
     $code = $c['code_livraison'] ?: (string) random_int(1000, 9999);
-    requete('UPDATE commandes_en_ligne SET livreur_id = ?, livreur_nom = ?, course_cle = ?, code_livraison = ?, modifie_le = ? WHERE id = ?', [$l['id'], $l['nom'], $cle, $code, maintenant(), $c['id']]);
+    requete('UPDATE commandes_en_ligne SET livreur_id = ?, livreur_nom = ?, course_cle = ?, code_livraison = ?, offre_le = NULL, modifie_le = ? WHERE id = ?', [$l['id'], $l['nom'], $cle, $code, maintenant(), $c['id']]);
     journaliser($u['commerce_id'], $u['id'], 'commande-assignee', ['numero' => (int) $c['numero'], 'livreur' => $l['id']]);
     $c = requete('SELECT * FROM commandes_en_ligne WHERE id = ?', [$c['id']])->fetch();
     repondre(['ok' => true, 'commande' => versCommandeLigne($c), 'livreur' => versLivreur($l)]);
@@ -208,7 +208,13 @@ function routeCourseStatut(): never
         throw new ErreurApi('Action inconnue');
     }
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$nouveau, maintenant(), $c['id']]);
-    if ($nouveau === 'livree') effacerPositionCourse($c['id']);
+    if ($nouveau === 'livree') {
+        effacerPositionCourse($c['id']);
+        if (estLivreurIndependant($c['livreur_id'] ?? null) && (float) ($c['offre_prix'] ?? 0) > 0) { // lot L5 : la commission de Kaislo est fixée à la livraison
+            $com = commissionLivreur((float) $c['offre_prix'], $c['devise']);
+            requete('UPDATE commandes_en_ligne SET commission_livraison = ?, gain_livreur = ? WHERE id = ?', [$com, (float) $c['offre_prix'] - $com, $c['id']]);
+        }
+    }
     journaliser($c['commerce_id'], null, 'course-' . $action, ['numero' => (int) $c['numero']]);
     $c['statut'] = $nouveau;
     notifierClientCommande($c, $nouveau);
