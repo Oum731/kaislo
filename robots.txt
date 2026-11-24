@@ -5,6 +5,7 @@ Disallow: /app/
 Disallow: /admin/
 Disallow: /commercial/
 Disallow: /livraison/
+Disallow: /espace-livreur/
 Disallow: /api/
 Disallow: /purge-cache.txt
 

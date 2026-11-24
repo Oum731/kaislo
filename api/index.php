@@ -64,6 +64,7 @@ require __DIR__ . '/lib/chat.php';
 require __DIR__ . '/lib/boutique-page.php';
 require __DIR__ . '/lib/virement.php';
 require __DIR__ . '/lib/livraison.php';
+require __DIR__ . '/lib/livreurs-independants.php';
 require __DIR__ . '/lib/paiement-ligne.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
@@ -122,6 +123,11 @@ try {
         'POST /commandes-en-ligne/rembourser' => routeCommandeRembourser(),
         'GET /paiements-en-ligne' => routePaiementsEnLigne(),
         'POST /livreurs' => routeLivreursEcrire(),
+        'POST /commandes-en-ligne/offrir' => routeCommandeOffrir(),
+        'POST /public/livreur/inscription' => routeLivreurInscription(),
+        'GET /public/livreur' => routeLivreurLire(),
+        'POST /public/livreur/etat' => routeLivreurEtat(),
+        'POST /public/livreur/accepter' => routeLivreurAccepter(),
         'GET /public/boutique' => routeBoutiquePublique(),
         'GET /page-boutique' => routePageBoutique(),
         'GET /plan-boutiques' => routePlanBoutiques(),
@@ -152,6 +158,8 @@ try {
         'GET /avis' => routeAvisPublics(),
         'GET /mon-avis' => routeMonAvis(),
         'POST /avis' => routeAvisEnvoyer(),
+        'GET /admin/livreurs' => routeAdminLivreurs(),
+        'POST /admin/livreurs' => routeAdminLivreurAgir(),
         'GET /admin/avis' => routeAdminAvis(),
         'POST /admin/avis' => routeAdminAvisModerer(),
         'GET /admin/factures' => routeAdminFactures(),

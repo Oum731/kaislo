@@ -258,8 +258,10 @@ function versCommandeLigne(array $c): array
         'note' => $c['note'], 'lignes' => json_decode($c['lignes'], true) ?: [], 'total' => (float) $c['total'], 'devise' => $c['devise'],
         'gros' => !empty($c['gros']),
         'mode' => $c['mode'] ?: 'livraison', 'frais' => (float) ($c['frais'] ?? 0),
-        'livreur' => !empty($c['livreur_id']) ? ['id' => $c['livreur_id'], 'nom' => (string) $c['livreur_nom'], 'telephone' => (string) (requete('SELECT telephone FROM livreurs WHERE id = ?', [$c['livreur_id']])->fetch()['telephone'] ?? '')] : null,
+        'livreur' => !empty($c['livreur_id']) ? ['id' => $c['livreur_id'], 'nom' => (string) $c['livreur_nom'], 'telephone' => (string) (requete(estLivreurIndependant($c['livreur_id']) ? 'SELECT telephone FROM livreurs_pool WHERE id = ?' : 'SELECT telephone FROM livreurs WHERE id = ?', [$c['livreur_id']])->fetch()['telephone'] ?? '')] : null,
         'paiement' => ($c['paiement'] ?? '') === 'en_ligne' ? ['mode' => 'en_ligne', 'statut' => $c['paiement_statut']] : ['mode' => 'livraison', 'statut' => null],
+        'independant' => estLivreurIndependant($c['livreur_id'] ?? null),
+        'offre' => !empty($c['offre_le']) && empty($c['livreur_id']) ? ['prix' => (float) $c['offre_prix'], 'expireLe' => date('c', strtotime((string) $c['offre_le']) + OFFRE_DUREE_SECONDES)] : null,
         'lienCourse' => !empty($c['course_cle']) ? lienCourse((string) $c['course_cle']) : null,
         'position' => $c['statut'] === 'en_route' && optionLivraison('carte') ? positionCourse($c['id']) : null,
     ];
