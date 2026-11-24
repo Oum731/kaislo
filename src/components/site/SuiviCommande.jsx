@@ -56,6 +56,14 @@ export default function SuiviCommande({ cle, surFermer }) {
             <ol className="suivi-etapes">
               {etapesCommande(c.statut, c.mode).map((e) => <li key={e.id} className={'suivi-' + e.etat}><span aria-hidden="true">{e.etat === 'ok' ? '✓' : e.etat === 'en-cours' ? '●' : '○'}</span> {e.libelle}</li>)}
             </ol>
+            {c.livreur && !fini && <p className="petit">{tr('Livreur : {0}', [c.livreur])}</p>}
+            {c.code && (
+              <div className="carte pile">
+                <b>{tr('Votre code de livraison')}</b>
+                <p style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: 6 }}>{c.code}</p>
+                <p className="petit muet">{tr('Donnez ce code au livreur quand il vous remet la commande. Ne le donnez à personne d’autre.')}</p>
+              </div>
+            )}
             {peutPrevenir && !push.abonne && (
               <button type="button" className="btn grand" onClick={prevenir}>{tr('Me prévenir quand le statut change')}</button>
             )}

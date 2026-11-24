@@ -161,13 +161,14 @@ export default function Decouverte() {
     </section>
   );
 
-  if (erreur) return <>{barre}<p className="alerte">{erreur}</p></>;
+  if (erreur) return <>{barre}{mesCommandes}<p className="alerte">{erreur}</p></>;
   if (!pays || !donnees) return <>{barre}<p className="muet">{tr('Chargement des boutiques…')}</p></>;
   if (!boutiques.length) {
     const autres = disponibles.map((id) => PAYS.find((p) => p.id === id)).filter(Boolean);
     return (
       <div className="annuaire">
         {barre}
+        {mesCommandes}
         <div className="annuaire-vide">
           <h2>{paysActuel && paysActuel.id !== 'XX' ? tr('Pas encore de boutique dans votre pays') : tr('Choisissez votre pays')}</h2>
           <p className="muet">{tr('Les commerçants qui utilisent Kaislo ouvrent leur boutique : elles apparaîtront ici dès qu’elles seront prêtes.')}</p>

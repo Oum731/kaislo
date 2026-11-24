@@ -16,8 +16,9 @@ import { lienWhatsApp } from '@/lib/donnees/whatsapp';
 import { choixDepuisCommande, STATUTS_COMMANDE, articlesAPublier, messageAnnuaire, venteDeCommande } from '@/lib/donnees/boutique';
 import { chemin } from '@/config';
 import { livraisonActive } from '@/lib/livraison';
+import { BlocLivraison } from './LivraisonCommande';
 
-const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
+const libelleStatut = (id) => ({ nouvelle: tr('Nouvelle'), confirmee: tr('Confirmée'), prete: tr('Prête'), en_route: tr('En route'), livree: tr('Livrée'), annulee: tr('Annulée') }[id] || id);
 
 const messageErreur = (e) => (e.horsLigne ? tr('Pas de connexion internet : réessayez quand le réseau est revenu.') : e.message);
 
@@ -157,6 +158,7 @@ const TEXTE_STATUT = {
   nouvelle: (c, boutique) => tr('Bonjour {0}, c’est {1}. Nous avons bien reçu votre commande n° {2}. Nous revenons vers vous très vite.', [c.client.nom, boutique, c.numero]),
   confirmee: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est confirmée. Merci !', [c.client.nom, boutique, c.numero]),
   prete: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est prête.', [c.client.nom, boutique, c.numero]),
+  en_route: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est en route.', [c.client.nom, boutique, c.numero]),
   livree: (c, boutique) => tr('Bonjour {0}, c’est {1}. Merci pour votre commande n° {2} !', [c.client.nom, boutique, c.numero]),
   annulee: (c, boutique) => tr('Bonjour {0}, c’est {1}. Nous ne pouvons pas honorer votre commande n° {2}. Désolé, écrivez-nous pour en parler.', [c.client.nom, boutique, c.numero]),
 };
@@ -170,6 +172,8 @@ export function FeuilleCommandesEnLigne() {
   const [edition, setEdition] = useState(null); // commande en cours de modification : { id, nom, telephone, adresse, note, quantites: [..] }
   const [modifiees, setModifiees] = useState([]); // commandes modifiées pendant cette ouverture : on propose de prévenir le client
   const [annulation, setAnnulation] = useState(null); // annulation d'une commande déjà encaissée : { id, pin } (le code du gérant annule aussi la vente)
+  const [l2, setL2] = useState(false); // livraison par le commerçant (livreurs, statut « en route ») : seulement quand le chantier est activé
+  useEffect(() => { livraisonActive().then(setL2); }, []);
 
   const charger = () => (demo
     ? import('@/lib/donnees/boutique-demo').then((m) => m.commandesDemo(s.d.commerce.id)).then(setListe)
@@ -384,8 +388,9 @@ export function FeuilleCommandesEnLigne() {
                     <button className="btn danger" onClick={() => annuler(c)}>{tr('Annuler la commande')}</button>
                   </div>
                 )}
+                {l2 && !demo && <BlocLivraison commande={c} jeton={s.jetonServeur()} pays={s.d.commerce.pays} surChange={(x) => setListe((l) => l.map((y) => (y.id === x.id ? x : y)))} surErreur={setErreur} />}
                 <div className="puces enveloppe">
-                  {STATUTS_COMMANDE.map(([id]) => <button key={id} className={'puce' + (c.statut === id ? ' actif' : '')} onClick={() => c.statut !== id && changer(c, id)}>{libelleStatut(id)}</button>)}
+                  {STATUTS_COMMANDE.filter(([id]) => id !== 'en_route' || (l2 && !demo && c.mode === 'livraison')).map(([id]) => <button key={id} className={'puce' + (c.statut === id ? ' actif' : '')} onClick={() => c.statut !== id && changer(c, id)}>{libelleStatut(id)}</button>)}
                 </div>
               </>
             )}

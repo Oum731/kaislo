@@ -27,6 +27,7 @@ export function etapesCommande(statut, mode) {
     ['nouvelle', tr('Commande envoyée')],
     ['confirmee', tr('Acceptée par la boutique')],
     ['prete', retrait ? tr('Prête à retirer') : tr('Prête, la livraison se prépare')],
+    ...(retrait ? [] : [['en_route', tr('En route')]]),
     ['livree', retrait ? tr('Retirée') : tr('Livrée')],
   ];
   const i = base.findIndex(([id]) => id === statut);
