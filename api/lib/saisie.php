@@ -60,3 +60,10 @@ function numeroFactice(string $national): bool
     }
     return false;
 }
+
+/** Texte d'un message : retours à la ligne gardés (pas plus d'une ligne vide de suite), majuscule au début et après « . », « ! », « ? », « … » ou un retour à la ligne. Le reste n'est pas touché. Identique à majusculesPhrases() de src/lib/donnees/saisie.js. */
+function majusculesPhrases(string $texte): string
+{
+    $t = trim((string) preg_replace('/\n{3,}/', "\n\n", (string) preg_replace('/[ \t]+\n/', "\n", str_replace(["\r\n", "\r"], "\n", $texte))));
+    return (string) preg_replace_callback('/(^|[.!?…]\s+|\n)(\p{Ll})/u', fn ($m) => $m[1] . mb_strtoupper($m[2]), $t);
+}

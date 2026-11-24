@@ -89,7 +89,8 @@ test('chaque visiteur a sa conversation, privée', async () => {
 
 test('messages vides, trop longs, robots et blocage', async () => {
   assert.equal((await api('POST', '/public/chat', { b: 'chez-awa-chat', v: V1, texte: '   ' })).statut, 400);
-  assert.equal((await api('POST', '/public/chat', { b: 'chez-awa-chat', v: V1, texte: 'x'.repeat(1001) })).statut, 400);
+  assert.equal((await api('POST', '/public/chat', { b: 'chez-awa-chat', v: V1, texte: 'x'.repeat(3001) })).statut, 400);
+  assert.equal((await api('POST', '/public/chat', { b: 'chez-awa-chat', v: V1, texte: 'y'.repeat(2500) })).statut, 201, 'un long message passe');
   const robot = await api('POST', '/public/chat', { b: 'chez-awa-chat', v: V1, texte: 'spam', site: 'http://x' });
   assert.equal(robot.ok, true);
   assert.equal(sql("SELECT COUNT(*) AS n FROM chats_messages WHERE texte = 'spam'")[0].n, 0);

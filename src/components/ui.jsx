@@ -349,3 +349,18 @@ export function ChampMontant({ valeur, surChanger, placeholder = '0', grand, aut
     />
   );
 }
+
+/** Zone de message qui grandit avec le texte (jusqu'à environ huit lignes) ; Entrée passe à la ligne, Ctrl+Entrée (ou ⌘+Entrée) envoie. */
+export function ZoneMessage({ valeur, surChanger, surEnvoyer, placeholder, maxLength = 3000, lignes = 3 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }, [valeur]);
+  return (
+    <textarea ref={ref} className="zone-message" value={valeur} onChange={(e) => surChanger(e.target.value)} placeholder={placeholder} rows={lignes} maxLength={maxLength}
+      enterKeyHint="enter" onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); surEnvoyer(); } }} />
+  );
+}

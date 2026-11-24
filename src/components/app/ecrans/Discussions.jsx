@@ -10,7 +10,7 @@ import { appelApi } from '@/lib/api';
 import { estServeur } from '@/lib/donnees/synchro';
 import { useSondage, fusionnerMessages } from '@/lib/sondage';
 import { formatDate, formatHeure } from '@/lib/utils/format';
-import { Icone } from '@/components/ui';
+import { Icone, ZoneMessage } from '@/components/ui';
 import { EnTete } from '../EnTete';
 import { tr } from '@/lib/i18n';
 
@@ -139,8 +139,7 @@ function Conversation({ id, jeton, retour, surChange }) {
       </div>
       {erreur && <p className="alerte" style={{ margin: '0 14px 10px' }}>{erreur}</p>}
       <div className="saisie-message">
-        <textarea value={texte} onChange={(e) => setTexte(e.target.value)} placeholder={tr('Votre réponse…')} rows={2} maxLength={1000}
-          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) envoyer(); }} />
+        <ZoneMessage valeur={texte} surChanger={setTexte} surEnvoyer={envoyer} placeholder={tr('Votre réponse…')} lignes={2} />
         <button className="btn" onClick={envoyer} disabled={envoi || !texte.trim()}>{envoi ? tr('Envoi…') : tr('Envoyer')}</button>
       </div>
     </div>

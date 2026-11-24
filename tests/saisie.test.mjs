@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { nomPropre, nomPropreSiUniforme, numeroFactice, nomAvecLettres } from '../src/lib/donnees/saisie.js';
+import { nomPropre, nomPropreSiUniforme, numeroFactice, nomAvecLettres, majusculesPhrases } from '../src/lib/donnees/saisie.js';
 
 const NOMS = [
   ['hassan', 'Hassan'], ['HASSAN BENALI', 'Hassan Benali'], ['  jean-pierre   d’AUBIGNÉ ', 'Jean-Pierre d’Aubigné'], ['marie-claire de la fontaine', 'Marie-Claire de la Fontaine'],
@@ -37,4 +37,18 @@ test('le serveur PHP donne les mêmes résultats que l’application', () => {
   assert.deepEqual(r.u, UNIFORMES.map((x) => x[1]));
   assert.deepEqual(r.f, FACTICES.map(() => true));
   assert.deepEqual(r.r, REELS.map(() => false));
+});
+
+const PHRASES = [
+  ['bonjour. avez-vous ce produit ? oui! merci', 'Bonjour. Avez-vous ce produit ? Oui! Merci'],
+  ['premier point\ndeuxième point\n\n\n\ntroisième', 'Premier point\nDeuxième point\n\nTroisième'],
+  ['voir www.kaislo.com et 3.5 kg. ok', 'Voir www.kaislo.com et 3.5 kg. Ok'],
+  ['  été prêt… à midi  ', 'Été prêt… À midi'],
+  ['déjà bien écrit. Gardé tel quel', 'Déjà bien écrit. Gardé tel quel'],
+];
+
+test('majusculesPhrases : majuscule après le point, retours à la ligne gardés, PHP identique', () => {
+  for (const [entree, attendu] of PHRASES) assert.equal(majusculesPhrases(entree), attendu, entree);
+  const code = `require 'api/lib/saisie.php'; echo json_encode(array_map(fn($x) => majusculesPhrases($x[0]), ${JSON.stringify(PHRASES)}));`;
+  assert.deepEqual(JSON.parse(execFileSync('php', ['-r', code], { encoding: 'utf8' })), PHRASES.map((x) => x[1]));
 });

@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { tr } from '@/lib/i18n';
 import { appelApi } from '@/lib/api';
 import { useSondage, fusionnerMessages } from '@/lib/sondage';
-import { Icone } from '@/components/ui';
+import { Icone, ZoneMessage } from '@/components/ui';
 import { formatHeure } from '@/lib/utils/format';
 
 const lire = (cle) => { try { return localStorage.getItem(cle); } catch { return null; } };
@@ -115,8 +115,7 @@ export default function ChatBoutique({ slug, nomBoutique, releve = false }) {
         {messages.length === 0 && <input value={nom} onChange={(e) => setNom(e.target.value)} placeholder={tr('Votre prénom (facultatif)')} maxLength={40} autoComplete="given-name" />}
         <input className="vitrine-piege" tabIndex={-1} autoComplete="off" aria-hidden="true" value={piege} onChange={(e) => setPiege(e.target.value)} />
         <div className="chat-ligne">
-          <textarea value={texte} onChange={(e) => setTexte(e.target.value)} placeholder={tr('Votre message…')} rows={1} maxLength={1000}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer(e); } }} />
+          <ZoneMessage valeur={texte} surChanger={setTexte} surEnvoyer={() => envoyer({ preventDefault() {} })} placeholder={tr('Votre message…')} />
           <button className="btn" type="submit" disabled={envoi || !texte.trim()}>{envoi ? '…' : tr('Envoyer')}</button>
         </div>
         <p className="tres-petit muet">{tr('N’écrivez pas d’informations bancaires. Cette discussion est tenue par le commerçant : Kaislo n’est pas partie à l’échange et n’en est en aucun cas responsable.')}</p>
