@@ -11,6 +11,18 @@ function livraisonActive(): bool
     return in_array(strtolower(trim((string) (lireFichierEnvCle('LivraisonActive') ?? ''))), ['oui', '1', 'true'], true);
 }
 
+/** Options du chantier, activées une à une : « LivraisonOptions=carte,paiement,independants » dans le .env (absente = aucune). */
+function optionLivraison(string $nom): bool
+{
+    if (!livraisonActive()) return false;
+    return in_array($nom, array_map('trim', explode(',', strtolower((string) (lireFichierEnvCle('LivraisonOptions') ?? '')))), true);
+}
+
+function exigerOptionLivraison(string $nom): void
+{
+    if (!optionLivraison($nom)) throw new ErreurApi('Introuvable', 404);
+}
+
 function exigerLivraison(): void
 {
     if (!livraisonActive()) throw new ErreurApi('Introuvable', 404);
@@ -166,7 +178,7 @@ function routeCourseLire(): never
     repondre(['ok' => true, 'course' => [
         'numero' => (int) $c['numero'], 'statut' => $c['statut'], 'boutique' => $commerce['nom'], 'lieuBoutique' => trim(($commerce['quartier'] ?? '') . ', ' . ($commerce['ville'] ?? ''), ', '), 'whatsappBoutique' => $b['whatsapp_cle'] ?? '',
         'client' => ['nom' => $c['client_nom'], 'telephone' => $c['client_telephone'], 'adresse' => $c['adresse']], 'note' => $c['note'], 'lignes' => $lignes,
-        'total' => (float) $c['total'], 'devise' => $c['devise'], 'livreur' => $c['livreur_nom'],
+        'total' => (float) $c['total'], 'devise' => $c['devise'], 'livreur' => $c['livreur_nom'], 'carte' => optionLivraison('carte'),
     ]]);
 }
 
@@ -195,6 +207,7 @@ function routeCourseStatut(): never
         throw new ErreurApi('Action inconnue');
     }
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$nouveau, maintenant(), $c['id']]);
+    if ($nouveau === 'livree') effacerPositionCourse($c['id']);
     journaliser($c['commerce_id'], null, 'course-' . $action, ['numero' => (int) $c['numero']]);
     $c['statut'] = $nouveau;
     notifierClientCommande($c, $nouveau);
@@ -202,4 +215,45 @@ function routeCourseStatut(): never
     $texte = $nouveau === 'livree' ? 'La commande n° ' . $c['numero'] . ' est livrée à ' . $c['client_nom'] . '.' : $c['livreur_nom'] . ' a récupéré la commande n° ' . $c['numero'] . ' : elle est en route.';
     try { envoyerPush($c['commerce_id'], 'commande', 'Livraison', $texte, '/app/'); } catch (Throwable) { /* le gérant verra le statut dans l'application */ }
     repondre(['ok' => true, 'etat' => $nouveau]);
+}
+
+// ---------- Lot L3 : position du livreur pendant la course ----------
+// La position n'est envoyée que pendant que la commande est « en route », seulement le temps de la course : une seule ligne par commande,
+// effacée dès que la commande est livrée ou annulée (et jamais gardée plus de deux heures). Le client la voit sur une carte.
+
+const POSITION_VALIDE_SECONDES = 600; // au-delà, le client voit « position indisponible » plutôt qu'une position périmée
+
+/** Dernière position connue de la commande : ['lat', 'lng', 'ageSec'], ou null. */
+function positionCourse(string $commandeId): ?array
+{
+    $p = requete('SELECT * FROM positions_course WHERE commande_id = ?', [$commandeId])->fetch();
+    if (!$p) return null;
+    $age = time() - strtotime((string) $p['maj_le']);
+    if ($age > 7200) { effacerPositionCourse($commandeId); return null; }
+    if ($age > POSITION_VALIDE_SECONDES) return null;
+    return ['lat' => (float) $p['lat'], 'lng' => (float) $p['lng'], 'ageSec' => max(0, $age)];
+}
+
+function effacerPositionCourse(string $commandeId): void
+{
+    requete('DELETE FROM positions_course WHERE commande_id = ?', [$commandeId]);
+}
+
+// POST /api/public/course/position { cle, lat, lng, precision? } : envoyé par la page du livreur toutes les dix secondes environ
+function routeCoursePosition(): never
+{
+    exigerOptionLivraison('carte');
+    $e = entree();
+    $c = courseParCle((string) ($e['cle'] ?? ''));
+    if ($c['statut'] !== 'en_route') { effacerPositionCourse($c['id']); repondre(['ok' => true, 'partage' => false]); }
+    if (!is_numeric($e['lat'] ?? null) || !is_numeric($e['lng'] ?? null)) throw new ErreurApi('Position invalide');
+    $lat = (float) $e['lat'];
+    $lng = (float) $e['lng'];
+    if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 || ($lat == 0.0 && $lng == 0.0)) throw new ErreurApi('Position invalide');
+    $precision = is_numeric($e['precision'] ?? null) ? max(0, min(100000, (int) $e['precision'])) : null;
+    $existe = requete('SELECT maj_le FROM positions_course WHERE commande_id = ?', [$c['id']])->fetch();
+    if ($existe && time() - strtotime((string) $existe['maj_le']) < 3) repondre(['ok' => true, 'partage' => true]); // pas plus d'une position toutes les trois secondes
+    if ($existe) requete('UPDATE positions_course SET lat = ?, lng = ?, precision_m = ?, maj_le = ? WHERE commande_id = ?', [round($lat, 5), round($lng, 5), $precision, maintenant(), $c['id']]);
+    else requete('INSERT INTO positions_course (commande_id, lat, lng, precision_m, maj_le) VALUES (?, ?, ?, ?, ?)', [$c['id'], round($lat, 5), round($lng, 5), $precision, maintenant()]);
+    repondre(['ok' => true, 'partage' => true]);
 }

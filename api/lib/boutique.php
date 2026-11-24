@@ -252,6 +252,7 @@ function versCommandeLigne(array $c): array
         'mode' => $c['mode'] ?: 'livraison', 'frais' => (float) ($c['frais'] ?? 0),
         'livreur' => !empty($c['livreur_id']) ? ['id' => $c['livreur_id'], 'nom' => (string) $c['livreur_nom'], 'telephone' => (string) (requete('SELECT telephone FROM livreurs WHERE id = ?', [$c['livreur_id']])->fetch()['telephone'] ?? '')] : null,
         'lienCourse' => !empty($c['course_cle']) ? lienCourse((string) $c['course_cle']) : null,
+        'position' => $c['statut'] === 'en_route' && optionLivraison('carte') ? positionCourse($c['id']) : null,
     ];
 }
 
@@ -337,6 +338,7 @@ function routeCommandesEnLigneStatut(): never
     // Abonnement non payé : on peut encore refuser (annuler) une commande, mais plus la valider
     if ($statut !== 'annulee' && $statut !== 'nouvelle') exigerAbonnementPaye($u['commerce_id'], 'Abonnement non payé : activez-le pour valider vos commandes.');
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$statut, maintenant(), $c['id']]);
+    if (in_array($statut, ['livree', 'annulee', 'confirmee', 'prete'], true)) effacerPositionCourse($c['id']);
     if ($statut !== $c['statut']) notifierClientCommande($c, $statut); // le client qui suit sa commande est prévenu (lot L1)
     $c['statut'] = $statut;
     repondre(['ok' => true, 'commande' => versCommandeLigne($c)]);
@@ -612,5 +614,6 @@ function routeCommandeSuivi(): never
         // Livreur et code de remise : le client donne ce code au livreur à la livraison
         'livreur' => !empty($l['livreur_nom']) ? mb_substr(nomPropre(explode(' ', (string) $l['livreur_nom'])[0]), 0, 30) : null,
         'code' => $l['statut'] === 'en_route' && !empty($l['code_livraison']) ? (string) $l['code_livraison'] : null,
+        'position' => $l['statut'] === 'en_route' && optionLivraison('carte') ? positionCourse($l['id']) : null,
     ], 'clePublique' => (function () { try { return cleVapid()['publique']; } catch (Throwable) { return null; } })()]);
 }

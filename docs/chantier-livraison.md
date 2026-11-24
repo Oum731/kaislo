@@ -18,7 +18,7 @@
 |---|---|---|
 | L1 | **Codé, non activé.** Commande dans Kaislo (panier, retrait ou livraison, frais, minimum, numéro de commande, suivi par le client), toujours payée au commerçant | rien |
 | L2 | **Codé, non activé.** Livraison par le commerçant : livreurs (simple fiche), assignation d'une commande, statuts en route et livrée, code de livraison | L1 |
-| L3 | Suivi du client : écran de statut, notifications, position du livreur pendant la course seulement | L2 |
+| L3 | **Codé, non activé** (option `carte`). Suivi du client : écran de statut, notifications, position du livreur pendant la course seulement | L2 |
 | L4 | Paiement en ligne via un prestataire agréé (Kaislo ne garde pas l'argent) | L1 + contrat prestataire |
 | L5 | Livreurs indépendants, partage des courses, commission, gains | L2, L4, avis juridique |
 
@@ -67,3 +67,10 @@ Chaque lot ajoute sa part de migration (numéro de base suivant) ; rien n'est cr
 - **Client** : statut « En route » dans son suivi et notification (français ou anglais), prénom du livreur, code de livraison ; le commerçant est prévenu sur ses appareils quand la commande est récupérée puis livrée.
 - **Statuts** : `en_route` s'ajoute (nouvelle, confirmée, prête, en route, livrée, annulée) et n'existe qu'avec l'interrupteur ouvert.
 - Pas encore fait dans L2 : essai sur de vrais téléphones, suivi du livreur sur carte (L3), encaissement tracé (L4).
+
+## Lot L3 : ce qui est codé (base v38)
+- **Options** : `LivraisonOptions=carte` dans le `.env` (liste séparée par des virgules : `carte,paiement,independants`), en plus de `LivraisonActive=oui`. Chaque option se coupe seule.
+- **Livreur** : sur la page de sa course, tant que la commande est « en route », son téléphone envoie sa position toutes les dix secondes (il est prévenu, et s'il refuse la localisation la course continue sans carte).
+- **Client** : carte OpenStreetMap avec la position du livreur et son ancienneté (« mise à jour il y a N min » ; au-delà de dix minutes, « position indisponible »). **Commerçant** : lien « Voir le livreur sur la carte ».
+- **Vie privée** : une seule position par commande (table `positions_course`), effacée dès que la commande est livrée, annulée ou ramenée à un statut d'avant la route, jamais gardée plus de deux heures ; mention dans la page Confidentialité.
+- Pas de calcul d'itinéraire ni de durée d'arrivée : l'adresse du client est un texte, pas une position.

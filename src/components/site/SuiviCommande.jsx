@@ -57,6 +57,16 @@ export default function SuiviCommande({ cle, surFermer }) {
               {etapesCommande(c.statut, c.mode).map((e) => <li key={e.id} className={'suivi-' + e.etat}><span aria-hidden="true">{e.etat === 'ok' ? '✓' : e.etat === 'en-cours' ? '●' : '○'}</span> {e.libelle}</li>)}
             </ol>
             {c.livreur && !fini && <p className="petit">{tr('Livreur : {0}', [c.livreur])}</p>}
+            {c.statut === 'en_route' && (
+              c.position ? (
+                <div className="carte pile">
+                  <b>{tr('Position du livreur')}</b>
+                  <iframe title={tr('Position du livreur')} className="suivi-carte" loading="lazy" referrerPolicy="no-referrer"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${c.position.lng - 0.006}%2C${c.position.lat - 0.004}%2C${c.position.lng + 0.006}%2C${c.position.lat + 0.004}&layer=mapnik&marker=${c.position.lat}%2C${c.position.lng}`} />
+                  <p className="tres-petit muet">{c.position.ageSec < 90 ? tr('Position mise à jour à l’instant') : tr('Position mise à jour il y a {0} min', [Math.round(c.position.ageSec / 60)])}</p>
+                </div>
+              ) : c.livreur ? <p className="tres-petit muet">{tr('La position du livreur n’est pas disponible pour le moment.')}</p> : null
+            )}
             {c.code && (
               <div className="carte pile">
                 <b>{tr('Votre code de livraison')}</b>

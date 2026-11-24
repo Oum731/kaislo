@@ -57,6 +57,7 @@ export function BlocLivraison({ commande: c, jeton, pays, surChange, surErreur }
     <div className="carte pile">
       <b>{tr('Livraison')}</b>
       {c.livreur ? <p className="petit">{tr('Livreur : {0}', [c.livreur.nom])}{c.statut === 'en_route' ? ' · ' + tr('en route') : ''}</p> : <p className="petit muet">{tr('Aucun livreur pour cette commande.')}</p>}
+      {c.position && <a className="btn secondaire" href={`https://www.openstreetmap.org/?mlat=${c.position.lat}&mlon=${c.position.lng}#map=16/${c.position.lat}/${c.position.lng}`} target="_blank" rel="noreferrer">{tr('Voir le livreur sur la carte')}</a>}
       {envoi && <a className="btn secondaire" style={{ height: 'auto', minHeight: 44, whiteSpace: 'normal', textAlign: 'center' }} href={envoi} target="_blank" rel="noreferrer">{tr('Envoyer la course à {0} sur WhatsApp', [c.livreur.nom])}</a>}
       {!ouvert && <button className="btn secondaire" onClick={ouvrir}>{c.livreur ? tr('Changer de livreur') : tr('Assigner un livreur')}</button>}
       {ouvert && (
