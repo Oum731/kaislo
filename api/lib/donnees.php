@@ -138,6 +138,9 @@ function enregistrerElement(array $u, array $e): ?string
         if ($id !== 'commerce') return 'identifiant invalide';
         // Champs gérés uniquement par le serveur (abonnement, code…) : jamais pris de l'appareil
         foreach (['id', 'code', 'abonnement', 'creeLe', 'conditionsAccepteesLe', 'serveur', 'telephone'] as $champ) unset($contenu[$champ]);
+        // Majuscules et minuscules : « abidjan » ou « ÉPICERIE DU COIN » sont corrigés, « iPhone Store » reste tel quel
+        if (isset($contenu['nom'])) $contenu['nom'] = nomPropreSiUniforme((string) $contenu['nom']);
+        if (isset($contenu['ville'])) $contenu['ville'] = nomPropreSiUniforme((string) $contenu['ville']);
         $json = json_encode($contenu, JSON_UNESCAPED_UNICODE);
         $nom = trim((string) ($contenu['nom'] ?? ''));
         if ($nom !== '') {
