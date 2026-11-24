@@ -50,3 +50,9 @@ export function numeroFactice(national) {
 
 /** Un nom de personne doit contenir au moins deux lettres (pas « 12345 » ni « ?? »). */
 export const nomAvecLettres = (texte) => /\p{L}.*\p{L}/u.test(String(texte || ''));
+
+/** Texte d'un message : retours à la ligne gardés (pas plus d'une ligne vide de suite), majuscule au début et après « . », « ! », « ? », « … » ou un retour à la ligne. Le reste n'est pas touché (« www.kaislo.com », sigles, noms propres). */
+export function majusculesPhrases(texte) {
+  const t = String(texte ?? '').replace(/\r\n?/g, '\n').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  return t.replace(/(^|[.!?…]\s+|\n)(\p{Ll})/gu, (_, avant, lettre) => avant + lettre.toLocaleUpperCase());
+}
