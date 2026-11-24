@@ -139,3 +139,244 @@ export function FeuilleBoutique() {
   );
 }
 
+
+const TEXTE_STATUT = {
+  nouvelle: (c, boutique) => tr('Bonjour {0}, c’est {1}. Nous avons bien reçu votre commande n° {2}. Nous revenons vers vous très vite.', [c.client.nom, boutique, c.numero]),
+  confirmee: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est confirmée. Merci !', [c.client.nom, boutique, c.numero]),
+  prete: (c, boutique) => tr('Bonjour {0}, c’est {1}. Votre commande n° {2} est prête.', [c.client.nom, boutique, c.numero]),
+  livree: (c, boutique) => tr('Bonjour {0}, c’est {1}. Merci pour votre commande n° {2} !', [c.client.nom, boutique, c.numero]),
+  annulee: (c, boutique) => tr('Bonjour {0}, c’est {1}. Nous ne pouvons pas honorer votre commande n° {2}. Désolé, écrivez-nous pour en parler.', [c.client.nom, boutique, c.numero]),
+};
+
+export function FeuilleCommandesEnLigne() {
+  const s = useKaislo();
+  const demo = s.estDemoActuel();
+  const [liste, setListe] = useState(null);
+  const [erreur, setErreur] = useState('');
+  const [message, setMessage] = useState('');
+  const [edition, setEdition] = useState(null); // commande en cours de modification : { id, nom, telephone, adresse, note, quantites: [..] }
+  const [modifiees, setModifiees] = useState([]); // commandes modifiées pendant cette ouverture : on propose de prévenir le client
+  const [annulation, setAnnulation] = useState(null); // annulation d'une commande déjà encaissée : { id, pin } (le code du gérant annule aussi la vente)
+
+  const charger = () => (demo
+    ? import('@/lib/donnees/boutique-demo').then((m) => m.commandesDemo(s.d.commerce.id)).then(setListe)
+    : appelApi('GET', '/commandes-en-ligne', null, s.jetonServeur()).then((r) => setListe(r.commandes)).catch((e) => setErreur(messageErreur(e))));
+  useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const changer = async (c, statut) => {
+    setErreur('');
+    if (demo) {
+      const m = await import('@/lib/donnees/boutique-demo');
+      setListe(await m.changerStatutDemo(s.d.commerce.id, c.id, statut));
+      return;
+    }
+    try {
+      const r = await appelApi('POST', '/commandes-en-ligne', { id: c.id, statut }, s.jetonServeur());
+      setListe((l) => l.map((x) => (x.id === c.id ? r.commande : x)));
+    } catch (e) { setErreur(messageErreur(e)); }
+  };
+
+  // Articles qu'on peut ajouter à une commande : actifs, avec un prix, sans option obligatoire à choisir (ceux-là se prennent à la caisse)
+  const produitsAjoutables = s.d.produits.filter((p) => p.actif !== false && Number(p.prix) > 0 && !(p.groupes || []).some((g) => g.obligatoire));
+  const modifiable = (c) => !['livree', 'annulee'].includes(c.statut);
+  const commencerModification = (c) => setEdition({ id: c.id, nom: c.client.nom, telephone: c.client.telephone, adresse: c.client.adresse || '', note: c.note || '', quantites: c.lignes.map((l) => l.quantite), ajouts: [], pin: '' });
+  // Vente en caisse issue de cette commande (ticket déjà émis), si elle n'est pas annulée
+  const venteDe = (c) => venteDeCommande(s.d.ventes, c.id);
+  const enregistrerModification = async (refaire = false) => {
+    setErreur('');
+    const e = edition;
+    if (e.quantites.every((q) => q === 0) && !e.ajouts.length) return setErreur(tr('Il doit rester au moins un article : pour tout retirer, annulez la commande.'));
+    const avant = liste.find((x) => x.id === e.id);
+    const vente = venteDe(avant);
+    // Refaire la vente : le code du gérant est vérifié AVANT de toucher à la commande
+    if (refaire && vente && !(await s.verifierPinGerant(e.pin || ''))) return s.message(tr('Code PIN du gérant incorrect'), 'erreur');
+    const corps = { id: e.id, client: { nom: e.nom.trim(), telephone: e.telephone.trim(), adresse: e.adresse.trim() }, note: e.note.trim(), lignes: e.quantites.map((quantite, index) => ({ index, quantite })), ajouts: e.ajouts.map((a) => ({ produitId: a.produitId, quantite: a.quantite })) };
+    let modifiee;
+    try {
+      if (demo) {
+        const m = await import('@/lib/donnees/boutique-demo');
+        const nouvelle = await m.modifierCommandeDemo(s.d.commerce.id, corps);
+        setListe(nouvelle);
+        modifiee = nouvelle.find((x) => x.id === e.id);
+      } else {
+        const r = await appelApi('POST', '/commandes-en-ligne', corps, s.jetonServeur());
+        setListe((l) => l.map((x) => (x.id === e.id ? r.commande : x)));
+        modifiee = r.commande;
+      }
+    } catch (err) { return setErreur(messageErreur(err)); }
+    setModifiees((l) => [...l, e.id]);
+    setEdition(null);
+    if (refaire && vente) {
+      // Ancienne vente annulée (stock et totaux remis à jour), puis la commande corrigée s'ouvre dans la caisse
+      const ok = await s.annulerVente(vente, e.pin, tr('Commande en ligne n° {0} modifiée', [modifiee.numero]), { ouvrirTicket: false });
+      if (ok) return ouvrirDansCaisse(modifiee, true);
+      return setMessage(tr('Commande modifiée, mais la vente n° {0} n’a pas pu être annulée.', [vente.numero]));
+    }
+    setMessage(vente ? tr('Commande modifiée. Le ticket n° {0} n’a pas changé : annulez ou refaites la vente si le montant n’est plus le bon.', [vente.numero]) : tr('Commande modifiée. Prévenez le client avec le bouton ci-dessous.'));
+  };
+  const annuler = async (c) => {
+    if (venteDe(c)) return setAnnulation({ id: c.id, pin: '' }); // déjà encaissée : on demande le code du gérant pour annuler aussi la vente
+    if (!confirm(tr('Annuler la commande n° {0} de {1} ?', [c.numero, c.client.nom]))) return;
+    await changer(c, 'annulee');
+    setEdition(null);
+    setMessage(tr('Commande annulée. Prévenez le client avec le bouton « Écrire au client ».'));
+  };
+  const annulerAvecVente = async (c) => {
+    const vente = venteDe(c);
+    const ok = await s.annulerVente(vente, annulation.pin, tr('Commande en ligne n° {0} annulée', [c.numero]), { ouvrirTicket: false });
+    if (!ok) return setAnnulation({ ...annulation, pin: '' }); // message déjà affiché
+    await changer(c, 'annulee');
+    setAnnulation(null);
+    setMessage(tr('Commande et vente n° {0} annulées. Prévenez le client avec le bouton « Écrire au client ».', [vente.numero]));
+  };
+
+  // Reprend les articles dans la caisse : le vendeur encaisse comme d'habitude (stock et comptes du soir restent justes)
+  const ouvrirDansCaisse = (c, refaite = false) => {
+    const deja = venteDe(c);
+    if (deja && !refaite && !confirm(tr('Cette commande a déjà été encaissée (ticket n° {0}). L’encaisser une deuxième fois ?', [deja.numero]))) return;
+    const manquants = [];
+    s.viderPanier();
+    if (c.gros) s.choisirModeGros(true); // commande de grossiste : au carton, au prix de gros
+    for (const l of c.lignes) {
+      const demi = String(l.produitId).endsWith(':demi'); // demi-carton d'une commande de gros
+      const produit = s.d.produits.find((p) => p.id === String(l.produitId).replace(/:demi$/, ''));
+      if (!produit) { manquants.push(l.nom); continue; }
+      s.ajouterAuPanier(produit, choixDepuisCommande(produit, l.optionIds || []), l.quantite, { demi });
+    }
+    useKaislo.setState({ aDistance: true, telephoneDistance: c.client.telephone, nomDistance: c.client.nom || '', commandeEnLigne: { id: c.id, numero: c.numero } });
+    if (c.statut === 'nouvelle') changer(c, 'confirmee');
+    s.allerA('caisse');
+    if (manquants.length) s.message(tr('Article(s) introuvable(s) dans votre catalogue : {0}', [manquants.join(', ')]), 'erreur');
+    else setMessage('');
+  };
+
+  const nom = s.d.commerce.nom;
+  const pays = s.d.commerce.pays;
+  const dev = s.d.commerce.devise;
+
+  return (
+    <Feuille titre={tr('Commandes en ligne')} surFermer={s.fermer} pleine large
+      avant={<span className="mini-emoji teinte-vert"><Icone nom="caisse" /></span>}
+      pied={<button className="btn secondaire bloc" onClick={() => { setErreur(''); charger(); }}>{tr('Actualiser')}</button>}>
+      <div className="pile">
+        {demo && <p className="info-verte petit">{tr('Démo : les deux premières commandes sont des exemples. Passez-en une vous-même depuis la boutique de démo : elle apparaît ici.')}</p>}
+        {erreur && <p className="alerte">{erreur}</p>}
+        {message && <p className="info-verte">{message}</p>}
+        {liste && !liste.length && <p className="astuce">{tr('Aucune commande pour le moment. Partagez le lien de votre boutique (Compte → Boutique en ligne).')}</p>}
+        {(liste || []).map((c) => (
+          <div key={c.id} className="carte pile">
+            <div className="ligne espace">
+              <b>{tr('Commande n° {0}', [c.numero])}{c.gros && <span className="badge safran" style={{ marginLeft: 8 }}>{tr('Gros')}</span>}</b>
+              <span className={'badge' + (c.statut === 'nouvelle' ? ' safran' : c.statut === 'annulee' ? ' gris' : '')}>{libelleStatut(c.statut)}</span>
+            </div>
+            <p className="tres-petit muet">{formatDate(c.creeLe)} {formatHeure(c.creeLe)}</p>
+            {edition?.id === c.id ? (
+              <div className="pile">
+                <label className="champ"><span>{tr('Nom du client')}</span><input value={edition.nom} onChange={(e) => setEdition({ ...edition, nom: e.target.value })} /></label>
+                <ChampTelephone libelle={tr('Téléphone du client')} pays={pays} valeur={edition.telephone} surChanger={(v) => setEdition({ ...edition, telephone: v })} verifier={!demo} />
+                <label className="champ"><span>{tr('Adresse de livraison')}</span><input value={edition.adresse} onChange={(e) => setEdition({ ...edition, adresse: e.target.value })} /></label>
+                <label className="champ"><span>{tr('Note')}</span><input value={edition.note} maxLength={300} onChange={(e) => setEdition({ ...edition, note: e.target.value })} /></label>
+                {c.lignes.map((l, i) => (
+                  <div key={i} className="ligne espace" style={{ opacity: edition.quantites[i] === 0 ? 0.5 : 1 }}>
+                    <span className="petit grandit">{l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} · {formatPrix(l.prixUnitaire, c.devise)}</span>
+                    <span className="ligne" style={{ gap: 6 }}>
+                      <button type="button" className="icone-btn" aria-label={tr('Moins')} onClick={() => setEdition({ ...edition, quantites: edition.quantites.map((q, j) => (j === i ? Math.max(0, q - 1) : q)) })}>−</button>
+                      <b>{edition.quantites[i]}</b>
+                      <button type="button" className="icone-btn" aria-label={tr('Plus')} onClick={() => setEdition({ ...edition, quantites: edition.quantites.map((q, j) => (j === i ? Math.min(99, q + 1) : q)) })}>+</button>
+                    </span>
+                  </div>
+                ))}
+                {edition.ajouts.map((a, i) => (
+                  <div key={'a' + i} className="ligne espace">
+                    <span className="petit grandit"><span className="badge safran">{tr('Ajouté')}</span> {a.nom} · {formatPrix(a.prix, c.devise)}</span>
+                    <span className="ligne" style={{ gap: 6 }}>
+                      <button type="button" className="icone-btn" aria-label={tr('Moins')} onClick={() => setEdition({ ...edition, ajouts: edition.ajouts.map((x, j) => (j === i ? { ...x, quantite: x.quantite - 1 } : x)).filter((x) => x.quantite > 0) })}>−</button>
+                      <b>{a.quantite}</b>
+                      <button type="button" className="icone-btn" aria-label={tr('Plus')} onClick={() => setEdition({ ...edition, ajouts: edition.ajouts.map((x, j) => (j === i ? { ...x, quantite: Math.min(99, x.quantite + 1) } : x)) })}>+</button>
+                    </span>
+                  </div>
+                ))}
+                {produitsAjoutables.length > 0 && (
+                  <label className="champ"><span>{tr('Ajouter un article')}</span>
+                    <select value="" onChange={(ev) => {
+                      const p = produitsAjoutables.find((x) => x.id === ev.target.value);
+                      if (!p) return;
+                      const deja = edition.ajouts.findIndex((x) => x.produitId === p.id);
+                      setEdition({ ...edition, ajouts: deja >= 0 ? edition.ajouts.map((x, j) => (j === deja ? { ...x, quantite: Math.min(99, x.quantite + 1) } : x)) : [...edition.ajouts, { produitId: p.id, nom: p.nom, prix: p.prix, quantite: 1 }] });
+                    }}>
+                      <option value="">{tr('Choisir dans votre catalogue…')}</option>
+                      {produitsAjoutables.map((p) => <option key={p.id} value={p.id}>{p.nom} · {formatPrix(p.prix, dev)}</option>)}
+                    </select>
+                  </label>
+                )}
+                <p className="tres-petit muet">{tr('Mettez la quantité à 0 pour retirer un article. Les articles déjà commandés gardent leur prix ; un article ajouté prend son prix du jour. Le total est recalculé à l’enregistrement.')}</p>
+                <div className="grille-2">
+                  <button className="btn secondaire" onClick={() => setEdition(null)}>{tr('Fermer sans changer')}</button>
+                  <button className="btn" onClick={() => enregistrerModification(false)}>{tr('Enregistrer')}</button>
+                </div>
+                {venteDe(c) && (
+                  <div className="carte pile">
+                    <p className="petit"><b>{tr('Déjà encaissée : ticket n° {0}', [venteDe(c).numero])}</b> · {tr('Enregistrer ne change pas le ticket. Pour que la vente corresponde à la commande modifiée, refaites-la :')}</p>
+                    <label className="champ"><span>{tr('Code PIN du gérant')}</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={4} value={edition.pin} onChange={(e) => setEdition({ ...edition, pin: e.target.value })} placeholder="••••" /></label>
+                    <button className="btn danger bloc" disabled={edition.pin.length < 4} onClick={() => enregistrerModification(true)}>{tr('Enregistrer et refaire la vente')}</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <p className="petit"><b>{c.client.nom}</b> · {c.client.telephone}{c.client.adresse ? ' · ' + c.client.adresse : ''}</p>
+                <ul className="petit" style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
+                  {c.lignes.map((l, i) => {
+                    const produit = s.d.produits.find((p) => p.id === String(l.produitId).replace(/:demi$/, ''));
+                    return (
+                      <li key={i} className="ligne-commande-photo">
+                        <ImageStockee reference={produit?.image} className="mini-photo" alt={l.nom} secours={<span className="mini-photo mini-photo-vide" aria-hidden="true">{produit?.emoji || '🛍️'}</span>} />
+                        <span>{l.quantite} × {l.nom}{l.options?.length ? ' (' + l.options.join(', ') + ')' : ''} : {formatPrix(l.total, dev)}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {c.note && <p className="petit muet">{tr('Note : {0}', [c.note])}</p>}
+                <p><b>{tr('Total : {0}', [formatPrix(c.total, c.devise)])}</b></p>
+                {venteDe(c) && (
+                  <div className="info-verte petit pile">
+                    <span><b>{tr('Déjà encaissée : ticket n° {0}', [venteDe(c).numero])}</b> · {formatPrix(venteDe(c).total, c.devise)}</span>
+                    {Math.abs((venteDe(c).sousTotal ?? venteDe(c).total) - c.total) > 0.005 && <span className="alerte">{tr('Le total de la commande a changé depuis l’encaissement. Annulez le ticket ou refaites la vente.')}</span>}
+                    <button type="button" className="lien" onClick={() => s.ouvrir('ticket', { vente: venteDe(c) })}>{tr('Voir le ticket')}</button>
+                  </div>
+                )}
+                <div className="grille-2">
+                  <a className="btn secondaire" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, TEXTE_STATUT[c.statut](c, nom))}><Icone nom="whatsapp" /> {tr('Écrire au client')}</a>
+                  <button className="btn" onClick={() => ouvrirDansCaisse(c)}><Icone nom="caisse" /> {tr('Ouvrir dans la caisse')}</button>
+                </div>
+                {modifiees.includes(c.id) && (
+                  <a className="btn secondaire bloc" target="_blank" rel="noreferrer" href={lienWhatsApp(c.client.telephone, pays, tr('Bonjour {0}, c’est {1}. Votre commande n° {2} a été modifiée. Nouveau total : {3}. Dites-nous si cela vous convient.', [c.client.nom, nom, c.numero, formatPrix(c.total, c.devise)]))}><Icone nom="whatsapp" /> {tr('Prévenir le client de la modification')}</a>
+                )}
+                {annulation?.id === c.id && (
+                  <div className="carte pile">
+                    <b>{tr('Annuler la commande et la vente n° {0}', [venteDe(c)?.numero])}</b>
+                    <p className="tres-petit muet">{tr('La vente reste dans l’historique, marquée « Annulée » ; les articles reviennent dans le stock.')}</p>
+                    <label className="champ"><span>{tr('Code PIN du gérant')}</span><input className="pin-saisie" type="password" inputMode="numeric" maxLength={4} value={annulation.pin} onChange={(e) => setAnnulation({ ...annulation, pin: e.target.value })} placeholder="••••" /></label>
+                    <div className="grille-2">
+                      <button className="btn secondaire" onClick={() => setAnnulation(null)}>{tr('Fermer sans changer')}</button>
+                      <button className="btn danger" disabled={annulation.pin.length < 4} onClick={() => annulerAvecVente(c)}>{tr('Annuler commande et vente')}</button>
+                    </div>
+                  </div>
+                )}
+                {modifiable(c) && annulation?.id !== c.id && (
+                  <div className="grille-2">
+                    <button className="btn secondaire" onClick={() => commencerModification(c)}>{tr('Modifier la commande')}</button>
+                    <button className="btn danger" onClick={() => annuler(c)}>{tr('Annuler la commande')}</button>
+                  </div>
+                )}
+                <div className="puces enveloppe">
+                  {STATUTS_COMMANDE.map(([id]) => <button key={id} className={'puce' + (c.statut === id ? ' actif' : '')} onClick={() => c.statut !== id && changer(c, id)}>{libelleStatut(id)}</button>)}
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </Feuille>
+  );
+}
