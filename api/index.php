@@ -63,6 +63,7 @@ require __DIR__ . '/lib/push.php';
 require __DIR__ . '/lib/chat.php';
 require __DIR__ . '/lib/boutique-page.php';
 require __DIR__ . '/lib/virement.php';
+require __DIR__ . '/lib/livraison.php';
 
 ini_set('display_errors', '0'); // jamais de détail technique affiché au visiteur
 header('Content-Type: application/json; charset=utf-8');
@@ -110,6 +111,7 @@ try {
         'POST /messages' => routeMessagesEcrire(),
         'POST /contact' => routeContact(),
         'GET /parrainage' => routeParrainage(),
+        'GET /livraison/etat' => routeLivraisonEtat(),
         'GET /boutique' => routeBoutiqueLire(),
         'POST /boutique' => routeBoutiqueEnregistrer(),
         'GET /commandes-en-ligne' => routeCommandesEnLigneLire(),
