@@ -135,6 +135,7 @@ try {
         'GET /public/commande-suivi' => routeCommandeSuivi(),
         'GET /public/course' => routeCourseLire(),
         'POST /public/course/statut' => routeCourseStatut(),
+        'POST /public/course/position' => routeCoursePosition(),
         'POST /public/commande-suivi/notifier' => routeSuiviNotifier(),
         'GET /notifications' => routeNotificationsEtat(),
         'POST /push/abonner' => routePushAbonner(),

@@ -2573,4 +2573,11 @@ export const EN = {
   "Demandez au client son code de livraison à quatre chiffres et saisissez-le.": "Ask the customer for their four-digit delivery code and enter it.",
   "Code de livraison": "Delivery code",
   "Livraison terminée": "Delivery completed",
+  "Position du livreur": "Courier’s position",
+  "Position mise à jour à l’instant": "Position updated just now",
+  "Position mise à jour il y a {0} min": "Position updated {0} min ago",
+  "La position du livreur n’est pas disponible pour le moment.": "The courier’s position is not available right now.",
+  "Position non partagée : autorisez la localisation pour que le client voie où vous êtes.": "Position not shared: allow location so the customer can see where you are.",
+  "Pendant la course, votre position est partagée avec le client. Elle s’arrête à la livraison.": "During the delivery, your position is shared with the customer. It stops at handover.",
+  "Voir le livreur sur la carte": "See the courier on the map",
 };

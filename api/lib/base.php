@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 37;
+const VERSION_BASE = 38;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -291,6 +291,11 @@ const STRUCTURE = [
     'livreurs' => [
         'colonnes' => ['id' => 'ID', 'commerce_id' => 'ID', 'nom' => 'TEXTE', 'telephone' => 'VARCHAR(40)', 'actif' => 'ENTIER', 'cree_le' => 'DATE'],
         'cle' => ['id'], 'uniques' => [], 'index' => [['commerce_id']],
+    ],
+    // Dernière position du livreur pendant une course (lot L3) : une ligne par commande, effacée dès que la course est finie
+    'positions_course' => [
+        'colonnes' => ['commande_id' => 'ID', 'lat' => 'DOUBLE', 'lng' => 'DOUBLE', 'precision_m' => 'ENTIER', 'maj_le' => 'DATE'],
+        'cle' => ['commande_id'], 'uniques' => [], 'index' => [],
     ],
     // Autorisations données par le gérant (code PIN saisi sur l'appareil d'un vendeur : annuler une vente)
     'autorisations' => [

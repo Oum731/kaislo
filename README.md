@@ -636,3 +636,6 @@ Retrait ou livraison, frais et minimum réglés par la boutique, total calculé 
 
 ### Livraison par le commerçant, lot L2 (base v37, derrière `LivraisonActive`)
 Livreurs (fiches), course à lien propre, code de remise donné par le client, statut « en route » : voir `docs/chantier-livraison.md`.
+
+### Suivi du livreur sur carte, lot L3 (base v38, option `carte`)
+Position du livreur envoyée pendant la course seulement, vue par le client sur une carte, effacée à la livraison : voir `docs/chantier-livraison.md`.

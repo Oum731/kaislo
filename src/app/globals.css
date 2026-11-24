@@ -1131,6 +1131,7 @@ body:has(.menu-site-voile) .chat-bouton { display: none; }
 .decouverte-produit .annuaire-vignette { width: 100%; height: 92px; }
 .decouverte-boutique { position: fixed; inset: 0; z-index: 60; overflow-y: auto; overscroll-behavior: contain; background: var(--fond); }
 .decouverte-boutique-barre { position: sticky; top: 0; z-index: 2; padding: 10px 14px; background: var(--fond); border-bottom: 1px solid var(--bordure); }
+.suivi-carte { width: 100%; height: 240px; border: 0; border-radius: 8px; }
 .suivi-etapes { list-style: none; padding: 0; display: grid; gap: 10px; margin: 8px 0; }
 .suivi-etapes li { font-size: 1.05rem; }
 .suivi-ok { color: var(--vert); font-weight: 600; }

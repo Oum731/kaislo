@@ -30,6 +30,17 @@ export default function Course() {
       .catch((e) => setErreur(e.statut === 404 ? 'introuvable' : e.horsLigne ? 'hors-ligne' : e.message));
   }, []);
 
+  // Lot L3 : tant que la course est en route, la position du téléphone est envoyée toutes les dix secondes (pour la carte du client), puis arrêtée
+  const [partage, setPartage] = useState('');
+  useEffect(() => {
+    if (!course?.carte || course.statut !== 'en_route' || !navigator.geolocation) return undefined;
+    let arret = false;
+    const envoyer = (p) => appelApi('POST', '/public/course/position', { cle, lat: p.coords.latitude, lng: p.coords.longitude, precision: Math.round(p.coords.accuracy || 0) })
+      .then(() => !arret && setPartage('oui')).catch(() => {});
+    const id = navigator.geolocation.watchPosition(envoyer, () => !arret && setPartage('refuse'), { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+    return () => { arret = true; navigator.geolocation.clearWatch(id); };
+  }, [course?.carte, course?.statut, cle]);
+
   const agir = async (action) => {
     setErreur('');
     setOccupe(true);
@@ -79,6 +90,11 @@ export default function Course() {
             <input className="pin-saisie" inputMode="numeric" maxLength={4} autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))} aria-label={tr('Code de livraison')} />
             <button className="btn grand" disabled={occupe || code.length < 4} onClick={() => agir('livre')}>{tr('Livraison terminée')}</button>
           </div>
+        )}
+        {course.statut === 'en_route' && course.carte && (
+          partage === 'refuse'
+            ? <p className="alerte petit">{tr('Position non partagée : autorisez la localisation pour que le client voie où vous êtes.')}</p>
+            : <p className="tres-petit muet">{tr('Pendant la course, votre position est partagée avec le client. Elle s’arrête à la livraison.')}</p>
         )}
         {erreur && <p className="alerte">{texteErreur}</p>}
       </div>
