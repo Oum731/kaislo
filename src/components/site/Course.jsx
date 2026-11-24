@@ -73,7 +73,7 @@ export default function Course() {
           <b>{tr('À livrer à')}</b>
           <p>{course.client.nom}</p>
           <p style={{ fontWeight: 700 }}>{course.client.adresse}</p>
-          {course.note && <p className="petit muet">{tr('Note du client : {0}', [course.note])}</p>}
+          {course.note && <p className="petit muet" style={{ whiteSpace: 'pre-line' }}>{tr('Note du client : {0}', [course.note])}</p>}
           <a className="btn secondaire" href={'tel:+' + tel(course.client.telephone)}>{tr('Appeler le client')} · {course.client.telephone}</a>
         </div>
         <div className="carte pile">

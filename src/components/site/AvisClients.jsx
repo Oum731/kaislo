@@ -40,7 +40,7 @@ export default function AvisClients() {
           {rep.avis.map((a, i) => (
             <figure key={i} className="carte-avis">
               <Etoiles note={a.note} />
-              <blockquote lang={langueActive() === 'en' && a.texteEn ? 'en' : undefined}>{langueActive() === 'en' && a.texteEn ? a.texteEn : a.texte}</blockquote>
+              <blockquote style={{ whiteSpace: 'pre-line' }} lang={langueActive() === 'en' && a.texteEn ? 'en' : undefined}>{langueActive() === 'en' && a.texteEn ? a.texteEn : a.texte}</blockquote>
               <figcaption><b>{a.nom}</b> · {tt(typeCommerce(a.activite).nom)} · {a.ville}{a.pays && paysParId(a.pays)?.nom ? `, ${tt(paysParId(a.pays).nom)}` : ''}</figcaption>
             </figure>
           ))}

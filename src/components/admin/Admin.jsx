@@ -16,7 +16,7 @@ import { API_ACTIVE, appelApi } from '@/lib/api';
 import { etatAbonnement, LIBELLES_STATUT, DUREE_ESSAI_JOURS } from '@/lib/donnees/abonnement';
 import { paysParId, typeCommerce, numeroWhatsApp, PAYS } from '@/lib/donnees/modeles';
 import { formatPrix, formatDate, formatHeure, symbole, NOMS_DEVISES, initiales } from '@/lib/utils/format';
-import { Icone, Feuille, Puces, ChampMontant } from '@/components/ui';
+import { Icone, Feuille, Puces, ChampMontant, ZoneMessage } from '@/components/ui';
 import { prixAbonnement, prixApresJoursOfferts, prixCatalogue, prixListeFormule, prixTouteDevise, TAUX_CHANGE } from '@/lib/donnees/tarifs';
 import { ETAPES, etapeRelance, texteRelance, prenomDe } from '@/lib/donnees/relances';
 import { memoriserEspace, oublierEspace, enregistrerServiceWorker, ADRESSE_SITE, voirLeSite } from '@/lib/espace';
@@ -636,7 +636,7 @@ function Conversation({ commerceId, ctx, surEnvoi }) {
       </div>
       {erreur && <p className="alerte" style={{ margin: '0 14px 10px' }}>{erreur}</p>}
       <div className="saisie-message">
-        <textarea value={texte} onChange={(e) => setTexte(e.target.value)} placeholder="Votre réponse…" rows={2} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) envoyer(); }} />
+        <ZoneMessage valeur={texte} surChanger={setTexte} surEnvoyer={envoyer} placeholder="Votre réponse…" lignes={2} />
         <button className="btn" onClick={envoyer} disabled={!texte.trim()}>Répondre</button>
       </div>
     </div>
