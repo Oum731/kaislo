@@ -639,3 +639,6 @@ Livreurs (fiches), course à lien propre, code de remise donné par le client, s
 
 ### Suivi du livreur sur carte, lot L3 (base v38, option `carte`)
 Position du livreur envoyée pendant la course seulement, vue par le client sur une carte, effacée à la livraison : voir `docs/chantier-livraison.md`.
+
+### Paiement en ligne, lot L4 (base v39, option `paiement`)
+Prestataire de simulation « essai » pour tester sans argent ; interface `InterfacePasserelle` pour un vrai prestataire ; Kaislo ne touche jamais l'argent : voir `docs/chantier-livraison.md`.

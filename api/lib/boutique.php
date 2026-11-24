@@ -93,7 +93,7 @@ function versBoutique(?array $b, array $commerce): array
         'articlesGros' => count(array_filter(articlesPublies($commerce['id']), fn ($p) => prixGrosValide($p) !== null)),
         'description' => $b['description'] ?? '',
         'livraison' => $b['livraison'] ?? '',
-        'commande' => ['fraisLivraison' => isset($b['frais_livraison']) ? (float) $b['frais_livraison'] : null, 'minimumCommande' => isset($b['minimum_commande']) ? (float) $b['minimum_commande'] : null, 'livre' => empty($b['livraison_off']), 'retrait' => empty($b['retrait_off'])],
+        'commande' => ['fraisLivraison' => isset($b['frais_livraison']) ? (float) $b['frais_livraison'] : null, 'minimumCommande' => isset($b['minimum_commande']) ? (float) $b['minimum_commande'] : null, 'livre' => empty($b['livraison_off']), 'retrait' => empty($b['retrait_off']), 'paiementEnLigne' => !empty($b['paiement_en_ligne']), 'reversement' => (string) ($b['reversement'] ?? '')],
         'localisation' => isset($b['lat'], $b['lng']) ? ['lat' => (float) $b['lat'], 'lng' => (float) $b['lng']] : null,
         'lien' => $b ? lienBoutique($b['slug']) : '',
         'articlesPublies' => $nbPublies,
@@ -237,6 +237,14 @@ function routeBoutiqueEnregistrer(): never
         requete('UPDATE boutiques SET frais_livraison = ?, minimum_commande = ?, livraison_off = ?, retrait_off = ? WHERE commerce_id = ?',
             [$montantOuNul($e['fraisLivraison'] ?? ($avant['frais_livraison'] ?? null)), $montantOuNul($e['minimumCommande'] ?? ($avant['minimum_commande'] ?? null)), $livre, $retrait, $c['id']]);
     }
+    // Paiement en ligne (lot L4) : la boutique l'accepte, et dit où le prestataire lui reverse l'argent (obligatoire)
+    if (paiementEnLigneActif() && array_key_exists('paiementEnLigne', $e)) {
+        $accepte = !empty($e['paiementEnLigne']) ? 1 : 0;
+        $reversement = trim((string) ($e['reversement'] ?? ($avant['reversement'] ?? '')));
+        if ($accepte && mb_strlen($reversement) < 6) throw new ErreurApi('Indiquez où vous recevez l’argent (numéro de mobile money ou compte bancaire)');
+        if (mb_strlen($reversement) > 200) throw new ErreurApi('Reversement : 200 caractères au maximum');
+        requete('UPDATE boutiques SET paiement_en_ligne = ?, reversement = ? WHERE commerce_id = ?', [$accepte, $reversement, $c['id']]);
+    }
     journaliser($c['id'], $u['id'], 'boutique-enregistree', ['slug' => $slug, 'actif' => (bool) $actif]);
     $b = requete('SELECT * FROM boutiques WHERE commerce_id = ?', [$c['id']])->fetch();
     repondre(['ok' => true, 'boutique' => versBoutique($b, $c)]);
@@ -251,6 +259,7 @@ function versCommandeLigne(array $c): array
         'gros' => !empty($c['gros']),
         'mode' => $c['mode'] ?: 'livraison', 'frais' => (float) ($c['frais'] ?? 0),
         'livreur' => !empty($c['livreur_id']) ? ['id' => $c['livreur_id'], 'nom' => (string) $c['livreur_nom'], 'telephone' => (string) (requete('SELECT telephone FROM livreurs WHERE id = ?', [$c['livreur_id']])->fetch()['telephone'] ?? '')] : null,
+        'paiement' => ($c['paiement'] ?? '') === 'en_ligne' ? ['mode' => 'en_ligne', 'statut' => $c['paiement_statut']] : ['mode' => 'livraison', 'statut' => null],
         'lienCourse' => !empty($c['course_cle']) ? lienCourse((string) $c['course_cle']) : null,
         'position' => $c['statut'] === 'en_route' && optionLivraison('carte') ? positionCourse($c['id']) : null,
     ];
@@ -276,6 +285,7 @@ function routeCommandesEnLigneStatut(): never
     $c = requete('SELECT * FROM commandes_en_ligne WHERE id = ? AND commerce_id = ?', [(string) ($e['id'] ?? ''), $u['commerce_id']])->fetch();
     if (!$c) throw new ErreurApi('Commande introuvable', 404);
     if (array_key_exists('lignes', $e) || array_key_exists('client', $e)) {
+        if (in_array($c['paiement_statut'] ?? '', ['paye', 'a_rembourser', 'rembourse'], true)) throw new ErreurApi('Cette commande est déjà payée en ligne : on ne la modifie plus (annulez-la et remboursez-la si besoin)');
         exigerAbonnementPaye($u['commerce_id'], 'Abonnement non payé : activez-le pour modifier vos commandes.');
         if (in_array($c['statut'], ['livree', 'annulee'], true)) throw new ErreurApi('Une commande livrée ou annulée ne se modifie plus : changez d’abord son statut');
         $commerce = requete('SELECT * FROM commerces WHERE id = ?', [$u['commerce_id']])->fetch();
@@ -335,9 +345,12 @@ function routeCommandesEnLigneStatut(): never
     $statut = (string) ($e['statut'] ?? '');
     if (!in_array($statut, STATUTS_COMMANDE, true)) throw new ErreurApi('Statut inconnu');
     if ($statut === 'en_route' && !livraisonActive()) throw new ErreurApi('Statut inconnu');
+    // Commande à payer en ligne : on ne l'accepte qu'une fois payée (on peut toujours la refuser)
+    if (($c['paiement'] ?? '') === 'en_ligne' && in_array($c['paiement_statut'], ['a_payer', 'echoue'], true) && !in_array($statut, ['annulee', 'nouvelle'], true)) throw new ErreurApi('Cette commande n’est pas encore payée : attendez la confirmation du paiement');
     // Abonnement non payé : on peut encore refuser (annuler) une commande, mais plus la valider
     if ($statut !== 'annulee' && $statut !== 'nouvelle') exigerAbonnementPaye($u['commerce_id'], 'Abonnement non payé : activez-le pour valider vos commandes.');
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$statut, maintenant(), $c['id']]);
+    if ($statut === 'annulee' && $c['paiement_statut'] === 'paye') requete("UPDATE commandes_en_ligne SET paiement_statut = 'a_rembourser' WHERE id = ?", [$c['id']]); // payée en ligne puis annulée : à rembourser
     if (in_array($statut, ['livree', 'annulee', 'confirmee', 'prete'], true)) effacerPositionCourse($c['id']);
     if ($statut !== $c['statut']) notifierClientCommande($c, $statut); // le client qui suit sa commande est prévenu (lot L1)
     $c['statut'] = $statut;
@@ -377,7 +390,7 @@ function routeBoutiquePublique(): never
 // Ce que le client peut choisir à la commande dans Kaislo (lot L1)
 function reglagesCommande(array $b): array
 {
-    return ['livre' => empty($b['livraison_off']), 'retrait' => empty($b['retrait_off']), 'frais' => (float) ($b['frais_livraison'] ?? 0), 'minimum' => (float) ($b['minimum_commande'] ?? 0)];
+    return ['livre' => empty($b['livraison_off']), 'retrait' => empty($b['retrait_off']), 'frais' => (float) ($b['frais_livraison'] ?? 0), 'minimum' => (float) ($b['minimum_commande'] ?? 0), 'paiementEnLigne' => paiementEnLigneActif() && !empty($b['paiement_en_ligne'])];
 }
 
 // Ce que le public voit d'une boutique : réglages, catégories utilisées et articles publiés (API et page pour Google)
@@ -519,6 +532,9 @@ function routeCommandePublique(): never
     $tel = telephoneValide(texte($client, 'telephone', 'votre numéro de téléphone', true, 40), $c['pays'], 'votre numéro');
     // Commande dans Kaislo (lot L1) : retrait en boutique ou livraison ; sans le chantier, tout reste une livraison à une adresse
     $l1 = livraisonActive() && !$gros;
+    // Paiement en ligne (lot L4) : seulement si la boutique l'accepte ; sinon on le dit plutôt que de prendre une commande à payer dans le vide
+    $enLigne = $l1 && ($e['paiement'] ?? '') === 'en_ligne';
+    if ($enLigne && !(paiementEnLigneActif() && !empty($b['paiement_en_ligne']))) throw new ErreurApi('Cette boutique n’accepte pas le paiement en ligne', 400);
     $mode = $l1 && ($e['mode'] ?? '') === 'retrait' ? 'retrait' : 'livraison';
     if ($l1) {
         if ($mode === 'livraison' && !empty($b['livraison_off'])) throw new ErreurApi('Cette boutique ne livre pas : choisissez le retrait');
@@ -583,14 +599,20 @@ function routeCommandePublique(): never
         throw $err;
     }
     if ($l1) requete('UPDATE commandes_en_ligne SET mode = ?, frais = ?, suivi_cle = ? WHERE id = ?', [$mode, $frais, $suivi, $id]);
+    $urlPaiement = null;
+    if ($enLigne) {
+        requete("UPDATE commandes_en_ligne SET paiement = 'en_ligne' WHERE id = ?", [$id]);
+        $urlPaiement = sessionPaiement(requete('SELECT * FROM commandes_en_ligne WHERE id = ?', [$id])->fetch());
+    }
     journaliser($c['id'], null, 'commande-en-ligne', ['numero' => $numero, 'total' => $total]);
     ajouterClientDeCommande($c['id'], $nom, $tel['affichage'], $adresse);
     $commande = [
         'numero' => $numero, 'total' => $total, 'devise' => $c['devise'], 'lignes' => $lignes,
         'client' => ['nom' => $nom, 'telephone' => $tel['affichage'], 'adresse' => $adresse], 'note' => $note,
         'whatsapp' => $b['whatsapp_cle'], 'boutique' => $c['nom'], 'gros' => $gros,
-    ] + ($l1 ? ['mode' => $mode, 'frais' => $frais, 'suivi' => $suivi] : []);
-    notifierNouvelleCommande($c['id'], $commande); // e-mail et/ou WhatsApp au commerçant, après la réponse
+    ] + ($l1 ? ['mode' => $mode, 'frais' => $frais, 'suivi' => $suivi] : []) + ($urlPaiement ? ['paiementUrl' => $urlPaiement] : []);
+    // Commande à payer en ligne : le commerçant n'est prévenu qu'une fois le paiement confirmé
+    if (!$enLigne) notifierNouvelleCommande($c['id'], $commande); // e-mail et/ou WhatsApp au commerçant, après la réponse
     repondre(['ok' => true, 'commande' => $commande], 201);
 }
 
@@ -615,5 +637,6 @@ function routeCommandeSuivi(): never
         'livreur' => !empty($l['livreur_nom']) ? mb_substr(nomPropre(explode(' ', (string) $l['livreur_nom'])[0]), 0, 30) : null,
         'code' => $l['statut'] === 'en_route' && !empty($l['code_livraison']) ? (string) $l['code_livraison'] : null,
         'position' => $l['statut'] === 'en_route' && optionLivraison('carte') ? positionCourse($l['id']) : null,
+        'paiement' => ($l['paiement'] ?? '') === 'en_ligne' ? ['mode' => 'en_ligne', 'statut' => $l['paiement_statut']] : ['mode' => 'livraison', 'statut' => null],
     ], 'clePublique' => (function () { try { return cleVapid()['publique']; } catch (Throwable) { return null; } })()]);
 }

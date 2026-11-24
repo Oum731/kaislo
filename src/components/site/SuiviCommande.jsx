@@ -29,6 +29,10 @@ export default function SuiviCommande({ cle, surFermer }) {
     return () => { actif = false; clearInterval(t); };
   }, [cle]);
 
+  const payerMaintenant = async () => {
+    setMessagePush('');
+    try { window.location.href = (await appelApi('POST', '/public/commande-suivi/payer', { cle })).url; } catch (e) { setMessagePush(e.horsLigne ? tr('Pas de connexion internet : le statut se mettra à jour dès que le réseau revient.') : e.message); }
+  };
   const prevenir = async () => {
     setMessagePush('');
     try {
@@ -56,6 +60,17 @@ export default function SuiviCommande({ cle, surFermer }) {
             <ol className="suivi-etapes">
               {etapesCommande(c.statut, c.mode).map((e) => <li key={e.id} className={'suivi-' + e.etat}><span aria-hidden="true">{e.etat === 'ok' ? '✓' : e.etat === 'en-cours' ? '●' : '○'}</span> {e.libelle}</li>)}
             </ol>
+            {c.paiement?.mode === 'en_ligne' && (
+              <div className="carte pile">
+                <b>{c.paiement.statut === 'paye' ? tr('Payée en ligne') : c.paiement.statut === 'rembourse' ? tr('Remboursée') : c.paiement.statut === 'a_rembourser' ? tr('Remboursement en cours') : tr('Paiement en attente')}</b>
+                {['a_payer', 'echoue'].includes(c.paiement.statut) && c.statut !== 'annulee' && (
+                  <>
+                    <p className="petit muet">{c.paiement.statut === 'echoue' ? tr('Le paiement n’a pas abouti. Vous pouvez réessayer.') : tr('La boutique recevra votre commande dès que le paiement est confirmé.')}</p>
+                    <button type="button" className="btn grand" onClick={payerMaintenant}>{tr('Payer maintenant')}</button>
+                  </>
+                )}
+              </div>
+            )}
             {c.livreur && !fini && <p className="petit">{tr('Livreur : {0}', [c.livreur])}</p>}
             {c.statut === 'en_route' && (
               c.position ? (
