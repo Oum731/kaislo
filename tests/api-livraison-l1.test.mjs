@@ -80,6 +80,20 @@ test('livraison ouverte : frais, minimum, retrait sans adresse et suivi par le c
   assert.equal(cl.frais, 10);
   assert.equal((await api('POST', '/commandes-en-ligne', { id: cl.id, statut: 'confirmee' }, jeton)).ok, true);
   assert.equal((await api('GET', '/public/commande-suivi?cle=' + l.commande.suivi)).commande.statut, 'confirmee');
+  // Notifications : le client abonne son appareil à sa commande, puis reçoit un message à chaque changement de statut, dans sa langue
+  const ENDPOINT = 'https://fcm.googleapis.com/fcm/send/client-test-1';
+  assert.match(s1.clePublique, /^[A-Za-z0-9_-]{80,}$/);
+  assert.equal((await api('POST', '/public/commande-suivi/notifier', { cle: 'c'.repeat(20), endpoint: ENDPOINT })).statut, 404);
+  assert.equal((await api('POST', '/public/commande-suivi/notifier', { cle: l.commande.suivi, endpoint: 'https://exemple.test/push' })).statut, 400);
+  assert.equal((await api('POST', '/public/commande-suivi/notifier', { cle: l.commande.suivi, endpoint: ENDPOINT, appareil: 'Test', langue: 'en' })).ok, true);
+  assert.equal((await api('POST', '/commandes-en-ligne', { id: cl.id, statut: 'prete' }, jeton)).ok, true);
+  const m1 = await api('POST', '/push/message', { endpoint: ENDPOINT });
+  assert.equal(m1.messages[0].titre, 'Épicerie L1');
+  assert.match(m1.messages[0].texte, /Your order no\. \d+ is ready: delivery is being prepared\./);
+  assert.equal((await api('POST', '/commandes-en-ligne', { id: cl.id, statut: 'annulee' }, jeton)).ok, true);
+  assert.match((await api('POST', '/push/message', { endpoint: ENDPOINT })).messages[0].texte, /was cancelled by the shop/);
+  // Le gérant, lui, ne reçoit pas les messages du client (l'abonnement du client n'est pas celui d'un gérant)
+  assert.equal((await api('GET', '/notifications', null, jeton)).push.appareils, 0);
   // Une clé inconnue ne révèle rien
   assert.equal((await api('GET', '/public/commande-suivi?cle=' + 'b'.repeat(20))).statut, 404);
   assert.equal((await api('GET', '/public/commande-suivi?cle=abc')).statut, 404);

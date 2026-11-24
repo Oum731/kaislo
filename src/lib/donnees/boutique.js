@@ -26,8 +26,8 @@ export const nombreArticles = (panier) => panier.reduce((n, l) => n + l.quantite
 export function erreurOptions(produit, optionIds) {
   for (const g of produit.groupes || []) {
     const choisies = g.options.filter((o) => optionIds.includes(o.id));
-    if (g.obligatoire && !choisies.length) return `Choisissez : ${g.nom}`;
-    if (g.type === 'unique' && choisies.length > 1) return `Une seule option : ${g.nom}`;
+    if (g.obligatoire && !choisies.length) return tr('Choisissez : {0}', [g.nom]);
+    if (g.type === 'unique' && choisies.length > 1) return tr('Une seule option : {0}', [g.nom]);
   }
   return null;
 }

@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 35;
+const VERSION_BASE = 36;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -165,6 +165,7 @@ const STRUCTURE = [
         'colonnes' => [
             'id' => 'ID', 'commerce_id' => 'ID', 'utilisateur_id' => 'ID', 'endpoint_hash' => 'VARCHAR(64)', 'endpoint' => 'LONG',
             'appareil' => 'TEXTE', 'cree_le' => 'DATE', 'vu_le' => 'DATE', 'echecs' => 'ENTIER',
+            'langue' => 'VARCHAR(4)', // langue du client qui suit une commande (notification dans sa langue) ; vide pour le gérant et l'équipe
         ],
         'cle' => ['id'], 'uniques' => [['endpoint_hash']], 'index' => [['commerce_id']],
     ],
@@ -405,6 +406,11 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 35 : langue des clients qui suivent une commande
+    if ($version >= 1 && $version < 36) {
+        $essayer('ALTER TABLE abonnements_push ADD COLUMN langue VARCHAR(4) NULL');
     }
 
     // Bases en version 1 à 34 : commande dans Kaislo (lot L1)

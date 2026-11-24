@@ -51,3 +51,16 @@ export async function desactiverPush(jeton, base = '/push') {
   await abonnement.unsubscribe();
   await appelApi('POST', base + '/desabonner', { endpoint }, jeton).catch(() => {});
 }
+
+/** Client qui suit une commande (lot L1) : autorise les notifications et abonne cet appareil à la commande, sans compte. */
+export async function activerPushSuivi(clePublique, cle, langue, enregistrerSw) {
+  const erreur = (code) => Object.assign(new Error(code), { code });
+  if (!pushSupporte() || !clePublique) throw erreur('indisponible');
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') throw erreur('refuse');
+  if (enregistrerSw) await enregistrerSw(); // le site public n'enregistre pas toujours le service worker
+  const reg = await navigator.serviceWorker.ready;
+  const abonnement = (await reg.pushManager.getSubscription())
+    || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: versOctets(clePublique) }));
+  await appelApi('POST', '/public/commande-suivi/notifier', { cle, endpoint: abonnement.endpoint, appareil: nomAppareil(), langue });
+}

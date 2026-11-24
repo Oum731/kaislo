@@ -55,4 +55,6 @@ Chaque lot ajoute sa part de migration (numéro de base suivant) ; rien n'est cr
 - Suivi : une clé au hasard par commande, gardée dans l'appareil du client (jamais dans une adresse de page) ; `GET /api/public/commande-suivi` ; l'accueil affiche « Mes commandes » ; statuts (envoyée, acceptée, prête, livrée) mis à jour toutes les 20 s.
 - Commerçant : la liste Commandes en ligne indique retrait et frais de livraison ; les statuts existants alimentent le suivi du client.
 - Sans l'interrupteur : la commande reste celle d'avant (WhatsApp, pas de frais, pas de suivi).
-- Pas encore fait dans L1 : notification au client quand le statut change (push), vérification sur un vrai téléphone, textes anglais de la boutique ouverte.
+- Notification : le client peut s'abonner depuis le suivi (« Me prévenir quand le statut change ») ; à chaque changement de statut il reçoit une notification, en français ou en anglais selon sa langue (même mécanisme que celles du gérant, abonnement lié à la clé de suivi, 3 appareils au plus ; base v36). Sur iPhone, seulement après ajout de Kaislo à l'écran d'accueil.
+- Anglais : la boutique ouverte, le panier, le suivi, la discussion et les notifications sont traduits. Les messages d'erreur renvoyés par le serveur et le message WhatsApp envoyé à la boutique restent en français.
+- Pas encore fait dans L1 : essai sur de vrais téléphones (Android et iPhone), y compris la réception réelle des notifications.

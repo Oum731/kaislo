@@ -18,14 +18,16 @@ export function oublierCommande(cle) {
   try { localStorage.setItem(CLE, JSON.stringify(lireCommandesSuivies().filter((c) => c.cle !== cle))); } catch { /* stockage bloqué */ }
 }
 
+import { tr } from '@/lib/i18n';
+
 // Étapes vues par le client, d'après le statut du commerçant (nouvelle, confirmee, prete, livree, annulee)
 export function etapesCommande(statut, mode) {
   const retrait = mode === 'retrait';
   const base = [
-    ['nouvelle', 'Commande envoyée'],
-    ['confirmee', 'Acceptée par la boutique'],
-    ['prete', retrait ? 'Prête à retirer' : 'Prête, la livraison se prépare'],
-    ['livree', retrait ? 'Retirée' : 'Livrée'],
+    ['nouvelle', tr('Commande envoyée')],
+    ['confirmee', tr('Acceptée par la boutique')],
+    ['prete', retrait ? tr('Prête à retirer') : tr('Prête, la livraison se prépare')],
+    ['livree', retrait ? tr('Retirée') : tr('Livrée')],
   ];
   const i = base.findIndex(([id]) => id === statut);
   return base.map(([id, libelle], k) => ({ id, libelle, etat: statut === 'annulee' ? (k === 0 ? 'ok' : 'attente') : k < i || (k === i && statut === 'livree') ? 'ok' : k === i ? 'en-cours' : 'attente' }));
