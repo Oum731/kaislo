@@ -31,7 +31,8 @@ const garderClient = (slug, c) => {
   } catch { /* non gardé */ }
 };
 
-export default function Boutique() {
+// slugFixe : la boutique s'ouvre dans l'accueil du site (sans adresse propre) ; sinon elle se lit dans l'adresse (démo, lien des grossistes)
+export default function Boutique({ slugFixe = '' }) {
   const [slug, setSlug] = useState(null);
   const [boutique, setBoutique] = useState(null);
   const [erreur, setErreur] = useState('');
@@ -50,7 +51,7 @@ export default function Boutique() {
   const [demo, setDemo] = useState(null); // identifiant du commerce de démo, ou null
   const [pro, setPro] = useState(''); // clé du lien privé des grossistes (?pro=…) : prix de gros, au carton
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(slugFixe ? '' : window.location.search);
     // Démo : kaislo.com/boutique/?demo=resto-ivoire (articles de la démo, commande gardée dans l'appareil)
     const idDemo = params.get('demo');
     if (idDemo) {
@@ -65,7 +66,7 @@ export default function Boutique() {
     }
     // /boutique/nom-du-commerce/ (page réécrite par le serveur, avec le contenu pour Google) ou ancienne forme /boutique/?b=nom
     const dansLAdresse = /^\/boutique\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(window.location.pathname);
-    const s = (params.get('b') || (dansLAdresse ? dansLAdresse[1] : '')).toLowerCase();
+    const s = (slugFixe || params.get('b') || (dansLAdresse ? dansLAdresse[1] : '')).toLowerCase();
     document.getElementById('seo-boutique')?.remove(); // contenu en HTML simple ajouté par le serveur pour Google : la vitrine prend le relais
     const cle = (params.get('pro') || '').replace(/[^a-z0-9]/gi, '').slice(0, 40);
     setPro(cle);

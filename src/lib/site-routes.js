@@ -10,6 +10,8 @@ import GUIDES_ADRESSES from '@/lib/guides-slugs.json';
 
 export const PAGES = [
   ['/', '/en/'],
+  ['/vendeurs/', '/en/sellers/'],
+  ['/livreurs/', '/en/couriers/'],
   ['/tarifs/', '/en/pricing/'],
   ['/gestion-restaurant/', '/en/restaurant-management/'],
   ['/gestion-epicerie/', '/en/grocery-store-management/'],

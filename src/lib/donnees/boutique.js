@@ -86,7 +86,7 @@ export const STATUTS_COMMANDE = [
   ['nouvelle', 'Nouvelle'], ['confirmee', 'Confirmée'], ['prete', 'Prête'], ['livree', 'Livrée'], ['annulee', 'Annulée'],
 ];
 
-// ---------- Annuaire des boutiques (kaislo.com/boutiques/) ----------
+// ---------- Boutiques de l’accueil de kaislo.com ----------
 // Les métiers sont regroupés en rayons que les clients comprennent. L'ordre est celui de l'affichage.
 export const CATEGORIES_ANNUAIRE = [
   { id: 'restauration', nom: 'Restaurants, maquis et cafés', emoji: '🍽️', types: ['restaurant', 'maquis', 'bar'] },
@@ -119,14 +119,14 @@ export function grouperBoutiques(boutiques, { texte = '', pays = '', categorie =
 /** Articles qu'on peut publier d'un geste : actifs, avec un nom et un prix, pas encore « Vendre en ligne ». */
 export const articlesAPublier = (produits = []) => produits.filter((p) => !p.enLigne && p.actif !== false && String(p.nom || '').trim() && Number(p.prix) > 0);
 
-/** Message au gérant : où en est sa boutique par rapport à la liste kaislo.com/boutiques (raison envoyée par le serveur). */
+/** Message au gérant : où en est sa boutique par rapport à l’accueil de kaislo.com (raison envoyée par le serveur). */
 export function messageAnnuaire(b) {
   if (!b) return null;
-  if (b.dansAnnuaire) return { ok: true, texte: tr('Votre boutique est dans la liste kaislo.com/boutiques : les clients de votre pays la trouvent.') };
+  if (b.dansAnnuaire) return { ok: true, texte: tr('Votre boutique est sur l’accueil de kaislo.com : les clients de votre pays la trouvent.') };
   const raisons = {
-    aucunArticle: tr('Votre boutique n’est pas encore dans la liste kaislo.com/boutiques : aucun article n’est publié en ligne. Publiez au moins un article.'),
-    desactivee: tr('Votre boutique n’est pas dans la liste kaislo.com/boutiques : elle est désactivée. Cochez « Boutique en ligne activée », puis Enregistrer.'),
-    privee: tr('Votre boutique n’est pas dans la liste kaislo.com/boutiques : vous avez choisi de ne pas l’afficher. Cochez « Afficher ma boutique sur kaislo.com/boutiques », puis Enregistrer.'),
+    aucunArticle: tr('Votre boutique n’est pas encore sur l’accueil de kaislo.com : aucun article n’est publié en ligne. Publiez au moins un article.'),
+    desactivee: tr('Votre boutique n’est pas sur l’accueil de kaislo.com : elle est désactivée. Cochez « Boutique en ligne activée », puis Enregistrer.'),
+    privee: tr('Votre boutique n’est pas sur l’accueil de kaislo.com : vous avez choisi de ne pas l’afficher. Cochez « Apparaître près de mes clients sur kaislo.com », puis Enregistrer.'),
     abonnement: tr('Votre boutique est fermée : l’abonnement est expiré. Réglez-le pour qu’elle revienne dans la liste.'),
     suspendu: tr('Votre commerce est suspendu : contactez Kaislo.'),
     pasDeBoutique: tr('Votre boutique n’est pas encore créée : activez-la et enregistrez.'),

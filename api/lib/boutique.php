@@ -392,7 +392,8 @@ function donneesBoutiquePublique(array $b, array $c, bool $gros = false): array
 // GET /api/public/boutiques : annuaire pour les clients (sans numéro WhatsApp : il n'apparaît que sur la page de la boutique)
 function routeBoutiquesAnnuaire(): never
 {
-    $demande = codePaysValide($_GET['pays'] ?? null); // pays choisi par le visiteur
+    $src = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' ? entree() : $_GET; // POST : position du visiteur dans le corps de la demande
+    $demande = codePaysValide($src['pays'] ?? null); // pays choisi par le visiteur
     $pays = $demande ?? paysDeLAdresse(adresseIp());
     $liste = [];
     $disponibles = [];

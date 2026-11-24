@@ -97,7 +97,7 @@ test('message du gérant : la boutique est dans la liste, ou la raison précise 
   assert.equal(messageAnnuaire(null), null);
   const ok = messageAnnuaire({ dansAnnuaire: true, raisonAnnuaire: '' });
   assert.equal(ok.ok, true);
-  assert.match(ok.texte, /dans la liste kaislo\.com\/boutiques/);
+  assert.match(ok.texte, /sur l’accueil de kaislo\.com/);
   for (const raison of ['aucunArticle', 'desactivee', 'privee', 'abonnement', 'suspendu', 'pasDeBoutique']) {
     const m = messageAnnuaire({ dansAnnuaire: false, raisonAnnuaire: raison });
     assert.equal(m.ok, false, raison);
