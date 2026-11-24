@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // ACCUEIL PAR PROXIMITÉ : les produits et les boutiques autour du client, de la plus proche à la plus lointaine.
 // Aucune boutique n'a d'adresse propre à partager : un clic ouvre la boutique dans cette page.
-// La position (bouton « Autour de moi ») sert seulement à classer : elle est arrondie (≈ 100 m), gardée dans l'appareil du visiteur
+// La position (demandée à l'arrivée) sert seulement à classer : elle est arrondie (≈ 100 m), gardée dans l'appareil du visiteur
 // et envoyée au serveur dans le corps de la demande, sans être conservée.
 // ------------------------------------------------------------
 import { useEffect, useMemo, useState } from 'react';
@@ -90,12 +90,8 @@ export default function Decouverte() {
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     );
   };
-  // Si le visiteur a déjà autorisé la localisation pour le site, on la reprend sans lui redemander
-  useEffect(() => {
-    if (lirePosition() || !navigator.permissions?.query) return;
-    navigator.permissions.query({ name: 'geolocation' }).then((r) => { if (r.state === 'granted') localiser(); }).catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const oublier = () => { garderPosition(null); setPosition(null); };
+  // Position demandée à l'arrivée (une seule fois) ; refusée, le pays déduit suffit et les boutiques restent affichées sans distance
+  useEffect(() => { if (!lirePosition()) localiser(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!pays) return undefined;
@@ -134,19 +130,7 @@ export default function Decouverte() {
   const disponibles = Object.keys(donnees?.paysDisponibles || {});
   const changerPays = (id) => { choisirPays(id); setPays(id); };
 
-  const barre = (
-    <div className="decouverte-barre">
-      <button type="button" className="btn petit" onClick={localiser}>{position ? tr('Mettre à jour ma position') : tr('Autour de moi')}</button>
-      {position && <button type="button" className="lien petit" onClick={oublier}>{tr('Oublier ma position')}</button>}
-      <label className="petit decouverte-pays">{tr('Pays')}{' '}
-        <select value={paysActuel?.id === 'XX' ? '' : pays || ''} onChange={(e) => e.target.value && changerPays(e.target.value)} aria-label={tr('Changer de pays')}>
-          <option value="">—</option>
-          {PAYS.filter((p) => p.id !== 'XX').map((p) => <option key={p.id} value={p.id}>{tt(p.nom)}{disponibles.includes(p.id) ? ' ●' : ''}</option>)}
-        </select>
-      </label>
-      {message && <span className="petit muet" role="status">{message}</span>}
-    </div>
-  );
+  const barre = message ? <p className="petit muet" role="status">{message}</p> : null;
 
   if (ouverte) {
     return (
@@ -167,6 +151,12 @@ export default function Decouverte() {
         <div className="annuaire-vide">
           <h2>{paysActuel && paysActuel.id !== 'XX' ? tr('Pas encore de boutique dans votre pays') : tr('Choisissez votre pays')}</h2>
           <p className="muet">{tr('Les commerçants qui utilisent Kaislo ouvrent leur boutique : elles apparaîtront ici dès qu’elles seront prêtes.')}</p>
+          <label className="petit decouverte-pays">{tr('Pays')}{' '}
+            <select value={paysActuel?.id === 'XX' ? '' : pays || ''} onChange={(e) => e.target.value && changerPays(e.target.value)} aria-label={tr('Changer de pays')}>
+              <option value="">—</option>
+              {PAYS.filter((p) => p.id !== 'XX').map((p) => <option key={p.id} value={p.id}>{tt(p.nom)}{disponibles.includes(p.id) ? ' ●' : ''}</option>)}
+            </select>
+          </label>
           {autres.length > 0 && <p className="petit">{tr('Boutiques disponibles :')} {autres.map((p, i) => <span key={p.id}>{i ? ', ' : ''}<button type="button" className="lien" onClick={() => changerPays(p.id)}>{tt(p.nom)}</button></span>)}</p>}
           <p><Link prefetch={false} className="btn" href="/app/?inscription=1">{tr('Vous êtes commerçant ? Ouvrez votre boutique')}</Link></p>
         </div>
@@ -204,8 +194,7 @@ export default function Decouverte() {
       {filtrees.length > 0 && (
         <section className="annuaire-rayon">
           <h2>{position ? tr('Boutiques près de vous') : tr('Boutiques')} <span className="petit muet">({filtrees.length})</span></h2>
-          {!position && <p className="petit muet">{tr('Touchez « Autour de moi » pour classer les boutiques de la plus proche à la plus lointaine.')}</p>}
-          <div className="annuaire-grille">{filtrees.map((b) => <CarteBoutique key={b.slug} b={b} ouvrir={setOuverte} />)}</div>
+                    <div className="annuaire-grille">{filtrees.map((b) => <CarteBoutique key={b.slug} b={b} ouvrir={setOuverte} />)}</div>
         </section>
       )}
     </div>

@@ -27,7 +27,7 @@ export default function Accueil({ lang }) {
       <main>
         <section className="section decouverte-section">
           <div className="site-largeur">
-            <h1 className="decouverte-titre">{tr('Les boutiques et produits près de chez vous.')}</h1>
+            <h1 className="sr-only">{tr('Les boutiques et produits près de chez vous.')}</h1>
             <Decouverte />
             <p className="tres-petit muet annuaire-avertissement">{tr('Les boutiques sont tenues par des commerçants indépendants. Kaislo est un outil qui relie les boutiques et leurs clients : il n’est pas le vendeur et n’encaisse aucun paiement. Confirmez le prix et la disponibilité avec la boutique.')}</p>
           </div>
