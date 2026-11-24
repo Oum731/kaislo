@@ -8,7 +8,7 @@
 // ET écrire l'ALTER TABLE correspondant dans migrer() (bases déjà installées).
 // ------------------------------------------------------------
 
-const VERSION_BASE = 38;
+const VERSION_BASE = 39;
 
 // Types « neutres », traduits pour MySQL ou SQLite
 //   ID : identifiant texte · TEXTE : texte court · LONG : texte long (JSON) · ENTIER · MONTANT · DATE (texte ISO)
@@ -270,6 +270,7 @@ const STRUCTURE = [
             'chat_off' => 'ENTIER', // 1 = le commerçant a désactivé la discussion en direct de sa boutique
             'pro_cle' => 'VARCHAR(40)', // clé du lien privé des grossistes (…/?pro=clé) ; vide = pas de lien de gros
             'publique' => 'ENTIER', // 1 = affichée sur l'accueil de kaislo.com (boutiques proches du client)
+            'paiement_en_ligne' => 'ENTIER', 'reversement' => 'TEXTE', // lot L4 : la boutique accepte le paiement en ligne, et où le prestataire lui reverse l'argent
             'frais_livraison' => 'MONTANT', 'minimum_commande' => 'MONTANT', 'livraison_off' => 'ENTIER', 'retrait_off' => 'ENTIER', // commande dans Kaislo (lot L1)
             'lat' => 'DOUBLE', 'lng' => 'DOUBLE', // position de la boutique (sert seulement à classer par distance ; jamais montrée telle quelle)
             'description' => 'LONG', 'livraison' => 'LONG', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
@@ -282,6 +283,7 @@ const STRUCTURE = [
             'adresse' => 'TEXTE', 'note' => 'LONG', 'lignes' => 'LONG', 'total' => 'MONTANT', 'devise' => 'VARCHAR(6)',
             'statut' => 'VARCHAR(12)', 'cree_le' => 'DATE', 'modifie_le' => 'DATE',
             'gros' => 'ENTIER', // 1 = commande passée par le lien des grossistes (prix de gros, au carton)
+            'paiement' => 'VARCHAR(12)', 'paiement_statut' => 'VARCHAR(14)', 'paiement_ref' => 'VARCHAR(40)', 'commission' => 'MONTANT', // lot L4 : paiement en ligne (livraison | en_ligne), son état, la référence chez le prestataire, la commission
             'livreur_id' => 'ID', 'livreur_nom' => 'TEXTE', 'course_cle' => 'VARCHAR(24)', 'code_livraison' => 'VARCHAR(8)', // lot L2 : livreur du commerçant, lien de sa course, code que le client donne à la remise
             'mode' => 'VARCHAR(10)', 'frais' => 'MONTANT', 'suivi_cle' => 'VARCHAR(24)', // commande dans Kaislo (lot L1) : retrait ou livraison, frais de livraison, clé de suivi du client
         ],
@@ -417,6 +419,17 @@ function migrer(PDO $pdo, string $driver): void
     // Bases en version 1 à 17 : confirmation « outil de gestion » pour la restauration
     if ($version >= 1 && $version < 18) {
         $essayer('ALTER TABLE commerces ADD COLUMN avis_restauration_le VARCHAR(30) NULL');
+    }
+
+    // Bases en version 1 à 38 : paiement en ligne (lot L4)
+    if ($version >= 1 && $version < 39) {
+        $montant = $driver !== 'sqlite' ? 'DECIMAL(14,2)' : 'REAL';
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN paiement VARCHAR(12) NULL');
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN paiement_statut VARCHAR(14) NULL');
+        $essayer('ALTER TABLE commandes_en_ligne ADD COLUMN paiement_ref VARCHAR(40) NULL');
+        $essayer("ALTER TABLE commandes_en_ligne ADD COLUMN commission $montant NULL");
+        $essayer('ALTER TABLE boutiques ADD COLUMN paiement_en_ligne INTEGER NULL');
+        $essayer('ALTER TABLE boutiques ADD COLUMN reversement VARCHAR(255) NULL');
     }
 
     // Bases en version 1 à 36 : livreur du commerçant (lot L2)
