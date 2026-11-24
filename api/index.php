@@ -130,6 +130,7 @@ try {
         'GET /public/boutique-image' => routeBoutiqueImage(),
         'POST /public/commande' => routeCommandePublique(),
         'GET /public/commande-suivi' => routeCommandeSuivi(),
+        'POST /public/commande-suivi/notifier' => routeSuiviNotifier(),
         'GET /notifications' => routeNotificationsEtat(),
         'POST /push/abonner' => routePushAbonner(),
         'POST /push/desabonner' => routePushDesabonner(),

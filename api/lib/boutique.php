@@ -334,6 +334,7 @@ function routeCommandesEnLigneStatut(): never
     // Abonnement non payé : on peut encore refuser (annuler) une commande, mais plus la valider
     if ($statut !== 'annulee' && $statut !== 'nouvelle') exigerAbonnementPaye($u['commerce_id'], 'Abonnement non payé : activez-le pour valider vos commandes.');
     requete('UPDATE commandes_en_ligne SET statut = ?, modifie_le = ? WHERE id = ?', [$statut, maintenant(), $c['id']]);
+    if ($statut !== $c['statut']) notifierClientCommande($c, $statut); // le client qui suit sa commande est prévenu (lot L1)
     $c['statut'] = $statut;
     repondre(['ok' => true, 'commande' => versCommandeLigne($c)]);
 }
@@ -605,5 +606,5 @@ function routeCommandeSuivi(): never
     repondre(['ok' => true, 'commande' => [
         'numero' => (int) $l['numero'], 'statut' => $l['statut'], 'mode' => $l['mode'] ?: 'livraison', 'boutique' => $c['nom'] ?? '', 'whatsapp' => $b['whatsapp_cle'] ?? '',
         'adresse' => $l['adresse'], 'total' => (float) $l['total'], 'frais' => (float) ($l['frais'] ?? 0), 'devise' => $l['devise'], 'creeLe' => $l['cree_le'], 'modifieLe' => $l['modifie_le'], 'lignes' => $lignes,
-    ]]);
+    ], 'clePublique' => (function () { try { return cleVapid()['publique']; } catch (Throwable) { return null; } })()]);
 }
