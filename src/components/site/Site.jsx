@@ -110,7 +110,7 @@ export function PiedSite({ cote = 'vendeur' }) {
           {vendeur ? (
             <>
           <div>
-            <h4>{tr('Kaislo')}</h4>
+            <h2>{tr('Kaislo')}</h2>
             <Link href={lien('/gestion-restaurant/')}>{tr('Gestion pour restaurant')}</Link>
             <Link href={lien('/gestion-epicerie/')}>{tr('Gestion pour épicerie')}</Link>
             <Link href={lien('/gestion-stock/')}>{tr('Gestion de stock et inventaire')}</Link>
@@ -123,25 +123,25 @@ export function PiedSite({ cote = 'vendeur' }) {
             <Link prefetch={false} href={LIEN_INSCRIPTION}>{tr('Créer mon commerce')}</Link>
           </div>
           <div>
-            <h4>{tr('Par activité')}</h4>
+            <h2>{tr('Par activité')}</h2>
             {Object.values(ACTIVITES()).map((a) => <Link key={a.lien} href={lien(a.lien)}>{a.nom}</Link>)}
           </div>
             </>
           ) : (
             <div>
-              <h4>{tr('Kaislo')}</h4>
+              <h2>{tr('Kaislo')}</h2>
               <Link href={lien('/vendeurs/')}>{tr('Je suis vendeur')}</Link>
               <Link href={lien('/livreurs/')}>{tr('Je suis livreur')}</Link>
             </div>
           )}
           <div>
-            <h4>{tr('Informations légales')}</h4>
+            <h2>{tr('Informations légales')}</h2>
             {PAGES_LEGALES().map(([lien, nom]) => <Link key={lien} href={lien}>{nom}</Link>)}
             <GererCookies />
             {langueActive() === 'en' && <p className="tres-petit" style={{ opacity: 0.7 }}>{tr('Pages juridiques en français')}</p>}
           </div>
           <div>
-            <h4>{tr('Contact')}</h4>
+            <h2>{tr('Contact')}</h2>
             <a href={`https://wa.me/${CONTACT_WHATSAPP}`} target="_blank" rel="noreferrer">{tr('WhatsApp')} {CONTACT_WHATSAPP_AFFICHE}</a>
             <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
             <a href="https://amorac.com" target="_blank" rel="noreferrer">{tr('amorac.com')}</a>

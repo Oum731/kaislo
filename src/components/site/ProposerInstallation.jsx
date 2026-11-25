@@ -87,7 +87,7 @@ export default function ProposerInstallation() {
     // Bouton directement visible : un toucher installe (Chrome/Edge) ou ouvre l'explication des gestes
     return (
       <div className="proposer-install compact" role="region" aria-label={tr('Installer Kaislo sur votre téléphone')}>
-        <img src={chemin('/icons/icone-192.png')} alt="" width="40" height="40" />
+        <img src={chemin('/icons/icone-192.png')} alt="Kaislo" width="40" height="40" />
         <div className="proposer-install-texte">
           <b>{tr('Installer Kaislo sur votre téléphone')}</b>
           <span className="tres-petit muet">{tr('Plein écran, même sans internet.')}</span>
@@ -103,7 +103,7 @@ export default function ProposerInstallation() {
     <div className="proposer-install" role="dialog" aria-label={tr('Installer Kaislo sur votre téléphone')}>
       <button type="button" className="proposer-install-fermer icone-btn" onClick={plusTard} aria-label={tr('Masquer')}><Icone nom="fermer" taille="sm" /></button>
       <div className="proposer-install-tete">
-        <img src={chemin('/icons/icone-192.png')} alt="" width="48" height="48" />
+        <img src={chemin('/icons/icone-192.png')} alt="Kaislo" width="48" height="48" />
         <div>
           <b>{parcours === 'ouvrir' ? tr('Ouvrez Kaislo dans votre navigateur') : tr('Installez Kaislo sur votre téléphone')}</b>
           <p className="petit muet">{parcours === 'ouvrir' ? tr('Cette fenêtre ne permet pas d’installer. Deux gestes et c’est réglé.') : tr('Trois gestes, et Kaislo s’ouvre en plein écran comme une application.')}</p>
