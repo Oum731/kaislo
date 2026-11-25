@@ -768,7 +768,7 @@ button.kpi:hover { border-color: var(--bordure-forte); }
 @media (min-width: 800px) { .site-pied .colonnes { grid-template-columns: 1.4fr 1fr 1fr 1.3fr 1fr 1fr; } }
 /* Liste des pays : sur deux colonnes (15 pays) */
 .site-pied .liste-pays { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
-.site-pied h4 { color: var(--creme); font-size: 14px; margin-bottom: 10px; }
+.site-pied h2, .site-pied h4 { color: var(--creme); font-size: 14px; margin-bottom: 10px; }
 .site-pied a { display: block; text-decoration: none; padding: 3px 0; }
 .site-pied a:hover, .site-pied .lien-pied:hover { color: var(--creme); }
 .site-pied .lien-pied { display: block; background: none; border: 0; padding: 3px 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
