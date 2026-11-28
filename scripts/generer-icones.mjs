@@ -24,11 +24,12 @@ const VERT = '#05561F', CREME = '#F6F5F1', SAFRAN = '#F5B014', ENCRE = '#14211C'
 // LOGO FOURNI : public/logo/kaislo-source.jpg (le logo de la marque, tel que fourni). On n'en redessine rien :
 // la « tuile » (le K dans son carré vert) est découpée dans cette image pour les icônes, le logo complet sert tel quel.
 const SOURCE = fs.readFileSync('public/logo/kaislo-source.jpg').toString('base64');
+let LOGO_SANS_FOND = ''; // PNG du logo complet sans fond
 let TUILE = ''; // PNG 512 × 512 de la tuile, coins arrondis transparents (préparé plus bas avec le navigateur)
 const marque = (arrondi = 15) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><image href="data:image/png;base64,${TUILE}" width="64" height="64"/></svg>`;
 // Icônes à fond plein (iPhone, Android « maskable ») : fond vert du logo, tuile réduite au centre
 const marquePleine = (echelle) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${VERT}"/><image href="data:image/png;base64,${TUILE}" x="${(64 - 64 * echelle) / 2}" y="${(64 - 64 * echelle) / 2}" width="${64 * echelle}" height="${64 * echelle}"/></svg>`;
-const logoImage = (fond) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 896 885"><rect width="896" height="885" fill="${fond}"/><image href="data:image/jpeg;base64,${SOURCE}" width="896" height="885"/></svg>`;
+const logoImage = () => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 896 885"><image href="data:image/png;base64,${LOGO_SANS_FOND}" width="896" height="885"/></svg>`;
 const POLICE = `<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=DM+Sans:wght@500;600&display=block" rel="stylesheet">`;
 
 fs.mkdirSync('public/icons', { recursive: true });
@@ -46,10 +47,31 @@ TUILE = (await page.evaluate(async (src) => {
   x.drawImage(im, sx, sy, sw, sh, 0, 0, 512, 512);
   return c.toDataURL('image/png').split(',')[1];
 }, SOURCE));
+// Le logo complet sans fond : le blanc relié aux bords de l'image devient transparent (le blanc du K, enfermé dans le carré, reste blanc)
+LOGO_SANS_FOND = await page.evaluate(async (src) => {
+  const im = new Image(); im.src = 'data:image/jpeg;base64,' + src; await im.decode();
+  const W = im.width, H = im.height;
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+  const d = x.getImageData(0, 0, W, H); const px = d.data;
+  const blanc = (i) => Math.min(px[i], px[i + 1], px[i + 2]) > 236;
+  const vu = new Uint8Array(W * H); const pile = [];
+  const empiler = (X, Y) => { const k = Y * W + X; if (!vu[k] && blanc(k * 4)) { vu[k] = 1; pile.push(k); } };
+  for (let X = 0; X < W; X++) { empiler(X, 0); empiler(X, H - 1); }
+  for (let Y = 0; Y < H; Y++) { empiler(0, Y); empiler(W - 1, Y); }
+  while (pile.length) { const k = pile.pop(), X = k % W, Y = (k - X) / W; if (X > 0) empiler(X - 1, Y); if (X < W - 1) empiler(X + 1, Y); if (Y > 0) empiler(X, Y - 1); if (Y < H - 1) empiler(X, Y + 1); }
+  for (let k = 0; k < W * H; k++) if (vu[k]) px[k * 4 + 3] = 0;
+  // Bord adouci : les pixels pâles collés au fond retiré deviennent à moitié transparents (pas de liseré blanc)
+  const bord = [];
+  for (let Y = 1; Y < H - 1; Y++) for (let X = 1; X < W - 1; X++) { const k = Y * W + X; if (!vu[k] && (vu[k - 1] || vu[k + 1] || vu[k - W] || vu[k + W]) && Math.min(px[k * 4], px[k * 4 + 1], px[k * 4 + 2]) > 190) bord.push(k); }
+  for (const k of bord) { const m = Math.min(px[k * 4], px[k * 4 + 1], px[k * 4 + 2]); px[k * 4 + 3] = Math.round(255 * (255 - m) / 65); }
+  x.putImageData(d, 0, 0);
+  return c.toDataURL('image/png').split(',')[1];
+}, SOURCE);
+fs.writeFileSync('public/logo/kaislo-logo-sans-fond.png', Buffer.from(LOGO_SANS_FOND, 'base64'));
 fs.writeFileSync('public/icons/icone.svg', marque());
 fs.writeFileSync('public/logo/kaislo-marque.svg', marque());
-fs.writeFileSync('public/logo/kaislo-logo.svg', logoImage('#ffffff'));
-fs.writeFileSync('public/logo/kaislo-logo-sombre.svg', logoImage('#ffffff'));
+fs.writeFileSync('public/logo/kaislo-logo.svg', logoImage());
+fs.writeFileSync('public/logo/kaislo-logo-sombre.svg', logoImage());
 fs.writeFileSync('public/logo/kaislo-marque-96.png', Buffer.from(await page.evaluate(async (t) => {
   const im = new Image(); im.src = 'data:image/png;base64,' + t; await im.decode();
   const c = document.createElement('canvas'); c.width = 96; c.height = 96; const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, 96, 96);
@@ -69,7 +91,7 @@ for (const t of [48, 192, 512]) await rendre(img(marque(), t), t, t, `public/ico
 await rendre(img(marquePleine(0.9), 180), 180, 180, 'public/icons/icone-180.png', false); // iPhone : carré plein (arrondi par iOS)
 await rendre(img(marquePleine(0.68), 512), 512, 512, 'public/icons/icone-maskable-512.png', false);
 await rendre(img(marque(), 1024), 1024, 1024, 'public/logo/kaislo-marque.png');
-await rendre(`<img src="data:image/jpeg;base64,${SOURCE}" width="600" height="593" style="display:block">`, 600, 593, 'public/logo/kaislo-logo.png', false);
+await rendre(`<img src="data:image/png;base64,${LOGO_SANS_FOND}" width="600" height="593" style="display:block">`, 600, 593, 'public/logo/kaislo-logo.png', true);
 fs.copyFileSync('public/logo/kaislo-logo.png', 'public/logo/kaislo-logo-sombre.png');
 
 // favicon.ico : plusieurs tailles PNG dans un seul fichier
