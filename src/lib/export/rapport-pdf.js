@@ -7,7 +7,7 @@
 import { formatNombre, symbole, formatDate, formatHeure } from '../utils/format.js';
 import { tr, localeIntl } from '../i18n/index.js';
 
-const VERT = [30, 91, 67];
+const VERT = [5, 86, 31];
 const VERT_CLAIR = [234, 242, 238];
 const GRIS = [120, 124, 120];
 const MAX_LIGNES_TICKETS = 600; // au-delà, le détail est dans l'Excel
