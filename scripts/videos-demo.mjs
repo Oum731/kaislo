@@ -94,7 +94,7 @@ const STYLE = `
 #v-titre { position: fixed; z-index: 99998; left: 50%; top: 14px; transform: translateX(-50%); max-width: 92%;
   background: rgba(20,33,28,.94); color: #fff; font: 600 22px/1.3 'DM Sans', system-ui, sans-serif; padding: 12px 22px; border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0,0,0,.25); text-align: center; transition: opacity .3s; pointer-events: none; }
-#v-titre b { color: #E8A317; font-weight: 700; }
+#v-titre b { color: #f5b014; font-weight: 700; }
 #v-titre:empty { opacity: 0; }
 #v-carte { position: fixed; inset: 0; z-index: 100000; background: #14211C; color: #F6F5F1; display: flex; flex-direction: column;
   align-items: center; justify-content: center; text-align: center; padding: 32px; font-family: 'DM Sans', system-ui, sans-serif; transition: opacity .5s; }
@@ -102,18 +102,18 @@ const STYLE = `
 #v-carte .marque { font: 800 30px/1 system-ui; letter-spacing: -.02em; margin-bottom: 26px; }
 #v-carte h1 { font-size: 40px; line-height: 1.15; letter-spacing: -.02em; max-width: 760px; margin: 0; }
 #v-carte p { font-size: 21px; opacity: .78; margin: 16px 0 0; max-width: 640px; }
-#v-carte .bouton { margin-top: 30px; background: #E8A317; color: #14211C; font-weight: 700; font-size: 22px; padding: 14px 28px; border-radius: 10px; }
+#v-carte .bouton { margin-top: 30px; background: #f5b014; color: #14211C; font-weight: 700; font-size: 22px; padding: 14px 28px; border-radius: 10px; }
 #v-carte .v-adresse { margin-top: 16px; font-size: 19px; color: #F6F5F1; opacity: .85; }
 .sk { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px 22px; gap: 14px; font-family: 'DM Sans', system-ui, sans-serif; }
 .sk.ancien { background: linear-gradient(#f3e3b8, #e7cf94); color: #3b2a12; }
 .sk.kaislo { background: linear-gradient(#e8f1ec, #cfe6da); color: #14211C; }
-.sk-badge { font: 800 17px/1 'DM Sans', system-ui; letter-spacing: .04em; text-transform: uppercase; background: #14211C; color: #E8A317; padding: 10px 16px; border-radius: 999px; }
+.sk-badge { font: 800 17px/1 'DM Sans', system-ui; letter-spacing: .04em; text-transform: uppercase; background: #14211C; color: #f5b014; padding: 10px 16px; border-radius: 999px; }
 .sk.kaislo .sk-badge { background: #1F5C45; color: #fff; }
 .sk-gros { font-size: 110px; line-height: 1; display: inline-block; }
 .sk-rangee { display: flex; gap: 14px; align-items: center; justify-content: center; font-size: 64px; }
 .sk-bulle { background: #fff; color: #14211C; border-radius: 22px; padding: 14px 18px; font: 600 21px/1.3 'DM Sans', system-ui; box-shadow: 0 6px 18px rgba(0,0,0,.18); max-width: 330px; min-height: 28px; }
 .sk-bulle:empty { visibility: hidden; }
-.sk-horloge { font: 800 64px/1 'DM Sans', system-ui; font-variant-numeric: tabular-nums; background: #14211C; color: #E8A317; padding: 12px 22px; border-radius: 16px; }
+.sk-horloge { font: 800 64px/1 'DM Sans', system-ui; font-variant-numeric: tabular-nums; background: #14211C; color: #f5b014; padding: 12px 22px; border-radius: 16px; }
 .sk-legende { font: 700 19px/1.3 'DM Sans', system-ui; opacity: .8; }
 .sk-secoue { animation: sk-secoue .35s infinite; }
 .sk-envol { animation: sk-envol 1.6s ease-in forwards; }
@@ -760,7 +760,7 @@ const L = (fr) => (LANGUE_TOURNAGE === 'en' ? DICO_EN[fr] || fr : fr); // libell
 const PROMO = {
   fr: {
     ancien: 'Le commerçant à l’ancienne', kaislo: 'Le commerçant Kaislo 😎',
-    cle: `<div class="k">K</div><div class="marque">Kaislo</div><h1>Kaislo fait les calculs<br>à votre place.</h1><p style="font-size:26px;opacity:1;color:#E8A317;font-weight:700">Votre entreprise tient<br>dans votre poche.</p><div class="bouton">Essai gratuit 30 jours</div>`,
+    cle: `<div class="k">K</div><div class="marque">Kaislo</div><h1>Kaislo fait les calculs<br>à votre place.</h1><p style="font-size:26px;opacity:1;color:#f5b014;font-weight:700">Votre entreprise tient<br>dans votre poche.</p><div class="bouton">Essai gratuit 30 jours</div>`,
     cleParole: 'Kaislo fait les calculs à votre place. Votre entreprise tient dans votre poche.',
     carnet: { nom: 'promo-carnet-credit', l1: 'Mon carnet de crédit ?<br>Il était là ce matin !', l2: 'Qui me doit combien ?!<br>😱', leg: 'Dettes des clients retrouvées : <b>???</b>', k1: 'Moi, tout est dans<br>mon téléphone.',
       c1: 'Une vente à <b>crédit</b> ? Deux touches.', c1p: 'Une vente à crédit ? Deux touches.', c2: 'Noté. <b>Rien ne se perd.</b>', c2p: 'Noté. Rien ne se perd.', c3: 'Qui vous doit <b>combien</b>, d’un coup d’œil', c3p: 'Et je vois qui me doit combien, d’un coup d’œil.' },
@@ -773,7 +773,7 @@ const PROMO = {
   },
   en: {
     ancien: 'The old-school shopkeeper', kaislo: 'The Kaislo shopkeeper 😎',
-    cle: `<div class="k">K</div><div class="marque">Kaislo</div><h1>Kaislo does the<br>maths for you.</h1><p style="font-size:26px;opacity:1;color:#E8A317;font-weight:700">Your business fits<br>in your pocket.</p><div class="bouton">30-day free trial</div>`,
+    cle: `<div class="k">K</div><div class="marque">Kaislo</div><h1>Kaislo does the<br>maths for you.</h1><p style="font-size:26px;opacity:1;color:#f5b014;font-weight:700">Your business fits<br>in your pocket.</p><div class="bouton">30-day free trial</div>`,
     cleParole: 'Kaislo does the maths for you. Your business fits in your pocket.',
     carnet: { nom: 'promo-lost-notebook', l1: 'My credit notebook?<br>It was right here this morning!', l2: 'Who owes me what?!<br>😱', leg: 'Customer debts recovered: <b>???</b>', k1: 'Me? It’s all<br>in my phone.',
       c1: 'A <b>credit</b> sale? Two taps.', c1p: 'A credit sale? Two taps.', c2: 'Saved. <b>Nothing gets lost.</b>', c2p: 'Saved. Nothing gets lost.', c3: 'See who owes <b>how much</b>, at a glance', c3p: 'And I see who owes me how much, at a glance.' },

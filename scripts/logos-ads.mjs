@@ -12,7 +12,7 @@ import puppeteer from 'puppeteer-core';
 
 const CHROME = [process.env.CHROME_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].filter(Boolean).find((c) => fs.existsSync(c));
 if (!CHROME) { console.error('Chrome introuvable : indiquez son chemin dans la variable CHROME_PATH.'); process.exit(1); }
-const VERT = '#1E5B43', CREME = '#F6F5F1', SAFRAN = '#E8A317', ENCRE = '#14211C';
+const VERT = '#05561f', CREME = '#F6F5F1', SAFRAN = '#f5b014', ENCRE = '#14211C';
 const SORTIE = 'outils/logos-ads';
 
 // Police du logo (Bricolage Grotesque, déjà téléchargée par « npm run build ») : fichier « latin » indiqué par le CSS du site

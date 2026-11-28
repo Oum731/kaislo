@@ -61,7 +61,7 @@ function PanneauVisuel() {
   return (
     <div className="connexion-visuel">
       <span className="cercle" style={{ width: 420, height: 420, right: -140, top: -120, background: 'rgba(233,162,59,.16)' }} />
-      <span className="cercle" style={{ width: 260, height: 260, left: -90, bottom: -80, background: 'rgba(30,91,67,.6)' }} />
+      <span className="cercle" style={{ width: 260, height: 260, left: -90, bottom: -80, background: 'rgba(5,86,31,.6)' }} />
       <span className="logo" style={{ color: 'var(--creme)', position: 'relative' }}><Marque /> {tr('Kaislo')}</span>
       <div style={{ position: 'relative' }}>
         <h2>{tr('Vendez plus vite. Comptez moins. Gagnez plus.')}</h2>

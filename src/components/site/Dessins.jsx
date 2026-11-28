@@ -1,6 +1,6 @@
 // Petits dessins du site (SVG légers, aux couleurs de la couleurs de Kaislo (vert, ocre)) : boutique, panier, téléphone.
 // Décoratifs : cachés des lecteurs d'écran (le texte à côté dit déjà la même chose).
-const VERT = '#1e5b43';
+const VERT = '#05561f';
 const OCRE = '#e2a431';
 const BRUN = '#14211c';
 const SABLE = '#f6f5f1';

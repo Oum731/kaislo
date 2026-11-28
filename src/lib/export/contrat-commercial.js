@@ -8,7 +8,7 @@
 import { formatNombre, symbole, formatDate } from '../utils/format.js';
 import { PAYS } from '../donnees/modeles.js';
 
-const VERT = [30, 91, 67];
+const VERT = [5, 86, 31];
 const GRIS = [95, 105, 100];
 
 const sur = (t) => String(t ?? '')

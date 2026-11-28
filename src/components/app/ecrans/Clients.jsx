@@ -71,7 +71,7 @@ export default function Clients() {
                 <span className="tres-petit muet tronque bloc-texte">
                   {c.telephone || tr('Pas de téléphone')}{c.dernier ? ' · ' + formatDate(c.dernier) : ''}{c.source === 'boutique' ? ' · ' + tr('Boutique en ligne') : ''}
                 </span>
-                {c.solde > 0 && <span className="jauge"><div style={{ width: Math.max(4, Math.round((c.solde / plusGros) * 100)) + '%', background: age(c) === 'retard' ? 'var(--rouge)' : age(c) === 'relancer' ? 'var(--safran, #e9a23b)' : 'var(--vert)' }} /></span>}
+                {c.solde > 0 && <span className="jauge"><div style={{ width: Math.max(4, Math.round((c.solde / plusGros) * 100)) + '%', background: age(c) === 'retard' ? 'var(--rouge)' : age(c) === 'relancer' ? 'var(--safran, #f5b014)' : 'var(--vert)' }} /></span>}
               </span>
               {c.solde > 0 ? (
                 <span className="droite">
